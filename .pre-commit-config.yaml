@@ -82,6 +82,14 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: sealed-read-guard
+        name: no read of the held-out set
+        description: ops/guard_scan.sh, GD-04, SOP W9.7 layer 3.
+        entry: ops/guard_scan.sh
+        language: script
+        pass_filenames: false
+        always_run: true
+
       - id: nb-clean
         name: strip notebook outputs
         description: empties outputs and execution counts before a notebook is committed.
