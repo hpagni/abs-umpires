@@ -1,0 +1,311 @@
+# contracts/savant_drawer.yml -- the Savant per-team ABS challenge drawer.
+#
+# SOP step W4.2. This file is the one place the drawer's measured numbers live.
+# src/absump/ingest/savant_drawer.py reads it; tests/data/test_drawer.py asserts
+# against it. SOP section 0.5 rule 4: a number that came from an endpoint goes in
+# a config or a contract, never hard-coded in code.
+#
+# The data contract recorded this service as unverified. It works, but only with
+# the year= / gameType=regular form. The season[] / gameType[]=R form that the
+# leaderboard page itself declares returns HTTP 200 with an empty data array, so
+# a wrong parameter form fails silently and has to be asserted against.
+
+contract: savant_drawer
+step: W4.2
+host: baseballsavant.mlb.com
+# Delay 10 s, daily cap 800, from config/throttle.yml. SOP section 5A item A3 is
+# the one source of truth for both; neither number is restated here.
+throttle_host_key: baseballsavant.mlb.com
+
+endpoint:
+  # The working form. Percent signs are not used: every value is literal.
+  url_template: "https://baseballsavant.mlb.com/leaderboard/services/abs/{team_id}?year={season}&challengeType=team-summary&gameType=regular&level={level}&minChal=1&minOppChal=0&dataCount=runs&groupBy="
+  method: GET
+  response: json
+  payload_key: data
+  required_params:
+    year: "{season}"
+    challengeType: team-summary
+    gameType: regular
+    level: "{level}"
+    minChal: "1"
+    minOppChal: "0"
+    dataCount: runs
+    groupBy: ""
+  # The forms that return HTTP 200 and no rows. Asserted against, never issued.
+  refused_params:
+    - "season[]"
+    - "gameType[]"
+  empty_envelope: '{"data":[]}'
+  empty_envelope_bytes: 11
+
+# The two pulls that resolved the contract, recorded by SOP W4.2.
+measured_pulls:
+  - label: cin_mlb_2026
+    team_id: 113
+    team_name: Cincinnati Reds
+    level: mlb
+    season: 2026
+    http_status: 200
+    body_bytes: 1214410
+    rows: 708
+    keys: 66
+    games: 156
+    against_false: 356
+    against_true: 352
+    overturned: 403
+    overturned_pct: 56.9
+    reasonable: 509
+    first_game_date: 2026-03-26
+    last_game_date: 2026-09-20
+    role_batter_rows: 326
+    role_pitcher_rows: 3
+  - label: lou_aaa_2025
+    team_id: 416
+    team_name: Louisville Bats
+    level: aaa
+    season: 2025
+    http_status: 200
+    body_bytes: 969705
+    rows: 568
+    keys: 66
+    first_game_date: 2025-03-28
+    last_game_date: 2025-09-21
+    role_batter_rows: 382
+  - label: empty_form
+    http_status: 200
+    body_bytes: 11
+    rows: 0
+
+schema:
+  # 66 keys per row, identical across both levels. SOP W4.2 names 45 of them;
+  # those 45 are required. The remaining 21 are not named in the SOP and are
+  # therefore not asserted by name.
+  key_count: 66
+  required_keys:
+    - year
+    - game_pk
+    - play_id
+    - game_date
+    - event_inning
+    - outs
+    - pre_ball_count
+    - pre_strike_count
+    - bat_score
+    - fld_score
+    - bat_side
+    - player_at_bat
+    - pitcher
+    - fielder_2
+    - challenging_player_id
+    - batter_name
+    - pitcher_name
+    - catcher_name
+    - bat_team_id
+    - fld_team_id
+    - opp_team
+    - original_isStrike_ump
+    - is_challengeABS_overturned
+    - is_challengeABS_reasonable_attempt
+    - edge_dist_calc
+    - sz_challenge_prob
+    - sz_challenge_prob_gain
+    - sz_challenge_prob_lost
+    - chal_gained
+    - chal_lost
+    - sz_challenge_runs
+    - sz_challenge_overturned_runs
+    - sz_challenge_lost_runs
+    - is_strike3_removed
+    - is_ball4_added
+    - is_strikeout_overturn
+    - is_walk_overturn
+    - plateX
+    - plateZ
+    - strikeZoneTop
+    - strikeZoneBottom
+    - widthinches
+    - against
+    - team_summary_mode
+    - level
+  # SOP W4.2 spells the two plate coordinates plateX and plateZ. SOP lines 1245
+  # and 1554, and tests/fixtures/generated/drawer_rows.json, spell the same two
+  # columns plate_X and plate_Z. W4.2's list is this contract's spelling; the
+  # aliases are accepted on read so the W4.5 coordinate bridge cannot break on a
+  # spelling. Reported to the reconciler as a wording defect in another step.
+  aliases:
+    plateX: plate_X
+    plateZ: plate_Z
+  # Never read. It has four values only and buckets the 3 CIN pitcher challenges
+  # under catcher-for, so it cannot carry role. Role comes from
+  # challenging_player_id, matched against player_at_bat, fielder_2 and pitcher.
+  forbidden_keys:
+    - team_summary_mode
+  team_summary_mode_values:
+    - catcher-for
+    - catcher-against
+    - batter-for
+    - batter-against
+
+# The four facts derived locally from 1,276 cached rows (708 MLB 2026 + 568 AAA
+# 2025). Each one is a test. SOP W4.2.
+facts:
+  sample_rows: 1276
+  sample_mlb_rows: 708
+  sample_aaa_rows: 568
+  # 1. original_isStrike_ump exists, so the data contract's section 2.7 is true
+  #    of the Stats API and the CSV but not of this service.
+  original_call_key: original_isStrike_ump
+  # 2. edge_dist_calc is exactly reproducible by the SOP section 2.5 formula,
+  #    max absolute error 0.000000 in on 1,276/1,276.
+  edge:
+    ball_radius_in: 1.45
+    feet_to_inches: 12
+    max_abs_error_in: 0.0
+    tolerance_in: 0.000001          # SOP section 9.1: reproduces to 1e-6 on 100% of rows
+    rows_checked: 1276
+  # 3. Overturn is deterministic on 1,276/1,276, including 953/953 outside a
+  #    +/- 0.5 in band.
+  overturn:
+    rule: "is_challengeABS_overturned == XOR(original_isStrike_ump == 1, edge_dist_calc < 0)"
+    rows_checked: 1276
+    band_in: 0.5
+    rows_outside_band: 953
+  # 4. Role resolves without ambiguity: 708/708 and 568/568, zero unresolved.
+  role:
+    fields:
+      batter: player_at_bat
+      catcher: fielder_2
+      pitcher: pitcher
+    key: challenging_player_id
+    mlb_rows_classified: 708
+    aaa_rows_classified: 568
+    unresolved: 0
+    # role == batter <=> original_isStrike_ump == 1: only the batting side may
+    # challenge a called strike. 326/326 MLB and 382/382 AAA.
+    batter_iff_called_strike: true
+    mlb_batter_rows: 326
+    aaa_batter_rows: 382
+
+# DT-25, drawer completeness. Distinct play_id over against == False, over the
+# 30 MLB 2026 team-seasons, equals the leaderboard's league totals: batting
+# n_challenges 4,612 plus fielding n_challenges 5,555 (SOP section on W4.1
+# leagueData). The split is checkable from the drawer alone through fact 4's
+# batter <=> called-strike identity.
+dt25:
+  level: mlb
+  season: 2026
+  expected_total: 10167
+  expected_batter_side: 4612
+  expected_fielding_side: 5555
+  # Captured by the W4.1 leaderboard pull. No date literal is written here:
+  # the SOP's W4.1 numbers are the provenance, and this contract stays clear of
+  # any day at or past the cutoff.
+  # Tolerance, "+/- games between pulls". Derived, not chosen: CIN played 156
+  # games and made 356 own challenges, so 2.282 challenges per team-game; a full
+  # MLB slate is 15 games, so 30 team-games; two days of slate is the gap a pull
+  # started the night after the leaderboard capture can open.
+  tolerance_days: 2
+  games_per_day_max: 15
+  challenges_per_team_game: 2.282
+
+# The pull. 60 team-seasons, one JSON file each, about 10 minutes at 10 s
+# spacing. Part of the 100 drawer, leaderboard and framing requests on Savant in
+# the sprint-critical subset of SOP section 10.1.
+pull:
+  targets: 60
+  requests: 60
+  levels:
+    - level: mlb
+      season: 2026
+      teams: 30
+      expected_rows: 21000
+      expected_bytes: 36000000
+    - level: aaa
+      season: 2025
+      teams: 30
+      expected_rows: 17000
+      expected_bytes: 30000000
+  # The drawer is season-scoped: it has no date parameter, so a 2026 pull run
+  # after the cutoff returns rows past it. The request does not cross the
+  # cutoff; the reader does, and open_rows() is the gate. See the module
+  # docstring and the note returned to the owner.
+  open_through: 2026-09-21
+
+# Team ids. Confirmed live in phase 02 through absump.http, two requests.
+team_index:
+  mlb:
+    url: "https://statsapi.mlb.com/api/v1/teams?sportId=1&season=2026&activeStatus=Y"
+    http_status: 200
+    body_bytes: 23219
+    count: 30
+  aaa:
+    # The URL SOP W4.2 records verbatim, with its recorded 20,380 B reproduced.
+    url: "https://statsapi.mlb.com/api/v1/teams?sportId=11&season=2025&activeStatus=Y"
+    http_status: 200
+    body_bytes: 20380
+    count: 30
+
+teams:
+  mlb:
+    - {id: 108, name: "Los Angeles Angels", abbreviation: "LAA"}
+    - {id: 109, name: "Arizona Diamondbacks", abbreviation: "AZ"}
+    - {id: 110, name: "Baltimore Orioles", abbreviation: "BAL"}
+    - {id: 111, name: "Boston Red Sox", abbreviation: "BOS"}
+    - {id: 112, name: "Chicago Cubs", abbreviation: "CHC"}
+    - {id: 113, name: "Cincinnati Reds", abbreviation: "CIN"}
+    - {id: 114, name: "Cleveland Guardians", abbreviation: "CLE"}
+    - {id: 115, name: "Colorado Rockies", abbreviation: "COL"}
+    - {id: 116, name: "Detroit Tigers", abbreviation: "DET"}
+    - {id: 117, name: "Houston Astros", abbreviation: "HOU"}
+    - {id: 118, name: "Kansas City Royals", abbreviation: "KC"}
+    - {id: 119, name: "Los Angeles Dodgers", abbreviation: "LAD"}
+    - {id: 120, name: "Washington Nationals", abbreviation: "WSH"}
+    - {id: 121, name: "New York Mets", abbreviation: "NYM"}
+    - {id: 133, name: "Athletics", abbreviation: "ATH"}
+    - {id: 134, name: "Pittsburgh Pirates", abbreviation: "PIT"}
+    - {id: 135, name: "San Diego Padres", abbreviation: "SD"}
+    - {id: 136, name: "Seattle Mariners", abbreviation: "SEA"}
+    - {id: 137, name: "San Francisco Giants", abbreviation: "SF"}
+    - {id: 138, name: "St. Louis Cardinals", abbreviation: "STL"}
+    - {id: 139, name: "Tampa Bay Rays", abbreviation: "TB"}
+    - {id: 140, name: "Texas Rangers", abbreviation: "TEX"}
+    - {id: 141, name: "Toronto Blue Jays", abbreviation: "TOR"}
+    - {id: 142, name: "Minnesota Twins", abbreviation: "MIN"}
+    - {id: 143, name: "Philadelphia Phillies", abbreviation: "PHI"}
+    - {id: 144, name: "Atlanta Braves", abbreviation: "ATL"}
+    - {id: 145, name: "Chicago White Sox", abbreviation: "CWS"}
+    - {id: 146, name: "Miami Marlins", abbreviation: "MIA"}
+    - {id: 147, name: "New York Yankees", abbreviation: "NYY"}
+    - {id: 158, name: "Milwaukee Brewers", abbreviation: "MIL"}
+  aaa:
+    - {id: 102, name: "Round Rock Express", abbreviation: "RR", parent_org_id: 140, parent_org_name: "Texas Rangers"}
+    - {id: 105, name: "Sacramento River Cats", abbreviation: "SAC", parent_org_id: 137, parent_org_name: "San Francisco Giants"}
+    - {id: 234, name: "Durham Bulls", abbreviation: "DUR", parent_org_id: 139, parent_org_name: "Tampa Bay Rays"}
+    - {id: 235, name: "Memphis Redbirds", abbreviation: "MEM", parent_org_id: 138, parent_org_name: "St. Louis Cardinals"}
+    - {id: 238, name: "Oklahoma City Comets", abbreviation: "OKC", parent_org_id: 119, parent_org_name: "Los Angeles Dodgers"}
+    - {id: 342, name: "Albuquerque Isotopes", abbreviation: "ABQ", parent_org_id: 115, parent_org_name: "Colorado Rockies"}
+    - {id: 400, name: "Las Vegas Aviators", abbreviation: "LV", parent_org_id: 133, parent_org_name: "Athletics"}
+    - {id: 416, name: "Louisville Bats", abbreviation: "LOU", parent_org_id: 113, parent_org_name: "Cincinnati Reds"}
+    - {id: 422, name: "Buffalo Bisons", abbreviation: "BUF", parent_org_id: 141, parent_org_name: "Toronto Blue Jays"}
+    - {id: 431, name: "Gwinnett Stripers", abbreviation: "GWN", parent_org_id: 144, parent_org_name: "Atlanta Braves"}
+    - {id: 445, name: "Columbus Clippers", abbreviation: "COL", parent_org_id: 114, parent_org_name: "Cleveland Guardians"}
+    - {id: 451, name: "Iowa Cubs", abbreviation: "IOW", parent_org_id: 112, parent_org_name: "Chicago Cubs"}
+    - {id: 484, name: "Indianapolis Indians", abbreviation: "IND", parent_org_id: 134, parent_org_name: "Pittsburgh Pirates"}
+    - {id: 494, name: "Charlotte Knights", abbreviation: "CLT", parent_org_id: 145, parent_org_name: "Chicago White Sox"}
+    - {id: 512, name: "Toledo Mud Hens", abbreviation: "TOL", parent_org_id: 116, parent_org_name: "Detroit Tigers"}
+    - {id: 529, name: "Tacoma Rainiers", abbreviation: "TAC", parent_org_id: 136, parent_org_name: "Seattle Mariners"}
+    - {id: 531, name: "Scranton/Wilkes-Barre RailRiders", abbreviation: "SWB", parent_org_id: 147, parent_org_name: "New York Yankees"}
+    - {id: 533, name: "Worcester Red Sox", abbreviation: "WOR", parent_org_id: 111, parent_org_name: "Boston Red Sox"}
+    - {id: 534, name: "Rochester Red Wings", abbreviation: "ROC", parent_org_id: 120, parent_org_name: "Washington Nationals"}
+    - {id: 541, name: "Omaha Storm Chasers", abbreviation: "OMA", parent_org_id: 118, parent_org_name: "Kansas City Royals"}
+    - {id: 552, name: "Syracuse Mets", abbreviation: "SYR", parent_org_id: 121, parent_org_name: "New York Mets"}
+    - {id: 556, name: "Nashville Sounds", abbreviation: "NAS", parent_org_id: 158, parent_org_name: "Milwaukee Brewers"}
+    - {id: 561, name: "Salt Lake Bees", abbreviation: "SL", parent_org_id: 108, parent_org_name: "Los Angeles Angels"}
+    - {id: 564, name: "Jacksonville Jumbo Shrimp", abbreviation: "JAX", parent_org_id: 146, parent_org_name: "Miami Marlins"}
+    - {id: 568, name: "Norfolk Tides", abbreviation: "NOR", parent_org_id: 110, parent_org_name: "Baltimore Orioles"}
+    - {id: 1410, name: "Lehigh Valley IronPigs", abbreviation: "LHV", parent_org_id: 143, parent_org_name: "Philadelphia Phillies"}
+    - {id: 1960, name: "St. Paul Saints", abbreviation: "STP", parent_org_id: 142, parent_org_name: "Minnesota Twins"}
+    - {id: 2310, name: "Reno Aces", abbreviation: "RNO", parent_org_id: 109, parent_org_name: "Arizona Diamondbacks"}
+    - {id: 4904, name: "El Paso Chihuahuas", abbreviation: "ELP", parent_org_id: 135, parent_org_name: "San Diego Padres"}
+    - {id: 5434, name: "Sugar Land Space Cowboys", abbreviation: "SUG", parent_org_id: 117, parent_org_name: "Houston Astros"}

@@ -1,0 +1,18 @@
+# W4.2, the Savant per-team ABS challenge drawer. Owner W4, fleet phase 02.
+#
+# The verify command has two halves and both must run. The pytest half is the
+# gate on a clean clone with no 2026 datum on disk: it builds a full-scale
+# synthetic MLB 2026 league of 10,167 challenges across the 30 team drawers and
+# runs DT-25 over it, along with the four facts W4.2 derived from 1,276 cached
+# rows and the negative cases for each. The --check half runs DT-25 and the same
+# four facts over whatever drawer files are actually on disk, and is green with
+# an explicit line when none are, so the command is runnable before the pull and
+# has teeth after it. Nothing here sends a request: the transport is a mock and
+# --check reads files only.
+
+- id: W4.2
+  title: "Savant drawer service, 60 team-seasons, Chapter 2 spine and the sprint bridge"
+  verify: "uv run --locked pytest tests/data/test_drawer.py -q && uv run --locked python -m absump.ingest.savant_drawer --check"
+  expect_exit: 0
+  owner: W4
+  needs: src/absump/ingest/savant_drawer.py, contracts/savant_drawer.yml, tests/data/test_drawer.py

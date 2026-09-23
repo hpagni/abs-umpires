@@ -1,0 +1,74 @@
+W2.11 Savant ABS leaderboard, DT-24
+contract      contracts/savant_absdata.yml
+pull date     2026-09-22
+tolerance     6.0 percent above the floor for a later pull
+views         batter, catcher, pitcher
+
+contract algebra
+  PASS CT-1 batting: views ['batter'] sum n_challenges 4612, leagueData 4612
+  PASS CT-1 fielding: views ['catcher', 'pitcher'] sum n_challenges 5555, leagueData 5555
+  PASS CT-2 fielding: views sum n_overturns 3231, leagueData 3231
+  PASS CT-3 fielding: leagueData n_overturns + n_fails = n_challenges
+  PASS CT-4 totals: challenges 10167/10167, overturns 5490/5490, fails 4677/4677
+  PASS CT-5 batter: rate 48.9809 percent, contract 48.98
+  PASS CT-6 batter: >=20 61 <= >=10 176 <= records 524
+  PASS CT-5 catcher: rate 58.7700 percent, contract 58.77
+  PASS CT-6 catcher: >=20 77 <= >=10 91 <= records 107
+  PASS CT-5 pitcher: rate 39.3064 percent, contract 39.31
+  PASS CT-6 pitcher: >=20 0 <= >=10 0 <= records 104
+  PASS CT-7 totals: rate 53.9982 percent, contract 53.99
+  PASS CT-8 first record CJ Abrams: 12 + 2 = 14
+  PASS CT-9 plan is 28 page fetches, contract 28
+  PASS CT-10 the absData regex in this module is the one the contract states
+  PASS CT-11 records and keys per view {'batter': (524, 86), 'catcher': (107, 87), 'pitcher': (104, 87)}, DT-24 {'batter': (524, 86), 'catcher': (107, 87), 'pitcher': (104, 87)}
+  PASS CT-12 league totals {'n_challenges': 10167, 'n_fails': 4677, 'n_overturns': 5490}, W2.11 {'n_challenges': 10167, 'n_fails': 4677, 'n_overturns': 5490}
+
+synthetic page, every clause must pass
+  PASS DT-24.1 batter records 524, contract 524, exact
+  PASS DT-24.2 batter keys [86], contract [86]
+  PASS DT-24.3 batter records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 batter required keys absent from at least one record: []
+  PASS DT-24.4 batter sum n_challenges 4612 contract 4612, sum n_overturns 2259 contract 2259, exact
+  PASS DT-24.5 batter overturn rate 48.9809 percent, contract 48.98, limit 0.0100 points
+  PASS DT-24.6 batter >=10 chal 176 contract 176, >=20 chal 61 contract 61, max 51 contract not measured, exact
+  PASS DT-24.1 catcher records 107, contract 107, exact
+  PASS DT-24.2 catcher keys [87], contract [87]
+  PASS DT-24.3 catcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 catcher required keys absent from at least one record: []
+  PASS DT-24.4 catcher sum n_challenges 5382 contract 5382, sum n_overturns 3163 contract 3163, exact
+  PASS DT-24.5 catcher overturn rate 58.7700 percent, contract 58.77, limit 0.0100 points
+  PASS DT-24.6 catcher >=10 chal 91 contract 91, >=20 chal 77 contract 77, max 172 contract 172, exact
+  PASS DT-24.1 pitcher records 104, contract 104, exact
+  PASS DT-24.2 pitcher keys [87], contract [87]
+  PASS DT-24.3 pitcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 pitcher required keys absent from at least one record: []
+  PASS DT-24.4 pitcher sum n_challenges 173 contract 173, sum n_overturns 68 contract 68, exact
+  PASS DT-24.5 pitcher overturn rate 39.3064 percent, contract 39.31, limit 0.0100 points
+  PASS DT-24.6 pitcher >=10 chal 0 contract 0, >=20 chal 0 contract 0, max 8 contract 8, exact
+  PASS DT-24.8 batting views ['batter'] sum n_challenges 4612, page leagueData [4612], contract 4612
+  PASS DT-24.8 fielding views ['catcher', 'pitcher'] sum n_challenges 5555, page leagueData [5555], contract 5555
+  PASS DT-24.9 league totals challenges 10167 contract 10167, overturns 5490 contract 5490, fails 4677 contract 4677, rate 53.9982 percent contract 53.99, limit 0.0100 points
+
+mutated page, each corruption must be caught by its clause
+  PASS DT-24.1 drop one record, caught ['DT-24.1', 'DT-24.4', 'DT-24.5', 'DT-24.8', 'DT-24.9']
+  PASS DT-24.2 add a key to one record, caught ['DT-24.2']
+  PASS DT-24.3 break n_overturns + n_fails, caught ['DT-24.3']
+  PASS DT-24.6 move a record over the 10-challenge line, caught ['DT-24.6']
+  PASS DT-24.8 rewrite leagueData n_challenges, caught ['DT-24.8']
+  PASS DT-24.7 rename a required key, caught ['DT-24.7']
+
+parser refuses a page it cannot read
+  PASS ParseError no absData block
+  PASS ParseError absData is not an array
+
+chokepoint refuses the two dead parameter forms
+  PASS refused csv=true
+  PASS refused year=
+
+probe table
+  PASS out/tables/leaderboard_csv_probe.csv matches the contract, 3 probes
+
+pages in the raw cache
+  none on disk; the 28-view pull has not run here
+
+DT-24: 52 checks, 52 passed, 0 failed

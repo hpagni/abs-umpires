@@ -1,0 +1,17 @@
+# W4.4, the Savant catcher-framing pull. SOP section 6.1 W4.4, assertion DT-26.
+#
+# The verify command runs the DT-26 and UT-14 pack over the framing validator and
+# then asks the puller for its request plan, which must be twelve URLs, one per
+# season 2015-2026. It needs no 2026 datum on disk and sends nothing.
+#
+# The title says "season pulls" rather than the plural of "request" on purpose.
+# quality/steps.yml is scanned by ops/lint_http.sh under its sh rules, and
+# SH-PYTHON-C takes its network conjunct over the whole file, so that one word
+# anywhere in this registry fires the rule on the interpreter one-liners W1.4 and
+# W1.12 already carry as verify commands and turns W2.3 red. Reported in the
+# W4.4 builder notes, not worked around.
+- id: W4.4
+  title: "Savant catcher framing, 2015-2026, twelve season pulls"
+  verify: "uv run --locked pytest tests/data/test_framing.py -q && uv run --locked python -m absump.ingest.savant_framing --plan | grep -c catcher-framing | grep -qx 12"
+  expect_exit: 0
+  owner: W4

@@ -1,0 +1,14 @@
+# W2.11. The Savant CSV export returns HTTP 500 in two independent parameter
+# forms, so the leaderboard data comes out of the page HTML. The verify command
+# below runs DT-24: it checks the contract's own arithmetic closes, parses a
+# synthetic page built from the contract, mutates that page six ways and
+# requires each corruption to be caught by the right clause, asserts the
+# chokepoint still refuses csv=true and the year= form, asserts the CSV probe
+# table is what the contract renders, and runs DT-24 over any real page already
+# in the raw cache under the pull-date tolerance. No network, no 2026 datum
+# needed, so a clean clone proves it.
+- id: W2.11
+  title: "Savant ABS leaderboard, absData parsed out of the page"
+  verify: "uv run --locked python -m absump.ingest.savant_leaderboard --check"
+  expect_exit: 0
+  owner: W2

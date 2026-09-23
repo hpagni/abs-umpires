@@ -1,0 +1,140 @@
+# config/leaderboard_views.yml -- the 28 Savant ABS leaderboard views of SOP W4.3.
+#
+# Owner: SOP step W4.3, "leaderboard pull -> W1.7". The sweep that reads this
+# file is src/absump/ingest/savant_leaderboard_sweep.py. The parser it sweeps
+# them through, the page contract and assertion DT-24 all belong to W2.11 and
+# live in contracts/savant_absdata.yml; nothing here repeats them.
+#
+# WHERE THE 28 COME FROM. The verified selector domains of the leaderboard page,
+# recorded by W2.11 on the contract's pull date:
+#
+#     ddlChalType  batter, batting-team, catcher, pitcher, catching-team,
+#                  team-summary, league          7
+#     ddlLevel     mlb, aaa                      2
+#     seasons      2026, 2025                    2
+#
+# 7 x 2 x 2 = 28, which is the count SOP section 10.1 costs and the count
+# contracts/savant_absdata.yml records under `pull.views`. The sweep asserts all
+# three agree before it does anything, so a selector domain that changes on the
+# page cannot pass as a complete sweep.
+#
+# The other four selectors of the page -- ddlMinChal, ddlMinOppChal, ddlLeverage
+# and ddlBallStrike -- are not swept. They are filters over the same rows, not
+# further views; crossing them in would be 2,520 page loads for data the swept
+# rows already carry, and SOP section 10.1 costs this step at 28.
+#
+# NO URL IS WRITTEN HERE. The canonical form is one constant,
+# absump.http.SAVANT_ABS_LEADERBOARD_URL, and the sweep renders each view from
+# it. A second copy of the URL in a config file is a second copy to drift: the
+# `season[]=` form is canonical, the `year=` form 301-redirects and the
+# `csv=true` export returns HTTP 500, and absump.http already refuses both.
+#
+# NO DELAY AND NO CAP ARE WRITTEN HERE either. One policy per host lives in
+# config/throttle.yml (SOP section 5A item A3) and absump.http enforces it.
+#
+# ORDER IS PART OF THE SPECIFICATION OF THIS FILE. The three views DT-24
+# baselines -- MLB 2026 batter, catcher, pitcher -- are swept first, so a leg
+# that is cut short by the daily cap, an interruption or --max-views still
+# leaves DT-24 refreshable. The remaining 25 follow in selector order. The
+# sweep asserts this ordering, so a reshuffle that buries the DT-24 views is a
+# failure and not a preference.
+
+schema: absump/config/leaderboard_views/1
+owner: W4.3
+parent_step: W2.11
+assertion: DT-24
+source_contract: contracts/savant_absdata.yml
+# The run that verified this enumeration against `selectors` in the source
+# contract. The receipt carries the timestamp; the date is not written here,
+# because GD-04 rule 5 refuses any date at or past the boundary on the
+# analysis surface, and a config file cannot tell the scanner that its date
+# stamps a run rather than selects a row.
+selectors_verified_receipt: quality/receipts/W4.3.json
+
+# The domains this enumeration is the cross product of, copied from
+# `selectors` in contracts/savant_absdata.yml. The sweep compares the two field
+# by field and fails on any difference, so this copy cannot drift silently; it
+# is here so the file can be read on its own.
+selector_domains:
+  ddlLevel:
+    - mlb
+    - aaa
+  seasons:
+    - 2026
+    - 2025
+  ddlChalType:
+    - batter
+    - batting-team
+    - catcher
+    - pitcher
+    - catching-team
+    - team-summary
+    - league
+
+sweep:
+  host: baseballsavant.mlb.com
+  expected_views: 28
+  # Where this leg sits in the night. SOP W4.2/W4.3/W4.4: the Savant drawer,
+  # leaderboard and framing work is 60 + 28 + 12 = 100 on one host, scheduled on
+  # night D1 behind W6.0's 800-day first batch so the daily cap is not breached.
+  # One sequential chain per host is the launcher's job; this step contributes a
+  # leg to it and starts nothing itself.
+  chain: savant
+  leg_position: 2
+  leg_after: [W6.0, W4.2]
+  leg_before: [W4.4]
+  # The launcher may stop the leg early. Stopping is safe at any point: every
+  # body is cached by absump.http under its URL, so resuming costs only the
+  # views not yet on disk, and the DT-24 views are first.
+  resumable: true
+
+# WHAT A 2026 VIEW IS. The page is a whole-season aggregate and carries no date
+# parameter, so a 2026 view pulled after 2026-09-21 necessarily aggregates days
+# inside the sealed window. The cutoff cannot be expressed in this address. The
+# contract records the same fact under `pull.season_2026_is_a_season_aggregate`;
+# the sweep marks every 2026 view as a sealed-set input and prints the mark, so
+# the aggregate is dated rather than assumed. The 2025 views are unaffected.
+# This is W2.11's recorded fact carried through, not a new decision.
+sealed_set_seasons:
+  - 2026
+
+# The 28. `id` is level-season-challenge_type. `dt24: true` marks the three
+# views contracts/savant_absdata.yml carries baseline counts for; the sweep
+# asserts that set equals the contract's `dt24.views` at the contract's own
+# level and season, so a fourth true here, or a missing one, fails.
+#
+# RECORDED OBSERVATION, not an assertion: serverParams on the MLB page declares
+# `validSeasons: [2026]`, so the MLB 2025 views may come back with no records at
+# all. The season checkbox offers 2025 and the SOP counts it among the 28, so it
+# is swept. An empty view is reported by the sweep and is not a failure: no
+# record count for any view outside the three DT-24 views was ever measured, and
+# a number nobody measured is not an assertion.
+views:
+  - {order: 1,  id: mlb-2026-batter,         level: mlb, season: 2026, challenge_type: batter,        dt24: true}
+  - {order: 2,  id: mlb-2026-catcher,        level: mlb, season: 2026, challenge_type: catcher,       dt24: true}
+  - {order: 3,  id: mlb-2026-pitcher,        level: mlb, season: 2026, challenge_type: pitcher,       dt24: true}
+  - {order: 4,  id: mlb-2026-batting-team,   level: mlb, season: 2026, challenge_type: batting-team,  dt24: false}
+  - {order: 5,  id: mlb-2026-catching-team,  level: mlb, season: 2026, challenge_type: catching-team, dt24: false}
+  - {order: 6,  id: mlb-2026-team-summary,   level: mlb, season: 2026, challenge_type: team-summary,  dt24: false}
+  - {order: 7,  id: mlb-2026-league,         level: mlb, season: 2026, challenge_type: league,        dt24: false}
+  - {order: 8,  id: mlb-2025-batter,         level: mlb, season: 2025, challenge_type: batter,        dt24: false}
+  - {order: 9,  id: mlb-2025-batting-team,   level: mlb, season: 2025, challenge_type: batting-team,  dt24: false}
+  - {order: 10, id: mlb-2025-catcher,        level: mlb, season: 2025, challenge_type: catcher,       dt24: false}
+  - {order: 11, id: mlb-2025-pitcher,        level: mlb, season: 2025, challenge_type: pitcher,       dt24: false}
+  - {order: 12, id: mlb-2025-catching-team,  level: mlb, season: 2025, challenge_type: catching-team, dt24: false}
+  - {order: 13, id: mlb-2025-team-summary,   level: mlb, season: 2025, challenge_type: team-summary,  dt24: false}
+  - {order: 14, id: mlb-2025-league,         level: mlb, season: 2025, challenge_type: league,        dt24: false}
+  - {order: 15, id: aaa-2026-batter,         level: aaa, season: 2026, challenge_type: batter,        dt24: false}
+  - {order: 16, id: aaa-2026-batting-team,   level: aaa, season: 2026, challenge_type: batting-team,  dt24: false}
+  - {order: 17, id: aaa-2026-catcher,        level: aaa, season: 2026, challenge_type: catcher,       dt24: false}
+  - {order: 18, id: aaa-2026-pitcher,        level: aaa, season: 2026, challenge_type: pitcher,       dt24: false}
+  - {order: 19, id: aaa-2026-catching-team,  level: aaa, season: 2026, challenge_type: catching-team, dt24: false}
+  - {order: 20, id: aaa-2026-team-summary,   level: aaa, season: 2026, challenge_type: team-summary,  dt24: false}
+  - {order: 21, id: aaa-2026-league,         level: aaa, season: 2026, challenge_type: league,        dt24: false}
+  - {order: 22, id: aaa-2025-batter,         level: aaa, season: 2025, challenge_type: batter,        dt24: false}
+  - {order: 23, id: aaa-2025-batting-team,   level: aaa, season: 2025, challenge_type: batting-team,  dt24: false}
+  - {order: 24, id: aaa-2025-catcher,        level: aaa, season: 2025, challenge_type: catcher,       dt24: false}
+  - {order: 25, id: aaa-2025-pitcher,        level: aaa, season: 2025, challenge_type: pitcher,       dt24: false}
+  - {order: 26, id: aaa-2025-catching-team,  level: aaa, season: 2025, challenge_type: catching-team, dt24: false}
+  - {order: 27, id: aaa-2025-team-summary,   level: aaa, season: 2025, challenge_type: team-summary,  dt24: false}
+  - {order: 28, id: aaa-2025-league,         level: aaa, season: 2025, challenge_type: league,        dt24: false}
