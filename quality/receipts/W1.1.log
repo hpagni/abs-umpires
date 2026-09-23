@@ -1,0 +1,14 @@
+ok    disk: 49.2 GiB free on /System/Volumes/Data (floor 15 GiB)
+ok    path: uv -> /Users/hudsonpagni/.local/bin/uv
+ok    path: R -> /usr/local/bin/R
+ok    path: Rscript -> /usr/local/bin/Rscript
+ok    path: duckdb -> /opt/homebrew/bin/duckdb
+ok    path: git -> /usr/bin/git
+ok    path: gh -> /Users/hudsonpagni/.local/bin/gh
+ok    path: jq -> /opt/homebrew/bin/jq
+ok    path: curl -> /usr/bin/curl
+ok    path: make -> /usr/bin/make
+info  make: GNU Make 3.81
+ok    env: DYLD_LIBRARY_PATH is empty
+ok    cmdstan: /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
+PREFLIGHT OK

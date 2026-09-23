@@ -1,0 +1,140 @@
+{
+  "n_review_records": 5,
+  "n_challenges": 4,
+  "n_filtered_non_mj": 1,
+  "standing_is_evaluated_on": "call_original",
+  "review_records": [
+    {
+      "at_bat_number": 4,
+      "locations": [
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "review_type": "MJ"
+    },
+    {
+      "at_bat_number": 5,
+      "locations": [
+        "about.hasReview",
+        "allPlays[].reviewDetails"
+      ],
+      "review_type": "MJ"
+    },
+    {
+      "at_bat_number": 6,
+      "locations": [
+        "about.hasReview",
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "review_type": "MJ"
+    },
+    {
+      "at_bat_number": 7,
+      "locations": [
+        "about.hasReview",
+        "allPlays[].reviewDetails"
+      ],
+      "review_type": "MF"
+    },
+    {
+      "at_bat_number": 8,
+      "locations": [
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "review_type": "MJ"
+    }
+  ],
+  "challenges": [
+    {
+      "at_bat_number": 4,
+      "pitch_seq": 3,
+      "statcast_pitch_number": 3,
+      "feed_pitch_number": 3,
+      "play_id": "00000000-0000-4000-8000-999001003003",
+      "review_locations": [
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "resolved_by": "event",
+      "review_type": "MJ",
+      "call_code_stored": "C",
+      "call_final": "strike",
+      "is_overturned": false,
+      "call_original": "strike",
+      "challenger_id": 6004,
+      "challenger_role": "batter",
+      "challenge_team_id": 901,
+      "standing_side": "batting",
+      "standing_team_id": 901
+    },
+    {
+      "at_bat_number": 5,
+      "pitch_seq": 3,
+      "statcast_pitch_number": 3,
+      "feed_pitch_number": 3,
+      "play_id": "00000000-0000-4000-8000-999001004003",
+      "review_locations": [
+        "about.hasReview",
+        "allPlays[].reviewDetails"
+      ],
+      "resolved_by": "last_isPitch",
+      "review_type": "MJ",
+      "call_code_stored": "C",
+      "call_final": "strike",
+      "is_overturned": false,
+      "call_original": "strike",
+      "challenger_id": 6005,
+      "challenger_role": "batter",
+      "challenge_team_id": 901,
+      "standing_side": "batting",
+      "standing_team_id": 901
+    },
+    {
+      "at_bat_number": 6,
+      "pitch_seq": 3,
+      "statcast_pitch_number": 3,
+      "feed_pitch_number": 3,
+      "play_id": "00000000-0000-4000-8000-999001005003",
+      "review_locations": [
+        "about.hasReview",
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "resolved_by": "event",
+      "review_type": "MJ",
+      "call_code_stored": "C",
+      "call_final": "strike",
+      "is_overturned": true,
+      "call_original": "ball",
+      "challenger_id": 7003,
+      "challenger_role": "catcher",
+      "challenge_team_id": 900,
+      "standing_side": "fielding",
+      "standing_team_id": 900
+    },
+    {
+      "at_bat_number": 8,
+      "pitch_seq": 2,
+      "statcast_pitch_number": 2,
+      "feed_pitch_number": 2,
+      "play_id": "00000000-0000-4000-8000-999001007002",
+      "review_locations": [
+        "playEvents[].details.hasReview",
+        "playEvents[].reviewDetails"
+      ],
+      "resolved_by": "event",
+      "review_type": "MJ",
+      "call_code_stored": "C",
+      "call_final": "strike",
+      "is_overturned": false,
+      "call_original": "strike",
+      "challenger_id": null,
+      "challenger_role": "unknown",
+      "challenge_team_id": 901,
+      "standing_side": "batting",
+      "standing_team_id": 901
+    }
+  ]
+}

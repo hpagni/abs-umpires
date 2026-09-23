@@ -1,0 +1,303 @@
+{
+  "gamePk": 999002,
+  "gameData": {
+    "game": {
+      "pk": 999002,
+      "type": "R",
+      "season": "2024"
+    },
+    "datetime": {
+      "officialDate": "2024-05-10"
+    },
+    "teams": {
+      "away": {
+        "id": 901,
+        "abbreviation": "SYA",
+        "name": "Synthetic AAA Away"
+      },
+      "home": {
+        "id": 900,
+        "abbreviation": "SYH",
+        "name": "Synthetic AAA Home"
+      }
+    },
+    "absChallenges": {
+      "home": {
+        "remaining": 1,
+        "usedFailed": 2
+      },
+      "away": {
+        "remaining": 2,
+        "usedFailed": 0
+      }
+    }
+  },
+  "liveData": {
+    "plays": {
+      "allPlays": [
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "AAA Synthetic Batter 1 called out on strikes."
+          },
+          "about": {
+            "atBatIndex": 0,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 1,
+            "isComplete": true,
+            "hasReview": true
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 8000,
+              "fullName": "AAA Synthetic Batter 1",
+              "link": "/api/v1/people/8000"
+            },
+            "pitcher": {
+              "id": 8100,
+              "fullName": "AAA Synthetic Pitcher 1",
+              "link": "/api/v1/people/8100"
+            }
+          },
+          "pitchIndex": [
+            0
+          ],
+          "actionIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.35,
+                  "pZ": 2.1
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999002000000",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": false,
+                "reviewType": "MJ",
+                "challengeTeamId": 900,
+                "inProgress": false,
+                "remainingChallenges": {
+                  "home": 3,
+                  "away": 3
+                }
+              }
+            }
+          ],
+          "atBatIndex": 0
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "AAA Synthetic Batter 2 called out on strikes."
+          },
+          "about": {
+            "atBatIndex": 1,
+            "halfInning": "bottom",
+            "isTopInning": false,
+            "inning": 2,
+            "isComplete": true,
+            "hasReview": true
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 8001,
+              "fullName": "AAA Synthetic Batter 2",
+              "link": "/api/v1/people/8001"
+            },
+            "pitcher": {
+              "id": 8101,
+              "fullName": "AAA Synthetic Pitcher 2",
+              "link": "/api/v1/people/8101"
+            }
+          },
+          "pitchIndex": [
+            0
+          ],
+          "actionIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.36,
+                  "pZ": 2.11
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999002001000",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": true,
+                "reviewType": "MJ",
+                "challengeTeamId": 901,
+                "inProgress": false,
+                "remainingChallenges": {
+                  "home": 2,
+                  "away": 3
+                }
+              }
+            }
+          ],
+          "atBatIndex": 1
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "AAA Synthetic Batter 3 called out on strikes."
+          },
+          "about": {
+            "atBatIndex": 2,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 3,
+            "isComplete": true,
+            "hasReview": true
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 8002,
+              "fullName": "AAA Synthetic Batter 3",
+              "link": "/api/v1/people/8002"
+            },
+            "pitcher": {
+              "id": 8102,
+              "fullName": "AAA Synthetic Pitcher 3",
+              "link": "/api/v1/people/8102"
+            }
+          },
+          "pitchIndex": [
+            0
+          ],
+          "actionIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.37,
+                  "pZ": 2.12
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999002002000",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": false,
+                "reviewType": "MJ",
+                "challengeTeamId": 900,
+                "inProgress": false,
+                "remainingChallenges": {
+                  "home": 2,
+                  "away": 3
+                }
+              }
+            }
+          ],
+          "atBatIndex": 2
+        }
+      ],
+      "playsByInning": []
+    }
+  }
+}

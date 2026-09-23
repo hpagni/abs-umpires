@@ -1,0 +1,16 @@
+{
+  "remaining_path": "liveData.plays.allPlays[].playEvents[].reviewDetails.remainingChallenges",
+  "allotment_by_playbyplay_max": {
+    "home": 3,
+    "away": 3
+  },
+  "allotment_implied_by_end_block": {
+    "home": 3,
+    "away": 2
+  },
+  "expected_allotment": 3,
+  "audit_rows": [
+    "away"
+  ],
+  "n_mj_records_without_player": 3
+}

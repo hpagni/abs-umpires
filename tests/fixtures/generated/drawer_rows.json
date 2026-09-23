@@ -1,0 +1,54 @@
+[
+  {
+    "game_pk": 999001,
+    "play_id": "00000000-0000-4000-8000-999001003003",
+    "plate_X": 0.1149,
+    "plate_Z": 2.05,
+    "strikeZoneTop": 3.4,
+    "strikeZoneBottom": 1.71588785,
+    "pre_ball_count": 1,
+    "pre_strike_count": 1,
+    "pitcher": 5001,
+    "fielder_2": 7003,
+    "isOverturned": false
+  },
+  {
+    "game_pk": 999001,
+    "play_id": "00000000-0000-4000-8000-999001004003",
+    "plate_X": -0.83,
+    "plate_Z": 1.82,
+    "strikeZoneTop": 3.4,
+    "strikeZoneBottom": 1.71588785,
+    "pre_ball_count": 0,
+    "pre_strike_count": 2,
+    "pitcher": 5001,
+    "fielder_2": 7003,
+    "isOverturned": false
+  },
+  {
+    "game_pk": 999001,
+    "play_id": "00000000-0000-4000-8000-999001005003",
+    "plate_X": 0.1151,
+    "plate_Z": 2.05,
+    "strikeZoneTop": 3.4,
+    "strikeZoneBottom": 1.71588785,
+    "pre_ball_count": 1,
+    "pre_strike_count": 1,
+    "pitcher": 5001,
+    "fielder_2": 7003,
+    "isOverturned": true
+  },
+  {
+    "game_pk": 999001,
+    "play_id": "00000000-0000-4000-8000-999001007002",
+    "plate_X": 0.91,
+    "plate_Z": 3.3,
+    "strikeZoneTop": 3.4,
+    "strikeZoneBottom": 1.71588785,
+    "pre_ball_count": 1,
+    "pre_strike_count": 0,
+    "pitcher": 5001,
+    "fielder_2": 7003,
+    "isOverturned": false
+  }
+]
