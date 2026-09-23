@@ -1,0 +1,30 @@
+# config/throttle.yml -- the one throttle policy for this project.
+#
+# SOP section 2.3 (request etiquette) and section 5A item A3 state this table
+# once. Section 10.1, W6.0, R-07 and R-08 are DERIVED from these numbers and
+# never restate them. Owner decision D-63. tests/unit/test_throttle_budget.py
+# (RP-09) asserts this file and those tables agree row by row.
+#
+# absump.http and R/lib/http.R read this file and nothing else. No delay, cap
+# or User-Agent literal appears anywhere else in the repository.
+user_agent: "abs-umpires-research/0.1 (academic research project; polite single-day pulls; github.com/hpagni/abs-umpires)"
+timeout_seconds: 30
+max_attempts: 4                  # 5xx and timeouts only; a 4xx is never retried; a 403 is FATAL
+backoff_base_seconds: 4          # exponential 2/4/8/16/32 on 429, 500, 502, 503, 504
+min_interval_seconds:            # section 2.3 table; no other value appears anywhere
+  baseballsavant.mlb.com: 10.0
+  statsapi.mlb.com: 4.0
+  www.retrosheet.org: 10.0
+  api.the-odds-api.com: 10.0
+  api.elections.kalshi.com: 10.0
+  statds.org: 10.0
+  default: 10.0
+daily_request_budget:
+  baseballsavant.mlb.com: 800
+  statsapi.mlb.com: 3000
+  www.retrosheet.org: 500
+  api.the-odds-api.com: 500
+  api.elections.kalshi.com: 500
+  statds.org: 500
+  default: 500
+cache_dir: data/raw

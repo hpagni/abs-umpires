@@ -1,0 +1,77 @@
+# dbt profiles for the absump project. Copy to ~/.dbt/profiles.yml, or point
+# DBT_PROFILES_DIR at this directory after copying it to profiles.yml.
+#
+# The four targets are fixed by the SOP section 2.1 resolution: dev is the local
+# DuckDB file, prod is MotherDuck, ci is the fixture build, sealed is the build
+# that runs after the unseal ceremony. The local target is named dev, not local.
+#
+# The settings below mirror src/absump/db.py::connect(). The two must not drift;
+# tests/unit/test_paths.py compares them value by value.
+#
+#   memory_limit '12GB'              18 GB machine, leave 6 for R/Stan
+#   threads 8                        11 cores, leave 3 for the OS and an R fit
+#   temp_directory data/tmp          DuckDB spill, relative to the repository root
+#   preserve_insertion_order false   also required before ROW_GROUP_SIZE_BYTES
+#   extensions httpfs, parquet
+#
+# GD-11: the dev target must have no attached database resolving under
+# data/sealed/. There is no attach: block here, and none may be added to dev.
+# Sealed rows reach a model only through the sealed target, after W9.7.
+
+absump:
+  target: dev
+  outputs:
+
+    dev:
+      type: duckdb
+      path: 'warehouse/abs.duckdb'
+      threads: 8
+      extensions:
+        - httpfs
+        - parquet
+      settings:
+        memory_limit: '12GB'
+        temp_directory: 'data/tmp'
+        preserve_insertion_order: false
+
+    prod:
+      # MotherDuck Lite. MOTHERDUCK_TOKEN is unset in this file on purpose; an
+      # empty token makes dbt debug --target prod fail with an auth error, which
+      # is the signal ops/smoke.sh turns into a skip.
+      type: duckdb
+      path: 'md:absump'
+      threads: 8
+      extensions:
+        - httpfs
+        - parquet
+      settings:
+        motherduck_token: "{{ env_var('MOTHERDUCK_TOKEN', '') }}"
+        memory_limit: '12GB'
+        preserve_insertion_order: false
+
+    ci:
+      # The fixture build: in memory, over the 200-row synthetic seed. No file,
+      # no lake, no network. Sized for a GitHub-hosted runner, not this Mac.
+      type: duckdb
+      path: ':memory:'
+      threads: 4
+      extensions:
+        - parquet
+      settings:
+        memory_limit: '8GB'
+        preserve_insertion_order: false
+
+    sealed:
+      # The post-unseal build (W9.7). It writes the same warehouse file as dev.
+      # No agent runs this target; the owner does, in one shell, after the
+      # ceremony, and nothing here unlocks the seal on its own.
+      type: duckdb
+      path: 'warehouse/abs.duckdb'
+      threads: 8
+      extensions:
+        - httpfs
+        - parquet
+      settings:
+        memory_limit: '12GB'
+        temp_directory: 'data/tmp'
+        preserve_insertion_order: false
