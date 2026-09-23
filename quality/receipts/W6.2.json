@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked python -m absump.ingest.umpires --check",
+  "duration_s": 1,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "a8355cbaad847b07150387f1cd0a7ee9cf50eadc",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W6.2.log",
+  "owner": "W6",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W6.2",
+  "timestamp_madrid": "2026-09-23 10:40:55 CEST",
+  "title": "Umpire assignments resolved to the per-game home-plate umpire"
+}

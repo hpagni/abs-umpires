@@ -1,0 +1,35 @@
+# W6.2, umpire assignments resolved to one home-plate umpire per played game.
+# W2.5 owns the two interim tables and owns DT-14. W6.2 owns the resolution the
+# study runs on and the published table out/tables/umpire_season_counts.csv.
+#
+# The verify command is offline. It reads local files and sends nothing, and it
+# writes nothing: --check recomputes the table and compares, it never publishes.
+#
+# What it gates, per level and season:
+#   DT-14, as a regression refresh. Exactly one Home Plate official per played
+#     game, missing_hp 0, 2022 through 2026. DT-14 belongs to W2.5 and is run
+#     again here against the interim table rather than the payload W2.5 read it
+#     from, so a defect between the extractor and the table the study reads is
+#     caught on this side too. Measured: 18,754 games resolved, missing_hp 0.
+#   Selection by officialType and never by array index. The resolved umpire is
+#     compared game by game with the one the payload labels Home Plate, and the
+#     index histogram must still span more than one position, because a fixed
+#     position is the one condition under which an index read would look right.
+#   official_id one-to-one with official_name inside a season, both directions.
+#   75 to 110 distinct umpires per season, with the two AAA counts recorded in
+#     absump.ingest.schedule, 71 for 2023 and 70 for 2025, pinned exactly.
+#   The seal. No resolved row falls after the cutoff in paths.LAST_OPEN_DATE.
+#   The published CSV equals the table recomputed from the lake, byte for byte.
+# With no interim table on disk it still gates the committed CSV on its own
+# arithmetic, so a clean clone proves the step.
+#
+# Mutation-checked on 2026-09-23, six mutations and six failures: a resolver
+# that takes element 0 of the officials array, which is wrong in 2,184 of 2,430
+# MLB 2022 games; a wrong distinct_umpires; a non-zero missing_home_plate; a
+# sealed last_official_date; the CSV absent; the CSV drifting from the lake.
+- id: W6.2
+  title: "Umpire assignments resolved to the per-game home-plate umpire"
+  verify: "uv run --locked python -m absump.ingest.umpires --check"
+  expect_exit: 0
+  owner: W6
+  needs: src/absump/ingest/umpires.py, src/absump/ingest/schedule.py, out/tables/umpire_season_counts.csv

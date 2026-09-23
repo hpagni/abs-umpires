@@ -1,0 +1,42 @@
+# W6.0. The Statcast backfill runner. Owned by W6, merged into quality/steps.yml
+# by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# This row replaces the scaffolding row, which read
+# `--plan --through 2026-09-21` and told W6 it may narrow that command but not
+# widen it into something that pulls. The command below issues nothing either,
+# and it is narrower in the way that matters: there is no `--through` flag at
+# all. The cutoff is absump.paths.LAST_OPEN_DATE, so no argument can move it,
+# and a sealed day is refused when the plan is built as well as when the URL is.
+#
+# The verify command has two halves and needs both.
+#
+# `--check` is the data-bound half. It builds the plan from the schedule
+# payloads in the lake, then runs seven assertion groups over what is actually
+# on disk: the scope is 908 open game-days over 2022-2026 with nothing past the
+# 2026-09-21 cutoff (K-01), the queue is strictly newest-first (K-02), every day
+# already in the lake and every day the staging manifest records as ok is
+# subtracted (K-03), tonight is a prefix of the queue and fits inside what is
+# left of the Savant daily cap (K-04), from an empty lake night one covers all
+# of 2023-2026 and night two is the 2022 tail (K-05), DT-01 and DT-02 hold over
+# all 799 stored days -- one header digest, max 5,412 rows against the 25,000
+# cap (K-06), and the resume marker round-trips and names the right next day
+# (K-07). It fails on an empty lake rather than passing on nothing.
+#
+# The pytest module is the logic half, 44 synthetic tests with no data and no
+# connection, so it still runs in a clean clone. It is what proves the guards
+# fire: no real day comes near the 25,000-row cap and no real night stops at a
+# cap of five. It carries DT-01, DT-02 and UT-14 through the runner's own path,
+# the cap stop, the resume point, the one-chain mutex and the mutations of the
+# runner that each have to turn the gate red.
+#
+# Mutation-checked on 2026-09-23, five mutations, each one caught: oldest-first
+# ordering (4 tests and 6 check groups red), a queue that subtracts neither the
+# lake nor the staging manifest (5 tests, 3 check groups), no cap pre-flight so
+# the chain runs until the client refuses it (2 tests), no resume marker
+# (1 test) and no mutex, so a second chain runs beside the first (1 test).
+- id: W6.0
+  title: "Statcast backfill runner, newest-first, two nights under the 800/day Savant cap"
+  verify: "uv run --locked python -m absump.ingest.pull_statcast --check && uv run --locked pytest tests/data/test_resume.py -q"
+  expect_exit: 0
+  owner: W6
+  needs: src/absump/ingest/pull_statcast.py, ops/night_savant.sh, tests/data/test_resume.py, config/throttle.yml

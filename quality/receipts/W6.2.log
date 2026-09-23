@@ -1,0 +1,9 @@
+mlb 2022  played=2430  resolved=2430  umpires=96   missing_hp=0  hp_index={0: 251, 1: 831, 2: 820, 3: 577} index0_wrong=2184
+mlb 2023  played=2430  resolved=2430  umpires=94   missing_hp=0  hp_index={0: 934, 1: 459, 2: 429, 3: 654} index0_wrong=1515
+mlb 2024  played=2429  resolved=2429  umpires=90   missing_hp=0  hp_index={0: 853, 1: 135, 2: 819, 3: 661} index0_wrong=1598
+mlb 2025  played=2430  resolved=2430  umpires=92   missing_hp=0  hp_index={0: 760, 1: 969, 2: 343, 3: 392} index0_wrong=1681
+mlb 2026  played=2342  resolved=2342  umpires=91   missing_hp=0  hp_index={0: 944, 1: 712, 2: 358, 3: 355} index0_wrong=1408
+aaa 2023  played=2229  resolved=2229  umpires=71   missing_hp=0  hp_index={0: 1125, 1: 443, 2: 662, 3: 81} index0_wrong=1152
+aaa 2024  played=2232  resolved=2232  umpires=87   missing_hp=0  hp_index={0: 1153, 1: 532, 2: 619, 3: 21} index0_wrong=1126
+aaa 2025  played=2232  resolved=2232  umpires=70   missing_hp=0  hp_index={0: 1161, 1: 657, 2: 465, 3: 41} index0_wrong=1123
+W6.2 8 season(s), 18754 games resolved to a home-plate umpire, DT-14 missing_hp=0, 0 failure(s)

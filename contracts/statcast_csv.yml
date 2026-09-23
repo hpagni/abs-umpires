@@ -1,0 +1,421 @@
+# contracts/statcast_csv.yml -- the data contract for the Statcast Search daily CSV.
+#
+# SOP W2.9. One request per game-day against Baseball Savant's Statcast Search
+# CSV export. This file is the written form of that step's endpoint contract:
+# the URL, the response shape, the traps, and every number the SOP measured.
+# src/absump/ingest/statcast_day.py reads it; tests/data/test_statcast_days.py
+# asserts it against the raw lake.
+#
+# Numbers here are measurements, not settings. Each one carries the day it was
+# measured on. SOP section 0.5 rule 4: a number that came from an endpoint is
+# never hard-coded without the contract line that produced it, and this file is
+# that line.
+
+step: W2.9
+title: "Statcast MLB daily CSV, 2022-2026, 2026 cut at 2026-09-21"
+owner: W2
+
+endpoint:
+  host: baseballsavant.mlb.com
+  path: /statcast_search/csv
+  method: GET
+  # The URL the SOP states, parameter for parameter and in this order. hfSea is
+  # "{season}|" percent-encoded. game_date_gt and game_date_lt are the same day,
+  # so the window is one day inclusive.
+  query_order:
+    - all
+    - type
+    - player_type
+    - min_pitches
+    - min_results
+    - group_by
+    - sort_col
+    - player_event_sort
+    - sort_order
+    - hfSea
+    - game_date_gt
+    - game_date_lt
+  query_fixed:
+    all: "true"
+    type: details
+    player_type: batter
+    min_pitches: "0"
+    min_results: "0"
+    group_by: name
+    sort_col: pitches
+    player_event_sort: api_p_release_speed
+    sort_order: desc
+  # No hfGT parameter. The default URL already includes the postseason:
+  # 2025-10-25 returned 224 rows for game_pk 813026, which the schedule confirms
+  # is gameType W. An hfGT=R| filter silently drops every postseason game and is
+  # the reason the 2026-09-23 staging cache had to be re-validated rather than
+  # trusted (see provenance below).
+  hfgt_parameter: absent
+
+response:
+  status: 200
+  content_type: "application/download; charset=utf-8"
+  compressed: false          # Savant does not compress this endpoint; the cost is fixed
+  encoding: utf-8-sig        # UT-14. The body carries a UTF-8 BOM, bytes EF BB BF
+  line_terminator: "\n"      # LF, and the last row has no terminator at all
+  ttfb_seconds: 7.0          # measured 2026-09-16
+  total_seconds: 7.7         # measured 2026-09-16
+
+header:
+  columns: 119
+  line_bytes_with_bom: 1825
+  # DT-02. The digest and what exactly is hashed are in the committed fixture.
+  fixture: tests/fixtures/statcast_header.sha256
+  sha256: c1703bd38919ac5304ed7f1e0f3eb225f385b969203db316cde88adc409462e3
+  sha256_nobom: 15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c
+  # Byte-identical across every day on disk and identical to the minors CSV.
+  # Verified 2026-09-23 over 799 MLB days, seasons 2022 through 2026: one digest.
+  names:
+    - pitch_type
+    - game_date
+    - release_speed
+    - release_pos_x
+    - release_pos_z
+    - player_name
+    - batter
+    - pitcher
+    - events
+    - description
+    - spin_dir
+    - spin_rate_deprecated
+    - break_angle_deprecated
+    - break_length_deprecated
+    - zone
+    - des
+    - game_type
+    - stand
+    - p_throws
+    - home_team
+    - away_team
+    - type
+    - hit_location
+    - bb_type
+    - balls
+    - strikes
+    - game_year
+    - pfx_x
+    - pfx_z
+    - plate_x
+    - plate_z
+    - on_3b
+    - on_2b
+    - on_1b
+    - outs_when_up
+    - inning
+    - inning_topbot
+    - hc_x
+    - hc_y
+    - tfs_deprecated
+    - tfs_zulu_deprecated
+    - umpire
+    - sv_id
+    - vx0
+    - vy0
+    - vz0
+    - ax
+    - ay
+    - az
+    - sz_top
+    - sz_bot
+    - hit_distance_sc
+    - launch_speed
+    - launch_angle
+    - effective_speed
+    - release_spin_rate
+    - release_extension
+    - game_pk
+    - fielder_2
+    - fielder_3
+    - fielder_4
+    - fielder_5
+    - fielder_6
+    - fielder_7
+    - fielder_8
+    - fielder_9
+    - release_pos_y
+    - estimated_ba_using_speedangle
+    - estimated_woba_using_speedangle
+    - woba_value
+    - woba_denom
+    - babip_value
+    - iso_value
+    - launch_speed_angle
+    - at_bat_number
+    - pitch_number
+    - pitch_name
+    - home_score
+    - away_score
+    - bat_score
+    - fld_score
+    - post_away_score
+    - post_home_score
+    - post_bat_score
+    - post_fld_score
+    - if_fielding_alignment
+    - of_fielding_alignment
+    - spin_axis
+    - delta_home_win_exp
+    - delta_run_exp
+    - bat_speed
+    - swing_length
+    - miss_distance
+    - estimated_slg_using_speedangle
+    - delta_pitcher_run_exp
+    - hyper_speed
+    - home_score_diff
+    - bat_score_diff
+    - home_win_exp
+    - bat_win_exp
+    - age_pit_legacy
+    - age_bat_legacy
+    - age_pit
+    - age_bat
+    - n_thruorder_pitcher
+    - n_priorpa_thisgame_player_at_bat
+    - pitcher_days_since_prev_game
+    - batter_days_since_prev_game
+    - pitcher_days_until_next_game
+    - batter_days_until_next_game
+    - api_break_z_with_gravity
+    - api_break_x_arm
+    - api_break_x_batter_in
+    - arm_angle
+    - attack_angle
+    - attack_direction
+    - swing_path_tilt
+    - intercept_ball_minus_batter_pos_x_inches
+    - intercept_ball_minus_batter_pos_y_inches
+
+traps:
+  bom:
+    id: UT-14
+    note: >-
+      Open with encoding utf-8-sig. Plain utf-8 leaves the BOM on the first
+      column name: it becomes U+FEFF followed by pitch_type, and never
+      matches "pitch_type" again. No literal U+FEFF is written into this
+      file, so that a grep for one finds data and not prose.
+  row_cap:
+    id: UT-15
+    cap: 25000
+    note: >-
+      The 25,000-row cap is silent and keeps the newest rows. A 30-day window
+      returns exactly 25,000 rows with no truncation header and the oldest days
+      missing. Assert rows < 25000 per day.
+    max_observed_rows: 5412
+    max_observed_day: "2023-08-19"
+    max_observed_games: 18
+    max_observed_note: >-
+      Measured 2026-09-23 over all 799 MLB days on disk, seasons 2022-2026.
+      SOP W2.9 states "max observed on a full slate 4,500" and gives 4,500 rows
+      for 2026-09-16 beside a byte count of 3,093,051. Two corrections, neither
+      of which moves the gate. First, 2026-09-16 has 4,501 rows: the byte count
+      reproduces exactly, the file has no trailing newline, so "wc -l minus
+      one" undercounts by one and that is the arithmetic the 4,500 came from.
+      Second, 4,500 is not the maximum: a Saturday slate with doubleheaders is
+      wider, and 2023-08-19 is 5,412 rows over 18 games. The gate is
+      rows < 25000, and the widest day on disk uses 22 per cent of it.
+  umpire_column:
+    present: true
+    non_empty_rows: 0
+    note: >-
+      csv-docs calls it "Deprecated field from old tracking system". 0 of 4,427
+      non-empty on 2026-09-15, and the same on 2025 and 2024. Umpires come from
+      W2.5, never from here.
+  abs_columns:
+    present: false
+    note: There is no ABS or challenge column of any kind in this CSV.
+  game_type_in_the_lake:
+    observed: {R: 3108070}
+    note: >-
+      Measured 2026-09-23 over all 799 days on disk: every row is gameType R.
+      That is the staging cache's hfGT=R| filter, not the endpoint. The
+      canonical URL carries no hfGT and returns the postseason. Until W6.0
+      backfills the postseason days the lake is regular season only, and no
+      analysis may treat it as a complete 2022-2026 record.
+  untracked_rows:
+    columns:
+      - pitch_type
+      - plate_x
+      - sz_bot
+      - sz_top
+    note: >-
+      Blank together, never one without the others. Filter them before any
+      numeric coercion, keep them in statcast_pitch with tracked = false, and
+      exclude them from the called-pitch mart. Left in, they previously inflated
+      a "batters with more than one distinct sz_top" count from 0 to 7.
+    measured_2026_09_15:
+      rows: 20
+      description:
+        automatic_ball: 19
+        foul: 1
+      note: >-
+        19 automatic_ball, which is an intentional walk or a pitch-timer ball,
+        plus one untracked foul. plate_z and zone are blank on exactly the same
+        20 rows.
+    measured_lake_2026_09_23:
+      # All 799 days on disk, seasons 2022-2026.
+      rows: 3108070
+      untracked: 11527
+      share: 0.003709
+      days_with_any: 777
+      worst_day: "2024-05-23"
+      worst_day_untracked: 180
+      worst_day_rows: 2485
+      worst_day_one_game: 167
+      description:
+        automatic_ball: 9750
+        automatic_strike: 623
+        ball: 379
+        foul: 223
+        hit_into_play: 200
+        called_strike: 182
+        swinging_strike: 118
+        blocked_ball: 30
+        foul_tip: 13
+        swinging_strike_blocked: 8
+        hit_by_pitch: 1
+      note: >-
+        SOP W2.9 describes the untracked rows from one day, 2026-09-15, where
+        they are 19 automatic_ball and one foul. That does not generalise. Over
+        the whole lake 1,777 of the 11,527 untracked rows are ordinary tracked
+        pitch types whose tracking failed, 591 of them called pitches, and they
+        concentrate in whole-game outages: 245 rows in game_pk 717265 on
+        2023-07-25, 167 in 746474 on 2024-05-23, 115 in 777317 on 2025-06-29.
+        The filter is the same either way -- the four tracking columns blank
+        together -- but a day is not safe merely because its untracked count is
+        small, and a called-pitch mart built without this filter would carry 591
+        called pitches with no plate_x. automatic_strike, the pitch-timer
+        strike, does not appear at all in the SOP's 2026-09-15 description list
+        and is 623 rows across the lake.
+
+called_pitch:
+  descriptions:
+    - called_strike
+    - ball
+    - blocked_ball
+  measured_2026_09_15:
+    rows: 2281
+    complete:            # 100.0% non-empty over the called-pitch population
+      - plate_x
+      - plate_z
+      - sz_top
+      - sz_bot
+      - zone
+      - fielder_2
+      - delta_run_exp
+      - delta_home_win_exp
+      - balls
+      - strikes
+      - outs_when_up
+      - inning
+      - stand
+      - p_throws
+    partial:
+      arm_angle: 2280    # of 2281
+    empty:
+      bat_speed: 0       # of 2281; bat speed is a swing measurement
+
+description_counts:
+  # Every value of `description` on a full slate, 2026-09-15, 4,427 rows.
+  "2026-09-15":
+    ball: 1462
+    foul: 801
+    hit_into_play: 764
+    called_strike: 719
+    swinging_strike: 466
+    blocked_ball: 100
+    foul_tip: 41
+    swinging_strike_blocked: 27
+    automatic_ball: 19
+    hit_by_pitch: 14
+    foul_bunt: 10
+    missed_bunt: 3
+    pitchout: 1
+
+measured_days:
+  # bytes is the uncompressed body as served. rows is what a CSV parser counts,
+  # header excluded. games is the count of distinct game_pk.
+  - date: "2026-09-16"
+    bytes: 3093051
+    rows: 4501
+    columns: 119
+    games: 15
+    sop_states_rows: 4500       # see traps.row_cap.max_observed_note
+  - date: "2026-09-15"
+    bytes: 3033672
+    rows: 4427
+    columns: 119
+    games: 15
+  - date: "2025-09-15"
+    bytes: 1871998
+    rows: 2739
+    columns: 119
+    games: 9
+  - date: "2024-09-15"
+    bytes: 2996245
+    rows: 4380
+    columns: 119
+    games: 15
+
+unverified:
+  # SOP W2.9 states these and the day is not on disk yet. 2022 is staged only
+  # through 2022-06-14, so 2022-09-15 has never been pulled by this project.
+  # W6.0's backfill lands it; this block is what the test will then assert.
+  - date: "2022-09-15"
+    rows: 2299
+    columns: 119
+    called_pitches: 1186
+    distinct_sz_top_sz_bot_ratios: 1105
+
+seal:
+  # SOP section 2.4 and absump.paths.LAST_OPEN_DATE. A request for a later day
+  # is a phase failure, not a warning.
+  last_open_date: "2026-09-21"
+
+storage:
+  # SOP section 2.3: raw bytes are immutable and compressed with zstandard
+  # level 10. The path template lives only in src/absump/paths.py, under the key
+  # named below. W1.6 (tests/unit/test_paths.py) fails on a second copy of the
+  # string anywhere in the tree, so this contract names the owner and the key
+  # instead of repeating the template; nothing reads this field.
+  compression: zstd
+  level: 10
+  path_template: "absump.paths.templates()['raw_statcast']"
+
+provenance:
+  # The 2026-09-23 staging cache (data/staging/STAGING.md) pulled these days
+  # under the same A3 throttle but with a DIFFERENT URL: hfGT=R%7C and
+  # player_event_sort=h_launch_speed. Provenance carries over, trust does not.
+  staging_url_differs: true
+  staging_days: 799
+  staging_seasons: [2022, 2023, 2024, 2025, 2026]
+  staging_gap: >-
+    Every staged season stops at the end of its regular season, so no
+    postseason day is staged, and 2022 is staged only from 2022-04-07 to
+    2022-06-14. W6.0's backfill owns the remainder.
+  equivalence: >-
+    Measured 2026-09-23 with one live request. 2026-09-15 pulled at the
+    canonical URL returned 3,033,672 bytes BYTE-IDENTICAL to the staged copy
+    pulled at the hfGT=R| URL: same header digest, same 119 columns, same 4,427
+    rows, same row multiset. For a day whose games are all gameType R the two
+    URLs are the same request, so the 799 staged days are sound as regular
+    season. It says nothing about a postseason day, where hfGT=R| drops games
+    and the canonical URL does not.
+  lake_days: 799
+  lake_seasons: [2022, 2023, 2024, 2025, 2026]
+  exceptions_table: out/tables/statcast_day_exceptions.csv
+  schedule_reconciliation: >-
+    Measured 2026-09-23 against the staged statsapi schedules, filtering on
+    status.abstractGameState == "Final". 799 of 799 days on disk, one
+    exception: 2024-09-29 game_pk 746577, codedGameState C, detailedState
+    Cancelled, reason Rain, no pitches thrown. That is the SOP's expected
+    entry. Filtering on codedGameState == "F" instead leaves zero exceptions.
+    No day carries a game_pk the schedule does not place on that officialDate.
+    Coverage is a separate matter: 110 scheduled 2022 days are not on disk, and
+    the staged schedules are regular season only, so they cannot confirm a
+    postseason day either.
