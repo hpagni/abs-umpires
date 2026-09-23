@@ -103,10 +103,10 @@
 
 - id: W1.13
   title: "pre-commit hooks"
-  verify: "uv run --locked pre-commit run --all-files"
+  verify: "SKIP=no-commit-to-branch uv run --locked pre-commit run --all-files && uv run --locked pytest tests/unit/test_precommit_config.py -q"
   expect_exit: 0
   owner: W1
-  needs: .pre-commit-config.yaml
+  needs: .pre-commit-config.yaml, ops/hook_no_raw_data.sh, ops/hook_nb_clean.py, ops/lint_http.sh, tests/unit/test_precommit_config.py
 
 - id: W1.14
   title: "Makefile"
@@ -124,10 +124,10 @@
 
 - id: W2.1
   title: "Layout and the no-raw-data guard"
-  verify: "uv run --locked pytest tests/unit/test_layout.py -q -k git_tracks_nothing"
+  verify: 'uv run --locked pytest tests/unit/test_layout.py -q -k "no_data_tracked or hook or guard or installer"'
   expect_exit: 0
   owner: W2
-  needs: .git/hooks/pre-commit, tests/unit/test_layout.py
+  needs: .git/hooks/pre-commit, .git/hooks/pre-commit.framework, ops/hook_precommit_guard.sh, ops/install_git_hooks.sh, tests/unit/test_layout.py
 
 - id: W2.2
   title: "Pinned dependencies"
@@ -149,6 +149,22 @@
   expect_exit: 0
   owner: W2
   needs: quality/sql/analysis_set.sql, config/seal.yml, docs/prereg/SEAL.md, ops/unseal.sh, ops/seal_check.sh, tests/unit/test_seal_classifier.py, tests/unit/test_seal_config_agrees.py
+
+# W6.0 is the Statcast backfill, SOP section W6.0: src/absump/ingest/pull_statcast.py,
+# 2022 to the 2026-09-21 cutoff, ordered newest first, idempotent, skipping any day already
+# cached non-empty. It is registered here so that `make prove` reports it MISSING until the
+# puller exists, rather than leaving a scheduled two-night pull off the board entirely.
+# The verify command must stay offline: --plan issues no request, prints the day list the
+# backfill would pull, and exits non-zero if that list crosses the 2026-09-21 cutoff, which
+# is the seal. W6 may narrow this command when it builds the step; it may not widen it into
+# something that pulls.
+
+- id: W6.0
+  title: "Statcast backfill, 2022 to the 2026-09-21 cutoff, resumable"
+  verify: "uv run --locked python -m absump.ingest.pull_statcast --plan --through 2026-09-21"
+  expect_exit: 0
+  owner: W6
+  needs: src/absump/ingest/pull_statcast.py, config/throttle.yml
 
 - id: W6.1
   title: "Repo public and the SSAC form fields recorded"
@@ -183,7 +199,7 @@
   verify: "uv run --locked pytest tests/guard -q && bash tests/guard/redteam_run.sh"
   expect_exit: 0
   owner: W9
-  needs: tests/guard/redteam_run.sh
+  needs: tests/guard/redteam_run.sh, tests/guard/redteam.patch, tests/guard/test_no_sealed_reads.py, tests/guard/test_seal_receipts.py, tests/guard/test_seal_immutability.py, tests/guard/test_dbt_dev_target.py, tests/guard/test_commit_guards.py, tests/guard/test_redteam.py, quality/sealed_manifest.json, quality/prereg.lock
 
 # Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
 # carry no body text in SOP-final, because the assembly folded them into their successors.

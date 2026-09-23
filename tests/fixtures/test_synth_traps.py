@@ -93,8 +93,9 @@ def test_trap_1_automatic_ball_offsets_the_pitch_number(plays):
     assert action["isPitch"] is False
     assert action["details"]["eventType"] == "automatic_ball"
     assert "pitchNumber" not in action
-    keys = {(k["at_bat_number"], k["pitch_seq"]): k
-            for k in _json(EXPECTED / "pitch_keys.json")["keys"]}
+    keys = {
+        (k["at_bat_number"], k["pitch_seq"]): k for k in _json(EXPECTED / "pitch_keys.json")["keys"]
+    }
     assert keys[(2, 2)]["feed_pitch_number"] == 2
     assert keys[(2, 2)]["statcast_pitch_number"] == 3
 
@@ -104,8 +105,7 @@ def test_trap_2_intentional_walk_is_four_events_with_pitch_number_zero(plays):
     assert len(events) == 4
     assert all(e["pitchNumber"] == 0 for e in events)
     assert all(e["details"]["call"]["code"] == "VB" for e in events)
-    keys = [k for k in _json(EXPECTED / "pitch_keys.json")["keys"]
-            if k["at_bat_number"] == 3]
+    keys = [k for k in _json(EXPECTED / "pitch_keys.json")["keys"] if k["at_bat_number"] == 3]
     assert len({k["corrected_key"] for k in keys}) == 4
     assert len({k["naive_key"] for k in keys}) == 1
 
@@ -166,8 +166,7 @@ def test_play_level_mj_resolves_to_the_last_is_pitch(challenges, plays):
 def test_original_call_is_the_final_call_flipped_when_overturned(challenges):
     for row in challenges["challenges"]:
         flipped = "ball" if row["call_final"] == "strike" else "strike"
-        assert row["call_original"] == (flipped if row["is_overturned"]
-                                        else row["call_final"])
+        assert row["call_original"] == (flipped if row["is_overturned"] else row["call_final"])
     overturned = [c for c in challenges["challenges"] if c["is_overturned"]]
     assert len(overturned) == 1
     assert overturned[0]["call_final"] == "strike"
@@ -228,10 +227,8 @@ def test_statcast_header_sha256_matches_the_expected_fixture():
     expected = _json(EXPECTED / "statcast_header.json")
     assert expected["n_columns"] == 119
     assert expected["columns"] == synth_feed.STATCAST_COLUMNS
-    assert expected["header_sha256"] == synth_feed.header_sha256(
-        synth_feed.STATCAST_COLUMNS)
-    with (GENERATED / "statcast.csv").open(
-            encoding=synth_feed.STATCAST_ENCODING) as fh:
+    assert expected["header_sha256"] == synth_feed.header_sha256(synth_feed.STATCAST_COLUMNS)
+    with (GENERATED / "statcast.csv").open(encoding=synth_feed.STATCAST_ENCODING) as fh:
         line = fh.readline().rstrip("\r\n")
     assert hashlib.sha256(line.encode("utf-8")).hexdigest() == expected["header_sha256"]
 
@@ -239,8 +236,7 @@ def test_statcast_header_sha256_matches_the_expected_fixture():
 def test_untracked_rows_are_blank_not_zero():
     """The data contract's trap: automatic_ball and intent_ball rows carry blank sz_top,
     sz_bot, plate_x and pitch_type. Coercing them to numbers is the bug."""
-    with (GENERATED / "statcast.csv").open(
-            encoding=synth_feed.STATCAST_ENCODING, newline="") as fh:
+    with (GENERATED / "statcast.csv").open(encoding=synth_feed.STATCAST_ENCODING, newline="") as fh:
         rows = list(csv.DictReader(fh))
     untracked = [r for r in rows if r["description"] in ("automatic_ball", "intent_ball")]
     assert len(untracked) == 5
@@ -252,8 +248,7 @@ def test_untracked_rows_are_blank_not_zero():
 def test_zone_height_identity_holds_on_every_tracked_row():
     """UT-13's identity. The top edge is 53.5% of the certified height and the bottom 27%,
     so sz_top*12/0.535 and sz_bot*12/0.27 are the same number."""
-    with (GENERATED / "statcast.csv").open(
-            encoding=synth_feed.STATCAST_ENCODING, newline="") as fh:
+    with (GENERATED / "statcast.csv").open(encoding=synth_feed.STATCAST_ENCODING, newline="") as fh:
         rows = list(csv.DictReader(fh))
     tracked = [r for r in rows if r["sz_top"] != ""]
     assert len(tracked) == 19
@@ -315,11 +310,17 @@ def test_attest_records_shape_and_hashes_and_no_content():
     attest = _json(REPO_ROOT / "quality" / "fixtures_attest.json")
     assert attest["schema"] == "fixtures_attest/1"
     assert attest["step"] == "W9.3"
-    assert attest["fixture_header_sha256"] == synth_feed.header_sha256(
-        synth_feed.STATCAST_COLUMNS)
+    assert attest["fixture_header_sha256"] == synth_feed.header_sha256(synth_feed.STATCAST_COLUMNS)
     allowed = {
-        "statcast_export_header": {"kind", "season", "n_files", "n_distinct_header_sha256",
-                                   "header_sha256", "n_columns", "encoding"},
+        "statcast_export_header": {
+            "kind",
+            "season",
+            "n_files",
+            "n_distinct_header_sha256",
+            "header_sha256",
+            "n_columns",
+            "encoding",
+        },
         "statsapi_schedule": {"kind", "path", "bytes", "sha256", "top_level_keys"},
     }
     assert attest["sources"], "the attestation has no sources"

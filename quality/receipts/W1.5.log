@@ -14,8 +14,8 @@ versions
   renv         1.2.4
   cmdstan      2.40.0
   cmdstan_path /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
-stack load: 1.5 s
+stack load: 1.6 s
 
 stan: 2 chains x 200 draws = 400 draws, rhat = 1.00154, 0.6 s
 
-R SMOKE OK (2.1 s)
+R SMOKE OK (2.2 s)

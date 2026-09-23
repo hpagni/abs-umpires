@@ -1,0 +1,39 @@
+{
+  "blocked_on": "the workflow OAuth scope on the gh token; scopes observed: gist, read:org, repo",
+  "cmd": "uv run --locked python -c \"import yaml; [yaml.safe_load(open(p)) for p in (\\\".github/workflows/ci.yml\\\", \\\".github/workflows/seal-guard.yml\\\")]\"",
+  "cmd_not_run_because": "The two workflow files are parked at ops/ci-pending/ and .github/ is absent from the tree, so the registered verify has no file to open. The parked files were validated in place instead.",
+  "deviation": "docs/DEVIATIONS.md, DEV-01",
+  "duration_s": 0,
+  "exit": null,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "cd447589",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "logs/evidence/W1.16.log",
+  "note": "A later scripts/prove.sh sweep rewrites this file as FAIL because write_receipt.py has no PENDING-OWNER status. The status here is the fleet's record; see the gate log.",
+  "owner": "W1",
+  "owner_command": [
+    "gh auth refresh -h github.com -s workflow,repo,read:org,gist",
+    "mkdir -p .github/workflows",
+    "git mv ops/ci-pending/ci.yml ops/ci-pending/seal-guard.yml .github/workflows/",
+    "git commit and git push -u origin HEAD"
+  ],
+  "proves_when_run": [
+    "gh workflow list --repo hpagni/abs-umpires lists ci and seal-guard",
+    "gh run list --repo hpagni/abs-umpires --limit 5 shows runs against the pushed SHA",
+    "bash scripts/prove.sh W1.16 passes unedited: the registered paths exist again after the move"
+  ],
+  "schema": "absump/receipt/1",
+  "status": "PENDING-OWNER",
+  "step": "W1.16",
+  "timestamp_madrid": "2026-09-23 06:35:00 CEST",
+  "title": "GitHub Actions, ci.yml and seal-guard.yml",
+  "verified_in_place": {
+    "check_failures": 0,
+    "job_set": "PASS, ci.yml declares exactly lint, python, r, dbt, guard, secrets",
+    "references": "PASS, every make target and script the jobs call exists on disk",
+    "yaml_parse": "PASS, both files"
+  },
+  "written_by": "W1.16/W1.3 remediation builder, by hand; quality/write_receipt.py emits only PASS or FAIL"
+}

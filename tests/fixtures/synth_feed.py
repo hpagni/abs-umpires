@@ -56,29 +56,125 @@ import pathlib
 # names -- schema, not observations. Their sha256 is recorded in
 # quality/fixtures_attest.json against a locally cached pre-2026 export.
 STATCAST_COLUMNS = [
-    "pitch_type", "game_date", "release_speed", "release_pos_x", "release_pos_z", "player_name",
-    "batter", "pitcher", "events", "description", "spin_dir", "spin_rate_deprecated",
-    "break_angle_deprecated", "break_length_deprecated", "zone", "des", "game_type", "stand",
-    "p_throws", "home_team", "away_team", "type", "hit_location", "bb_type", "balls", "strikes",
-    "game_year", "pfx_x", "pfx_z", "plate_x", "plate_z", "on_3b", "on_2b", "on_1b",
-    "outs_when_up", "inning", "inning_topbot", "hc_x", "hc_y", "tfs_deprecated",
-    "tfs_zulu_deprecated", "umpire", "sv_id", "vx0", "vy0", "vz0", "ax", "ay", "az", "sz_top",
-    "sz_bot", "hit_distance_sc", "launch_speed", "launch_angle", "effective_speed",
-    "release_spin_rate", "release_extension", "game_pk", "fielder_2", "fielder_3", "fielder_4",
-    "fielder_5", "fielder_6", "fielder_7", "fielder_8", "fielder_9", "release_pos_y",
-    "estimated_ba_using_speedangle", "estimated_woba_using_speedangle", "woba_value",
-    "woba_denom", "babip_value", "iso_value", "launch_speed_angle", "at_bat_number",
-    "pitch_number", "pitch_name", "home_score", "away_score", "bat_score", "fld_score",
-    "post_away_score", "post_home_score", "post_bat_score", "post_fld_score",
-    "if_fielding_alignment", "of_fielding_alignment", "spin_axis", "delta_home_win_exp",
-    "delta_run_exp", "bat_speed", "swing_length", "miss_distance",
-    "estimated_slg_using_speedangle", "delta_pitcher_run_exp", "hyper_speed", "home_score_diff",
-    "bat_score_diff", "home_win_exp", "bat_win_exp", "age_pit_legacy", "age_bat_legacy",
-    "age_pit", "age_bat", "n_thruorder_pitcher", "n_priorpa_thisgame_player_at_bat",
-    "pitcher_days_since_prev_game", "batter_days_since_prev_game", "pitcher_days_until_next_game",
-    "batter_days_until_next_game", "api_break_z_with_gravity", "api_break_x_arm",
-    "api_break_x_batter_in", "arm_angle", "attack_angle", "attack_direction", "swing_path_tilt",
-    "intercept_ball_minus_batter_pos_x_inches", "intercept_ball_minus_batter_pos_y_inches",
+    "pitch_type",
+    "game_date",
+    "release_speed",
+    "release_pos_x",
+    "release_pos_z",
+    "player_name",
+    "batter",
+    "pitcher",
+    "events",
+    "description",
+    "spin_dir",
+    "spin_rate_deprecated",
+    "break_angle_deprecated",
+    "break_length_deprecated",
+    "zone",
+    "des",
+    "game_type",
+    "stand",
+    "p_throws",
+    "home_team",
+    "away_team",
+    "type",
+    "hit_location",
+    "bb_type",
+    "balls",
+    "strikes",
+    "game_year",
+    "pfx_x",
+    "pfx_z",
+    "plate_x",
+    "plate_z",
+    "on_3b",
+    "on_2b",
+    "on_1b",
+    "outs_when_up",
+    "inning",
+    "inning_topbot",
+    "hc_x",
+    "hc_y",
+    "tfs_deprecated",
+    "tfs_zulu_deprecated",
+    "umpire",
+    "sv_id",
+    "vx0",
+    "vy0",
+    "vz0",
+    "ax",
+    "ay",
+    "az",
+    "sz_top",
+    "sz_bot",
+    "hit_distance_sc",
+    "launch_speed",
+    "launch_angle",
+    "effective_speed",
+    "release_spin_rate",
+    "release_extension",
+    "game_pk",
+    "fielder_2",
+    "fielder_3",
+    "fielder_4",
+    "fielder_5",
+    "fielder_6",
+    "fielder_7",
+    "fielder_8",
+    "fielder_9",
+    "release_pos_y",
+    "estimated_ba_using_speedangle",
+    "estimated_woba_using_speedangle",
+    "woba_value",
+    "woba_denom",
+    "babip_value",
+    "iso_value",
+    "launch_speed_angle",
+    "at_bat_number",
+    "pitch_number",
+    "pitch_name",
+    "home_score",
+    "away_score",
+    "bat_score",
+    "fld_score",
+    "post_away_score",
+    "post_home_score",
+    "post_bat_score",
+    "post_fld_score",
+    "if_fielding_alignment",
+    "of_fielding_alignment",
+    "spin_axis",
+    "delta_home_win_exp",
+    "delta_run_exp",
+    "bat_speed",
+    "swing_length",
+    "miss_distance",
+    "estimated_slg_using_speedangle",
+    "delta_pitcher_run_exp",
+    "hyper_speed",
+    "home_score_diff",
+    "bat_score_diff",
+    "home_win_exp",
+    "bat_win_exp",
+    "age_pit_legacy",
+    "age_bat_legacy",
+    "age_pit",
+    "age_bat",
+    "n_thruorder_pitcher",
+    "n_priorpa_thisgame_player_at_bat",
+    "pitcher_days_since_prev_game",
+    "batter_days_since_prev_game",
+    "pitcher_days_until_next_game",
+    "batter_days_until_next_game",
+    "api_break_z_with_gravity",
+    "api_break_x_arm",
+    "api_break_x_batter_in",
+    "arm_angle",
+    "attack_angle",
+    "attack_direction",
+    "swing_path_tilt",
+    "intercept_ball_minus_batter_pos_x_inches",
+    "intercept_ball_minus_batter_pos_y_inches",
 ]
 
 # The Savant CSV carries a UTF-8 BOM, so it is read with encoding="utf-8-sig" and the
@@ -197,8 +293,9 @@ def _pitch_event(
     return event
 
 
-def _action_event(*, index: int, event_type: str, description: str, balls: int,
-                  strikes: int, outs: int) -> dict:
+def _action_event(
+    *, index: int, event_type: str, description: str, balls: int, strikes: int, outs: int
+) -> dict:
     """A non-pitch action event. isPitch is false, and there is no pitchNumber at all."""
     return {
         "details": {
@@ -214,9 +311,19 @@ def _action_event(*, index: int, event_type: str, description: str, balls: int,
     }
 
 
-def _play(*, at_bat_index: int, event: str, event_type: str, description: str,
-          balls: int, strikes: int, outs: int, has_review: bool, play_events: list,
-          review_details: dict | None = None) -> dict:
+def _play(
+    *,
+    at_bat_index: int,
+    event: str,
+    event_type: str,
+    description: str,
+    balls: int,
+    strikes: int,
+    outs: int,
+    has_review: bool,
+    play_events: list,
+    review_details: dict | None = None,
+) -> dict:
     batter_id = BATTER_IDS[at_bat_index + 1]
     play = {
         "result": {
@@ -272,199 +379,438 @@ def build_mlb_feed() -> dict:
 
     # Play 0. A clean strikeout. No trap. It is here so that a consumer that gets every
     # trap right but breaks the ordinary case still fails.
-    plays.append(_play(
-        at_bat_index=0, event="Strikeout", event_type="strikeout",
-        description="Synthetic Batter 1 strikes out swinging.",
-        balls=1, strikes=3, outs=1, has_review=False,
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="C", call_description="Called Strike",
-                         plate_x=0.20, plate_z=2.30, balls=0, strikes=1, outs=0,
-                         play_id=_play_id(0, 1)),
-            # "*B" is a called ball in the dirt. It is a called pitch and UT-06 admits it,
-            # so the fixture carries one to keep it out of nobody's classifier.
-            _pitch_event(index=1, pitch_number=2, code="*B", call_description="Ball In Dirt",
-                         plate_x=-1.20, plate_z=1.10, balls=1, strikes=1, outs=0,
-                         play_id=_play_id(0, 2)),
-            _pitch_event(index=2, pitch_number=3, code="S",
-                         call_description="Swinging Strike",
-                         plate_x=0.40, plate_z=1.50, balls=1, strikes=2, outs=0,
-                         play_id=_play_id(0, 3)),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=0,
+            event="Strikeout",
+            event_type="strikeout",
+            description="Synthetic Batter 1 strikes out swinging.",
+            balls=1,
+            strikes=3,
+            outs=1,
+            has_review=False,
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.20,
+                    plate_z=2.30,
+                    balls=0,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(0, 1),
+                ),
+                # "*B" is a called ball in the dirt. It is a called pitch and UT-06 admits it,
+                # so the fixture carries one to keep it out of nobody's classifier.
+                _pitch_event(
+                    index=1,
+                    pitch_number=2,
+                    code="*B",
+                    call_description="Ball In Dirt",
+                    plate_x=-1.20,
+                    plate_z=1.10,
+                    balls=1,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(0, 2),
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=3,
+                    code="S",
+                    call_description="Swinging Strike",
+                    plate_x=0.40,
+                    plate_z=1.50,
+                    balls=1,
+                    strikes=2,
+                    outs=0,
+                    play_id=_play_id(0, 3),
+                ),
+            ],
+        )
+    )
 
     # TRAP 1. The automatic_ball pitch-number offset. The pitch-timer violation is an
     # action event, so it carries no pitchNumber and the feed's pitchNumber sequence runs
     # 1, 2, 3 over the three pitches. Statcast emits a row for it, so Statcast pitch_number
     # runs 1, 2, 3, 4 and is one ahead from the automatic ball onward. Joining on
     # (game_pk, at_bat_number, pitch_number) silently pairs the wrong rows.
-    plays.append(_play(
-        at_bat_index=1, event="Groundout", event_type="field_out",
-        description="Synthetic Batter 2 grounds out, shortstop to first baseman.",
-        balls=2, strikes=1, outs=1, has_review=False,
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="C", call_description="Called Strike",
-                         plate_x=0.10, plate_z=2.60, balls=0, strikes=1, outs=0,
-                         play_id=_play_id(1, 1)),
-            _action_event(index=1, event_type="automatic_ball",
-                          description="Automatic Ball - Pitch Timer",
-                          balls=1, strikes=1, outs=0),
-            _pitch_event(index=2, pitch_number=2, code="B", call_description="Ball",
-                         plate_x=-1.05, plate_z=3.60, balls=2, strikes=1, outs=0,
-                         play_id=_play_id(1, 2)),
-            _pitch_event(index=3, pitch_number=3, code="X",
-                         call_description="In play, out(s)",
-                         plate_x=0.00, plate_z=2.20, balls=2, strikes=1, outs=0,
-                         play_id=_play_id(1, 3)),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=1,
+            event="Groundout",
+            event_type="field_out",
+            description="Synthetic Batter 2 grounds out, shortstop to first baseman.",
+            balls=2,
+            strikes=1,
+            outs=1,
+            has_review=False,
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.10,
+                    plate_z=2.60,
+                    balls=0,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(1, 1),
+                ),
+                _action_event(
+                    index=1,
+                    event_type="automatic_ball",
+                    description="Automatic Ball - Pitch Timer",
+                    balls=1,
+                    strikes=1,
+                    outs=0,
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=2,
+                    code="B",
+                    call_description="Ball",
+                    plate_x=-1.05,
+                    plate_z=3.60,
+                    balls=2,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(1, 2),
+                ),
+                _pitch_event(
+                    index=3,
+                    pitch_number=3,
+                    code="X",
+                    call_description="In play, out(s)",
+                    plate_x=0.00,
+                    plate_z=2.20,
+                    balls=2,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(1, 3),
+                ),
+            ],
+        )
+    )
 
     # TRAP 2. The four-event intentional walk. Every event carries pitchNumber 0 and
     # details.call.code "VB", so the naive key collapses four events into one. The
     # corrected counter must still produce four distinct keys.
-    plays.append(_play(
-        at_bat_index=2, event="Intent Walk", event_type="walk",
-        description="Synthetic Batter 3 intentionally walks.",
-        balls=4, strikes=0, outs=0, has_review=False,
-        play_events=[
-            _pitch_event(index=i, pitch_number=0, code="VB",
-                         call_description="Intent Ball", plate_x=None, plate_z=None,
-                         balls=i + 1, strikes=0, outs=0, play_id=_play_id(2, i + 1))
-            for i in range(4)
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=2,
+            event="Intent Walk",
+            event_type="walk",
+            description="Synthetic Batter 3 intentionally walks.",
+            balls=4,
+            strikes=0,
+            outs=0,
+            has_review=False,
+            play_events=[
+                _pitch_event(
+                    index=i,
+                    pitch_number=0,
+                    code="VB",
+                    call_description="Intent Ball",
+                    plate_x=None,
+                    plate_z=None,
+                    balls=i + 1,
+                    strikes=0,
+                    outs=0,
+                    play_id=_play_id(2, i + 1),
+                )
+                for i in range(4)
+            ],
+        )
+    )
 
     # TRAP 3. A pitch-level MJ. details.hasReview is true on the third pitch while
     # about.hasReview is false on the same play. A consumer that reads only the play-level
     # flag loses this challenge entirely. Standing: the call is a strike, so only the
     # batting team may challenge, and in a top half that is the away team.
-    plays.append(_play(
-        at_bat_index=3, event="Strikeout", event_type="strikeout",
-        description="Synthetic Batter 4 called out on strikes.",
-        balls=1, strikes=3, outs=1, has_review=False,
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="B", call_description="Ball",
-                         plate_x=-1.30, plate_z=2.10, balls=1, strikes=0, outs=0,
-                         play_id=_play_id(3, 1)),
-            _pitch_event(index=1, pitch_number=2, code="C", call_description="Called Strike",
-                         plate_x=0.55, plate_z=2.90, balls=1, strikes=1, outs=0,
-                         play_id=_play_id(3, 2)),
-            _pitch_event(index=2, pitch_number=3, code="C", call_description="Called Strike",
-                         plate_x=NEAR_TIE_X_A, plate_z=NEAR_TIE_Z, balls=1, strikes=2,
-                         outs=0, play_id=_play_id(3, 3), has_review=True,
-                         review_details={
-                             "isOverturned": False,
-                             "reviewType": "MJ",
-                             "challengeTeamId": AWAY_TEAM_ID,
-                             "player": _player(BATTER_IDS[4], "Synthetic Batter 4"),
-                             "inProgress": False,
-                         }),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=3,
+            event="Strikeout",
+            event_type="strikeout",
+            description="Synthetic Batter 4 called out on strikes.",
+            balls=1,
+            strikes=3,
+            outs=1,
+            has_review=False,
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="B",
+                    call_description="Ball",
+                    plate_x=-1.30,
+                    plate_z=2.10,
+                    balls=1,
+                    strikes=0,
+                    outs=0,
+                    play_id=_play_id(3, 1),
+                ),
+                _pitch_event(
+                    index=1,
+                    pitch_number=2,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.55,
+                    plate_z=2.90,
+                    balls=1,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(3, 2),
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=3,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=NEAR_TIE_X_A,
+                    plate_z=NEAR_TIE_Z,
+                    balls=1,
+                    strikes=2,
+                    outs=0,
+                    play_id=_play_id(3, 3),
+                    has_review=True,
+                    review_details={
+                        "isOverturned": False,
+                        "reviewType": "MJ",
+                        "challengeTeamId": AWAY_TEAM_ID,
+                        "player": _player(BATTER_IDS[4], "Synthetic Batter 4"),
+                        "inProgress": False,
+                    },
+                ),
+            ],
+        )
+    )
 
     # TRAP 4. A play-level MJ. about.hasReview is true and reviewDetails sits on the play,
     # not on any pitch, so the challenged pitch has to be resolved as the last isPitch
     # event. result.description says nothing about a challenge, which is why UT-08 forbids
     # text-matching it.
-    plays.append(_play(
-        at_bat_index=4, event="Strikeout", event_type="strikeout",
-        description="Synthetic Batter 5 called out on strikes.",
-        balls=0, strikes=3, outs=1, has_review=True,
-        review_details={
-            "isOverturned": False,
-            "reviewType": "MJ",
-            "challengeTeamId": AWAY_TEAM_ID,
-            "player": _player(BATTER_IDS[5], "Synthetic Batter 5"),
-            "inProgress": False,
-        },
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="C", call_description="Called Strike",
-                         plate_x=0.30, plate_z=2.40, balls=0, strikes=1, outs=0,
-                         play_id=_play_id(4, 1)),
-            _pitch_event(index=1, pitch_number=2, code="S",
-                         call_description="Swinging Strike",
-                         plate_x=0.60, plate_z=1.40, balls=0, strikes=2, outs=0,
-                         play_id=_play_id(4, 2)),
-            _pitch_event(index=2, pitch_number=3, code="C", call_description="Called Strike",
-                         plate_x=-0.83, plate_z=1.82, balls=0, strikes=3, outs=1,
-                         play_id=_play_id(4, 3)),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=4,
+            event="Strikeout",
+            event_type="strikeout",
+            description="Synthetic Batter 5 called out on strikes.",
+            balls=0,
+            strikes=3,
+            outs=1,
+            has_review=True,
+            review_details={
+                "isOverturned": False,
+                "reviewType": "MJ",
+                "challengeTeamId": AWAY_TEAM_ID,
+                "player": _player(BATTER_IDS[5], "Synthetic Batter 5"),
+                "inProgress": False,
+            },
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.30,
+                    plate_z=2.40,
+                    balls=0,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(4, 1),
+                ),
+                _pitch_event(
+                    index=1,
+                    pitch_number=2,
+                    code="S",
+                    call_description="Swinging Strike",
+                    plate_x=0.60,
+                    plate_z=1.40,
+                    balls=0,
+                    strikes=2,
+                    outs=0,
+                    play_id=_play_id(4, 2),
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=3,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=-0.83,
+                    plate_z=1.82,
+                    balls=0,
+                    strikes=3,
+                    outs=1,
+                    play_id=_play_id(4, 3),
+                ),
+            ],
+        )
+    )
 
     # TRAP 5. An overturned challenge. details.call.code holds "C", the call AFTER the
     # challenge. The umpire called a ball, the fielding team challenged, and the call was
     # overturned to a strike. Anything that reads details.call.code as the umpire's call
     # scores this pitch as a correct strike call, which is the R-05 bias.
-    plays.append(_play(
-        at_bat_index=5, event="Strikeout", event_type="strikeout",
-        description="Synthetic Batter 6 called out on strikes.",
-        balls=1, strikes=3, outs=1, has_review=True,
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="B", call_description="Ball",
-                         plate_x=-1.50, plate_z=2.80, balls=1, strikes=0, outs=0,
-                         play_id=_play_id(5, 1)),
-            _pitch_event(index=1, pitch_number=2, code="C", call_description="Called Strike",
-                         plate_x=0.62, plate_z=2.70, balls=1, strikes=1, outs=0,
-                         play_id=_play_id(5, 2)),
-            _pitch_event(index=2, pitch_number=3, code="C", call_description="Called Strike",
-                         plate_x=NEAR_TIE_X_B, plate_z=NEAR_TIE_Z, balls=1, strikes=2,
-                         outs=0, play_id=_play_id(5, 3), has_review=True,
-                         review_details={
-                             "isOverturned": True,
-                             "reviewType": "MJ",
-                             "challengeTeamId": HOME_TEAM_ID,
-                             "player": _player(CATCHER_ID, "Synthetic Catcher"),
-                             "inProgress": False,
-                         }),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=5,
+            event="Strikeout",
+            event_type="strikeout",
+            description="Synthetic Batter 6 called out on strikes.",
+            balls=1,
+            strikes=3,
+            outs=1,
+            has_review=True,
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="B",
+                    call_description="Ball",
+                    plate_x=-1.50,
+                    plate_z=2.80,
+                    balls=1,
+                    strikes=0,
+                    outs=0,
+                    play_id=_play_id(5, 1),
+                ),
+                _pitch_event(
+                    index=1,
+                    pitch_number=2,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.62,
+                    plate_z=2.70,
+                    balls=1,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(5, 2),
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=3,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=NEAR_TIE_X_B,
+                    plate_z=NEAR_TIE_Z,
+                    balls=1,
+                    strikes=2,
+                    outs=0,
+                    play_id=_play_id(5, 3),
+                    has_review=True,
+                    review_details={
+                        "isOverturned": True,
+                        "reviewType": "MJ",
+                        "challengeTeamId": HOME_TEAM_ID,
+                        "player": _player(CATCHER_ID, "Synthetic Catcher"),
+                        "inProgress": False,
+                    },
+                ),
+            ],
+        )
+    )
 
     # TRAP 6. An "MF" replay record. It is a review, so it belongs to the union of review
     # locations, but reviewType is not "MJ" and it must not become a challenge.
-    plays.append(_play(
-        at_bat_index=6, event="Single", event_type="single",
-        description="Synthetic Batter 7 singles on a line drive to left fielder.",
-        balls=0, strikes=0, outs=0, has_review=True,
-        review_details={
-            "isOverturned": True,
-            "reviewType": "MF",
-            "challengeTeamId": AWAY_TEAM_ID,
-            "inProgress": False,
-        },
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="X",
-                         call_description="In play, no out",
-                         plate_x=0.00, plate_z=2.50, balls=0, strikes=0, outs=0,
-                         play_id=_play_id(6, 1)),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=6,
+            event="Single",
+            event_type="single",
+            description="Synthetic Batter 7 singles on a line drive to left fielder.",
+            balls=0,
+            strikes=0,
+            outs=0,
+            has_review=True,
+            review_details={
+                "isOverturned": True,
+                "reviewType": "MF",
+                "challengeTeamId": AWAY_TEAM_ID,
+                "inProgress": False,
+            },
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="X",
+                    call_description="In play, no out",
+                    plate_x=0.00,
+                    plate_z=2.50,
+                    balls=0,
+                    strikes=0,
+                    outs=0,
+                    play_id=_play_id(6, 1),
+                ),
+            ],
+        )
+    )
 
     # TRAP 7. An AAA-shaped MJ record: reviewDetails with no "player" key at all. The
     # consumer must yield a null challenger id and the role "unknown", and must not crash
     # on the missing key. D-12's evidence is that reviewDetails.player is absent from every
     # AAA MJ record, which is why the AAA arm is team-level only.
-    plays.append(_play(
-        at_bat_index=7, event="Flyout", event_type="field_out",
-        description="Synthetic Batter 8 flies out to center fielder.",
-        balls=1, strikes=1, outs=1, has_review=False,
-        play_events=[
-            _pitch_event(index=0, pitch_number=1, code="B", call_description="Ball",
-                         plate_x=-1.10, plate_z=3.50, balls=1, strikes=0, outs=0,
-                         play_id=_play_id(7, 1)),
-            _pitch_event(index=1, pitch_number=2, code="C", call_description="Called Strike",
-                         plate_x=0.91, plate_z=3.30, balls=1, strikes=1, outs=0,
-                         play_id=_play_id(7, 2), has_review=True,
-                         review_details={
-                             "isOverturned": False,
-                             "reviewType": "MJ",
-                             "challengeTeamId": AWAY_TEAM_ID,
-                             "inProgress": False,
-                         }),
-            _pitch_event(index=2, pitch_number=3, code="X",
-                         call_description="In play, out(s)",
-                         plate_x=0.05, plate_z=2.45, balls=1, strikes=1, outs=1,
-                         play_id=_play_id(7, 3)),
-        ],
-    ))
+    plays.append(
+        _play(
+            at_bat_index=7,
+            event="Flyout",
+            event_type="field_out",
+            description="Synthetic Batter 8 flies out to center fielder.",
+            balls=1,
+            strikes=1,
+            outs=1,
+            has_review=False,
+            play_events=[
+                _pitch_event(
+                    index=0,
+                    pitch_number=1,
+                    code="B",
+                    call_description="Ball",
+                    plate_x=-1.10,
+                    plate_z=3.50,
+                    balls=1,
+                    strikes=0,
+                    outs=0,
+                    play_id=_play_id(7, 1),
+                ),
+                _pitch_event(
+                    index=1,
+                    pitch_number=2,
+                    code="C",
+                    call_description="Called Strike",
+                    plate_x=0.91,
+                    plate_z=3.30,
+                    balls=1,
+                    strikes=1,
+                    outs=0,
+                    play_id=_play_id(7, 2),
+                    has_review=True,
+                    review_details={
+                        "isOverturned": False,
+                        "reviewType": "MJ",
+                        "challengeTeamId": AWAY_TEAM_ID,
+                        "inProgress": False,
+                    },
+                ),
+                _pitch_event(
+                    index=2,
+                    pitch_number=3,
+                    code="X",
+                    call_description="In play, out(s)",
+                    plate_x=0.05,
+                    plate_z=2.45,
+                    balls=1,
+                    strikes=1,
+                    outs=1,
+                    play_id=_play_id(7, 3),
+                ),
+            ],
+        )
+    )
 
     return {
         "gamePk": GAME_PK,
@@ -472,33 +818,43 @@ def build_mlb_feed() -> dict:
             "game": {"pk": GAME_PK, "type": "R", "season": SEASON},
             "datetime": {"officialDate": OFFICIAL_DATE, "dayNight": "night"},
             "teams": {
-                "away": {"id": AWAY_TEAM_ID, "abbreviation": AWAY_TEAM_CODE,
-                         "name": "Synthetic Away"},
-                "home": {"id": HOME_TEAM_ID, "abbreviation": HOME_TEAM_CODE,
-                         "name": "Synthetic Home"},
+                "away": {
+                    "id": AWAY_TEAM_ID,
+                    "abbreviation": AWAY_TEAM_CODE,
+                    "name": "Synthetic Away",
+                },
+                "home": {
+                    "id": HOME_TEAM_ID,
+                    "abbreviation": HOME_TEAM_CODE,
+                    "name": "Synthetic Home",
+                },
             },
         },
         "liveData": {
             "plays": {"allPlays": plays, "playsByInning": []},
             "boxscore": {
                 "teams": {
-                    "home": {"players": {
-                        f"ID{PITCHER_ID}": {
-                            "person": _player(PITCHER_ID, "Synthetic Pitcher"),
-                            "position": {"code": "1", "abbreviation": "P"},
-                        },
-                        f"ID{CATCHER_ID}": {
-                            "person": _player(CATCHER_ID, "Synthetic Catcher"),
-                            "position": {"code": "2", "abbreviation": "C"},
-                        },
-                    }},
-                    "away": {"players": {
-                        f"ID{pid}": {
-                            "person": _player(pid, f"Synthetic Batter {n}"),
-                            "position": {"code": "7", "abbreviation": "LF"},
+                    "home": {
+                        "players": {
+                            f"ID{PITCHER_ID}": {
+                                "person": _player(PITCHER_ID, "Synthetic Pitcher"),
+                                "position": {"code": "1", "abbreviation": "P"},
+                            },
+                            f"ID{CATCHER_ID}": {
+                                "person": _player(CATCHER_ID, "Synthetic Catcher"),
+                                "position": {"code": "2", "abbreviation": "C"},
+                            },
                         }
-                        for n, pid in sorted(BATTER_IDS.items())
-                    }},
+                    },
+                    "away": {
+                        "players": {
+                            f"ID{pid}": {
+                                "person": _player(pid, f"Synthetic Batter {n}"),
+                                "position": {"code": "7", "abbreviation": "LF"},
+                            }
+                            for n, pid in sorted(BATTER_IDS.items())
+                        }
+                    },
                 },
             },
         },
@@ -564,40 +920,42 @@ def build_statcast_rows(feed: dict) -> list[dict]:
                 continue
             pitch_number += 1
             last = event is play["playEvents"][-1]
-            rows.append(_statcast_row(
-                pitch_type="FF" if tracked else "",
-                game_date=OFFICIAL_DATE,
-                release_speed=event["pitchData"]["startSpeed"] if tracked else "",
-                player_name="Pitcher, Synthetic",
-                batter=batter["id"],
-                pitcher=PITCHER_ID,
-                events=play["result"]["eventType"] if last else "",
-                description=description,
-                des=play["result"]["description"] if last else "",
-                game_type="R",
-                stand="R",
-                p_throws="R",
-                home_team=HOME_TEAM_CODE,
-                away_team=AWAY_TEAM_CODE,
-                type=CODE_TO_TYPE[code] if code else "B",
-                balls=pre_balls,
-                strikes=pre_strikes,
-                game_year=SEASON,
-                plate_x=f"{coords['pX']:.4f}" if tracked else "",
-                plate_z=f"{coords['pZ']:.4f}" if tracked else "",
-                outs_when_up=0,
-                inning=play["about"]["inning"],
-                inning_topbot="Top",
-                sz_top=f"{SZ_TOP:.8f}" if tracked else "",
-                sz_bot=f"{SZ_BOT:.8f}" if tracked else "",
-                game_pk=GAME_PK,
-                fielder_2=CATCHER_ID,
-                at_bat_number=at_bat_number,
-                pitch_number=pitch_number,
-                pitch_name="4-Seam Fastball" if tracked else "",
-                home_score=0,
-                away_score=0,
-            ))
+            rows.append(
+                _statcast_row(
+                    pitch_type="FF" if tracked else "",
+                    game_date=OFFICIAL_DATE,
+                    release_speed=event["pitchData"]["startSpeed"] if tracked else "",
+                    player_name="Pitcher, Synthetic",
+                    batter=batter["id"],
+                    pitcher=PITCHER_ID,
+                    events=play["result"]["eventType"] if last else "",
+                    description=description,
+                    des=play["result"]["description"] if last else "",
+                    game_type="R",
+                    stand="R",
+                    p_throws="R",
+                    home_team=HOME_TEAM_CODE,
+                    away_team=AWAY_TEAM_CODE,
+                    type=CODE_TO_TYPE[code] if code else "B",
+                    balls=pre_balls,
+                    strikes=pre_strikes,
+                    game_year=SEASON,
+                    plate_x=f"{coords['pX']:.4f}" if tracked else "",
+                    plate_z=f"{coords['pZ']:.4f}" if tracked else "",
+                    outs_when_up=0,
+                    inning=play["about"]["inning"],
+                    inning_topbot="Top",
+                    sz_top=f"{SZ_TOP:.8f}" if tracked else "",
+                    sz_bot=f"{SZ_BOT:.8f}" if tracked else "",
+                    game_pk=GAME_PK,
+                    fielder_2=CATCHER_ID,
+                    at_bat_number=at_bat_number,
+                    pitch_number=pitch_number,
+                    pitch_name="4-Seam Fastball" if tracked else "",
+                    home_score=0,
+                    away_score=0,
+                )
+            )
             pre_balls = event["count"]["balls"]
             pre_strikes = event["count"]["strikes"]
     return rows
@@ -605,8 +963,9 @@ def build_statcast_rows(feed: dict) -> list[dict]:
 
 def render_statcast_csv(rows: list[dict]) -> str:
     buf = io.StringIO(newline="")
-    writer = csv.DictWriter(buf, fieldnames=STATCAST_COLUMNS, quoting=csv.QUOTE_ALL,
-                           lineterminator="\n")
+    writer = csv.DictWriter(
+        buf, fieldnames=STATCAST_COLUMNS, quoting=csv.QUOTE_ALL, lineterminator="\n"
+    )
     writer.writeheader()
     writer.writerows(rows)
     return buf.getvalue()
@@ -617,16 +976,31 @@ def render_statcast_csv(rows: list[dict]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _aaa_mj_event(*, index: int, pitch_number: int, code: str, plate_x: float,
-                  plate_z: float, overturned: bool, team_id: int,
-                  remaining_home: int, remaining_away: int) -> dict:
+def _aaa_mj_event(
+    *,
+    index: int,
+    pitch_number: int,
+    code: str,
+    plate_x: float,
+    plate_z: float,
+    overturned: bool,
+    team_id: int,
+    remaining_home: int,
+    remaining_away: int,
+) -> dict:
     """An AAA MJ event. Note there is no "player" key: D-12 records that
     reviewDetails.player is absent from every AAA MJ record, which is why the AAA arm is
     team-level only."""
     event = _pitch_event(
-        index=index, pitch_number=pitch_number, code=code,
+        index=index,
+        pitch_number=pitch_number,
+        code=code,
         call_description="Called Strike" if code == "C" else "Ball",
-        plate_x=plate_x, plate_z=plate_z, balls=0, strikes=1, outs=0,
+        plate_x=plate_x,
+        plate_z=plate_z,
+        balls=0,
+        strikes=1,
+        outs=0,
         play_id=f"00000000-0000-4000-8000-{AAA_GAME_PK:06d}{index:03d}000",
         has_review=True,
         review_details={
@@ -654,46 +1028,53 @@ def build_aaa_feed() -> dict:
     ]
     plays = []
     for n, (index, team, overturned, rh, ra) in enumerate(specs):
-        plays.append({
-            "result": {
-                "type": "atBat",
-                "event": "Strikeout",
-                "eventType": "strikeout",
-                "description": f"AAA Synthetic Batter {n + 1} called out on strikes.",
-            },
-            "about": {
+        plays.append(
+            {
+                "result": {
+                    "type": "atBat",
+                    "event": "Strikeout",
+                    "eventType": "strikeout",
+                    "description": f"AAA Synthetic Batter {n + 1} called out on strikes.",
+                },
+                "about": {
+                    "atBatIndex": n,
+                    "halfInning": "top" if n % 2 == 0 else "bottom",
+                    "isTopInning": n % 2 == 0,
+                    "inning": n + 1,
+                    "isComplete": True,
+                    "hasReview": True,
+                },
+                "count": {"balls": 0, "strikes": 3, "outs": 1},
+                "matchup": {
+                    "batter": _player(8000 + n, f"AAA Synthetic Batter {n + 1}"),
+                    "pitcher": _player(8100 + n, f"AAA Synthetic Pitcher {n + 1}"),
+                },
+                "pitchIndex": [0],
+                "actionIndex": [],
+                "playEvents": [
+                    _aaa_mj_event(
+                        index=index,
+                        pitch_number=1,
+                        code="C",
+                        plate_x=0.35 + 0.01 * n,
+                        plate_z=2.10 + 0.01 * n,
+                        overturned=overturned,
+                        team_id=team,
+                        remaining_home=rh,
+                        remaining_away=ra,
+                    ),
+                ],
                 "atBatIndex": n,
-                "halfInning": "top" if n % 2 == 0 else "bottom",
-                "isTopInning": n % 2 == 0,
-                "inning": n + 1,
-                "isComplete": True,
-                "hasReview": True,
-            },
-            "count": {"balls": 0, "strikes": 3, "outs": 1},
-            "matchup": {
-                "batter": _player(8000 + n, f"AAA Synthetic Batter {n + 1}"),
-                "pitcher": _player(8100 + n, f"AAA Synthetic Pitcher {n + 1}"),
-            },
-            "pitchIndex": [0],
-            "actionIndex": [],
-            "playEvents": [
-                _aaa_mj_event(index=index, pitch_number=1, code="C",
-                              plate_x=0.35 + 0.01 * n, plate_z=2.10 + 0.01 * n,
-                              overturned=overturned, team_id=team,
-                              remaining_home=rh, remaining_away=ra),
-            ],
-            "atBatIndex": n,
-        })
+            }
+        )
     return {
         "gamePk": AAA_GAME_PK,
         "gameData": {
             "game": {"pk": AAA_GAME_PK, "type": "R", "season": AAA_SEASON},
             "datetime": {"officialDate": AAA_OFFICIAL_DATE},
             "teams": {
-                "away": {"id": AWAY_TEAM_ID, "abbreviation": "SYA",
-                         "name": "Synthetic AAA Away"},
-                "home": {"id": HOME_TEAM_ID, "abbreviation": "SYH",
-                         "name": "Synthetic AAA Home"},
+                "away": {"id": AWAY_TEAM_ID, "abbreviation": "SYA", "name": "Synthetic AAA Away"},
+                "home": {"id": HOME_TEAM_ID, "abbreviation": "SYH", "name": "Synthetic AAA Home"},
             },
             # The end-of-game block. Home implies 3 and agrees with the play-by-play
             # maximum. Away implies 2 and does not, so away becomes an audit row rather
@@ -714,9 +1095,19 @@ def build_aaa_feed() -> dict:
 # The fields the Savant ABS challenge drawer returns, per D-62. isOverturned is carried
 # because the drawer is what supplies the flip; the coordinate bridge exists to attach it
 # to a Statcast row without the feed's playId.
-DRAWER_FIELDS = ("game_pk", "play_id", "plate_X", "plate_Z", "strikeZoneTop",
-                 "strikeZoneBottom", "pre_ball_count", "pre_strike_count", "pitcher",
-                 "fielder_2", "isOverturned")
+DRAWER_FIELDS = (
+    "game_pk",
+    "play_id",
+    "plate_X",
+    "plate_Z",
+    "strikeZoneTop",
+    "strikeZoneBottom",
+    "pre_ball_count",
+    "pre_strike_count",
+    "pitcher",
+    "fielder_2",
+    "isOverturned",
+)
 
 
 def build_drawer_rows(feed: dict, statcast_rows: list[dict]) -> list[dict]:
@@ -724,22 +1115,27 @@ def build_drawer_rows(feed: dict, statcast_rows: list[dict]) -> list[dict]:
     it must bridge to. Two of them are the within-game near-tie."""
     out = []
     for ch in derive_challenges(feed)["challenges"]:
-        sc = next(r for r in statcast_rows
-                  if r["at_bat_number"] == ch["at_bat_number"]
-                  and r["pitch_number"] == ch["statcast_pitch_number"])
-        out.append({
-            "game_pk": GAME_PK,
-            "play_id": ch["play_id"],
-            "plate_X": float(sc["plate_x"]),
-            "plate_Z": float(sc["plate_z"]),
-            "strikeZoneTop": SZ_TOP,
-            "strikeZoneBottom": SZ_BOT,
-            "pre_ball_count": int(sc["balls"]),
-            "pre_strike_count": int(sc["strikes"]),
-            "pitcher": PITCHER_ID,
-            "fielder_2": CATCHER_ID,
-            "isOverturned": ch["is_overturned"],
-        })
+        sc = next(
+            r
+            for r in statcast_rows
+            if r["at_bat_number"] == ch["at_bat_number"]
+            and r["pitch_number"] == ch["statcast_pitch_number"]
+        )
+        out.append(
+            {
+                "game_pk": GAME_PK,
+                "play_id": ch["play_id"],
+                "plate_X": float(sc["plate_x"]),
+                "plate_Z": float(sc["plate_z"]),
+                "strikeZoneTop": SZ_TOP,
+                "strikeZoneBottom": SZ_BOT,
+                "pre_ball_count": int(sc["balls"]),
+                "pre_strike_count": int(sc["strikes"]),
+                "pitcher": PITCHER_ID,
+                "fielder_2": CATCHER_ID,
+                "isOverturned": ch["is_overturned"],
+            }
+        )
     return out
 
 
@@ -775,8 +1171,7 @@ def derive_challenges(feed: dict) -> dict:
         at_bat_number = play["about"]["atBatIndex"] + 1
         pitches = [e for e in play["playEvents"] if e["isPitch"]]
         event_rd = next((e for e in play["playEvents"] if "reviewDetails" in e), None)
-        event_flag = next((e for e in play["playEvents"]
-                           if e["details"].get("hasReview")), None)
+        event_flag = next((e for e in play["playEvents"] if e["details"].get("hasReview")), None)
         play_rd = play.get("reviewDetails")
         locations = []
         if play["about"]["hasReview"]:
@@ -792,11 +1187,13 @@ def derive_challenges(feed: dict) -> dict:
         rd = event_rd["reviewDetails"] if event_rd is not None else play_rd
         # Each play contributes exactly one review record, whichever of the three
         # locations flagged it and however many flagged it at once.
-        review_records.append({
-            "at_bat_number": at_bat_number,
-            "locations": locations,
-            "review_type": rd["reviewType"],
-        })
+        review_records.append(
+            {
+                "at_bat_number": at_bat_number,
+                "locations": locations,
+                "review_type": rd["reviewType"],
+            }
+        )
         if rd["reviewType"] != "MJ":
             continue  # UT-09
         target = event_rd or event_flag
@@ -808,34 +1205,40 @@ def derive_challenges(feed: dict) -> dict:
         assert code in CALLED_CODES, code
         call_final = "strike" if code == "C" else "ball"
         is_overturned = bool(rd["isOverturned"])
-        call_original = ("ball" if call_final == "strike" else "strike") \
-            if is_overturned else call_final
+        call_original = (
+            ("ball" if call_final == "strike" else "strike") if is_overturned else call_final
+        )
         player = rd.get("player")
         player_id = player["id"] if player else None
         pitch_seq = pitches.index(target) + 1
-        n_auto = sum(1 for e in play["playEvents"][:play["playEvents"].index(target)]
-                     if not e["isPitch"]
-                     and e["details"].get("eventType") in STATCAST_ONLY_DESCRIPTIONS)
-        challenges.append({
-            "at_bat_number": at_bat_number,
-            "pitch_seq": pitch_seq,
-            "statcast_pitch_number": pitch_seq + n_auto,
-            "feed_pitch_number": target["pitchNumber"],
-            "play_id": target["playId"],
-            "review_locations": locations,
-            "resolved_by": resolved_by,
-            "review_type": "MJ",
-            "call_code_stored": code,
-            "call_final": call_final,
-            "is_overturned": is_overturned,
-            "call_original": call_original,
-            "challenger_id": player_id,
-            "challenger_role": _role(feed, play, player_id),
-            "challenge_team_id": rd["challengeTeamId"],
-            "standing_side": _side(call_original),
-            "standing_team_id": (AWAY_TEAM_ID if _side(call_original) == "batting"
-                                 else HOME_TEAM_ID),
-        })
+        n_auto = sum(
+            1
+            for e in play["playEvents"][: play["playEvents"].index(target)]
+            if not e["isPitch"] and e["details"].get("eventType") in STATCAST_ONLY_DESCRIPTIONS
+        )
+        challenges.append(
+            {
+                "at_bat_number": at_bat_number,
+                "pitch_seq": pitch_seq,
+                "statcast_pitch_number": pitch_seq + n_auto,
+                "feed_pitch_number": target["pitchNumber"],
+                "play_id": target["playId"],
+                "review_locations": locations,
+                "resolved_by": resolved_by,
+                "review_type": "MJ",
+                "call_code_stored": code,
+                "call_final": call_final,
+                "is_overturned": is_overturned,
+                "call_original": call_original,
+                "challenger_id": player_id,
+                "challenger_role": _role(feed, play, player_id),
+                "challenge_team_id": rd["challengeTeamId"],
+                "standing_side": _side(call_original),
+                "standing_team_id": (
+                    AWAY_TEAM_ID if _side(call_original) == "batting" else HOME_TEAM_ID
+                ),
+            }
+        )
     return {
         "n_review_records": len(review_records),
         "n_challenges": len(challenges),
@@ -851,22 +1254,27 @@ def derive_pitch_keys(feed: dict, statcast_rows: list[dict]) -> dict:
     for play in feed["liveData"]["plays"]["allPlays"]:
         at_bat_number = play["about"]["atBatIndex"] + 1
         pitches = [e for e in play["playEvents"] if e["isPitch"]]
-        sc = [r for r in statcast_rows
-              if r["at_bat_number"] == at_bat_number
-              and r["description"] not in STATCAST_ONLY_DESCRIPTIONS]
+        sc = [
+            r
+            for r in statcast_rows
+            if r["at_bat_number"] == at_bat_number
+            and r["description"] not in STATCAST_ONLY_DESCRIPTIONS
+        ]
         assert len(pitches) == len(sc), (at_bat_number, len(pitches), len(sc))
         for seq, (event, row) in enumerate(zip(pitches, sc, strict=True), start=1):
             naive = f"{GAME_PK}-{at_bat_number}-{event['pitchNumber']}"
             naive_counts[naive] = naive_counts.get(naive, 0) + 1
-            keys.append({
-                "at_bat_number": at_bat_number,
-                "pitch_seq": seq,
-                "feed_pitch_number": event["pitchNumber"],
-                "statcast_pitch_number": row["pitch_number"],
-                "tracked": row["plate_x"] != "",
-                "corrected_key": f"{GAME_PK}-{at_bat_number}-{seq}",
-                "naive_key": naive,
-            })
+            keys.append(
+                {
+                    "at_bat_number": at_bat_number,
+                    "pitch_seq": seq,
+                    "feed_pitch_number": event["pitchNumber"],
+                    "statcast_pitch_number": row["pitch_number"],
+                    "tracked": row["plate_x"] != "",
+                    "corrected_key": f"{GAME_PK}-{at_bat_number}-{seq}",
+                    "naive_key": naive,
+                }
+            )
     collisions = sorted(k for k, v in naive_counts.items() if v > 1)
     return {
         "alignment_rule": (
@@ -877,8 +1285,9 @@ def derive_pitch_keys(feed: dict, statcast_rows: list[dict]) -> dict:
         "n_distinct_corrected_keys": len({k["corrected_key"] for k in keys}),
         "n_distinct_naive_keys": len(naive_counts),
         "naive_key_collisions": collisions,
-        "n_offset_pitches": sum(1 for k in keys
-                                if k["feed_pitch_number"] != k["statcast_pitch_number"]),
+        "n_offset_pitches": sum(
+            1 for k in keys if k["feed_pitch_number"] != k["statcast_pitch_number"]
+        ),
         "keys": keys,
     }
 
@@ -902,7 +1311,8 @@ def derive_aaa_allotment(aaa_feed: dict) -> dict:
         "expected_allotment": AAA_ALLOTMENT,
         "audit_rows": audit,
         "n_mj_records_without_player": sum(
-            1 for play in aaa_feed["liveData"]["plays"]["allPlays"]
+            1
+            for play in aaa_feed["liveData"]["plays"]["allPlays"]
             for e in play["playEvents"]
             if e.get("reviewDetails", {}).get("reviewType") == "MJ"
             and "player" not in e["reviewDetails"]
@@ -917,8 +1327,7 @@ def derive_drawer_bridge(drawer_rows: list[dict], statcast_rows: list[dict]) -> 
     for row in statcast_rows:
         if row["plate_x"] == "":
             continue
-        key = (row["game_pk"], round(float(row["plate_x"]), 2),
-               round(float(row["plate_z"]), 2))
+        key = (row["game_pk"], round(float(row["plate_x"]), 2), round(float(row["plate_z"]), 2))
         index.setdefault(key, []).append(row["pitch_number"])
     matches, ambiguous, unmatched = [], [], []
     for row in drawer_rows:
@@ -930,8 +1339,7 @@ def derive_drawer_bridge(drawer_rows: list[dict], statcast_rows: list[dict]) -> 
             ambiguous.append(row["play_id"])
         else:
             unmatched.append(row["play_id"])
-    near_tie = [r["play_id"] for r in drawer_rows
-                if r["plate_X"] in (NEAR_TIE_X_A, NEAR_TIE_X_B)]
+    near_tie = [r["play_id"] for r in drawer_rows if r["plate_X"] in (NEAR_TIE_X_A, NEAR_TIE_X_B)]
     return {
         "join_key": "(game_pk, round(plate_X, 2), round(plate_Z, 2))",
         "n_drawer_rows": len(drawer_rows),
@@ -956,7 +1364,7 @@ TRAPS = [
         "name": "automatic_ball pitch-number offset",
         "locator": "liveData.plays.allPlays[1].playEvents[1]",
         "assertion": "isPitch false, details.eventType automatic_ball, no pitchNumber; "
-                     "Statcast emits a row for it, so pitch_number runs one ahead",
+        "Statcast emits a row for it, so pitch_number runs one ahead",
         "tests": ["UT-01", "UT-02"],
     },
     {
@@ -964,7 +1372,7 @@ TRAPS = [
         "name": "four-event intentional walk",
         "locator": "liveData.plays.allPlays[2].playEvents[0:4]",
         "assertion": "every event pitchNumber 0 and details.call.code VB; four corrected "
-                     "keys, one naive key",
+        "keys, one naive key",
         "tests": ["UT-02", "UT-03"],
     },
     {
@@ -979,7 +1387,7 @@ TRAPS = [
         "name": "play-level MJ with no challenge word in the description",
         "locator": "liveData.plays.allPlays[4].reviewDetails",
         "assertion": "reviewType MJ at play level, resolves to the last isPitch, and "
-                     "result.description does not contain 'challenged'",
+        "result.description does not contain 'challenged'",
         "tests": ["UT-06", "UT-08"],
     },
     {
@@ -987,7 +1395,7 @@ TRAPS = [
         "name": "overturned challenge storing the post-challenge call",
         "locator": "liveData.plays.allPlays[5].playEvents[2].reviewDetails",
         "assertion": "isOverturned true while details.call.code holds C, the call after "
-                     "the challenge; the original call was a ball",
+        "the challenge; the original call was a ball",
         "tests": ["UT-07"],
     },
     {
@@ -1002,7 +1410,7 @@ TRAPS = [
         "name": "AAA-shaped MJ record with no player key",
         "locator": "liveData.plays.allPlays[7].playEvents[1].reviewDetails",
         "assertion": "reviewType MJ with no 'player' key; challenger_id null, "
-                     "challenger_role unknown, no crash",
+        "challenger_role unknown, no crash",
         "tests": ["UT-10"],
     },
 ]
@@ -1039,14 +1447,15 @@ def generate() -> dict[str, str]:
         "expected/pitch_keys.json": _dumps(derive_pitch_keys(feed, statcast_rows)),
         "expected/challenges.json": _dumps(derive_challenges(feed)),
         "expected/aaa_allotment.json": _dumps(derive_aaa_allotment(aaa_feed)),
-        "expected/drawer_bridge.json": _dumps(
-            derive_drawer_bridge(drawer_rows, statcast_rows)),
-        "expected/statcast_header.json": _dumps({
-            "n_columns": len(STATCAST_COLUMNS),
-            "encoding": STATCAST_ENCODING,
-            "header_sha256": header_sha256(STATCAST_COLUMNS),
-            "columns": STATCAST_COLUMNS,
-        }),
+        "expected/drawer_bridge.json": _dumps(derive_drawer_bridge(drawer_rows, statcast_rows)),
+        "expected/statcast_header.json": _dumps(
+            {
+                "n_columns": len(STATCAST_COLUMNS),
+                "encoding": STATCAST_ENCODING,
+                "header_sha256": header_sha256(STATCAST_COLUMNS),
+                "columns": STATCAST_COLUMNS,
+            }
+        ),
     }
 
 
@@ -1094,17 +1503,20 @@ def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
             shas = set()
             for f in files:
                 with f.open(encoding=STATCAST_ENCODING) as fh:
-                    shas.add(hashlib.sha256(
-                        fh.readline().rstrip("\r\n").encode("utf-8")).hexdigest())
-            sources.append({
-                "kind": "statcast_export_header",
-                "season": season_dir.name,
-                "n_files": len(files),
-                "n_distinct_header_sha256": len(shas),
-                "header_sha256": sorted(shas),
-                "n_columns": len(STATCAST_COLUMNS),
-                "encoding": STATCAST_ENCODING,
-            })
+                    shas.add(
+                        hashlib.sha256(fh.readline().rstrip("\r\n").encode("utf-8")).hexdigest()
+                    )
+            sources.append(
+                {
+                    "kind": "statcast_export_header",
+                    "season": season_dir.name,
+                    "n_files": len(files),
+                    "n_distinct_header_sha256": len(shas),
+                    "header_sha256": sorted(shas),
+                    "n_columns": len(STATCAST_COLUMNS),
+                    "encoding": STATCAST_ENCODING,
+                }
+            )
 
     schedule = staging / "statsapi" / "schedule"
     if schedule.is_dir():
@@ -1112,19 +1524,20 @@ def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
             if f.stem.endswith(str(ATTEST_CUTOFF_SEASON)):
                 continue
             raw = f.read_bytes()
-            sources.append({
-                "kind": "statsapi_schedule",
-                "path": str(f.relative_to(repo_root)),
-                "bytes": len(raw),
-                "sha256": hashlib.sha256(raw).hexdigest(),
-                "top_level_keys": sorted(json.loads(raw).keys()),
-            })
+            sources.append(
+                {
+                    "kind": "statsapi_schedule",
+                    "path": str(f.relative_to(repo_root)),
+                    "bytes": len(raw),
+                    "sha256": hashlib.sha256(raw).hexdigest(),
+                    "top_level_keys": sorted(json.loads(raw).keys()),
+                }
+            )
 
     feeds = staging / "statsapi" / "feeds"
     pre_2026, from_2026 = 0, 0
     if feeds.is_dir():
-        for season_dir in sorted(p for p in feeds.rglob("*") if p.is_dir()
-                                 and p.name.isdigit()):
+        for season_dir in sorted(p for p in feeds.rglob("*") if p.is_dir() and p.name.isdigit()):
             n = len(list(season_dir.glob("*.json")))
             if int(season_dir.name) >= ATTEST_CUTOFF_SEASON:
                 from_2026 += n
@@ -1132,8 +1545,12 @@ def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
                 pre_2026 += n
 
     fixture_sha = header_sha256(STATCAST_COLUMNS)
-    cached_shas = {s for src in sources if src["kind"] == "statcast_export_header"
-                   for s in src["header_sha256"]}
+    cached_shas = {
+        s
+        for src in sources
+        if src["kind"] == "statcast_export_header"
+        for s in src["header_sha256"]
+    }
     return {
         "schema": "fixtures_attest/1",
         "step": "W9.3",
@@ -1169,11 +1586,14 @@ def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
-        "--out", default=str(pathlib.Path(__file__).resolve().parent),
+        "--out",
+        default=str(pathlib.Path(__file__).resolve().parent),
         help="directory holding generated/ and expected/ (default: tests/fixtures)",
     )
     parser.add_argument(
-        "--attest", default=None, metavar="PATH",
+        "--attest",
+        default=None,
+        metavar="PATH",
         help="also write the attestation to PATH, reading pre-2026 caches under data/",
     )
     parser.add_argument("--stamp", default="", help="Madrid stamp for the attestation")

@@ -1,0 +1,299 @@
+# .github/workflows/ci.yml -- SOP step W1.16, fleet phase 01.
+#
+# Six parallel jobs on ubuntu-latest, on push and on pull request. Budget: under
+# eight minutes wall clock. Every job is free on a public repository.
+#
+# No job here reads, pulls or joins a 2026 datum, and no job talks to an MLB or
+# Savant host. The dbt job builds its warehouse from the synthetic fixtures in
+# tests/fixtures. The only outbound request in this file is the gitleaks release
+# download in the secrets job: that is a CI toolchain install, not a data pull,
+# and it is outside the scan path of ops/lint_http.sh (src, R, tools, notebooks).
+#
+# Action versions are pinned by the SOP: astral-sh/setup-uv@v10.2.0,
+# r-lib/actions/setup-r@v2, actions/cache@v6.1.0.
+#
+# There is no nightly.yml. The nightly is local, SOP section 2.8 and D-08. See
+# docs/runbook.md for the 60-day disablement rule that would apply to any Actions
+# cron added later.
+
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  R_VERSION: "4.5.2"
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+
+  # ---------------------------------------------------------------- lint
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # full history: the prose lint runs on the .md files this push or pull
+          # request changed, which needs the merge base on disk.
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: uv sync --locked
+        run: uv sync --locked
+
+      - name: ruff check .
+        run: uv run --locked ruff check .
+
+      - name: ruff format --check .
+        run: uv run --locked ruff format --check .
+
+      - name: ops/lint_http.sh
+        run: bash ops/lint_http.sh
+
+      - name: ops/hook_no_raw_data.sh
+        run: bash ops/hook_no_raw_data.sh
+
+      - name: make lint-prose on changed .md
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -eu
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            git fetch --no-tags origin \
+              "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" || true
+            base="origin/$BASE_REF"
+            git rev-parse -q --verify "$base" >/dev/null || base=FETCH_HEAD
+            changed=$(git diff --name-only --diff-filter=ACMR "$base...HEAD" -- '*.md')
+          elif [ -n "${BEFORE_SHA:-}" ] \
+            && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            changed=$(git diff --name-only --diff-filter=ACMR "$BEFORE_SHA" HEAD -- '*.md')
+          else
+            # first push of a branch, or a force push past the old tip: lint all of it.
+            changed=$(git ls-files -- '*.md')
+          fi
+          if [ -z "$changed" ]; then
+            echo "no .md changed in this event; prose lint skipped"
+            exit 0
+          fi
+          echo "$changed"
+          # ops/lint_prose.sh (SOP W9.13) reads ABS_PROSE_FILES, one path per line,
+          # and lints the whole human-facing corpus when it is unset.
+          ABS_PROSE_FILES="$changed" make lint-prose
+
+  # ---------------------------------------------------------------- python
+  python:
+    name: python
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # tests/guard walks git history and tags; a shallow clone makes it lie.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: uv sync --locked
+        run: uv sync --locked
+
+      - name: pytest unit, fixtures, guard
+        run: uv run --locked pytest tests/unit tests/fixtures tests/guard -q -n 4
+
+  # ---------------------------------------------------------------- r
+  r:
+    name: r
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      RENV_PATHS_ROOT: ~/.cache/R/renv
+      # .Rprofile pins repos to cloud.r-project.org, which would build all 216
+      # packages from source on a runner. The override points renv at the public
+      # Posit binaries for the runner's Ubuntu release instead. It changes where
+      # the bytes come from, never which versions: renv.lock decides that.
+      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+      # No Stan compile in this job. Nothing here installs CmdStan, and no step
+      # calls R/00_setup.R or any model fit. cmdstanr restores as an R package only.
+      CMDSTANR_NO_VER_CHECK: "true"
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.5.2"
+          use-public-rspm: true
+
+      - uses: actions/cache@v6.1.0
+        with:
+          path: ~/.cache/R/renv
+          key: renv-${{ runner.os }}-R4.5.2-${{ hashFiles('renv.lock') }}
+          restore-keys: |
+            renv-${{ runner.os }}-R4.5.2-
+
+      - name: renv::restore()
+        shell: Rscript {0}
+        run: |
+          # renv/activate.R runs from .Rprofile and bootstraps the pinned renv.
+          renv::restore(prompt = FALSE)
+
+      - name: testthat::test_dir("tests/testthat")
+        shell: Rscript {0}
+        run: |
+          testthat::test_dir("tests/testthat")
+
+  # ---------------------------------------------------------------- dbt
+  dbt:
+    name: dbt
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    # PRECONDITION. This job needs dbt/dbt_project.yml, dbt/packages.yml and real
+    # models under dbt/models/. Phase 01 wrote dbt/profiles.yml.example and the
+    # directory tree only, so the job is red until SOP W1.11 and W2 land them.
+    # Recorded in docs/DEVIATIONS.md and logs/evidence/W1.16.log. It is a phase
+    # ordering fact, not a broken reference: every Makefile target and script this
+    # file names does exist today.
+    env:
+      # The ci target is in-memory DuckDB over a synthetic lake written to the
+      # runner's temp directory. Nothing under data/ is read or written, and the
+      # repository working tree stays clean.
+      ABS_DATA_ROOT: ${{ runner.temp }}/ci-lake
+      DBT_PROFILES_DIR: ${{ runner.temp }}/dbt-profiles
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: uv sync --locked
+        run: uv sync --locked
+
+      - name: build the fixture DuckDB from synthetic Parquet
+        run: |
+          set -eu
+          uv run --locked python tests/fixtures/synth_feed.py --out tests/fixtures
+          mkdir -p "$ABS_DATA_ROOT/interim"
+          uv run --locked python - <<'PY'
+          """Write the synthetic fixtures out as the Parquet lake the dbt sources read.
+
+          The sources in dbt/models resolve through
+          read_parquet('$ABS_DATA_ROOT/interim/{name}/**/*.parquet', hive_partitioning=true).
+          Every row here comes from tests/fixtures/generated, which is generated
+          synthetic data with no MLB or Savant content in it.
+          """
+          import os
+          import pathlib
+
+          import duckdb
+
+          root = pathlib.Path(os.environ["ABS_DATA_ROOT"]) / "interim"
+          generated = pathlib.Path("tests/fixtures/generated")
+
+          # fixture file -> lake table. Extend this map as W2's extractor lands the
+          # remaining lake tables; the SOP W1.11 source list is the target shape.
+          tables = {"statcast_pitch": generated / "statcast.csv"}
+
+          con = duckdb.connect()
+          for table, src in tables.items():
+              if not src.exists():
+                  raise SystemExit(f"fixture missing: {src}")
+              out_dir = root / table
+              out_dir.mkdir(parents=True, exist_ok=True)
+              out = out_dir / "part-0.parquet"
+              con.execute(
+                  "COPY (SELECT * FROM read_csv_auto(?, header=true)) "
+                  "TO ? (FORMAT PARQUET, COMPRESSION ZSTD)",
+                  [str(src), str(out)],
+              )
+              rows = con.execute("SELECT count(*) FROM read_parquet(?)", [str(out)]).fetchone()[0]
+              print(f"{table}: {rows} rows -> {out}")
+          PY
+
+      - name: profiles.yml for the ci target
+        run: |
+          set -eu
+          mkdir -p "$DBT_PROFILES_DIR"
+          cp dbt/profiles.yml.example "$DBT_PROFILES_DIR/profiles.yml"
+
+      - name: dbt deps && dbt parse && dbt build --target ci
+        working-directory: dbt
+        run: |
+          set -eu
+          uv run --locked dbt deps
+          uv run --locked dbt parse
+          uv run --locked dbt build --target ci
+
+  # ---------------------------------------------------------------- guard
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The guard is a git and file scan. It reads history and tags, and it
+          # reads no data at all.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: uv sync --locked
+        run: uv sync --locked
+
+      - name: make test-guard
+        run: make test-guard
+
+      - name: make prove-guard-redteam
+        run: make prove-guard-redteam
+
+  # ---------------------------------------------------------------- secrets
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # gitleaks scans the full history, so the full history has to be here.
+          fetch-depth: 0
+
+      - name: install gitleaks
+        env:
+          GITLEAKS_VERSION: ${{ env.GITLEAKS_VERSION }}
+        run: |
+          set -eu
+          cd "$RUNNER_TEMP"
+          url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl --silent --show-error --fail --location "$url" --output gitleaks.tar.gz
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: gitleaks detect --redact --no-banner
+        run: gitleaks detect --redact --no-banner

@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/fixtures/test_synth_traps.py -q",
-  "duration_s": 0,
-  "exit": 0,
+  "duration_s": 1,
+  "exit": 1,
   "expect_exit": 0,
-  "git_branch": "main",
+  "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "b4c297ef2902aff6e388764dddfb02fc7ebe23a5",
+  "git_sha": "cd447580fc16796d34dd0a8fff807421c2bb23f3",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.3.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
-  "status": "PASS",
+  "status": "FAIL",
   "step": "W9.3",
-  "timestamp_madrid": "2026-09-23 04:53:09 CEST",
+  "timestamp_madrid": "2026-09-23 06:31:12 CEST",
   "title": "Synthetic fixtures with all seven traps"
 }
