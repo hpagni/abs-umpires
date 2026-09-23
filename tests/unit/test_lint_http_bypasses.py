@@ -47,6 +47,7 @@ EXPECTED_SCAN_DIRS = [
 EXPECTED_EXEMPT = (
     "ops/lint_http.sh",
     "ops/ci-pending/",
+    "ops/env-setup.sh",
     "tests/unit/fixtures/lint_http/",
     "tests/unit/test_lint_http[a-z_]*.py",
     "tests/unit/test_http_etiquette.py",

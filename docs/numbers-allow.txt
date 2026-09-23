@@ -1,0 +1,25 @@
+# Numbers that are neither a model output nor a quotation from prior work: form
+# constraints, owner budgets, dates and observed HTTP facts. One per line, value first,
+# justification after the hash. The gate reads only the part before the hash.
+#
+# A line belongs here only when the number cannot come from docs/numbers.json (nothing
+# produced it) and cannot come from docs/priorart-numbers.txt (nobody published it). Keep
+# this file short: every entry here is a value the gate stops checking everywhere in scope.
+
+# Conference constraints, read from sloansportsconference.com on 2026-09-22 and recorded in
+# abstract/FORM-FIELDS.md section 2.
+500   # the abstract word limit, "fewer than 500 words, including title and body"
+470   # the project's own drafting ceiling under that limit, SOP W6 abstract budget
+
+# Owner budgets and in-file cross-references, abstract/FORM-FIELDS.md.
+20    # minutes budgeted for the owner's form survey
+3     # "Section 3", a cross-reference to a section of that same file
+
+# Observed facts about the submission form, verified 2026-09-22, abstract/FORM-FIELDS.md
+# section 1. Not a measurement of anything the project models.
+401   # HTTP status returned by an unauthenticated fetch of the form
+9,251 # bytes in the body of that 401 response
+
+# Dates written as a day of the month rather than in ISO form, which the gate's date
+# pattern does not recognise.
+1     # "1 October", the published abstract deadline day, 2026-10-01

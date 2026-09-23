@@ -1,5 +1,5 @@
-........................................................................ [ 69%]
-................................                                         [100%]
+........................................................................ [ 60%]
+...............................................                          [100%]
 =============================== warnings summary ===============================
 tests/guard/test_seal_immutability.py::test_the_seal_holds_no_readable_rows
   /Users/hudsonpagni/sports-project/tests/guard/test_seal_immutability.py:207: VacuousGuard: GD-10 vacuous: no sealed rows yet, data/sealed/ is empty in phase 01
@@ -19,6 +19,14 @@ tests/guard/test_seal_receipts.py::test_no_held_out_artifact_predates_the_pre_re
 
 tests/guard/test_seal_receipts.py::test_the_ordering_script_runs_and_reports
   /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:212: VacuousGuard: GD-12 vacuous: no fit receipts yet and prereg-v1 is not tagged yet, so no ordering has been tested
+    warnings.warn(
+
+tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
+  /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:98: UserWarning: GD-10 pairing vacuous: docs/prereg/SEAL.md records no UNSEALED line in phase 01
+    warnings.warn(
+
+tests/guard/test_unseal_receipt.py::test_the_unseal_script_writes_the_receipt
+  /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:116: UserWarning: OWNER ITEM: ops/unseal.sh (not this lane's path) does not yet write quality/receipts/unseal-<tag>.log; the pairing rule is defined and asserted here, the writer is missing
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html

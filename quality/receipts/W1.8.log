@@ -1,33 +1,15 @@
-..F.........F.......................................                     [100%]
-=================================== FAILURES ===================================
-________________________ test_allowlist_is_load_bearing ________________________
-
-    def test_allowlist_is_load_bearing() -> None:
-        """Without the allowlist the scan fails, and only on allowlisted paths."""
-        unfiltered = scan_repository(allowlist=frozenset())
-        assert unfiltered, "the scan no longer flags the two files that define the held-out set"
->       assert {v.path for v in unfiltered} <= ALLOWLIST, "\n".join(str(v) for v in unfiltered)
-E       AssertionError: GD-04 FAIL: quality/sql/analysis_set.sql:6 literal boundary-date comparison -- WHEN season = 2026 AND game_type = 'R' AND official_date >= DATE '2026-09-22' THEN 'sealed
-E         GD-05 FAIL: quality/sql/analysis_set.sql:6 the held-out label outside the two allowlisted files -- WHEN season = 2026 AND game_type = 'R' AND official_date >= DATE '2026-09-22' THEN 'sealed
-E         GD-05 FAIL: quality/sql/analysis_set.sql:7 the held-out label outside the two allowlisted files -- WHEN season = 2026 AND game_type IN ('F','D','L','W')                  THEN 'sealed'
-E         GD-04 FAIL: src/absump/ch3/dp_fast.py:48 literal boundary-date comparison -- "WHERE official_date >= DATE '2026-09-23' "
-E         GD-04 FAIL: src/absump/ch3/dp_fast.py:49 literal boundary-date comparison -- "   OR official_date > DATE '2026-09-21'"
-E       assert {'quality/sql...3/dp_fast.py'} <= frozenset({'q...ump/seal.py'})
-E
-E         Extra items in the left set:
-E         'src/absump/ch3/dp_fast.py'
-
-tests/guard/test_no_sealed_reads.py:85: AssertionError
-_____________________ test_repository_has_no_held_out_read _____________________
-
-    def test_repository_has_no_held_out_read() -> None:
-        """The whole repository, every file it ships, minus two allowlisted paths."""
-        found = scan_repository()
->       assert not found, "\n".join(str(v) for v in found)
-E       AssertionError: GD-04 FAIL: notebooks/ch1_explore__redteam.ipynb:10 names the held-out pitch view -- "rows = con.execute(\"SELECT * FROM v_pitch_sealed\").pl()\n"
-E       assert not [Violation(path='notebooks/ch1_explore__redteam.ipynb', line=10, rule='names the held-out pitch view', text='    "rows = con.execute(\\"SELECT * FROM v_pitch_sealed\\").pl()\\n"', code='GD-04')]
-
-tests/guard/test_no_sealed_reads.py:215: AssertionError
-=========================== short test summary info ============================
-FAILED tests/guard/test_no_sealed_reads.py::test_allowlist_is_load_bearing - ...
-FAILED tests/guard/test_no_sealed_reads.py::test_repository_has_no_held_out_read
+........................................................................ [ 87%]
+..........                                                               [100%]
+SEAL MODULE OK (9/9) boundary 2026-09-22, tag prereg-v1, gate shut
+SEAL-ORDER OK (0 fit receipts, prereg-v1 not tagged yet, nothing has been fit)
+MILESTONE M1 preconditions (SOP phase 04, D3 end of day):
+  OK      prereg_tag in config/seal.yml
+  MISSING PREREGISTRATION.md on disk
+  MISSING four chapter annexes under docs/prereg/ (found 0)
+  OK      quality/sealed_manifest.json frozen
+  MISSING docs/prereg/RELEASE_NOTES.md written
+  OK      git repository
+  MISSING worktree clean
+  OK      tag prereg-v1 not yet created
+  OK      remote origin configured
+preregister --check: 4 precondition(s) outstanding. Nothing was changed.

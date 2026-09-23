@@ -1,8 +1,4 @@
 lint-prose selftest: OK, 3 rules, 2 fixtures
-docs/prior-art.md:110: WR-01 banned word 'very'
-docs/prior-art.md:117: WR-05 novelty claim 'first' with no citation on this line or the next
-docs/prior-art.md:241: WR-01 banned word 'leverage'
-docs/prior-art.md:377: WR-05 novelty claim 'no public work' with no citation on this line or the next
-docs/prior-art.md:412: WR-05 novelty claim 'the only' with no citation on this line or the next
-docs/prior-art.md:508: WR-05 novelty claim 'first' with no citation on this line or the next
-lint-prose: 10 file(s), 6 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
+lint-prose: 10 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
+check_numbers selftest: OK, 3 fixtures
+check_numbers: 1 file(s), 56 traceable value(s), 0 untraced literal(s)

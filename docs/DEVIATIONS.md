@@ -82,3 +82,150 @@ The same applies one level up: `logs/evidence/W1.16.log` and `logs/evidence/W1.3
 `GATE RESULT: PENDING-OWNER` rather than the usual `PASS` or `FAIL`. Any reader or script that
 greps for the two-value form should treat `PENDING-OWNER` as not-yet-passed and read the owner
 action in the same log.
+
+---
+
+## DEV-04 — W1.7 / W2.3: `ops/lint_http.sh` is a 29-rule table over eleven directories
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+SOP section 2.3 (SOP-final.md:374) specified a grep for six idioms over four directories.
+Round-1 verification planted 30 bypasses against that rule and it reported three. The
+scanner is now a table of 29 named rules over `ops`, `scripts`, `R`, `src`, `app`, `dbt`,
+`notebooks`, `tests`, `tools`, `sql` and `quality`, plus the `Makefile`. Round-2
+verification planted 43 files and 35 of 37 required bypasses were flagged.
+
+The recommended default was applied rather than raised: a gate that misses nine bypasses in
+ten is not a gate. The SOP line has been edited in place to match, pre-tag. Evidence:
+`logs/evidence/verify-chokepoint-r2.log`, `logs/evidence/verify-verify-throttle-chokepoint.log`.
+
+## DEV-05 — W9.7 GD-04: the scan excludes `quality/receipts/` and `logs/`
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+SOP-final.md:1679 and :1757 say the static scan walks the whole repository. It does not. Two
+prefixes are excluded, `quality/receipts/` and `logs/`. Without the exclusion the red team
+writes its own transcript into `quality/receipts/W9.7.log`, and the next run reads that
+transcript as a violation. The gate then fails because it ran, which is a self-trigger, not
+a finding.
+
+The exclusion was a hole on its own. A mode-755 installer sat under `logs/`, where a
+held-out read would have been invisible to the scan. The backstop is
+`tests/guard/test_no_sealed_reads.py::test_no_executable_or_shebang_under_an_excluded_prefix`,
+which fails if any file under either prefix carries the executable bit or a shebang. If that
+test is ever deleted the exclusion becomes a hole again and must go back to a format-aware
+filter. The SOP lines have been edited in place to match. Evidence:
+`logs/evidence/verify-guard-r2.log`.
+
+## DEV-06 — W9.7 GD-05 runs on the analysis surface, not repo-wide
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+SOP-final.md:1757 reads GD-05 as a repo-wide ban on the held-out label outside the two
+allowlisted files. As implemented, GD-05 fires on the analysis surface only: `R/`, `dbt/`,
+`notebooks/`, `sql/` and the chapter code under `src/absump/`. The label as a bare quoted
+string carries no read with it, so repo-wide it fires on documentation, on the SOP itself
+and on this file. The reads that matter happen on the analysis surface, and GD-04 rules 1
+to 4 still cover the whole repository. The allowlist count stays two. The SOP line has been
+edited in place to match.
+
+## DEV-07 — W2.4: `make unseal` checks six conditions, not three
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+SOP W2.4 (SOP-final.md:978) lists three preconditions. `ops/unseal.sh` checks six. The three
+added are pulled forward from phase 5: the shell variable set to its documented value, the
+tag readable on `origin` read back from the git host, and the local tag ref equal to the
+object on `origin`. With three conditions only, the door opens on four local commands and a
+tag no other reader can see, and the public `UNSEALED` line is written anyway. A failed request
+to the git host is a failed check, never a pass. The SOP line has been edited in place.
+
+## DEV-08 — W1.3 and W1.16 read `PENDING-OWNER` until the `workflow` scope is granted
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Owner action outstanding.
+
+Both steps are built and parked at `ops/ci-pending/`. What is outstanding is one credential
+action: `gh auth refresh -h github.com -s workflow`. `make prove` read `MISSING` for both,
+which is the status for work that was never built, and `FAIL` before that. Both now read
+`PENDING-OWNER`. The status is driven by a `pending_owner:` line in `quality/steps.yml`, so
+it is tracked and shows up in the diff. `make prove` does not run the command of such a
+step, does not count it as `FAIL` or `MISSING`, and reports the count separately.
+`tests/unit/test_prove_hygiene.py` asserts that exactly W1.3 and W1.16 carry the field, so
+the status cannot spread. Closes when the scope is granted and both workflow files move to
+`.github/workflows/`. See DEV-01, DEV-02 and DEV-03.
+
+## DEV-09 — W9.3: UT-20 exempts eleven paths the one cached real feed cannot attest
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
+
+UT-20 compares the generator's key paths against one locally cached real feed. The feed on
+disk is a 2024 Triple-A game, sport 11. Two path families the SOP requires the fixtures to
+carry cannot be attested by it. The eight `reviewDetails.player` paths name the challenger
+at MLB level; the AAA feed has no `player` key, and that absence is trap 7. The three
+`reviewDetails.remainingChallenges` paths predate the allotment appearing on the record.
+
+Rather than weakening the test, `synth_feed.UT20_UNATTESTABLE_PATHS` declares those eleven
+paths with a reason each. UT-20 exempts that set and nothing else. A second assertion fails
+if an exemption goes stale, meaning it is absent from the fixtures or present in the cached
+feed. Closes when an MLB-level feed from 2025 or earlier is cached; UT-20 then says so by
+failing the staleness check.
+
+Two real bugs were fixed in the same pass and were the bulk of the failure. The path walker
+descended element 0 of every list only, so the first play's non-pitch action event hid
+`pitchData`, `details.call`, `pitchNumber` and `playId` from the reference set. Lists are
+now walked in full, which is a stronger comparison. Boxscore player maps keyed `ID<id>` are
+values, not shape, and now collapse to `ID#` on both sides. UT-20 also checks
+`aaa_feed.json` as well as `mlb_feed.json`.
+
+## DEV-10 — W1.2: `.github/workflows/` is not in the tracked-directory tree
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN, with DEV-01. Pre-tag.
+
+The directory does not exist, because the workflow files are parked (DEV-01). It is removed
+from `TRACKED_DIRS` in `tests/unit/test_layout.py`, where it made two tests fail on a
+missing directory. It is replaced by `test_ci_is_either_wired_or_parked`, which accepts
+`.github/workflows/{ci,seal-guard}.yml` or `ops/ci-pending/{ci,seal-guard}.yml` with its
+`README.md`. Nothing under `.github/` was touched. W1.3 and W1.16 read `PENDING-OWNER`
+because CI is parked, not because the layout is wrong.
+
+## DEV-11 — W1.2 no longer pins `HEAD` to `refs/heads/main`
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+The branch model is: work on `phase01/<x>`, fast-forward `main`, push `main`. Reading
+`.git/HEAD` and demanding `ref: refs/heads/main` failed on every working branch, including
+the branch the fleet is built on. The assertions are now that a local `main` exists, that
+`origin/main` resolves and equals `main`, and that HEAD's tip is `main`'s tip or a
+descendant of it. That is what the model promises. It still fails on a diverged branch and
+on an unpushed `main`.
+
+## DEV-12 — `logs/env-setup.sh` moved to `ops/env-setup.sh`
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
+
+The round-2 guard verifier found a mode-755 toolchain installer under `logs/`, an excluded
+prefix, where a held-out read would not have been scanned. The file was untracked, so it
+moved with a plain `mv`. It now sits in `ops/`, which `ops/lint_http.sh` scans. Its
+`curl` line and its two `Rscript -e` lines are reported as request idioms outside the two
+allowed call sites. They install a toolchain; they do not fetch data. The deviation is that
+`make lint-http` is red at rest until the exemption is decided. Owner item O-G2.
+
+## DEV-13 — `tools/comms/export_numbers.py` was not created
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
+
+SOP-final.md:516 and :1619 name the generator as `tools/comms/export_numbers.R`, an R script
+run by `check_all.sh`. A lane brief listed a Python file of the same stem as an owned path,
+to be created if the SOP named it. The SOP does not name it, so nothing was created.
+`docs/numbers.json` records the R script as its generator. Moving the generator to Python
+changes W7.42's ordering as well, so it is an owner decision, not a drift.
+
+## DEV-14 — eight seeded prior-art numbers are held back
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
+
+SOP-final.md:1773 seeds `docs/priorart-numbers.txt` with 58 values. Eight of them are not
+carried by `docs/prior-art.md` at this commit, so no line could be written with a URL and a
+read date. They are listed in a comment at the head of the file and are held back rather
+than asserted. WR-07 flags any of them that appears in prose, which is the intended failure.
+Closes when each value has a source and a read date, or is dropped.

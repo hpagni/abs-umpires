@@ -154,9 +154,46 @@ def test_an_executable_under_an_excluded_prefix_is_scanned(tmp_path: Path) -> No
         assert not is_excluded(relative), f"{relative} is skipped"
         assert scan_text(relative, script, BOUNDARY), f"{relative} carries a read and is silent"
     listed = set(shipped_files())
-    on_disk = REPO_ROOT / "logs" / "env-setup.sh"
-    if on_disk.is_file():
-        assert "logs/env-setup.sh" in listed, "the toolchain installer is not even listed"
+    # The installer itself was moved out from under the excluded prefix in the
+    # R2 fixup: it lives at ops/env-setup.sh now, where nothing is skipped.
+    assert not (REPO_ROOT / "logs" / "env-setup.sh").is_file(), (
+        "logs/env-setup.sh is back under an excluded prefix; it belongs in ops/"
+    )
+    if (REPO_ROOT / "ops" / "env-setup.sh").is_file():
+        assert "ops/env-setup.sh" in listed, "the toolchain installer is not even listed"
+
+
+def test_no_executable_or_shebang_under_an_excluded_prefix() -> None:
+    """The stronger form of the R2 finding: those directories hold no programs.
+
+    `test_nothing_runnable_is_excluded_on_disk` proves the scan does not SKIP a
+    program there. This one proves there is no program there to skip, which is
+    what lets `ops/lint_http.sh` exclude the same two directories wholesale so
+    that a lint receipt quoting a violation never re-triggers the linter. Both
+    the executable bit and a `#!` first line count, whatever the suffix.
+    """
+    offenders: list[str] = []
+    for prefix in EXCLUDED_PREFIXES:
+        base = REPO_ROOT / prefix.rstrip("/")
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file() or path.is_symlink():
+                continue
+            relative = str(path.relative_to(REPO_ROOT))
+            if os.access(path, os.X_OK):
+                offenders.append(f"{relative} (mode {oct(path.stat().st_mode & 0o777)})")
+                continue
+            try:
+                with path.open("rb") as handle:
+                    if handle.read(2) == b"#!":
+                        offenders.append(f"{relative} (shebang)")
+            except OSError:
+                continue
+    assert not offenders, (
+        "an excluded directory holds a program; move it under ops/ or scripts/: "
+        + ", ".join(sorted(offenders))
+    )
 
 
 def test_a_transcript_is_still_skipped() -> None:
@@ -618,3 +655,62 @@ def test_fit_receipts_descend_from_the_pre_registration() -> None:
     )
     assert done.returncode == 0, done.stdout + done.stderr
     assert "SEAL-ORDER OK" in done.stdout
+
+
+# ------------------------------------------------- R3: the six new spellings
+def test_identifiers_are_matched_without_regard_to_case() -> None:
+    """DuckDB folds identifiers, so one shift key must not empty three rules."""
+    shouted = f"SELECT GAME_PK, PLATE_X FROM {_VIEW.upper()}\n"
+    found = scan_text("sql/shouted.sql", shouted, BOUNDARY)
+    assert [v.rule for v in found] == ["names the held-out pitch view"]
+    labelled = f"SELECT * FROM {_FACT.upper()}PITCH WHERE ANALYSIS_SET = '{_HELD.upper()}'\n"
+    rules = {v.rule for v in scan_text("sql/shouted2.sql", labelled, BOUNDARY)}
+    assert "reads the held-out analysis set" in rules
+    assert "the held-out label outside the two allowlisted files" in rules
+
+
+def test_the_held_out_partition_is_read_off_the_analysis_surface() -> None:
+    """`ops/` holds the pull, the seal and the deploy; a read there is a read."""
+    line = f"df = pl.read_parquet('data/{_HELD}/pitch/*.parquet')\n"
+    found = scan_text("ops/nightly_pull.py", line, BOUNDARY)
+    assert [(v.code, v.rule) for v in found] == [("GD-05", "reads the held-out partition off disk")]
+
+
+def test_a_glob_inside_the_label_segment_is_still_the_label() -> None:
+    globbed = f"SELECT * FROM read_parquet('data/{_HELD[:4]}*/pitch/*.parquet')\n"
+    assert scan_text("sql/globbed.sql", globbed, BOUNDARY)
+    assert scan_text("ops/deploy.py", globbed, BOUNDARY)
+
+
+def test_a_day_reached_by_arithmetic_is_a_held_out_day() -> None:
+    from datetime import date, timedelta
+
+    start = date.fromisoformat(BOUNDARY) - timedelta(days=3)
+    arithmetic = (
+        f"CUT = date({start.year}, {start.month}, {start.day}) + timedelta(days=3)\n"
+        "rows = frame.filter(pl.col('official_date') >= CUT)\n"
+    )
+    found = scan_text("src/absump/ch3/window.py", arithmetic, BOUNDARY)
+    assert found and found[0].rule == "literal boundary-date comparison"
+    safe = f"CUT = date({start.year}, {start.month}, {start.day}) + timedelta(days=1)\n"
+    assert not scan_text("src/absump/ch3/window_ok.py", safe, BOUNDARY)
+
+
+def test_a_name_assembled_from_character_codes_is_that_name() -> None:
+    """The scanner's own token trick, turned back on it."""
+    codes = "+".join(f"chr({ord(char)})" for char in _VIEW[:2])
+    line = f'q = "SELECT * FROM " + {codes}+"{_VIEW[2:]}"\n'
+    found = scan_text("src/absump/ch3/ordinals.py", line, BOUNDARY)
+    assert found and found[0].rule == "names the held-out pitch view"
+
+
+def test_a_label_spelled_with_escapes_is_that_label() -> None:
+    escaped = f'split = "{_HELD[:4]}\\x{ord(_HELD[4]):02x}{_HELD[5:]}"\n'
+    found = scan_text("src/absump/ch3/escaped.py", escaped, BOUNDARY)
+    assert found and found[0].code == "GD-05"
+
+
+def test_the_seal_machinery_writing_its_own_directory_is_not_a_read() -> None:
+    """`out/<label>/` is where the seal writes; listing it is not a read."""
+    machinery = f'sealed="$root/out/{_HELD}"\nfind "$sealed" -type f\n'
+    assert not scan_text("ops/seal_check.sh", machinery, BOUNDARY)

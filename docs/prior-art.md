@@ -106,16 +106,20 @@ cut the grading buffer from two inches outside the zone edge to three-quarters o
 either side of it. That change acts on the same borderline lean, conditional on count, that
 their estimand measures.
 
-Their own literature notes state the mechanism, dated 2026-08-17. A grading tolerance of
-plus or minus 0.75 in "means there is no longer a penalty for calling a ball in the very
-interior". They also write that "the accountability shock we study in 2026 sits on top of a
+Their own literature notes state the mechanism, dated 2026-08-17. On a grading tolerance of
+plus or minus 0.75 in they write, verbatim:
+
+> means there is no longer a penalty for calling a ball in the very interior
+
+They also write that "the accountability shock we study in 2026 sits on top of a
 2025 grading shock; identification must difference both". Their notes name the objection
 directly: "Your
 umpire-accountability effect is the 2025 grading-buffer change and the 2026 coordinate
 change, not challenges."
 
-This project is not first to notice that confound. It is public, dated 2026-08-17, in four
-of their literature files and in their methods review. This project's claim is to resolve
+This project is not first to notice that confound (lit/04, lit/06, lit/22 and
+METHODS_REVIEW B5, dated 2026-08-17). It is public, in four of their literature files and
+in their methods review. This project's claim is to resolve
 it with a third, untreated baseline regime.
 
 ---
@@ -237,9 +241,12 @@ Newest first. No ABS post exists on that site after 2026-08-31.
   and expected-runs metrics that this project benchmarks against.
 - Mike Petriello, "Think you know who's been good at using ABS? It's not so simple",
   https://www.mlb.com/news/how-to-know-who-is-good-at-using-abs-2026-mlb, 2026-04-30. Model
-  inputs, verbatim: "the location of the pitch and challenges remaining, as well as the
-  leverage of the situation (meaning runners on, score, inning, and ball/strike/out
-  situation)". The page requires a browser user agent; a plain fetch returns HTTP 406.
+  inputs, verbatim:
+
+  > the location of the pitch and challenges remaining, as well as the leverage of the
+  > situation (meaning runners on, score, inning, and ball/strike/out situation)
+
+  The page requires a browser user agent; a plain fetch returns HTTP 406.
 - Petriello, 2026-02-26, a Triple-A 2025 breakdown over about 861,000 pitches and 9,432
   challenges: about 50% overturn overall, batters 45%, fielders about 55%; 3% of
   challengeable pitches challenged; challenge rate rising from 2.1% to about 5% by late
@@ -375,8 +382,8 @@ which is every public treatment of either transition found on 2026-09-22.
 ### 6.2 Umpire-level heterogeneity in the response
 
 No public work reports a per-umpire 2025 or 2026 zone change, a between-umpire standard
-deviation of the response, or the reliability of it. The relevant public work is listed
-here.
+deviation of the response, or the reliability of it, as of 2026-09-22. The public work that
+comes closest is listed here.
 
 - TapToChallenge /umpires is the only per-umpire ABS-era leaderboard. It is 2026 only, with
   no zone geometry, no shrinkage and no cross-season contrast.
@@ -409,7 +416,8 @@ Source: Andrews, FanGraphs, 5 and 6 May 2025, unless noted.
 - Shadow-zone called strikes as a share of all pitches: 2.3%, 2.1%, 2.1%, 1.6% for 2022 to
   2025 (Dwyer, FanSided, 2026-05-27).
 - There is no public estimate of the 2025 change in inches of edge movement or in square
-  inches of zone area. Andrews, the only source for that transition, reports neither.
+  inches of zone area. Andrews, the only source for that transition, reports neither
+  (FanGraphs, 2025-05-05 and 2025-05-06).
 
 2025 to 2026, the ABS challenge system. Source: Clemens, FanGraphs, 2026-04-28, through
 25 April of each season, unless noted.
@@ -505,7 +513,8 @@ This project may not claim:
 - That challenge accuracy is mostly noise. Published: signal shares 0.80 and 0.33 for
   catchers, 0.73 and 0.13 for batters, team capture reliability 0.32, and a shrunken
   between-team SD of 0.034 against their own 0.10 threshold.
-- A first perception-noise model or first role-level accounting. Published: sigma_bat 3.02
+- A first perception-noise model or first role-level accounting (published 2026-08-18).
+  Published: sigma_bat 3.02
   in and sigma_fld 1.90 in, the hurdle variant, the two-way probit, and the role overturn
   rates in section 1.1.
 - The capture ratio, the challenge card, the dump test, the value of a token in wins, or the
