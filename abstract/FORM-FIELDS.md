@@ -19,6 +19,12 @@ information out of every file reachable from the repository root while the SSAC 
 window is open. That scan covers `README.md`, `LICENSE`, `CITATION.cff`, `docs/`, `app/`,
 `.github/` and any file they link to. Do not link this file from any of them.
 
+Numbers in this file. Every numeric literal below is a form constraint, an owner budget, a
+date or an observed HTTP fact. None of them is a model output, so none can come from
+`docs/numbers.json`. Each is listed with its justification in `docs/numbers-allow.txt`,
+which is one of the three sources `quality/check_numbers.py` reads. If the form contradicts
+one of them, correct it in section 4 and change the justification there in the same commit.
+
 ---
 
 ## 1. Getting to the form

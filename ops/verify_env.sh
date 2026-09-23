@@ -7,7 +7,7 @@
 # each failing check is printed above it.
 #
 #   RP-01  lockfile current                 uv lock --check
-#   RP-02  env installs from the lock alone  uv sync --locked; import absump
+#   RP-02  env installs from the lock alone  uv sync --locked --all-groups; import absump
 #   RP-03  R env matches renv.lock           renv::status() -> "No issues found"
 #   RP-04  CmdStan pinned, DYLD unset        cmdstan_version()=="2.40.0"
 #   RP-05  arrow equal on both sides         tests/unit/test_arrow_seam.py
@@ -63,7 +63,15 @@ rp01() {
 rp02() {
   # RP-02: the environment installs from the lock alone, and the package it
   # installs is importable under the name the SOP fixed: absump, never "abs".
-  uv sync --locked || return 1
+  #
+  # D-PROVE-02. --all-groups is load-bearing, not decoration. W1.4's verify
+  # command syncs every dependency group; a bare `uv sync --locked` here syncs
+  # only the default groups and so UNINSTALLS the bayes group W1.4 had just
+  # installed. The two steps then fought over the same .venv and whichever ran
+  # last decided whether the next R or model step could import anything. Both
+  # sides now name the same group set, so the environment is the same after
+  # either one and `make prove` is order-independent.
+  uv sync --locked --all-groups || return 1
   uv run --locked python -c 'import absump; print("import absump: ok")'
 }
 

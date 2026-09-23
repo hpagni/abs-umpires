@@ -46,3 +46,11 @@ ops/b44_python_stdin.sh	2	SH-PYTHON-C	program on stdin
 scripts/b45_curl_in_var.sh	2	SH-CURL	quoted BIN="curl"
 ops/b46_exec_var.sh	3	SH-EXECVAR	command name in a variable
 tools/b47_split_word.sh	2	SH-CONCAT	curl split across two fragments
+src/absump/ingest/b48_urllib3_import.py	1	PY-URLLIB	urllib3 imported by keyword; the name ends in a digit
+src/absump/ingest/b49_pycurl.py	1	PY-NETIMPORT	pycurl imported by keyword, not named in a string
+src/absump/ingest/b50_hoisted_url_reader.py	4	PY-FETCHLIB	the URL is one line above the reader
+ops/b51_split_var_command.sh	3	SH-EXECVAR	${C}l: the variable reference is followed by a letter
+ops/b52_netcat.sh	2	SH-RAWNET	nc speaking HTTP by hand
+R/b53_rcurl_geturl.R	1	R-CURLPKG	RCurl:: with a capital C, and getURL is a verb no rule named
+sql/b54_sql_from_url.sql	2	SQL-URI	a URL in FROM; DuckDB needs no reader name
+src/absump/ingest/b55_hoisted_argv.py	4	PY-CMDBUILD	the command text is assembled above the subprocess line

@@ -18,6 +18,7 @@ import csv
 import hashlib
 import json
 import pathlib
+import re
 
 import pytest
 import synth_feed
@@ -378,20 +379,42 @@ def test_ut20_generator_shape_against_one_local_real_feed():
         print(synth_feed.UT20_DEFERRED_REASON)
         pytest.skip(synth_feed.UT20_DEFERRED_REASON)
     real = json.loads(real_path.read_text(encoding="utf-8"))
-    synthetic = _json(GENERATED / "mlb_feed.json")
+
+    id_key = re.compile(r"^ID\d+$")
 
     def paths(node, prefix=""):
+        """Every key path in the document. Lists are walked in full, not just element 0:
+        the real feed's first play opens with a non-pitch action event, so walking only
+        element 0 hides pitchData and details.call from the reference set and makes the
+        comparison report them as generator drift. Boxscore player maps are keyed by
+        player id, which is a value, not a shape, so those keys collapse to ID#."""
         out = set()
         if isinstance(node, dict):
             for key, value in node.items():
-                out.add(f"{prefix}.{key}" if prefix else key)
-                out |= paths(value, f"{prefix}.{key}" if prefix else key)
-        elif isinstance(node, list) and node:
-            out |= paths(node[0], f"{prefix}[]")
+                key = "ID#" if id_key.match(key) else key
+                child = f"{prefix}.{key}" if prefix else key
+                out.add(child)
+                out |= paths(value, child)
+        elif isinstance(node, list):
+            for item in node:
+                out |= paths(item, f"{prefix}[]")
         return out
 
-    missing = sorted(p for p in paths(synthetic) if p not in paths(real))
+    real_paths = paths(real)
+    exempt = synth_feed.UT20_UNATTESTABLE_PATHS
+    synthetic_paths = set()
+    for name in ("mlb_feed.json", "aaa_feed.json"):
+        synthetic_paths |= paths(_json(GENERATED / name))
+
+    missing = sorted(p for p in synthetic_paths if p not in real_paths and p not in exempt)
     assert not missing, (
         f"the generator emits key paths the real feed does not have: {missing}. "
         f"The feed shape changed, or the generator drifted. Real feed: {real_path}"
+    )
+
+    # An exemption may not outlive the fixture that needed it, and may not cover a path the
+    # cached feed does carry: either way it would be hiding drift rather than declaring it.
+    stale = sorted(p for p in exempt if p not in synthetic_paths or p in real_paths)
+    assert not stale, (
+        f"UT20_UNATTESTABLE_PATHS lists paths the fixtures no longer need exempting: {stale}"
     )

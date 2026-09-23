@@ -34,7 +34,8 @@ Ground truth for all of it lives in `tests/fixtures/expected/`. The generator is
 deterministic: no clock, no randomness, no network. Regenerating must reproduce every
 byte, and `tests/fixtures/test_synth_traps.py` asserts exactly that.
 
-Run:  uv run --locked python tests/fixtures/synth_feed.py --out tests/fixtures/generated
+Run:  uv run --locked python tests/fixtures/synth_feed.py --out tests/fixtures
+      --out is the directory that HOLDS generated/ and expected/, not generated/ itself.
 """
 
 from __future__ import annotations
@@ -1480,6 +1481,32 @@ ATTEST_CUTOFF_SEASON = 2026
 
 # The exact skip reason UT-20 prints when no pre-2026 real feed is cached. Fixed string.
 UT20_DEFERRED_REASON = "no local real feed cached; UT-20 deferred to phase 02"
+
+# UT-20 compares the generator's key paths against one locally cached real feed. The only
+# feed phase 01 has cached is a 2024 Triple-A (sport 11) game, so two families of paths the
+# SOP requires the fixtures to carry cannot be attested by it. They are listed here, with a
+# reason each, so the test can exempt exactly these and nothing else: an exemption that is
+# not present in the fixtures, or any other new path, still fails UT-20.
+_UT20_AAA_SAMPLE = "MLB-level shape; the one cached sample is a 2024 AAA feed"
+_UT20_ALLOTMENT = "D-12 three-token allotment; not on the 2024 AAA feed's record"
+
+UT20_UNATTESTABLE_PATHS = {
+    # SOP W9.3: MLB-level review records name the challenger. The AAA feed has no
+    # "player" key on reviewDetails at all -- that absence is trap 7, so the contrast
+    # has to stay in the fixtures.
+    **{
+        f"liveData.plays.allPlays[]{where}.reviewDetails.player{leaf}": _UT20_AAA_SAMPLE
+        for where in ("", ".playEvents[]")
+        for leaf in ("", ".id", ".fullName", ".link")
+    },
+    # SOP W9.3 R2: the AAA fixture carries the D-12 three-token allotment.
+    **{
+        f"liveData.plays.allPlays[].playEvents[].reviewDetails.remainingChallenges{leaf}": (
+            _UT20_ALLOTMENT
+        )
+        for leaf in ("", ".home", ".away")
+    },
+}
 
 
 def _staging_root(repo_root: pathlib.Path) -> pathlib.Path:

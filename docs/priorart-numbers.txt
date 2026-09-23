@@ -1,0 +1,76 @@
+# Numbers quoted from someone else's published work, one per line, value first and the
+# source after the hash. The gate at quality/check_numbers.py reads only the part before
+# the hash, so dates and URLs in the comment are not themselves traced.
+#
+# Rule: a line goes in only when docs/prior-art.md carries the number with its source. The
+# SOP's seed list also names 454, 439, 53, 524, 4612, 4716, 4067 and 10167; those eight are
+# not in docs/prior-art.md at this commit and are held back rather than asserted. Add each
+# one here when the prior-art ledger records it with a URL and a read date.
+#
+# R-17: two upstream sources rebuild nightly and these figures drift. Re-read this file
+# against the live releases before each venue submission; the capture ratio alone moved
+# from 0.80 to 0.826 between 2026-08-18 and 2026-09-22.
+
+# A. AyanArora29/use-it-or-lose-it, release `data`, read 2026-09-22.
+# https://github.com/AyanArora29/use-it-or-lose-it  (docs/prior-art.md section 1.1)
+99.75    # zone-truth agreement with the ABS verdict, on challenged pitches
+10155    # challenged pitches in that agreement denominator
+10168    # "MJ" challenge events extracted, 2026-03-25 to 2026-09-21
+0.837    # count-composed win-probability surface, r against the call's change in WP
+0.215    # same surface, MAE in pp
+2.48     # V(2), value of two tokens at the first pitch of a tie game, pp
+1.53     # MTV1, inning 1
+0.86     # MTV2, inning 1
+0.41     # MTV2, inning 9
+2.57     # information-constrained optimum, pp per team-game
+4.16     # the same optimum expressed as wins per 162
+2.12     # pp per team-game teams realised
+3.43     # the realised figure expressed as wins
+0.826    # capture ratio
+0.797    # capture ratio, lower end of the game-clustered bootstrap interval
+0.854    # capture ratio, upper end of that interval
+0.399    # optimum divided by oracle
+3.173    # counterfactual, three tokens retained, pp
+1.956    # counterfactual, two tokens without retention, pp
+3.02     # sigma_bat, inches, pooled probit with cell thresholds
+1.90     # sigma_fld, inches, same model
+0.782    # hurdle variant, pi for batters
+0.883    # hurdle variant, pi for fielders
+58.8     # role overturn rate, catcher, per cent
+49.0     # role overturn rate, batter, per cent
+39.3     # role overturn rate, pitcher, per cent
+0.80     # weak-form reliability, catcher signal share
+0.33     # weak-form reliability, catcher overturn rate
+0.73     # weak-form reliability, batter signal share
+0.13     # weak-form reliability, batter overturn rate
+0.034    # between-team SD of the capture ratio after empirical-Bayes shrinkage
+0.10     # their own pre-registered threshold for that SD
+
+# B. Davy Andrews, FanGraphs, "Your Final Pre-Robo-Zone Umpire Accuracy Update", 2025-11-20.
+# https://blogs.fangraphs.com/your-final-pre-robo-zone-umpire-accuracy-update/
+92.83    # record overall called-pitch accuracy, 2025 season, per cent
+42.7     # shadow-zone called-strike rate, 2025, per cent
+
+# C. Ben Clemens, FanGraphs, "The Strike Zone Is Shrinking. Here's How.", 2026-04-28.
+# https://blogs.fangraphs.com/the-strike-zone-is-shrinking-heres-how/
+54.3     # called strikes on fastballs just above the 53.5% line, 2025, per cent
+40.8     # the same measure in 2026, per cent
+8        # 95% interval on the zone-area change, smaller end, sq in
+22       # 95% interval on the zone-area change, larger end, sq in
+
+# D. Bradford Doolittle, ESPN, "MLB 2026: What we've learned so far about ABS", 2026-05-19.
+# Cited second-hand through docs/prior-art.md sections 2 and 6.3.
+0.704    # top-30 framing runs per 100 innings, 2025
+0.565    # top-30 framing runs per 100 innings, 2026
+47.3     # in-zone pitch rate, 2026, per cent
+50.6     # in-zone pitch rate, 2025, per cent
+
+# E. Matt Martell, FanGraphs, "To Challenge, or Not To Challenge...", 2026-06-19.
+# https://blogs.fangraphs.com/to-challenge-or-not-to-challenge-that-is-the-question/
+2.8      # league challenge rate, per cent of called pitches
+5.1      # challenge rate, bases loaded, per cent
+3.7      # challenge rate, runners in scoring position, per cent
+2.4      # challenge rate, no runners, per cent
+9.4      # challenge rate on 3-2 counts, per cent (also the 2026 walk rate, Doolittle)
+2.0      # challenge rate on 3-0 counts, per cent
+77.4     # share of challenges with a score differential of zero to three runs, per cent

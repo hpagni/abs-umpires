@@ -478,11 +478,13 @@ SOP section 9.1 closes the prose artifact with four clauses. Three are now mecha
 `docs/` and `abstract/`. `quality/check_numbers.py` runs WR-07 against
 `docs/numbers.json`. The fourth clause is this line, and it is a human act.
 
-- Owner sign-off, prose artifacts, phase 01: **not given yet**. Recorded 2026-09-23 by the
-  builder, not by the owner. `make lint-prose` currently reports 28 violations and
-  `quality/check_numbers.py` reports 9 untraced numbers, so there is nothing to sign
-  off on yet. Hudson signs off by replacing this bullet with a dated line in his own
-  commit, once both gates are green. No agent writes that line for him.
+- Owner sign-off, prose artifacts, phase 01: **not given**. Recorded 2026-09-23 by the
+  builder, not by the owner. Both mechanical gates are green as of 2026-09-23: `make
+  lint-prose` reports 0 violations over 10 files, and `quality/check_numbers.py` reports 56
+  traceable values and 0 untraced literals. Evidence: `logs/evidence/W9.13.log`. Green gates
+  do not sign anything off. Hudson signs off by replacing this bullet with a dated line in
+  his own commit. No agent writes that line for him, and this bullet stays as it is until
+  he does.
 
 ## 2026-09-23, Madrid -- second round on the prove sweep
 
@@ -518,3 +520,265 @@ SOP section 9.1 closes the prose artifact with four clauses. Three are now mecha
   "Installed 19 packages" on one sweep and "Checked 176 packages" on the next, for ever.
   Recommended default: W9.2 syncs with `--all-groups` as well, so that the sweep leaves
   the environment where it found it. W9.2 owns that line and should make the change.
+
+## Decisions applied under the execution posture, round 3 (2026-09-23, Madrid)
+
+Merged from `logs/decisions-pending/` by the docs lane after the four round-2 fix lanes.
+Each entry is a recommended default applied pre-tag, under the standing posture. The owner
+may override any of them. Deviations raised by the same lanes are in `docs/DEVIATIONS.md`,
+entries DEV-04 to DEV-14.
+
+### D-G1 An `UNSEALED` line must be backed by a receipt
+
+Owner: W2.4 / W9.7. Status: applied, with one open builder item.
+
+An `UNSEALED` line in `docs/prereg/SEAL.md` is a claim anyone can type. It now has to be
+paired with `quality/receipts/unseal-<tag>.log`, which must exist and must carry the same
+`commit=<sha>` the line carries. One receipt per tag, written by `ops/unseal.sh` at the
+moment it appends the line, never by hand. Asserted by `tests/guard/test_unseal_receipt.py`.
+The pairing is vacuous today, because there is no `UNSEALED` line, and the test says so
+through a warning rather than a silent pass. `ops/unseal.sh` does not write the receipt yet.
+That is owner item O-G1.
+
+### D-G2 `ops/lint_http.sh` excludes two directories wholesale, with a backstop
+
+Owner: W2.3 / W9.7. Status: applied.
+
+GD-04 excludes `quality/receipts/` and `logs/` by format and by mode, so a `.sh` file or an
+executable under either one is still scanned. The linter cannot make that distinction,
+because grep's `--exclude-dir` is all-or-nothing. The wholesale exclusion is accepted, with
+a backstop that closes the gap:
+`tests/guard/test_no_sealed_reads.py::test_no_executable_or_shebang_under_an_excluded_prefix`
+fails if any file under either directory carries the executable bit or a shebang. Deleting
+that test turns the exclusion back into a hole, and the filter must then become
+format-aware. The script's own comment says so.
+
+### D-PROVE-02 RP-02 syncs every dependency group
+
+Owner: W9.1 / W9.2. Status: applied. Raised in round 2, taken in round 3.
+
+`ops/verify_env.sh` RP-02 ran `uv sync --locked`, which syncs the default groups only. That
+uninstalls the `bayes` group that W1.4 had just installed with `uv sync --locked
+--all-groups`. Both steps run in one sweep against one `.venv`, so the environment after
+`make prove` depended on which of the two ran last. A model or R step that followed could
+find the group gone. RP-02 now runs `uv sync --locked --all-groups`.
+
+Narrowing W1.4 to the default groups was the alternative, and it was rejected. W1.4 exists
+to show that the pinned scientific stack installs from the lock alone, and the `bayes` group
+is that stack. A gate must not remove the thing it checks.
+
+### D-PROVE-03 `PENDING-OWNER` is a registry field, not a marker file
+
+Owner: W9.1. Status: applied.
+
+W1.3 and W1.16 wait on one move only the owner can make: re-authorising the `gh` token with
+the `workflow` scope. Until then nothing under `.github/` may be committed. Both steps read
+`MISSING` before, which is the status for work that was never built, and `FAIL` before that.
+Both now read `PENDING-OWNER`.
+
+The status is driven by a `pending_owner:` line in `quality/steps.yml`. It is not a marker
+file on disk and not the last line of a gate log. A marker file is untracked state that a
+clean clone does not have and that no reviewer reads. The tail of a log is a string a
+failing command can print by accident. The registry is tracked, shows up in the diff, and is
+already the single source of what a step is. `tests/unit/test_prove_hygiene.py` asserts that
+exactly W1.3 and W1.16 carry the field, so the status cannot become an excuse for unfinished
+work. `make prove` does not run such a step's command and counts it as neither `FAIL` nor
+`MISSING`; the summary reports the count separately. See `docs/DEVIATIONS.md` DEV-08.
+
+### D-PROVE-04 Receipt logs are normalised before comparison
+
+Owner: W9.1. Status: applied. Recorded in round 2 and restated here.
+
+Four rules replace run-local tokens with named placeholders before a receipt log is compared
+or written: RN-01 clock, RN-02 elapsed, RN-03 temporary directory, RN-04 timing. A log that
+had a token replaced ends with a line naming the rules that fired. A receipt is rewritten
+only when the normalised content differs. Counts, sizes, versions, package names, paths,
+rule ids and pass or fail lines are untouched.
+
+### D-PROVE-05 One sweep at a time, with an out-of-tree `mkdir` lock
+
+Owner: W9.1. Status: applied.
+
+`scripts/prove.sh` takes a `mkdir`-based lock for `--all` and for a single step. `mkdir` is
+atomic on every POSIX filesystem and needs no dependency. The holder's pid is written inside.
+A lock whose pid is gone is broken once and reported. The holder exports
+`ABSUMP_PROVE_LOCK`, so W9.1's own verify command runs re-entrantly as a child of `--all`
+rather than deadlocking.
+
+The lock lives under `$TMPDIR`, keyed to the repository path, and not inside
+`quality/receipts/`. An in-tree lock directory is untracked while it exists. That would make
+`git status --porcelain` non-empty, would record `git_dirty: true` on every receipt written
+during the sweep, and would sit inside the tree the reproducibility clause diffs.
+
+### D-PROVE-06 A test the registry does not name does not count as done
+
+Owner: W9.1. Status: applied.
+
+The round-2 verifier found five test modules and two quality tools that no verify command
+named, so `make prove` never ran any of them. Now registered: `test_seal_official_date.py`
+and `test_seal_unlock_conjuncts.py` under W1.8; `test_lint_http_bypasses.py` under W2.3;
+`test_seal_unseal_gate.py` under W2.4; `tests/guard/gd04_scan.py` in W9.7's needs, since
+W9.7 already runs the whole `tests/guard` directory; and `test_prove_hygiene.py` under W9.1.
+W9.13 already registers `ops/lint_prose.sh` and `quality/check_numbers.py`.
+
+The rule is enforceable through
+`tests/unit/test_prove_hygiene.py::test_every_test_module_is_named_by_some_verify_command`.
+It walks `tests/unit`, `tests/fixtures` and `tests/guard`. It fails on any module that no
+verify command, Makefile recipe or `ops/` script names, directly or by running its directory.
+
+### D-NUM-01 Three small integers are allow-listed for WR-07
+
+Owner: W9.13. Status: applied.
+
+`docs/numbers-allow.txt` allows 1, 3 and 20, so that "1 October", "Section 3" and a
+twenty-minute budget in `abstract/FORM-FIELDS.md` trace. An allowed value stops being checked
+anywhere in WR-07 scope. The alternative was a gate change: a case-insensitive section
+pattern and a day-of-month date pattern in `quality/check_numbers.py`. That belongs to the
+gate's owner, not to the numbers lane.
+
+### Note for the risk register, R-17
+
+`docs/priorart-numbers.txt` must be re-read against the two nightly-rebuilding upstreams
+before each venue submission. The head of the file says so, and R-17 already records the
+rule.
+
+
+## Round-3 fixup, merged from `logs/decisions-pending/` (2026-09-23, Madrid)
+
+Merged by the git lane at the close of round 3. Two pending ids collided with
+entries already merged above, so they are renumbered here and the original id is
+named in each entry.
+
+### D-G3 `ops/env-setup.sh` is exempt from `ops/lint_http.sh`
+
+*(guard lane; written as "DEC-??")* The round-3 chokepoint verifier found the
+gate red on a clean tree with none of its own plants present: `[SH-CURL]
+ops/env-setup.sh` for the uv installer, and `[R-RSCRIPT]` twice for the R
+packages and CmdStan. The round-2 rewrite moved this file into scan range on
+purpose and gave `R-RSCRIPT` a file-scope conjunct, so a provisioning script that
+names any network idiom anywhere trips on every `Rscript -e` in it, and a
+permanently red gate blocks every prove run that depends on it.
+
+**Decision.** `^ops/env-setup\.sh:` joins `EXEMPT` as its seventh entry. It is
+machine provisioning, not a data pull: it fetches a package manager and R
+packages from astral.sh, CRAN and r-universe, writes nothing under `data/raw/`
+and puts no row in `data/raw/_manifest.csv`. It is outside the throttle by
+construction, not in evasion of it. `tests/unit/test_lint_http_bypasses.py` pins
+the list so the exemption cannot widen unnoticed.
+
+**Rejected alternative.** Moving provisioning back out of the scan set. DEV-12
+moved this file into `ops/` from `logs/`, and `tests/guard/test_no_sealed_reads.py`
+asserts both that `logs/env-setup.sh` is absent and that `ops/env-setup.sh` is
+listed by the scanner; moving it again would reopen DEV-12 for no gain.
+
+**Evidence.** `logs/evidence/verify-chokepoint-r3.log` (red),
+`logs/evidence/fix-chokepoint-r3.log` (green after).
+
+This also closes the git lane's owner item **D-GIT-01**, which recorded that the
+bootstrap had nowhere to live under the two rules as they then stood and that no
+round-3 commit could be written while the file was on disk. The exemption is the
+resolution; the alternatives D-GIT-01 listed (keep the installer outside the
+repository, or relax the guard's executable rule) are both declined.
+
+### D-PROVE-07 Receipt byte-identity is a property of the verify command
+
+*(prove-receipts lane; written as "D-PROVE-06", which is taken above.)*
+`scripts/prove.sh`'s normaliser is a line-wise text filter: it strips escapes and
+rewrites four families of run-local token (RN-01..RN-04), and it cannot reorder
+lines, because reordering a log would destroy the only thing a log is for. A
+verify command that prints an unordered collection therefore defeats receipt
+byte-identity by construction. Round 3 measured exactly that: a failing
+`assert set(...) == set(...)` in `tests/unit/test_layout.py` rendered two entries
+in `PYTHONHASHSEED` order and made `quality/receipts/W1.2.log` differ between two
+otherwise identical sweeps.
+
+**Decision.** The rule is stated in the normaliser header of `scripts/prove.sh`
+and enforced at the source: assertions compare sorted lists, never sets, and any
+listing is sorted before it is printed. `tests/unit/test_layout.py` now holds no
+set comparison and no unsorted glob.
+
+### D-PROVE-08 W9.13 runs both prose gates, always
+
+*(prove-receipts lane; written as "D-PROVE-07".)* The verify command was
+`lint_prose && check_numbers`. A failing `lint_prose` short-circuited the second
+gate, so the receipt reported six violations where there were fifteen. The
+command now captures both exit codes and fails if either is non-zero, and both
+outputs land in the receipt log. Measured with a stubbed failing lint:
+`check_numbers` still ran, combined rc=1.
+
+### Stated limits, recorded rather than dropped (no decision owed)
+
+The guard and chokepoint lanes each closed round 3 by naming what a text scanner
+cannot decide, in the header of `ops/lint_http.sh` and in the "WHAT THIS STILL
+DOES NOT CATCH" header of `tests/guard/gd04_scan.py`, and in
+`logs/decisions-pending/last-round.md`. In short: a URL that does not exist in
+the source; a request made inside a dependency; whether a matched line ever runs;
+a held-out day written with no comparison off the analysis surface; date
+arithmetic whose offset is not a literal on the same line; a character code built
+by arithmetic; a non-date datum copied into a fixture; and anything binary or
+under `data/`. The behavioural backstops are `data/raw/_manifest.csv`, the
+pre-commit hook, the red-team run (GD-09) and GD-10. These are declared limits of
+the static scan, not departures from the SOP, so no DEVIATIONS entry is owed.
+
+### Deviations for transcription into `docs/DEVIATIONS.md` (docs lane)
+
+The git lane does not write `docs/DEVIATIONS.md`. These three arrived in
+`logs/decisions-pending/prove-receipts.md` already numbered, and DEV-14 is the
+highest entry in that file, so the numbers are free. They are parked here so the
+round-3 commit does not lose them.
+
+- **DEV-15 — W1.2 no longer asserts that an ignored directory exists on disk.**
+  Five directories in the section 2.1 tree cannot exist in a clone:
+  `.github/workflows` (no workflow scope, parked at `ops/ci-pending/`, DEV-04),
+  `warehouse`, `data/raw`, `data/interim`, `data/marts` (excluded by
+  `.gitignore`, and the publish policy forbids anything under `data/` on the
+  public remote). `test_directory_exists` now covers the tracked half only, every
+  entry of which carries a tracked `.gitkeep`; the ignored half is held by
+  `test_ignored_directory_is_ignored`, which asserts the `.gitignore` rule rather
+  than the filesystem. An ignored directory that stopped being ignored still
+  fails W1.2.
+- **DEV-16 — the ignore checks ask through a probe path inside the directory.**
+  `.gitignore` writes these rules with a trailing slash, which matches a
+  directory, and git resolves a path that is not on disk as a file, so in a clone
+  `git check-ignore research` reports nothing and exits 1. Both ignore tests now
+  ask `git check-ignore -q <dir>/.ignore-probe`, which matches the same rule and
+  answers identically in a clone and on a working machine. The one-call
+  multi-path form the SOP names is kept, with probe paths.
+- **DEV-17 — W1.2's branch assertion is anchored on `origin/main`.** A clone
+  checked out on `phase01/public` has `origin/main` and no `refs/heads/main`, and
+  the round-2 form failed there for a reason that says nothing about the layout.
+  `origin/main` is now the anchor; HEAD must be its tip or a descendant; a local
+  `main`, when it exists, must agree with it.
+
+### Owner items still open at the close of round 3
+
+- **D-PROVE-09 (written as D-PROVE-08) — nothing in the bootstrap path installs
+  the W2.1 hook.** A clean clone has no `.git/hooks/pre-commit` and no
+  `.git/hooks/pre-commit.framework`. `make bootstrap` runs `ops/bootstrap.sh`,
+  which installs neither, so W2.1 fails in any clone until a human runs two
+  commands by hand. Measured: in a fresh clone of main, `uv run --locked
+  pre-commit install && bash ops/install_git_hooks.sh` takes
+  `tests/unit/test_layout.py` from 28 failures to 0. Recommended: `ops/bootstrap.sh`
+  gains those two lines after the Python environment step. That file is on no
+  fixup lane's owned paths, so no round wrote it; the failure messages of the four
+  affected tests now name the exact repair.
+- **`sop/SOP-final.md` line 374 names the wrong rule count.** That paragraph says
+  `ops/lint_http.sh` scans eleven directories "against a table of 29 named rules".
+  The round-3 fixup takes it to 37 (added PY-NETIMPORT, PY-CMDBUILD, SH-RAWNET,
+  R-NETPKG, SQL-URI, and the widened PY-URLLIB, SH-EXECVAR, R-CURLPKG); the
+  directory list is unchanged. The count wants amending there, as DEV-04 already
+  amends the six-idiom text. No lane in this round edits the SOP.
+
+### Owner items closed by this commit
+
+- **D-PROVE-10 (written as D-PROVE-09) — the three number ledgers were
+  untracked.** `docs/numbers.json`, `docs/priorart-numbers.txt` and
+  `docs/numbers-allow.txt` are what makes `quality/check_numbers.py` green, and
+  `quality/steps.yml` names all three in W9.13's `needs:`, so W9.13 read MISSING
+  in a clone. This commit tracks them. The `needs:` line is deliberate: the gap
+  reports itself instead of passing vacuously.
+- **`ops/verify_env.sh` removed the bayes-fallback dependency group.** Line 66 ran
+  a bare `uv sync --locked`; with `default-groups = ["dev"]` and an exact sync,
+  every `make verify-env` uninstalled pymc/nutpie/arviz and exited 0 (measured, 3
+  packages to 0). The file now runs `uv sync --locked --all-groups`, matching
+  W1.4's own command and D-PROVE-02.

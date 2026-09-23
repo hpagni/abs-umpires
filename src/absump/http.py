@@ -512,6 +512,63 @@ def _check_contract(url: str, host: str) -> None:
 # --------------------------------------------------------------------------
 
 
+# --------------------------------------------------------------------------
+# Identity: nothing that could name a person leaves this machine
+# --------------------------------------------------------------------------
+
+# An address, however it is spelled on the wire: the bare '@', its percent
+# encodings, and the two-hop form a query string can carry ('%2540').
+_AT_FORMS: tuple[str, ...] = ("@", "%40", "%2540", "&#64;", "\\u0040")
+
+
+def _names_a_person(text: str) -> str | None:
+    """The form of '@' this text carries, or None.
+
+    Section 2.3 forbids an identifying header or parameter of any kind, so the
+    test is the separator itself rather than one known address: a rule that
+    looked for the owner's address would have to carry the owner's address, and
+    this file is public. LIMIT: an address obfuscated past every spelling listed
+    here (' at ', a base64 blob, a shortened redirector) is not detected.
+    """
+    lowered = text.lower()
+    for form in _AT_FORMS:
+        if form.lower() in lowered:
+            return form
+    return None
+
+
+def _check_no_identity(url: str, headers: dict[str, str] | None = None) -> None:
+    """Refuse a request that carries userinfo, or an address anywhere in it.
+
+    Three surfaces, all of them ways a person's address reaches a log on
+    someone else's server:
+
+      * ``user:pass@host`` userinfo, which httpx would put in an
+        ``Authorization`` header and which servers log verbatim;
+      * any query parameter, name or value, carrying an '@';
+      * any outgoing header value carrying one.
+    """
+    parsed = httpx.URL(url)
+    if parsed.userinfo:
+        raise Fatal(
+            "refusing a URL with userinfo (user:pass@host): it authenticates as "
+            "a person and section 2.3 forbids identifying this machine's owner "
+            f"to a host -- {parsed.host or url}"
+        )
+    if _names_a_person(str(parsed.raw_path.decode("ascii", "replace"))):
+        raise Fatal(
+            "refusing a URL whose path or query carries an address separator: "
+            "no query parameter may name a person (section 2.3)"
+        )
+    for name, value in (headers or {}).items():
+        form = _names_a_person(str(value))
+        if form is not None:
+            raise Fatal(
+                f"refusing a request: header {name} carries {form!r}; "
+                "no outgoing header may name a person (section 2.3)"
+            )
+
+
 def _headers(host: str) -> dict[str, str]:
     """The complete outgoing header set this project adds.
 
@@ -692,6 +749,7 @@ def get(url: str, *, host_budget: bool = True) -> Response:
     :class:`Retryable` when a 429, a 5xx or a timeout survives ``max_attempts``.
     """
     host = _host_of(url)
+    _check_no_identity(url, _headers(host))
     _check_contract(url, host)
     dest = _dest_path(url)
 

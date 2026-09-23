@@ -1,0 +1,13 @@
+{
+  "_what": "The generated number ledger read by the numeric-literal gate at quality/check_numbers.py.",
+  "_generator": "tools/comms/export_numbers.R, which writes this file from app/data/*.rds and out/tables/*.csv.",
+  "_rule": "Every entry is a number a model produced, carried here by the generator with the file it came from. Nothing in this file is typed in by hand; a hand-written entry defeats the gate it feeds.",
+  "_state": "Empty. The chapter-one run has not happened, so app/data and out/tables hold no output and no generated number exists to trace. It fills on the first export run.",
+  "_entry_shape": {
+    "value": "the number, as the model produced it",
+    "units": "pp, inches, counts, or null",
+    "source": "the repository file the generator read it from",
+    "produced_by": "the SOP step that wrote that file"
+  },
+  "entries": []
+}

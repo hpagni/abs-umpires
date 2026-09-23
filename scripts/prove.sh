@@ -45,6 +45,68 @@ usage() {
   exit 2
 }
 
+# ---------------------------------------------------------------------- the lock
+# W9.1. Two sweeps must not interleave. They share quality/receipts/, and each
+# one rewrites a receipt only when the normalised content changed, so a second
+# sweep running inside the first sees half-written logs, compares against them
+# and can persist a receipt that describes neither run. The verifier also caught
+# a concurrent agent moving the branch under a sweep, which the receipt records
+# in git_branch; one writer at a time is the only way that field means anything.
+#
+# mkdir is the primitive: on every POSIX filesystem it creates the directory and
+# fails, atomically, if it already exists. No flock, no lockfile utility, no
+# dependency. The PID is written inside so a stale directory can be identified,
+# and a lock whose PID is gone is broken once, reported, and retaken -- a crashed
+# sweep must not wedge the gate forever.
+#
+# Re-entrancy is required, not optional: W9.1's own verify command is
+# `bash scripts/prove.sh --check`, which `--all` runs as a child. The holder
+# exports its lock path, so a nested prove.sh sees the variable, takes no lock
+# and releases nothing.
+#
+# The lock lives outside the repository, keyed to the repository path, for two
+# reasons the receipts themselves make: an in-tree lock directory is untracked
+# while it exists, so `git status --porcelain` is non-empty and every receipt
+# written during the sweep would record git_dirty true because of the lock; and
+# the clause under test is that quality/receipts/ is byte-identical between two
+# runs, which a directory that appears and disappears inside it does not help.
+LOCK_DIR="${TMPDIR:-/tmp}/absump-prove$(printf '%s' "$ROOT" | tr '/ ' '--').lock"
+LOCK_HELD=0
+
+release_lock() {
+  [ "$LOCK_HELD" -eq 1 ] || return 0
+  LOCK_HELD=0
+  rm -f "$LOCK_DIR/pid"
+  rmdir "$LOCK_DIR" 2>/dev/null || true
+}
+
+take_lock() {
+  if [ -n "${ABSUMP_PROVE_LOCK:-}" ]; then
+    return 0                      # a parent sweep already holds it
+  fi
+  mkdir -p "$RECEIPTS"
+  local tries=0 holder
+  while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+    holder="$(cat "$LOCK_DIR/pid" 2>/dev/null || echo '')"
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+      echo "prove: breaking a stale lock left by pid $holder" >&2
+      rm -f "$LOCK_DIR/pid"
+      rmdir "$LOCK_DIR" 2>/dev/null || true
+      continue
+    fi
+    tries=$((tries + 1))
+    if [ "$tries" -ge 60 ]; then
+      echo "prove: another run holds $LOCK_DIR (pid ${holder:-unknown}); giving up" >&2
+      exit 4
+    fi
+    sleep 1
+  done
+  echo $$ > "$LOCK_DIR/pid"
+  LOCK_HELD=1
+  export ABSUMP_PROVE_LOCK="$LOCK_DIR"
+  trap 'release_lock' EXIT INT TERM
+}
+
 # ---------------------------------------------------------------- idempotence
 # SOP section 9.1 asks every pipeline step to be safe to re-run: two runs in a
 # row leave the tree as they found it. prove.sh used to fail that. It truncated
@@ -90,6 +152,21 @@ usage() {
 #
 #      If a step's own command grows a fourth kind of run-local token, the rule
 #      for it belongs here, with an id, not in a one-off sed in that step.
+#
+#      STATED LIMIT, by construction. The normaliser is a line-wise text filter.
+#      It can delete a token and it can rewrite one, but it cannot reorder lines,
+#      because reordering a log would destroy the only thing a log is for. So any
+#      verify command that prints an UNORDERED collection -- a Python set, a dict
+#      before 3.7 ordering, a bare os.listdir, a glob, a parallel worker's
+#      interleaving -- can defeat receipt byte-identity and the normaliser will
+#      never catch it. That is not hypothetical: a failing `assert set(...) ==
+#      set(...)` in tests/unit/test_layout.py rendered its members in
+#      PYTHONHASHSEED order and made quality/receipts/W1.2.log differ between two
+#      otherwise identical sweeps. The fix belongs in the verify command, not
+#      here: sort before you print, and compare sorted lists rather than sets, so
+#      the failure message is ordered too. A step whose output is unordered is a
+#      step whose receipt is unreproducible, and no filter downstream can repair
+#      it.
 #   2. The receipt json is compared against the one already on disk with the two
 #      fields that move on their own removed, timestamp_madrid and duration_s.
 #      If the proof is otherwise identical, the file on disk is left alone and
@@ -257,6 +334,7 @@ case "$1" in
     exit 0
     ;;
   --all)
+    take_lock
     pass=0; failed=0; missing=0; retired_n=0; pending=0; total=0
     printf "%-7s %-13s %s\n" "STEP" "STATUS" "DETAIL"
     while IFS=$'\x1f' read -r id owner retired expect needs label cmd pending_owner; do
@@ -301,6 +379,7 @@ case "$1" in
 esac
 
 STEP="$1"
+take_lock
 RETIRED=$("$PY" "$REG" --field retired --step "$STEP" 2>/dev/null) || {
   echo "$STEP is not registered in quality/steps.yml" >&2
   exit 3

@@ -480,6 +480,67 @@ created="$created $E20"
 assert_caught "E20 an executable under an excluded prefix" "$E20"
 revert_files
 
+# ---------------------------------------------------- R3: six new spellings
+# E21. The view SHOUTED. DuckDB folds identifiers; the R3 verifier walked
+#      through rules 1, 2 and 6 with one shift key.
+E21="sql/shouted__redteam.sql"
+refuse_if_present "$E21"
+printf 'SELECT GAME_PK, PLATE_X FROM %s\n' \
+  "$(printf '%s' "$VIEW" | tr '[:lower:]' '[:upper:]')" > "$E21"
+created="$created $E21"
+assert_caught "E21 the held-out view in upper case" "$E21"
+revert_files
+
+# E22. The partition read by path from ops/, which is off the analysis surface
+#      and is where the pull, the seal and the deploy live.
+E22="ops/nightly_pull__redteam.py"
+refuse_if_present "$E22"
+printf "import polars as pl\n\nframe = pl.read_parquet('data/%s/pitch/*.parquet')\n" \
+  "$HELD" > "$E22"
+created="$created $E22"
+assert_caught "E22 the partition read by path from ops/" "$E22" GD-05
+revert_files
+
+# E23. A glob standing in for the tail of the label: the same partition.
+E23="sql/globbed__redteam.sql"
+refuse_if_present "$E23"
+printf "SELECT * FROM read_parquet('data/%s*/pitch/*.parquet')\n" "$FRAG" > "$E23"
+created="$created $E23"
+assert_caught "E23 a glob inside the label path segment" "$E23" GD-05
+revert_files
+
+# E24. The boundary reached by arithmetic, so no held-out day is written down.
+E24="src/absump/ch3/arith__redteam.py"
+refuse_if_present "$E24"
+short=$(date -j -v-3d -f "%Y-%m-%d" "$BOUNDARY" "+%Y, %-m, %-d" 2>/dev/null) || short=""
+if [ -z "$short" ]; then
+  short=$(python3 -c "import datetime,sys; d=datetime.date.fromisoformat(sys.argv[1])-datetime.timedelta(days=3); print(f'{d.year}, {d.month}, {d.day}')" "$BOUNDARY")
+fi
+{
+  printf 'from datetime import date, timedelta\n\n'
+  printf 'CUT = date(%s) + timedelta(days=3)\n' "$short"
+  printf 'rows = frame.filter(official_date >= CUT)\n'
+} > "$E24"
+created="$created $E24"
+assert_caught "E24 the boundary reached by date arithmetic" "$E24"
+revert_files
+
+# E25. The view spelled in character codes: this scanner's own token trick.
+E25="src/absump/ch3/ordinal__redteam.py"
+refuse_if_present "$E25"
+printf 'q = "SELECT * FROM " + chr(118)+chr(95)+"%s"\n' "${VIEW#??}" > "$E25"
+created="$created $E25"
+assert_caught "E25 the view assembled from character codes" "$E25"
+revert_files
+
+# E26. The label with one character written as a hex escape.
+E26="src/absump/ch3/escape__redteam.py"
+refuse_if_present "$E26"
+printf 'split = "%s\\x65d"\n' "$FRAG" > "$E26"
+created="$created $E26"
+assert_caught "E26 the label with a character escaped" "$E26" GD-05
+revert_files
+
 # ------------------------------------------------------- 3. green after the revert
 guard "$work/clean.log"
 clean_exit=$?
