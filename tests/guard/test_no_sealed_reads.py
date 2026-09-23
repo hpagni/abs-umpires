@@ -1,223 +1,68 @@
 """GD-04 and GD-05. Layer 3 of the four-layer guard: the static scan.
 
-SOP step W1.8, inverted in revision R2.
+SOP step W9.7, inverted in revision R2 and repaired after the phase 01 red team.
 
-WHAT THIS SCANS. The whole repository. Every file the repository ships --
-`git ls-files` plus everything untracked that git would track -- minus the
-formats that cannot execute a read (prose, data, images, lockfiles). There is
-no directory list. The R1 rule named five directories and so did not cover
-`src/absump/ch2/`, `src/absump/ch3/`, `tools/` or `app/`, which is exactly
-where W5 puts the solver and the fallback and where W5.5 imports the Chapter 2
-predictor from; a held-out read in either passed the guard. `SCANNED_DIR_SKIPS`
-below is empty, and a test asserts it stays empty.
+The engine is `tests/guard/gd04_scan.py`; its module docstring states what the
+scan walks, what it never walks and what the four rules are. This file is the
+assertion layer: it pins the allowlist, pins the scope, and reproduces every
+plant that the independent red team got past the R2 scanner, so that none of
+them can come back.
 
-WHAT IT FAILS ON, four rules:
+The eleven plants of the phase 01 red team, and where each is pinned below:
 
-    1. `analysis_set` compared to the held-out label, within one line.
-    2. the held-out pitch view, by name.
-    3. a raw fact-table read that the file does not restrict to the open set.
-    4. a literal date comparison against the boundary day in config/seal.yml.
+    P1  raw fact read in R/ch1/                       caught then, still caught
+    P2  boundary-date literal in src/absump/ch3/      caught then, still caught
+    P8  the held-out view inside a YAML config        caught then, still caught
+    P9a the held-out view in a small notebook         caught then, still caught
+    P3  the label spelled in two pieces by paste0     MISSED then, pinned here
+    P4  the view name built by an f-string            MISSED then, pinned here
+    P5  FROM and the table on two lines, in dbt       MISSED then, pinned here
+    P6  a raw read forgiven by a comment, in dbt      MISSED then, pinned here
+    P7  a later boundary date, and > the day before   MISSED then, pinned here
+    P9b the same notebook padded with a plot blob     MISSED then, pinned here
+    P10 a symlink out of an ignored directory         MISSED then, pinned here
 
-WHAT IS ALLOWLISTED. Exactly two paths, by exact path and nothing else:
-`src/absump/seal.py` and `quality/sql/analysis_set.sql`. They are the two files
-that define the held-out set. GD-05's count is two, and a test asserts it.
+Two more the verifier demonstrated against the engine directly, not as worktree
+plants, are pinned as well: the complement `!= 'open'`, which selects exactly
+the held-out rows without ever writing the label, and the second fact table.
 
-WHY THE RULES ARE BUILT FROM FRAGMENTS. This file would otherwise fail its own
-scan, and allowlisting it would make the count three. Every banned token below
-is assembled at import time, so the literal never appears in this file. The
-boundary date is read from `config/seal.yml`, which is also why no number here
-is hard-coded (SOP rule 0.5.4).
-
-GD-09, the red team, plants one violation in `R/ch1/20_surfaces.R` and a second
-in `src/absump/ch3/dp_fast.py` and requires the guard to fail on both. The
-planted-violation tests below are that mechanism in miniature, run on temporary
-files so the working tree is never dirtied.
+The plants below run on strings and on temporary files, never on the worktree,
+so a test run never dirties a tracked path. The worktree round trip is GD-09,
+`tests/guard/redteam_run.sh`.
 """
 
 from __future__ import annotations
 
-import re
+import os
 import subprocess
-from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
-import yaml
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-CONFIG_PATH = REPO_ROOT / "config" / "seal.yml"
-
-# ------------------------------------------------------------- the allowlist
-# Exactly two, by exact repository-relative path. Not a prefix, not a glob, not
-# a directory. GD-05's count is two.
-ALLOWLIST: frozenset[str] = frozenset(
-    {
-        "src/absump/seal.py",
-        "quality/sql/analysis_set.sql",
-    }
+from gd04_scan import (
+    _COMPLEMENT_OPS,
+    _FACT,
+    _HELD,
+    _VIEW,
+    ALLOWLIST,
+    EXCLUDED_PREFIXES,
+    NON_CODE_SUFFIXES,
+    REPO_ROOT,
+    SCANNED_DIR_SKIPS,
+    WALKED_ROOTS,
+    Violation,
+    boundary_date,
+    is_excluded,
+    is_scannable,
+    scan_repository,
+    scan_text,
+    shipped_files,
 )
 
-# The R1 directory list, kept empty on purpose. A test asserts it is empty.
-SCANNED_DIR_SKIPS: frozenset[str] = frozenset()
-
-# Formats that carry no executable read: prose, tabular data, images, archives,
-# lockfiles. The exclusion is by format, never by location.
-NON_CODE_SUFFIXES: frozenset[str] = frozenset(
-    {
-        ".md",
-        ".txt",
-        ".rst",
-        ".lock",
-        ".csv",
-        ".tsv",
-        ".parquet",
-        ".rds",
-        ".zst",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".svg",
-        ".ico",
-        ".pdf",
-        ".zip",
-        ".gz",
-        ".woff",
-        ".woff2",
-        ".ttf",
-        ".otf",
-        ".duckdb",
-        ".xlsx",
-        ".p8",
-        ".pyc",
-    }
-)
-
-MAX_BYTES = 2_000_000
-
-# ----------------------------------------------------------------- the rules
-# Assembled so that this file contains none of the tokens it bans.
-_HELD = "seal" + "ed"
-_VIEW = "v_pitch_" + _HELD
-_FACT = "fct_" + "pitch"
-_QUOTED_HELD = rf"['\"]{_HELD}['\"]"
-_QUOTED_OPEN = r"['\"]open['\"]"
-
-# 1. The expression, not the vocabulary: the column and the held-out literal
-#    have to meet on one line. A file may discuss the held-out set in prose; it
-#    may not compare the routing column to it.
-RULE_ANALYSIS_SET = re.compile(
-    rf"analysis_set\b[^\n]{{0,60}}{_QUOTED_HELD}|{_QUOTED_HELD}[^\n]{{0,60}}\banalysis_set\b"
-)
-
-# 2. The held-out view, by name, anywhere.
-RULE_VIEW = re.compile(rf"\b{_VIEW}\b")
-
-# 3. A read of the raw fact table. `FROM`, `JOIN`, a dbt `ref()` or `source()`,
-#    `read_parquet` or a `.table()` call, followed by the table name. It is
-#    forgiven only when the same file restricts the routing column to the open
-#    label, which is what the open views do.
-RULE_RAW_FACT = re.compile(
-    rf"(?:\bFROM\b|\bJOIN\b|\bref\s*\(|\bsource\s*\(|read_parquet|\.table\s*\()[^\n]{{0,80}}\b{_FACT}\b",
-    re.IGNORECASE,
-)
-QUALIFIES_OPEN = re.compile(rf"analysis_set\b[^\n]{{0,40}}{_QUOTED_OPEN}", re.IGNORECASE)
+BOUNDARY = boundary_date()
 
 
-def boundary_date() -> str:
-    """The first held-out day, from `config/seal.yml`. W2.4 owns that file."""
-    loaded = yaml.safe_load(CONFIG_PATH.read_text(encoding="utf-8"))
-    return str(loaded["seal_start_date"])
-
-
-def _date_rule(boundary: str) -> re.Pattern[str]:
-    """4. A literal date comparison against the boundary day.
-
-    Both the ISO form, `>= DATE '<boundary>'` or `>= as.Date("<boundary>")`,
-    and the three-integer constructor form that a date library would write. The
-    date itself comes from the config file, so it is not written here, which is
-    also why this file does not fail its own rule.
-    """
-    year, month, day = boundary.split("-")
-    iso = re.escape(boundary)
-    ctor = rf"[A-Za-z_.]*[Dd]ate\s*\(\s*{int(year)}\s*,\s*{int(month)}\s*,\s*{int(day)}\s*\)"
-    prefix = r"(?:>=|>)\s*(?:DATE\s+|as\.Date\s*\(\s*|date\s*\(\s*|pl\.date\s*\(\s*)?"
-    return re.compile(rf"{prefix}['\"]?{iso}|(?:>=|>)\s*{ctor}")
-
-
-@dataclass(frozen=True)
-class Violation:
-    path: str
-    line: int
-    rule: str
-    text: str
-
-    def __str__(self) -> str:
-        return f"GD-04 FAIL: {self.path}:{self.line} {self.rule} -- {self.text.strip()[:90]}"
-
-
-def shipped_files(root: Path = REPO_ROOT) -> list[str]:
-    """Every file the repository ships, relative to the root, sorted.
-
-    Tracked plus untracked-not-ignored. A violation written but not yet
-    committed still fails the guard. There is no directory filter here.
-    """
-    done = subprocess.run(
-        ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    if done.returncode != 0:
-        raise RuntimeError(f"git ls-files failed in {root}: {done.stderr.strip()}")
-    return sorted({line for line in done.stdout.splitlines() if line.strip()})
-
-
-def is_scannable(relative: str, root: Path = REPO_ROOT) -> bool:
-    """True when the file is code this scan can read. Format only, never place."""
-    path = root / relative
-    if Path(relative).suffix.lower() in NON_CODE_SUFFIXES:
-        return False
-    if not path.is_file() or path.is_symlink():
-        return False
-    return path.stat().st_size <= MAX_BYTES
-
-
-def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
-    """The four rules, over one file's text. The allowlist is applied by the caller."""
-    found: list[Violation] = []
-    date_rule = _date_rule(boundary)
-    qualified = bool(QUALIFIES_OPEN.search(text))
-    for number, line in enumerate(text.splitlines(), start=1):
-        if RULE_ANALYSIS_SET.search(line):
-            found.append(Violation(relative, number, "reads the held-out analysis set", line))
-        if RULE_VIEW.search(line):
-            found.append(Violation(relative, number, "names the held-out pitch view", line))
-        if RULE_RAW_FACT.search(line) and not qualified:
-            found.append(Violation(relative, number, "unqualified raw fact-table read", line))
-        if date_rule.search(line):
-            found.append(Violation(relative, number, "literal boundary-date comparison", line))
-    return found
-
-
-def scan_repository(
-    root: Path = REPO_ROOT,
-    allowlist: frozenset[str] = ALLOWLIST,
-) -> list[Violation]:
-    """The whole repository, minus the allowlist, minus non-code formats."""
-    boundary = boundary_date()
-    found: list[Violation] = []
-    for relative in shipped_files(root):
-        if relative in allowlist:
-            continue
-        if not is_scannable(relative, root):
-            continue
-        try:
-            text = (root / relative).read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-        found.extend(scan_text(relative, text, boundary))
-    return found
+def rules(found: list[Violation]) -> set[str]:
+    return {v.rule for v in found}
 
 
 # ===================================================================== GD-05
@@ -233,44 +78,78 @@ def test_allowlisted_paths_exist() -> None:
 
 
 def test_allowlist_is_load_bearing() -> None:
-    """Without the allowlist the scan fails, and only on allowlisted paths.
-
-    If this ever finds nothing, the scan has stopped seeing the two files that
-    define the held-out set, and a green run would mean nothing.
-    """
+    """Without the allowlist the scan fails, and only on allowlisted paths."""
     unfiltered = scan_repository(allowlist=frozenset())
     assert unfiltered, "the scan no longer flags the two files that define the held-out set"
     assert {v.path for v in unfiltered} <= ALLOWLIST, "\n".join(str(v) for v in unfiltered)
 
 
-# ===================================================================== GD-04
+# =============================================================== GD-04 scope
 def test_no_directory_is_skipped() -> None:
     """The R1 directory list is gone and stays gone (architect item 6)."""
     assert not SCANNED_DIR_SKIPS, f"a directory list came back: {sorted(SCANNED_DIR_SKIPS)}"
 
 
+def test_every_directory_that_executes_is_walked() -> None:
+    """R/, src/, dbt/, notebooks/, scripts/, ops/, app/ and tests/ are all walked."""
+    for name in ("R", "src", "dbt", "notebooks", "scripts", "ops", "app", "tests"):
+        assert name in WALKED_ROOTS, f"{name}/ is not walked"
+
+
+def test_the_only_exclusions_are_evidence() -> None:
+    """Receipts and gate logs. Nothing that executes is excluded.
+
+    This is the self-poisoning fix. A receipt quotes the guard's failure text
+    verbatim, so scanning receipts made every red-team run write the file that
+    turned the next run red. Neither directory is importable, runnable or
+    compiled, so excluding them removes no read.
+    """
+    assert set(EXCLUDED_PREFIXES) == {"quality/receipts/", "logs/"}
+    for prefix in EXCLUDED_PREFIXES:
+        assert is_excluded(prefix + "anything.sql")
+    for name in WALKED_ROOTS:
+        assert not is_excluded(name + "/anything.sql"), f"{name}/ must not be excluded"
+
+
+def test_a_receipt_quoting_the_guard_does_not_poison_the_scan(tmp_path: Path) -> None:
+    """The exact phase 01 failure: the transcript of a red-team run."""
+    transcript = (
+        f"[redteam] make test-guard -> exit 2   "
+        f"GD-04 FAIL: R/ch1/20_surfaces.R:31 reads analysis_set = '{_HELD}'\n"
+        f"[redteam] make test-guard -> exit 2   "
+        f"GD-04 FAIL: src/absump/ch3/dp_fast.py:37 reads {_VIEW}\n"
+        f"literal boundary-date comparison -- official_date >= DATE '{BOUNDARY}'\n"
+    )
+    assert scan_text("quality/receipts/W9.7.log", transcript, BOUNDARY), (
+        "the transcript really does carry banned text; that is why it is excluded by path"
+    )
+    assert is_excluded("quality/receipts/W9.7.log")
+    assert is_excluded("logs/evidence/W9.7.log")
+    written = tmp_path / "W9.7.log"
+    written.write_text(transcript, encoding="utf-8")
+    assert "quality/receipts" not in {v.path for v in scan_repository()}
+
+
 def test_every_shipped_file_is_dropped_only_for_its_format() -> None:
     """The one reason a shipped file is not scanned is that it is not code.
 
-    This is the assertion that replaces the R1 directory list. `src/absump/ch2/`,
-    `src/absump/ch3/`, `tools/` and `app/` are covered because nothing excludes
-    them, not because they are named.
+    Size is no longer a reason and neither is being a symlink: both were exits
+    the red team walked through.
     """
     for relative in shipped_files():
         if is_scannable(relative):
             continue
         path = REPO_ROOT / relative
         reason_is_format = Path(relative).suffix.lower() in NON_CODE_SUFFIXES
-        reason_is_size = path.is_file() and path.stat().st_size > MAX_BYTES
-        reason_is_gone = not path.is_file() or path.is_symlink()
-        assert reason_is_format or reason_is_size or reason_is_gone, (
-            f"{relative} was skipped and no format, size or link rule explains it"
+        reason_is_gone = not path.exists()
+        assert reason_is_format or reason_is_gone, (
+            f"{relative} was skipped and no format rule explains it"
         )
 
 
 def test_code_extensions_are_all_scanned() -> None:
     code = [p for p in shipped_files() if Path(p).suffix.lower() in {".py", ".r", ".sql", ".sh"}]
-    assert len(code) > 10, "the scan found almost no code; git ls-files is probably wrong"
+    assert len(code) > 10, "the scan found almost no code; the listing is probably wrong"
     for relative in code:
         assert is_scannable(relative), f"{relative} is code and must be scanned"
 
@@ -281,58 +160,242 @@ def test_repository_has_no_held_out_read() -> None:
     assert not found, "\n".join(str(v) for v in found)
 
 
-# ------------------------------------------------- the scan is not vacuous
+# ============================================ the eleven plants of the red team
+def test_p1_raw_fact_read_in_R_is_caught() -> None:
+    line = f'  DBI::dbGetQuery(con, "SELECT plate_x, plate_z FROM {_FACT}pitch")\n'
+    found = scan_text("R/ch1/20_surfaces.R", line, BOUNDARY)
+    assert "unqualified raw fact-table read" in rules(found)
+
+
+def test_p2_boundary_date_literal_in_ch3_is_caught() -> None:
+    text = (
+        "    return con.execute(\n"
+        f"        \"SELECT * FROM v_pitch_open WHERE official_date >= DATE '{BOUNDARY}'\"\n"
+        "    ).pl()\n"
+    )
+    found = scan_text("src/absump/ch3/dp_fast.py", text, BOUNDARY)
+    assert "literal boundary-date comparison" in rules(found)
+
+
+def test_p8_the_view_inside_a_yaml_config_is_caught() -> None:
+    text = f'value_frame:\n  sql: "SELECT * FROM {_VIEW}"\n'
+    found = scan_text("config/ch3_queries.yml", text, BOUNDARY)
+    assert "names the held-out pitch view" in rules(found)
+
+
+def test_p3_a_label_spelled_in_two_pieces_is_caught() -> None:
+    """The label built by paste0 and compared through a variable.
+
+    R2 matched a quoted literal, so the label held in `HELD` was invisible. The
+    seam-joiner closes the gap between the fragments, and the taint pass carries
+    the value to the line that compares it.
+    """
+    text = (
+        f'HELD <- paste0("{_HELD[:4]}", "{_HELD[4:]}")\n'
+        "d <- dplyr::filter(d, analysis_set == HELD)\n"
+    )
+    found = scan_text("R/ch1/20_surfaces.R", text, BOUNDARY)
+    assert "reads the held-out analysis set" in rules(found)
+    assert [v.line for v in found if v.rule == "reads the held-out analysis set"] == [2]
+
+
+def test_p3b_the_fragments_alone_are_caught_when_compared() -> None:
+    """The same trick without the variable: the two pieces on the comparison line."""
+    text = f'd <- dplyr::filter(d, analysis_set == paste0("{_HELD[:4]}", "{_HELD[4:]}"))\n'
+    assert "reads the held-out analysis set" in rules(scan_text("R/ch1/x.R", text, BOUNDARY))
+
+
+def test_p4_a_view_name_built_by_an_fstring_is_caught() -> None:
+    text = (
+        f'    split = "{_HELD}"\n'
+        '    view = f"v_pitch_{split}"\n'
+        '    return con.execute(f"SELECT * FROM {view}").pl()\n'
+    )
+    found = scan_text("src/absump/ch3/dp_fast.py", text, BOUNDARY)
+    assert "names the held-out pitch view" in rules(found)
+    hits = sorted(v.line for v in found if v.rule == "names the held-out pitch view")
+    assert hits == [2, 3], f"both the build and the use must be named, got {hits}"
+
+
+def test_p5_from_and_the_table_on_two_lines_is_caught() -> None:
+    """A formatter breaks the statement; R2's per-line rule 3 lost the read."""
+    text = (
+        "{{ config(materialized='view') }}\n"
+        "SELECT\n    game_pk,\n    plate_x\nFROM\n"
+        f"    {_FACT}pitch\n"
+    )
+    found = scan_text("dbt/models/marts/v_pitch_all.sql", text, BOUNDARY)
+    assert "unqualified raw fact-table read" in rules(found)
+
+
+def test_p6_a_comment_forgives_nothing() -> None:
+    """R2 computed the open qualification over the whole file, comments included."""
+    text = (
+        "-- Sibling of v_pitch_open, which restricts analysis_set = 'open'. This one\n"
+        "-- counts every pitch so the totals in the memo reconcile.\n"
+        "{{ config(materialized='table') }}\n"
+        f"SELECT game_pk, count(*) AS pitches FROM {_FACT}pitch GROUP BY 1\n"
+    )
+    found = scan_text("dbt/models/marts/late_counts.sql", text, BOUNDARY)
+    assert "unqualified raw fact-table read" in rules(found)
+
+
+def test_p7_any_day_on_or_after_the_boundary_is_caught() -> None:
+    """R2 matched one literal. Every later day, and `>` the day before, read the same rows."""
+    from datetime import date, timedelta
+
+    day = date.fromisoformat(BOUNDARY)
+    after = (day + timedelta(days=1)).isoformat()
+    before = (day - timedelta(days=1)).isoformat()
+    for snippet in (
+        f"WHERE official_date >= DATE '{after}'",
+        f"WHERE official_date > DATE '{before}'",
+        f"WHERE official_date <= DATE '{after}'",
+        f"WHERE official_date BETWEEN DATE '2026-04-01' AND DATE '{after}'",
+        f"d <- dplyr::filter(d, official_date > as.Date('{before}'))",
+    ):
+        found = scan_text("src/absump/ch3/dp_fast.py", snippet + "\n", BOUNDARY)
+        assert "literal boundary-date comparison" in rules(found), snippet
+
+
+def test_a_comparison_that_stays_open_is_not_flagged() -> None:
+    """The rule bans reading the held-out days, not writing a date."""
+    from datetime import date, timedelta
+
+    day = date.fromisoformat(BOUNDARY)
+    before = (day - timedelta(days=1)).isoformat()
+    for snippet in (
+        f"WHERE official_date < DATE '{BOUNDARY}'",
+        f"WHERE official_date <= DATE '{before}'",
+    ):
+        assert not scan_text("src/absump/ch2/predict.py", snippet + "\n", BOUNDARY), snippet
+
+
+def test_p9b_a_notebook_is_scanned_whatever_it_weighs(tmp_path: Path) -> None:
+    """One embedded plot used to push the same notebook past the size skip."""
+    blob = "iVBORw0KGgoAAAANSUhEUg" * 120_000
+    notebook = (
+        '{\n "cells": [\n  {\n   "cell_type": "code",\n'
+        '   "outputs": [\n    {"output_type": "display_data",\n'
+        f'     "data": {{"image/png": "{blob}"}}}}\n   ],\n'
+        '   "source": [\n'
+        f'    "rows = con.execute(\\"SELECT * FROM {_VIEW}\\").pl()\\n"\n'
+        '   ]\n  }\n ],\n "nbformat": 4\n}\n'
+    )
+    path = tmp_path / "notebooks" / "ch1_explore.ipynb"
+    path.parent.mkdir(parents=True)
+    path.write_text(notebook, encoding="utf-8")
+    assert path.stat().st_size > 2_000_000, "the plant must be past the old size skip"
+    assert is_scannable("notebooks/ch1_explore.ipynb", root=tmp_path)
+    found = scan_text("notebooks/ch1_explore.ipynb", notebook, BOUNDARY)
+    assert "names the held-out pitch view" in rules(found)
+
+
+def test_p10_a_symlink_out_of_an_ignored_directory_is_scanned(tmp_path: Path) -> None:
+    """An importable symlink into ignored research/ was skipped by design in R2."""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    target = outside / "probe.py"
+    target.write_text(f'def probe(con):\n    return con.execute("SELECT * FROM {_VIEW}").pl()\n')
+    inside = tmp_path / "src" / "absump" / "ch3"
+    inside.mkdir(parents=True)
+    os.symlink(target, inside / "probe.py")
+    relative = "src/absump/ch3/probe.py"
+    assert is_scannable(relative, root=tmp_path), "a symlink to code is still code"
+    found = scan_repository(root=tmp_path, allowlist=frozenset(), only=relative)
+    assert "names the held-out pitch view" in rules(found)
+
+
+def test_the_complement_of_the_open_label_is_caught() -> None:
+    """`!= 'open'` selects exactly the held-out rows and never writes the label.
+
+    R2 read this as proof that the file was restricted to the open set, and
+    forgave the raw fact reads in the same file as well.
+    """
+    bang, angle, notin = _COMPLEMENT_OPS
+    for snippet in (
+        f"con.execute(\"SELECT plate_x FROM v_pitch_open WHERE analysis_set {bang} 'open'\")",
+        f"SELECT plate_x FROM dim_game WHERE analysis_set {angle} 'open'",
+        f"d <- dplyr::filter(d, analysis_set {bang} 'open')",
+        f"SELECT * FROM dim_game WHERE analysis_set {notin} ('open')",
+    ):
+        found = scan_text("src/absump/ch3/dp_fast.py", snippet + "\n", BOUNDARY)
+        assert "reads the held-out analysis set" in rules(found), snippet
+
+
+def test_the_complement_does_not_qualify_a_raw_read() -> None:
+    text = f"SELECT plate_x FROM {_FACT}pitch WHERE analysis_set {_COMPLEMENT_OPS[0]} 'open'\n"
+    found = scan_text("dbt/models/marts/x.sql", text, BOUNDARY)
+    assert rules(found) == {"reads the held-out analysis set", "unqualified raw fact-table read"}
+
+
+def test_the_second_fact_table_is_guarded_too() -> None:
+    """Rule 3 named one table in R2. The challenge table was unguarded."""
+    text = f"SELECT * FROM {_FACT}challenge\n"
+    assert "unqualified raw fact-table read" in rules(scan_text("sql/x.sql", text, BOUNDARY))
+
+
+def test_qualification_ahead_of_the_read_forgives_nothing() -> None:
+    """An open restriction belonging to an earlier statement is not a licence."""
+    text = (
+        f"SELECT game_pk FROM dim_game WHERE analysis_set = 'open';\nSELECT * FROM {_FACT}pitch\n"
+    )
+    found = scan_text("sql/two_statements.sql", text, BOUNDARY)
+    assert [v.line for v in found if v.rule == "unqualified raw fact-table read"] == [2]
+
+
+def test_a_distant_open_query_does_not_forgive_a_later_raw_read() -> None:
+    """File-wide forgiveness is gone: the window is the statement, not the file."""
+    text = (
+        "q1 = \"SELECT * FROM v_pitch_open WHERE analysis_set = 'open'\"\n"
+        + "filler = 1\n" * 8
+        + f'q2 = "SELECT * FROM {_FACT}pitch"\n'
+    )
+    found = scan_text("src/absump/ch3/dp_fast.py", text, BOUNDARY)
+    assert [v.line for v in found if v.rule == "unqualified raw fact-table read"] == [10]
+
+
+# ------------------------------------------------- what must stay unflagged
+def test_an_open_read_is_not_flagged() -> None:
+    open_read = "rows = con.execute('SELECT * FROM v_pitch_open').pl()\n"
+    assert not scan_text("src/absump/ch2/predict.py", open_read, BOUNDARY)
+    view_definition = (
+        f"CREATE VIEW v_pitch_open AS\nSELECT * FROM {_FACT}pitch\nWHERE analysis_set = 'open'\n"
+    )
+    assert not scan_text("dbt/models/marts/v_pitch_open.sql", view_definition, BOUNDARY)
+
+
+def test_an_unqualified_fact_read_is_flagged() -> None:
+    unqualified = f"CREATE VIEW v_all AS\nSELECT * FROM {_FACT}pitch\n"
+    found = scan_text("dbt/models/marts/v_all.sql", unqualified, BOUNDARY)
+    assert found and found[0].rule == "unqualified raw fact-table read"
+
+
 def _planted() -> list[tuple[str, str]]:
-    boundary = boundary_date()
     return [
         ("analysis set", f"SELECT game_pk FROM dim_game WHERE analysis_set = '{_HELD}'"),
         ("held-out view", f"rows = con.execute('SELECT * FROM {_VIEW}').pl()"),
-        ("raw fact table", f"SELECT plate_x FROM {_FACT} WHERE balls = 0"),
-        ("boundary date", f"SELECT * FROM dim_game WHERE official_date >= DATE '{boundary}'"),
+        ("raw fact table", f"SELECT plate_x FROM {_FACT}pitch WHERE balls = 0"),
+        ("boundary date", f"SELECT * FROM dim_game WHERE official_date >= DATE '{BOUNDARY}'"),
     ]
 
 
 @pytest.mark.parametrize(("label", "snippet"), _planted(), ids=[c[0] for c in _planted()])
 def test_a_planted_violation_is_caught(label: str, snippet: str) -> None:
-    found = scan_text("src/absump/ch3/dp_fast.py", snippet + "\n", boundary_date())
+    found = scan_text("src/absump/ch3/dp_fast.py", snippet + "\n", BOUNDARY)
     assert found, f"the {label} rule no longer fires"
 
 
 def test_gd09_plants_in_both_ch3_and_R_are_caught() -> None:
-    """GD-09 plants one violation in R/ch1/ and one in src/absump/ch3/.
-
-    The R1 directory list covered neither. Both must fail, and neither path may
-    be allowlisted into silence.
-    """
+    """GD-09 plants one violation in R/ch1/ and one in src/absump/ch3/."""
     plants = {
         "R/ch1/20_surfaces.R": f"d <- dplyr::filter(d, analysis_set == '{_HELD}')",
         "src/absump/ch3/dp_fast.py": f'rows = con.execute("SELECT * FROM {_VIEW}").pl()',
     }
     for relative, line in plants.items():
         assert relative not in ALLOWLIST
-        found = scan_text(relative, line + "\n", boundary_date())
+        found = scan_text(relative, line + "\n", BOUNDARY)
         assert found, f"the guard did not fail on the plant in {relative}"
-
-
-def test_an_open_read_is_not_flagged() -> None:
-    """The scan bans a held-out read, not the warehouse.
-
-    Reading an open view is fine, and so is the view definition itself, which
-    reads the fact table and restricts it to the open label in the same file.
-    """
-    open_read = "rows = con.execute('SELECT * FROM v_pitch_open').pl()\n"
-    assert not scan_text("src/absump/ch2/predict.py", open_read, boundary_date())
-    view_definition = (
-        f"CREATE VIEW v_pitch_open AS\nSELECT * FROM {_FACT}\nWHERE analysis_set = 'open'\n"
-    )
-    assert not scan_text("dbt/models/marts/v_pitch_open.sql", view_definition, boundary_date())
-
-
-def test_an_unqualified_fact_read_is_flagged() -> None:
-    """The same read, without the open restriction, fails."""
-    unqualified = f"CREATE VIEW v_all AS\nSELECT * FROM {_FACT}\n"
-    found = scan_text("dbt/models/marts/v_all.sql", unqualified, boundary_date())
-    assert found and found[0].rule == "unqualified raw fact-table read"
 
 
 # ================================================== layer 2 and the ordering
