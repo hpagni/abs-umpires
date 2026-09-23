@@ -85,7 +85,7 @@ action in the same log.
 
 ---
 
-## DEV-04 — W1.7 / W2.3: `ops/lint_http.sh` is a 29-rule table over eleven directories
+## DEV-04 — W1.7 / W2.3: `ops/lint_http.sh` is a 37-rule table over eleven directories
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -98,6 +98,36 @@ verification planted 43 files and 35 of 37 required bypasses were flagged.
 The recommended default was applied rather than raised: a gate that misses nine bypasses in
 ten is not a gate. The SOP line has been edited in place to match, pre-tag. Evidence:
 `logs/evidence/verify-chokepoint-r2.log`, `logs/evidence/verify-verify-throttle-chokepoint.log`.
+
+**Amended R3 (2026-09-23).** The table is now **37 rules**, not 29, and the eight added are
+`PY-NETIMPORT`, `PY-CMDBUILD`, `SH-RAWNET`, `R-NETPKG`, `SQL-URI` and the widened
+`PY-URLLIB`, `SH-EXECVAR` and `R-CURLPKG`. Two of the rules also changed *shape*, which
+matters more than the count: a **file-scope conjunct** lets a rule fire when its two halves
+sit on different lines of one file, closing a URL hoisted into a variable
+(`PY-FETCHLIB`, `R-FETCHLIB`, `ANY-URLREAD`, `ANY-HTTPFS`, `PY-CMDBUILD`); and a
+**morpheme family** replaces an enumerated list of library names with the network morpheme
+they share, closing a sibling library absent from the list (`urllib3`, `pycurl`, `httplib2`,
+`requests_html`). The design rule that follows: a new bypass is closed at its shape, never
+by adding one more name to a list. The eleven scanned directories are unchanged.
+
+**Amended R4 (2026-09-23).** Both this entry and `sop/SOP-final.md` said 29 while the gate
+ran 37, for one whole round. The count is now pinned:
+`tests/unit/test_lint_http_bypasses.py::test_the_documented_rule_count_matches_the_gate`
+reads the number out of the linter's own banner and fails if either document disagrees, so
+a rule added without moving the prose fails in the commit that adds it.
+
+**Two residual classes, recorded so they are not re-reported as defects.** First, a command
+name split further than one character (`C=cur` then `${C}l`): `SH-EXECVAR` needs whitespace
+after the variable reference. Second, the allow-list residue: the morpheme families and the
+raw-transport rules close what is named here, but a transport matching no morpheme and no
+family still passes. `ops/lint_http.sh` is a list of *shapes*, not a behavioural gate. The
+behavioural gate is `src/absump/http.py`, which refuses userinfo and every `@` spelling in a
+path, a query name, a query value and a header; a URL *fragment* (`#a@b.com`) is allowed
+because a fragment is never put on the wire, and the `&#64;` vector splits at `#` for the
+same reason. Three further classes are undecidable for any grep table and are stated in the
+`ops/lint_http.sh` header: a URL that does not exist in the source, a request made inside a
+dependency, and whether a matched line ever runs. The behavioural backstop for all three is
+`data/raw/_manifest.csv`, one row per pull through `absump.http.get()`.
 
 ## DEV-05 — W9.7 GD-04: the scan excludes `quality/receipts/` and `logs/`
 
@@ -229,3 +259,104 @@ carried by `docs/prior-art.md` at this commit, so no line could be written with 
 read date. They are listed in a comment at the head of the file and are held back rather
 than asserted. WR-07 flags any of them that appears in prose, which is the intended failure.
 Closes when each value has a source and a read date, or is dropped.
+
+## DEV-15 — W1.2 no longer asserts that an ignored directory exists on disk
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+Five directories in the SOP section 2.1 tree cannot exist in a clone of `origin/main`:
+`.github/workflows` (the token carries no workflow scope, so the two workflows are parked at
+`ops/ci-pending/`, DEV-04 and DEV-10), and `warehouse`, `data/raw`, `data/interim` and
+`data/marts` (excluded by `.gitignore`, and the publish policy forbids anything under
+`data/` on the public remote). W1.2 as registered required both that the tree be published
+and that these directories exist, and a clone cannot satisfy both.
+
+`test_directory_exists` now covers the **tracked half** only, every entry of which carries a
+tracked `.gitkeep`; the ignored half is held by `test_ignored_directory_is_ignored`, which
+asserts the `.gitignore` rule rather than the filesystem. This is a visible narrowing of a
+registered check and is recorded as one: what is no longer asserted is existence on disk,
+and what is asserted instead is that the directory is still ignored. An ignored directory
+that stopped being ignored still fails W1.2, which is the failure that would actually matter.
+
+## DEV-16 — the W1.2 ignore checks ask through a probe path inside the directory
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+`.gitignore` writes these rules with a trailing slash, which matches a directory, and git
+resolves a path that is not on disk as a file. So in a clone `git check-ignore research`
+reports nothing and exits 1, even though the rule is present and correct. Both ignore tests
+now ask `git check-ignore -q <dir>/.ignore-probe`, which matches the same rule and answers
+identically in a clone and on a working machine. The one-call multi-path form the SOP names
+is kept; only the paths handed to it changed.
+
+## DEV-17 — W1.2's branch assertion is anchored on `origin/main`
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
+
+A clone checked out on `phase01/public` has `origin/main` and no `refs/heads/main`, so the
+round-2 form of the check failed there for a reason that says nothing about the layout.
+`origin/main` is now the anchor: HEAD must be its tip or a descendant, and a local `main`,
+when one exists, must agree with it. This supersedes the narrower DEV-11.
+
+## DEV-18 — the declared limits of the GD-04 static scan, and where each is covered
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN by design (a standing limit). Pre-tag.
+
+`DECISIONS.md` previously ruled that the static scan's limits were declared limits rather
+than departures from the SOP, so no DEVIATIONS entry was owed. That was correct on the
+merits and wrong on the audience, and round 4 reverses it: `docs/DEVIATIONS.md` is the
+document a reviewer and the SSAC methods appendix read, and a limit recorded only in a
+decisions log is a limit a reviewer is unlikely to reach. The same list is in the
+`tests/guard/gd04_scan.py`
+header; this entry is the copy a reader will actually reach.
+
+**GD-04 is a detection layer, not the containment boundary.** Containment is the seal: the
+held-out rows sit in an encrypted partition, a deliberate read must run `ops/unseal.sh`,
+which is irreversible and six-gated, and GD-10 pairs every `UNSEALED` line to a receipt
+`ops/unseal.sh` itself writes. The scan's bounded claim is that it catches the *accident* --
+a chapter reaching past the boundary day by habit -- and every evasion class ever
+demonstrated against it, at file and line, before the commit lands. It does not claim
+exhaustiveness against an author who already holds the key, and any wording that implied
+otherwise would be the dishonest part.
+
+What it does not catch, each with the layer that does:
+
+1. **A held-out day written with no comparison, outside the analysis surface.** Rule 5 is
+   surface-only *on purpose*. Off the surface the same spelling is a receipt stamp
+   (`quality/steps.yml`), a tag message (`ops/preregister.sh`), a dbt target
+   (`dbt/profiles.yml.example`) or the seal module doing its job (`src/absump/paths.py`), and
+   a rule that cried wolf there would be switched off within a week. Note the asymmetry
+   deliberately: `scripts/` **is** on the analysis surface and `ops/` is **not**. Do not
+   "fix" this by adding `ops/` and then silencing the resulting noise. What actually harms
+   is the *read*, and rule 6c catches a read of the partition by path everywhere, `ops/`
+   included. Covered by: rule 6c, the pre-commit hook, review.
+2. **The bare label as a literal outside the analysis surface**, for the same reason.
+3. **Date arithmetic whose offset is not a literal on the same line** --
+   `CUT = date(2026, 9, 19) + timedelta(days=n)` with `n` computed elsewhere, or a boundary
+   reached by a loop. Rule 4b reads a written offset only. This is a taint-analysis problem,
+   not a regex gap. Covered by: review, and the seal itself.
+4. **A character code built by arithmetic rather than written down** -- `chr(115 + 3)` where
+   `chr(118)` is caught. The scanner assembles its own banned tokens from ordinals so that it
+   does not flag itself, and it cannot ban ordinal arithmetic without flagging itself. The
+   decoder reads written ordinals and `\xNN`, `\uNNNN` and octal escapes, not expressions.
+5. **A query assembled across several lines through variables the taint pass does not
+   model**; a jinja `~` concatenation of a *fact table* name (the label and the view are
+   tracked, a table name is not); and a base64 blob abutting an identifier with no quote
+   between them, where `redact_blobs` eats the leading character.
+6. **A datum other than a date copied into a fixture as data** -- a bare `gamePk` is not a
+   spelling any rule can read. Rule 5 reads the date; nothing reads the identifier.
+7. **Any read performed by a binary or compiled artefact**, and anything under `data/` or
+   `research/`, which D-03 keeps out of git entirely. Covered by: the seal, and
+   `data/raw/_manifest.csv`.
+
+**The stopping rule.** The scan is closed for a phase when four conditions hold, each one
+checkable rather than aspirational: (1) the seal layer stands under direct attack, re-proved
+each round; (2) every evasion demonstrated to date is caught with file and line *and* is
+re-planted as a permanent check in GD-09 and `tests/guard/redteam_run.sh`, so a repair cannot
+silently regress; (3) every known miss is written down here and in the scanner header, each
+named with the layer that covers it; and (4) a full, time-boxed red-team budget, run in an
+isolated clone, yields no miss in a **new class** -- a new spelling inside a class already
+declared does not reopen the scanner. Two consecutive no-new-class rounds close it for the
+phase. The honest finish line is "no evasion in the pinned corpus and no new class since
+round N", never "no evasion exists". Standing obligation: the red team runs again at each
+phase boundary and on any change to the rule table, and this list is re-read at the same time.

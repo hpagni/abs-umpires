@@ -717,8 +717,17 @@ a held-out day written with no comparison off the analysis surface; date
 arithmetic whose offset is not a literal on the same line; a character code built
 by arithmetic; a non-date datum copied into a fixture; and anything binary or
 under `data/`. The behavioural backstops are `data/raw/_manifest.csv`, the
-pre-commit hook, the red-team run (GD-09) and GD-10. These are declared limits of
-the static scan, not departures from the SOP, so no DEVIATIONS entry is owed.
+pre-commit hook, the red-team run (GD-09) and GD-10.
+
+**Reversed in round 4 (D-R4-01).** This section previously ruled that these were
+declared limits of the static scan rather than departures from the SOP, so no
+DEVIATIONS entry was owed. That was right on the merits and wrong on the
+audience. `docs/DEVIATIONS.md` is the document a reviewer and the SSAC methods
+appendix actually read; a limit recorded only in a decisions log is a limit
+a reviewer is unlikely to reach. The list is now `docs/DEVIATIONS.md` DEV-18, with the covering
+layer named beside each item, and DEV-04 carries the chokepoint's two residual
+classes. The scanner header and DEV-18 are deliberate duplicates: change one,
+change both.
 
 ### Deviations for transcription into `docs/DEVIATIONS.md` (docs lane)
 
@@ -782,3 +791,139 @@ round-3 commit does not lose them.
   every `make verify-env` uninstalled pymc/nutpie/arviz and exited 0 (measured, 3
   packages to 0). The file now runs `uv sync --locked --all-groups`, matching
   W1.4's own command and D-PROVE-02.
+
+## Round 4 (2026-09-23) — the single-builder round
+
+One builder owned the whole tree; no parallel lanes, so none of round 3's
+cross-lane churn was possible. Every red-team probe ran in a scratch root under
+the session scratchpad via the new `--root` flag, never in the live tree.
+
+### D-R4-01 The static scan's declared limits are transcribed into DEVIATIONS.md
+
+Reverses the ruling recorded above. See `docs/DEVIATIONS.md` DEV-18.
+
+### D-R4-02 `ops/bootstrap.sh` installs both hooks, in the order that preserves the guard
+
+Owner: round 4. Status: applied. Closes **D-PROVE-09** (written in round 3 as
+D-PROVE-08; cite it as D-PROVE-09).
+
+`make bootstrap` ran `ops/bootstrap.sh`, which installed no git hook at all, so a
+clean clone had no `.git/hooks/pre-commit` and W2.1 was red in every clone until
+a human ran two commands by hand. Measured in round 3: 28 failures in
+`tests/unit/test_layout.py` before `uv run --locked pre-commit install && bash
+ops/install_git_hooks.sh`, 0 after. The public pre-registration claims a stranger
+can reproduce this from the public repo; while bootstrap installed no hook that
+claim was false.
+
+`ops/bootstrap.sh` now runs `uv run --locked pre-commit install` and then
+`sh ops/install_git_hooks.sh`, in that order and documented as load-bearing:
+`pre-commit install` overwrites `.git/hooks/pre-commit`, and
+`ops/install_git_hooks.sh` preserves the framework hook as
+`pre-commit.framework` and execs it, so both still run on every commit.
+
+This defect survived three rounds because `ops/bootstrap.sh` sat on no lane's
+owned-path list. **Unowned equals unfixed**: every future round assigns every
+top-level path an owner before it starts.
+
+### D-R4-03 `ops/unseal.sh` writes the GD-10 receipt
+
+Owner: round 4. Status: applied. Closes owner item **O-G1**.
+
+The pairing rule was asserted but had no writer: `ops/unseal.sh` appended the
+`UNSEALED` line to `docs/prereg/SEAL.md` and stopped there, and
+`tests/guard/test_unseal_receipt.py` could only warn until an unseal had already
+happened. That is a gate whose first firing would come immediately after the one
+irreversible act it exists to police, at the moment when the only way to satisfy
+it is to hand-write the receipt it was designed to forbid.
+
+`ops/unseal.sh` now writes `quality/receipts/unseal-<tag>.log` carrying the same
+`commit=<sha>` as the line, in the same success path. Three details are
+deliberate: the receipt is written **before** the claim, so no window exists in
+which an `UNSEALED` line stands with nothing behind it; the script refuses if the
+receipt already exists, so one tag can never be unsealed twice; and `--check`
+still writes nothing. The test is now unconditional and also asserts the write
+order and the refusal, so the writer cannot regress into a warning.
+
+### D-R4-04 Gate-doc parity is enforced by a test, not by discipline
+
+Owner: round 4. Status: applied.
+
+`sop/SOP-final.md:374` and `docs/DEVIATIONS.md` DEV-04 both said `ops/lint_http.sh`
+runs "a table of 29 named rules" while the gate ran 37, for a full round. A
+binding pre-registration that misstates the size of its own gate is a credibility
+problem out of proportion to the edit. Both documents are corrected, and
+`tests/unit/test_lint_http_bypasses.py::test_the_documented_rule_count_matches_the_gate`
+now reads the count out of the linter's own banner and fails if either document
+disagrees. A rule added without moving the prose fails in the commit that adds
+it. The SOP paragraph also names the two structural shapes round 3 introduced —
+the file-scope conjunct and the morpheme family — because the shape change
+matters more than the count.
+
+**Caveat the owner should know.** `sop/` is excluded by `.gitignore:7`, so
+`sop/SOP-final.md` is not in the public repo and this correction lands on the
+working machine only. The tracked half of the parity claim is
+`docs/DEVIATIONS.md` DEV-04, which every clone gets, and the test asserts that
+one unconditionally; the SOP is checked where it exists and skipped where it
+does not, so a reviewer's clone does not fail on a file the publish policy keeps
+out. If the SOP is meant to be part of the public pre-registration, that is an
+owner decision (**O-R4-02**) and not one this round should take silently.
+
+### D-R4-05 GD-06/GD-10 vacuity now expires by assertion
+
+Owner: round 4. Status: applied.
+
+`data/sealed/` is empty in phase 01, so the immutability guard declares itself
+vacuous through `VacuousGuard` rather than passing silently. That is honest now
+and dangerous later: once the phase-02 pull seals real rows, an empty manifest
+would let the drift check compare nothing against nothing and report GD-06 green
+while the containment check slept.
+`test_the_vacuity_expires_when_the_seal_carries_rows` is inert while the
+partition is empty and becomes a hard assertion the instant it is not. This is
+the one check that tests the layer actually holding the data.
+
+### D-R4-06 `tests/guard/gd04_scan.py` takes `--root`
+
+Owner: round 4. Status: applied.
+
+`ops/lint_http.sh` already took a ROOT argument; the scanner did not, which is
+why round 3's guard verifier had to work on a scratch branch inside the shared
+tree and then explain an unrelated diff, and why round 2 planted in the
+repository and corrupted two other lanes' receipts. `--root DIR` scans any tree,
+repository or not. **SOP W9.7 rule: every red-team plant goes in an isolated
+clone or a scratch root. Never the live tree.**
+
+### D-R4-07 The stopping rule is written down
+
+Owner: round 4. Status: applied.
+
+Recorded in the `tests/guard/gd04_scan.py` header and in `docs/DEVIATIONS.md`
+DEV-18. GD-04 is a detection layer; the seal is the control. The scan closes for
+a phase on four checkable conditions: closure, class-not-spelling with a sibling
+plant, mutation-proof under GD-09, and no miss in a new class under a time-boxed
+budget. The honest claim is "no evasion in the pinned corpus and no new class
+since round N", never exhaustiveness.
+
+### Where the three judges disagreed, and what was chosen
+
+- **The unseal receipt writer.** Two judges reported it already fixed, citing
+  `ops/unseal.sh:221`; one reported it still open. The tree settles it: line 221
+  appended the **SEAL.md line**, not the receipt file, and `DECISIONS.md` said
+  outright "ops/unseal.sh does not write the receipt yet. That is owner item
+  O-G1." The minority judge was right and the item was implemented. Checked
+  against the tree rather than counted.
+- **Putting `ops/` on rule 5's analysis surface.** One judge asked for it (by
+  file shape, for config-shaped files); two asked for the opposite, that the
+  asymmetry be *declared* so that a later round does not widen it and then
+  silence the resulting noise. The
+  majority was followed: `scripts/` is on the surface, `ops/` is not, rule 6c
+  already catches a partition READ under `ops/` repo-wide, and the reason is now
+  in DEV-18. Recorded because it is a live temptation for round 5.
+- **A mutation gate for `ops/lint_http.sh`.** One judge asked for GD-09-style
+  neutering of the chokepoint before phase 02; the others did not raise it. Not
+  built this round. Raised as owner item **O-R4-01** rather than dropped,
+  because phase 02's real pull (W6.0) is when the chokepoint becomes
+  load-bearing.
+- **The premise of the task itself.** All three judges independently found the
+  brief stale: it described uncommitted repairs, but round 3 was committed and
+  pushed as 4bc71f3 with a clean tree. Verified before any edit. Nothing was
+  re-fixed.

@@ -17,12 +17,13 @@ module defines the artefact that ties it:
     line, never by hand afterwards.
 
 WHAT THIS ASSERTS, AND WHAT IT CANNOT.  The pairing is asserted over the real
-tree for every UNSEALED line present. Whether `ops/unseal.sh` itself writes the
-receipt is checked too, but `ops/unseal.sh` is outside this lane's owned paths:
-until it is taught to write one, a missing writer is reported as a warning while
-there are no UNSEALED lines, and as a failure the moment there is one. So in
-phase 01 this module proves its logic against fixtures and stands ready; it does
-not yet prove that a real unseal leaves a receipt behind.
+tree for every UNSEALED line present. The writer side is asserted too, and since
+round 4 it is unconditional: `ops/unseal.sh` writes the receipt, it writes it
+BEFORE it appends the claim, and it refuses a second unseal of the same tag.
+That closes owner item O-G1. What remains true is that phase 01 has no UNSEALED
+line, so the pairing itself is still proved against fixtures rather than against
+a real unseal; the first real unseal is the first end-to-end proof, and by then
+the writer is already in place rather than being hand-made after the fact.
 """
 
 from __future__ import annotations
@@ -104,20 +105,22 @@ def test_every_unsealed_line_has_its_receipt() -> None:
 
 
 def test_the_unseal_script_writes_the_receipt() -> None:
-    """The writer side. A warning while it is unwritten, a failure once it matters."""
+    """The writer side. Unconditional since round 4: the writer exists (O-G1 closed)."""
     assert UNSEAL_SCRIPT.is_file(), "ops/unseal.sh is absent"
     body = UNSEAL_SCRIPT.read_text(encoding="utf-8")
-    writes = "quality/receipts" in body and "unseal-" in body
-    claims = unseal_claims(SEAL_DOC.read_text(encoding="utf-8")) if SEAL_DOC.is_file() else []
-    if claims:
-        assert writes, (
-            "GD-10 FAIL: an unseal has happened and ops/unseal.sh does not write "
-            "quality/receipts/unseal-<tag>.log; the receipts are hand-made"
-        )
-    elif not writes:
-        warnings.warn(
-            "OWNER ITEM: ops/unseal.sh (not this lane's path) does not yet write "
-            "quality/receipts/unseal-<tag>.log; the pairing rule is defined and "
-            "asserted here, the writer is missing",
-            stacklevel=1,
-        )
+    assert "quality/receipts" in body and "unseal-$TAG.log" in body, (
+        "GD-10 FAIL: ops/unseal.sh does not write quality/receipts/unseal-<tag>.log. "
+        "The pairing rule is asserted here; without the writer the receipts are hand-made, "
+        "which is the one thing the rule exists to forbid."
+    )
+    receipt_at = body.index("unseal-$TAG.log")
+    append_at = body.index('>> "$SEAL_DOC"')
+    assert receipt_at < append_at, (
+        "GD-10 FAIL: ops/unseal.sh appends the UNSEALED line before it writes the receipt. "
+        "The receipt must be written first, so no window exists in which a claim "
+        "stands with nothing behind it."
+    )
+    assert 'if [ -e "$RECEIPT" ]' in body, (
+        "GD-10 FAIL: ops/unseal.sh does not refuse a second unseal of the same tag; "
+        "the rule is one receipt per tag, never overwritten."
+    )
