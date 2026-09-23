@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SOP step W8.2. The Kalshi capture agent.
+
+  StartInterval 600 wakes the agent every 10 minutes, 144 times a day. The agent
+  decides what each wake does: it polls the KXMLBGAME markets only inside the
+  16:00Z to 06:00Z capture window, and it takes the point-in-time probables
+  snapshot at the first wake at or after 14:00Z, once per UTC day.
+
+  No path here names a user. The job runs a login shell, so $HOME and the
+  toolchain on PATH come from the account that loads it.
+
+  Install, as the owner, on the capture machine:
+
+    cp ops/launchd/com.abs-umpires.kalshi.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.abs-umpires.kalshi.plist
+    launchctl kickstart -p gui/$(id -u)/com.abs-umpires.kalshi
+
+  Check and remove:
+
+    launchctl print gui/$(id -u)/com.abs-umpires.kalshi
+    launchctl bootout gui/$(id -u)/com.abs-umpires.kalshi
+
+  Kalshi is TLS-reset from this network. The agent records the failure, keeps
+  its schedule and retries at the next wake. It never routes through another
+  host. A block lasting more than 24 consecutive hours stops the agent and is
+  an owner item.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.abs-umpires.kalshi</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd "$HOME/sports-project" &amp;&amp; mkdir -p data/p8/kalshi &amp;&amp; exec "$HOME/.local/bin/uv" run --locked python -m absump.p8.kalshi_capture --tick &gt;&gt; data/p8/kalshi/launchd.log 2&gt;&amp;1</string>
+  </array>
+
+  <key>StartInterval</key>
+  <integer>600</integer>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>LowPriorityIO</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/dev/null</string>
+
+  <key>StandardErrorPath</key>
+  <string>/dev/null</string>
+</dict>
+</plist>

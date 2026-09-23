@@ -1,0 +1,13 @@
+# W8.2, the only pre-gate P8 step. SOP section 0.1 shape: one step, five keys.
+# The verify command is offline. It asserts the markets URL, the thirteen
+# verified market fields, the candlestick fields with period_interval 60, the
+# 16:00Z to 06:00Z window and StartInterval 600 out of the installed plist, both
+# ticker traps (HHMM is US/Eastern, close_time is a three-day placeholder), the
+# NDJSON layout with a repeated poll that writes no bytes, the write-once
+# probables snapshot, the 24 hour block limit and the ban on routing through
+# another host.
+- id: W8.2
+  title: "Kalshi launchd capture agent and the daily probables snapshot"
+  verify: "uv run --locked pytest tests/p8/test_kalshi_capture.py -q"
+  expect_exit: 0
+  owner: W8
