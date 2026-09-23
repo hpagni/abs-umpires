@@ -1,0 +1,52 @@
+# Private data and planning material. D-03: data/, research/ and logs/ never enter
+# git in any form; this fleet extends D-03 to sop/ and fleet/, which are private
+# planning material of the same class. A slip here publishes the SOP and the fleet plan.
+data/
+research/
+logs/
+sop/
+fleet/
+# RUNLOG.md is the fleet's own evidence log. It is not in the section 2.1 tree
+# and it names fleet/ paths and step internals, so D-03 covers it too.
+RUNLOG.md
+
+# Two directories in the section 2.1 tree are named data/ and hold source, not data:
+# the Shiny app's bundled aggregates (app/data/) and the DT-* data tests
+# (tests/data/). The data/ pattern above is unanchored on purpose, so it would
+# otherwise swallow both. Re-include exactly those two paths and nothing else.
+!app/data/
+!tests/data/
+
+# Generated model and table artifacts. out/ itself is tracked; only the heavy
+# formats under it are not.
+out/**/*.parquet
+out/models/**/*.rds
+out/models/**/*.npz
+
+# Secrets and local environment
+.env
+.Renviron
+
+# Python and R environments
+.venv/
+renv/library/
+renv/staging/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Warehouse
+*.duckdb
+*.duckdb.wal
+warehouse/
+
+# Spreadsheets. SBRO workbooks are never committed (W8.15 compliance gate).
+*.xlsx
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# macOS
+.DS_Store
