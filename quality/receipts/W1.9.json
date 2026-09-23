@@ -1,0 +1,17 @@
+{
+  "cmd": "bash ops/b2_sync.sh --dry-run && bash ops/b2_check.sh --self-test && uv run --locked pytest tests/data/test_b2.py -q",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "a8355cbaad847b07150387f1cd0a7ee9cf50eadc",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W1.9.log",
+  "owner": "W1",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W1.9",
+  "timestamp_madrid": "2026-09-23 10:09:08 CEST",
+  "title": "Backblaze B2 private mirror of data/raw"
+}
