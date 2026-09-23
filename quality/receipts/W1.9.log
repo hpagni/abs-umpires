@@ -1,0 +1,61 @@
+b2_sync: source data/raw
+b2_sync: destination b2://abs-umpires-raw/raw
+b2_sync: never-mirror check OK (0 held-out plain paths, 0 duckdb files)
+b2_sync: plan 3161 file(s), 817071641 byte(s)
+  upload data/raw/_budget.json
+  upload data/raw/_manifest.csv
+  upload data/raw/baseballsavant.mlb.com/c3/c38cd617404a5713c286fd7b4cb86fa1ac03e0553619582527d491fe984cc25f.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-07/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-08/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-09/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-10/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-11/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-12/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-13/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-14/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-15/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-16/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-17/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-18/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-19/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-20/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-21/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-22/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-23/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-24/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-25/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-26/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-27/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-28/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-29/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-30/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-01/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-02/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-03/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-04/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-05/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-06/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-07/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-08/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-09/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-10/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-11/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-12/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-13/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-14/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-15/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-16/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-17/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-18/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-19/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-20/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-21/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-22/pitches.csv.zst
+  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-23/pitches.csv.zst
+  ... and 3111 more
+command: uv run b2 sync --delete --threads 4 data/raw b2://abs-umpires-raw/raw
+DEFERRED: B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY are unset.
+DEFERRED: the b2 side of the dry run needs an account: b2 authorizes before it plans.
+DEFERRED: the owner sets both in .env, which is gitignored. No key is ever written into the repository.
+CANARY SELF-TEST OK (6/6), key _canary/20260923T092401Z.txt, 1024 bytes
+....................sss                                                  [100%]

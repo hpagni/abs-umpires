@@ -1,0 +1,15 @@
+# W1.9 registers three things at once: the plan, the canary and the data test.
+#
+# The dry run prints the SOP's sync command line and refuses to send anything
+# when the source tree carries the held-out plain partition or a DuckDB file.
+# The canary self-test runs the round-trip comparison and the lifecycle-prefix
+# assertion offline, so the logic is proved without an account. The pytest
+# module asserts the bucket type, both lifecycle rules field by field, the CI
+# key capability list with no deleteFiles, and the sync source and destination;
+# its three live assertions skip while B2_APPLICATION_KEY_ID and
+# B2_APPLICATION_KEY are unset, which is an owner item.
+- id: W1.9
+  title: "Backblaze B2 private mirror of data/raw"
+  verify: "bash ops/b2_sync.sh --dry-run && bash ops/b2_check.sh --self-test && uv run --locked pytest tests/data/test_b2.py -q"
+  expect_exit: 0
+  owner: W1
