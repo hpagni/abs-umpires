@@ -111,7 +111,9 @@ Raw pulls started early so the network time overlaps with fleet design: `~/sport
 - Every target in the SOP W1.14 list exists, 52 of them, spelled as the SOP spells them. `unseal` is the 53rd: SOP W2.4 names it as a make target and the delegation rule assigns it a script, so the Makefile carries it even though the W1.14 list does not. No other target was added. `figures` and `tables` are named elsewhere in the SOP but are not in the W1.14 list, and they were left out rather than invented into it. The step that needs them should add them to the SOP list first.
 - The one-line-delegation rule is enforced by a test, not by convention. `tests/unit/test_makefile.py` fails if any recipe has more than one line or contains `&&`, `||`, `;`, `|`, a backtick, `$(shell`, or an `if`, `for` or `while`. That is what keeps W2.4, W9.1, W9.2 and W9.7 out of this file while they build in parallel.
 - Script homes: operational scripts in `ops/`, pipeline runners in `scripts/`. `scripts/prove.sh` is the SOP's own path and set the convention for `scripts/`; `ops/preflight.sh`, `ops/lint_http.sh`, `ops/preregister.sh`, `ops/smoke.sh` and `ops/b2_check.sh` are the SOP's own paths and set it for `ops/`. Chapter, P8, app and abstract runners went to `scripts/`; environment, disk, seal, lint, data and clean scripts went to `ops/`. A later step that wants a different path changes its own target's one line.
-- `py` and `r` were undefined by the SOP. Read as the two halves of `bootstrap`: `py` is `uv sync --locked --all-groups`, `r` is `Rscript -e 'renv::restore(prompt = FALSE)'`, and `bootstrap` runs preflight then both. Both are idempotent on a machine that is already set up.
+- `py` and `r` were undefined by the SOP. Read as the two halves of `bootstrap`: `py` is `uv sync --locked --all-groups`, `r` is `Rscript -e 'renv::restore(prompt = FALSE)'`, and `bootstrap` runs preflight then both. `uv sync` is idempotent on a machine that is already set up. `renv::restore()` is
+not, and round 5 corrects this sentence: it rewrites `renv/activate.R` on every
+run. See "Round 5" below and DEV-19 for what that cost and how it was repaired.
 - `canary` delegates to `ops/b2_check.sh`, the SOP's own name for the B2 canary in W1.15, rather than a new script name.
 - 36 placeholder scripts were created, one per target whose body a later step owns. Each prints one line naming that step and exits 0, so `make -n <target>` and `make <target>` both work today. Each carries the string `ABSUMP_PLACEHOLDER` and the sentence "the existence of this file is not evidence that <step> has run", so that the owning step overwrites it instead of skipping on a file-exists check. `grep -rl ABSUMP_PLACEHOLDER ops scripts tests/guard` lists all 36.
 - `ops/lint_http.sh` was deliberately not stubbed. SOP W1.7 owns it and is building in this same phase, so a stub could have been mistaken for its work. `ops/lint.sh` runs ruff check, ruff format --check and then that script if it is present, and otherwise prints one line naming W1.7 without failing the run. W1.7's own gate is what proves rule 0.5.2, not this target.
@@ -927,3 +929,41 @@ since round N", never exhaustiveness.
   brief stale: it described uncommitted repairs, but round 3 was committed and
   pushed as 4bc71f3 with a clean tree. Verified before any edit. Nothing was
   re-fixed.
+
+## Round 5 (2026-09-23, Madrid) -- the renv/activate.R rewrite that failed W1.13 once
+
+An isolated-clone verifier refuted one criterion on the pushed commit `11b1da3`: the
+**first** `make prove` of a fresh clone exits 1 with W1.13 FAIL, 19 PASS / 1 FAIL /
+1 MISSING / 2 PENDING-OWNER / 3 RETIRED. Runs 2 and 3 are green and byte-identical, so
+the gate erased its own cause and four rounds of proving never saw it.
+
+- **The cause, reproduced on this machine before anything was edited.** `ops/bootstrap.sh:29`
+  runs `Rscript -e 'renv::restore(prompt = FALSE)'`. renv regenerates `renv/activate.R`
+  from its own template, and that template carries trailing whitespace: `git diff --stat`
+  reports 344 insertions and 344 deletions, `git diff --ignore-all-space` is empty, and
+  `grep -cE ' +$' renv/activate.R` goes from 0 to 344. The restore was otherwise a no-op
+  ("The library is already synchronized with the lockfile"), so the file is the whole
+  effect. W1.13's verify then runs `pre-commit run --all-files`, the trailing-whitespace
+  hook at `.pre-commit-config.yaml` repairs the file and exits 1, and the step fails. The
+  side effect matters as much as the failure: `make prove` was writing to a tracked source
+  file in a clean clone.
+- **The repair, both halves.** The verifier offered two and recommended the exclude; both
+  were applied, because either alone leaves half the finding standing. (1) The
+  trailing-whitespace hook now carries `exclude: ^renv/activate\.R$`. renv owns that
+  file's formatting and regenerates it on every restore, so the hook was arguing with a
+  generator it cannot win against. (2) `renv/activate.R` is committed exactly as renv
+  writes it, whitespace included, so restore on a fresh clone rewrites it byte for byte
+  and the tree stays clean. Only with both is the sentence at "W1.14 defaults" above true
+  again.
+- **Why the exclude is pinned by tests, not by comment.** An exclude is an escape hatch and
+  the next one will be easier to add than this one was. `tests/unit/test_precommit_config.py`
+  now asserts the exclude is exactly that path, that it is the only exclude in the config
+  and that there is no top-level exclude, and that the tracked `renv/activate.R` still
+  carries the whitespace renv emits -- if someone strips it by hand, bootstrap starts
+  dirtying the tree again and that test says so.
+- **Nothing else was touched.** The verifier's other findings were out of criterion and are
+  recorded as limits, not repairs: the stale brief premise, `make lint-http` not existing
+  as a target (the HTTP lint lives in `make lint` and standalone at `ops/lint_http.sh`,
+  both exit 0), the three RETIRED steps being bookkeeping, `make prove` rewriting the 26
+  receipts under `quality/receipts/` by design, and three declared GD-04 limits that this
+  run actually caught and that DEV-18's paragraph can therefore be tightened against.

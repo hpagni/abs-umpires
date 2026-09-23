@@ -81,6 +81,38 @@ def test_main_is_protected(hooks):
     assert args == ["--branch", "main"], "W1.13: main is reachable only through a pull request"
 
 
+RENV_ACTIVATE = r"^renv/activate\.R$"
+
+
+def test_trailing_whitespace_excludes_renv_activate(hooks):
+    # renv::restore() regenerates renv/activate.R with trailing whitespace on
+    # 344 lines, so without this exclude the first `make prove` of a fresh clone
+    # fails W1.13 and the hook then repairs the file, hiding the cause from
+    # every later run. renv owns that file's formatting; the hook does not.
+    assert hooks["trailing-whitespace"].get("exclude") == RENV_ACTIVATE
+
+
+def test_the_renv_exclude_is_the_only_one(config):
+    # An exclude is an escape hatch. Exactly one path has earned it, and a
+    # second one arriving without a test is the regression this pins.
+    excluded = {
+        h["id"]: h["exclude"] for repo in config["repos"] for h in repo["hooks"] if h.get("exclude")
+    }
+    assert excluded == {"trailing-whitespace": RENV_ACTIVATE}
+    assert not config.get("exclude"), "a top-level exclude would silence every hook at once"
+
+
+def test_renv_activate_is_committed_as_renv_writes_it(hooks):
+    # The companion half of the exclude: the tracked file already carries the
+    # trailing whitespace renv emits, so `renv::restore()` on a clean clone
+    # rewrites it byte for byte and leaves the tree clean. If this ever reads
+    # zero, someone stripped the file by hand and bootstrap will dirty the tree
+    # again on the next restore.
+    activate = ROOT / "renv" / "activate.R"
+    lines = activate.read_text(encoding="utf-8").splitlines()
+    assert sum(1 for line in lines if line != line.rstrip()) > 0
+
+
 def test_ruff_check_fixes(hooks):
     assert "--fix" in hooks["ruff-check"]["args"]
 

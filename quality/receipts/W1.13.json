@@ -1,17 +1,17 @@
 {
   "cmd": "SKIP=no-commit-to-branch uv run --locked pre-commit run --all-files && uv run --locked pytest tests/unit/test_precommit_config.py -q",
-  "duration_s": 3,
+  "duration_s": 2,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "4bc71f35138ac26d4bdeae918b93fa77c1b90c97",
+  "git_sha": "11b1da3cda9a24b33a4c13a28de480ed7c47f937",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.13.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.13",
-  "timestamp_madrid": "2026-09-23 08:41:59 CEST",
+  "timestamp_madrid": "2026-09-23 09:29:20 CEST",
   "title": "pre-commit hooks"
 }

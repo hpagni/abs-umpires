@@ -1,5 +1,5 @@
-<clock> INF 15 commits scanned.
-<clock> INF scanned ~1990355 bytes (1.99 MB) in <elapsed>
+<clock> INF 16 commits scanned.
+<clock> INF scanned ~2027745 bytes (2.03 MB) in <elapsed>
 <clock> INF no leaks found
 
 -- scripts/prove.sh normalised run-local tokens in this log: RN-01 clock, RN-02 elapsed
