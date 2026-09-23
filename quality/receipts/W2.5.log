@@ -1,0 +1,11 @@
+mlb 2022  source=raw      games=2430  played=2430  dates=179  hp_umpires=96   missing_hp=0 dup_pks=49 sealed=0 written=0 unchanged=0
+mlb 2023  source=raw      games=2430  played=2430  dates=182  hp_umpires=94   missing_hp=0 dup_pks=46 sealed=0 written=0 unchanged=0
+mlb 2024  source=raw      games=2430  played=2429  dates=185  hp_umpires=90   missing_hp=0 dup_pks=39 sealed=0 written=0 unchanged=0
+mlb 2025  source=raw      games=2430  played=2430  dates=184  hp_umpires=92   missing_hp=0 dup_pks=34 sealed=0 written=0 unchanged=0
+mlb 2026  source=raw      games=2430  played=2343  dates=184  hp_umpires=91   missing_hp=0 dup_pks=29 sealed=88 written=0 unchanged=0
+aaa 2023  source=raw      games=2255  played=2229  dates=154  hp_umpires=71   missing_hp=0 dup_pks=85 sealed=0 written=0 unchanged=0
+aaa 2024  source=raw      games=2250  played=2232  dates=154  hp_umpires=87   missing_hp=0 dup_pks=95 sealed=0 written=0 unchanged=0
+aaa 2025  source=raw      games=2250  played=2232  dates=152  hp_umpires=70   missing_hp=0 dup_pks=97 sealed=0 written=0 unchanged=0
+W2.5 8 of 8 season(s) on disk, 18755 played games, 0 failure(s)
+........................................................................ [ 84%]
+.............                                                            [100%]

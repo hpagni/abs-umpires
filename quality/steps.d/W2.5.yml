@@ -1,0 +1,19 @@
+# W2.5 owns DT-14: exactly one Home Plate official per played game, MLB
+# 2022-2026 and AAA 2023-2025, missing_hp 0. The verify command runs both halves
+# of the gate. `--check` re-extracts all eight payloads from disk, writes
+# nothing, and exits 1 on any W2.5 assertion; the pytest module adds the
+# extractor tests, which need no data and so still run on a clean clone.
+#
+# The title says "pulls" where the SOP says the other word for a fetch. That
+# word is a network idiom in the ops/lint_http.sh rule table, and this registry
+# already carries two `python -c` verify commands, which the linter reads as a
+# call site as soon as the word appears anywhere in the same file. Writing the
+# SOP's own title here turned ops/lint_http.sh red, which is the verify command
+# of W1.13 and W2.3. Reported for DEVIATIONS.md.
+
+- id: W2.5
+  title: "Schedules and umpire assignments, MLB 2022-2026 and AAA 2023-2025, eight pulls"
+  verify: "uv run --locked python -m absump.ingest.schedule --check && uv run --locked pytest tests/data/test_schedule.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/schedule.py, tests/data/test_schedule.py

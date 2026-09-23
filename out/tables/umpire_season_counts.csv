@@ -1,0 +1,9 @@
+level,season,games_played,games_with_home_plate_umpire,missing_home_plate,distinct_umpires,band_low,band_high,recorded_exception,band_status,max_games_one_umpire,min_games_one_umpire,first_official_date,last_official_date
+aaa,2023,2229,2229,0,71,75,110,71,recorded_exception,51,1,2023-03-31,2023-09-28
+aaa,2024,2232,2232,0,87,75,110,,in_band,54,1,2024-03-29,2024-09-22
+aaa,2025,2232,2232,0,70,75,110,70,recorded_exception,51,1,2025-03-28,2025-09-21
+mlb,2022,2430,2430,0,96,75,110,,in_band,36,1,2022-04-07,2022-10-05
+mlb,2023,2430,2430,0,94,75,110,,in_band,35,1,2023-03-30,2023-10-01
+mlb,2024,2429,2429,0,90,75,110,,in_band,35,6,2024-03-20,2024-09-30
+mlb,2025,2430,2430,0,92,75,110,,in_band,33,3,2025-03-18,2025-09-28
+mlb,2026,2342,2342,0,91,75,110,,in_band,32,2,2026-03-25,2026-09-21

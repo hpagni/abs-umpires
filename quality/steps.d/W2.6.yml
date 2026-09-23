@@ -1,0 +1,17 @@
+# W2.6 -- MLB 2026 GUMBO feed ingest. Owned by W2, merged into quality/steps.yml
+# by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command runs the data tests SOP W2.6 names -- test_regime_marker,
+# test_token_start, test_feed_size_sane -- against the stored lake, plus the
+# traps (key presence not a field read, review is not absChallenges, reviewType
+# filtered to MJ, both hasReview flags, nested additionalReviews) and the seal
+# (nothing stored after 2026-09-21, nothing sealed ever queued, 823543 refused
+# at the writer). Mutation-checked on 2026-09-23: reading the marker as a field
+# read, dropping the additionalReviews walk, disabling the seal, and reversing
+# the schedule dedupe each fail it.
+- id: W2.6
+  title: "MLB 2026 feeds, 2,512 games, one overnight statsapi batch"
+  verify: "uv run --locked pytest tests/data/test_feeds_mlb2026.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/feeds.py, tests/data/test_feeds_mlb2026.py, ops/night_statsapi.sh, data/raw/statsapi/feed/sport=1/season=2026

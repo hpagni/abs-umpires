@@ -1,0 +1,25 @@
+# W2.9 owns the Statcast Search day endpoint, its traps and its assertions.
+# W6.0 owns the runner that drives it across 920 days.
+#
+# The verify command is offline and exercises all four assertions the step owns.
+# `--verify` re-runs them over every day already in data/raw and prints the day
+# count, the number of distinct header digests and the widest day, so the
+# receipt log carries the evidence rather than only an exit code. The pytest run
+# adds the synthetic half: it builds a day out of the committed 119-column list
+# and proves UT-15 stops a response at exactly 25,000 rows, which no real day
+# ever reaches, and proves UT-14 and DT-02 fire on a missing BOM and a moved
+# column. Both halves run in a clean clone; the sweeps skip when data/raw is
+# empty and the synthetic tests do not.
+#
+#   DT-01  rows per day < 25,000, every stored day
+#   DT-02  header sha256 against tests/fixtures/statcast_header.sha256, every
+#          stored day, including 2022 and 2023
+#   UT-14  utf-8-sig, and a body without a BOM is refused
+#   UT-15  the day guard fires at 25,000 rows
+
+- id: W2.9
+  title: "Statcast MLB daily CSV, 2022-2026, 2026 cut at 2026-09-21"
+  verify: "uv run --locked python -m absump.ingest.statcast_day --verify && uv run --locked pytest tests/data/test_statcast_days.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/statcast_day.py, tests/data/test_statcast_days.py, contracts/statcast_csv.yml, tests/fixtures/statcast_header.sha256

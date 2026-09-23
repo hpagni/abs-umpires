@@ -1,0 +1,32 @@
+# tests/fixtures/statcast_header.sha256 -- DT-02, the committed header fixture.
+#
+# SOP W2.9: "Header stability -- 119 columns, byte-identical across 2024, 2025
+# and 2026 and identical to the minors CSV; assert the header sha256 against a
+# committed fixture on every day, including 2022 and 2023, which were
+# unverified before this project."
+#
+# WHAT IS HASHED, exactly. The first line of the response body as it arrives:
+# the three BOM bytes included, the line terminator excluded. Savant serves LF,
+# not CRLF; a trailing CR would be stripped before hashing so a line-ending
+# change reads as a line-ending change and not as a column change. The digest
+# therefore covers the BOM as well, which is deliberate: DT-02 says
+# byte-identical, and the bytes start at byte zero.
+#
+# A second digest is recorded for diagnosis only. It is the same line decoded
+# with utf-8-sig and re-encoded utf-8, so the BOM is gone. When the two digests
+# disagree in the same direction the BOM moved; when only the BOM-stripped one
+# moves, a column moved.
+#
+# MEASURED by the W2.6 run over the 799 MLB days on disk, seasons 2022 through
+# 2026 -- quality/receipts/W2.6.json carries the timestamp. This file is read by
+# the scanner as code, and its comments are not stripped, so a run date at or
+# past the boundary cannot be written here even as a stamp (GD-04 rule 5):
+# one digest, 799 of 799 days, 119 columns, header line 1,825 bytes with BOM.
+# absump.ingest.statcast_day reads this file; tests/data/test_statcast_days.py
+# asserts it against every day in the raw lake.
+#
+# Format: "<sha256>  <name>", two spaces, as sha256sum writes it. Comment lines
+# and blank lines are ignored.
+
+c1703bd38919ac5304ed7f1e0f3eb225f385b969203db316cde88adc409462e3  statcast_csv_header
+15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c  statcast_csv_header_nobom
