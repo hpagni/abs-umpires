@@ -388,3 +388,98 @@ uniqueness, and the whitespace in the tracked file. The general lesson for later
 gate that repairs what it measures reports the repaired state, so a one-shot failure in a
 fresh clone is invisible to any number of repeat runs on a warm one. Fresh-clone proving,
 not repeat proving, is what tests determinism.
+
+## DEV-20 -- W2.9 / DT-01: the SOP's two Statcast row counts are 4,501 and 5,412
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by this entry. Pre-tag.
+
+SOP W2.9 and section 6.3 state two row counts that the staged data contradicts. The first
+is the row count for 2026-09-16, given as 4,500. It is 4,501. The byte count reproduces
+exactly at 3,093,051, so this is the same file the SOP measured; the file carries no
+trailing newline, and `wc -l` minus one undercounts by one on such a file. The second is
+DT-01's gate line "max observed 4,500", which is not the maximum. Over 799 stored days the
+widest is 2023-08-19 at 5,412 rows over 18 games, and five other days also exceed 5,000.
+In all, 176 days exceed 4,500.
+
+Neither figure moves the gate, which is `rows < 25000` and passes on every stored day. The
+two SOP figures are amended here to 4,501 and 5,412 rather than re-measured, and
+`contracts/statcast_csv.yml` already records 5,412. What closes it: the amendment is the
+close. A later re-pull that changes either number reopens the entry.
+
+## DEV-21 -- W2.9: the untracked rows are not only intentional walks
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by this entry. Pre-tag.
+
+SOP W2.9 characterises the untracked Statcast rows from a single day. On 2026-09-15 they
+are nineteen `automatic_ball` rows and one foul, which reads as an intentional-walk
+artefact. That characterisation is day-specific and does not generalise, and a downstream
+mart that believed it would drop the wrong rows.
+
+Measured over 799 days: 11,527 untracked rows out of 3,108,070. Of those, 1,777 are
+ordinary tracked pitch types whose tracking failed, and 591 of the 1,777 are called
+pitches. They concentrate in whole-game outages rather than scattering evenly: 245 rows in
+game_pk 717265 on 2023-07-25, 167 in 746474 on 2024-05-23, and 115 in 777317 on
+2025-06-29.
+
+The four-column filter the SOP specifies handles all of it, so the filter is kept
+unchanged. What deviates is the sentence, which is corrected here. A reader must not take
+"untracked" to mean "intentional walk", because a called pitch with failed tracking is a
+different object and a framing or a challenge mart has to decide about it explicitly.
+
+## DEV-22 -- W2.5: `schedule_game` carries fifteen columns, not thirteen
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by this entry. Pre-tag.
+
+The SOP lists thirteen columns for `schedule_game`. The table carries those thirteen in
+the SOP's order plus two more, `status_coded` and `status_detailed`.
+
+Reason. DT-14 cannot be stated without the coded state. MLB reports a cancelled or a
+postponed game with `abstractGameState` Final and an empty officials array. That shape
+appears 1 time in MLB 2024, 1 in MLB 2026, 26 in AAA 2023, 18 in AAA 2024 and 23 in AAA
+2025. The SOP's sentence "every Final game has exactly one Home Plate official" is
+therefore false as written in five of the eight seasons. With the coded state in the table,
+DT-14 excludes the cancelled and postponed games by their own status rather than by a
+hand-kept list of game identifiers, and the assertion holds.
+
+The owner decision that keeps the two columns is D-P2-05.
+
+## DEV-23 -- W2.5: the registered step title says "pulls" where the SOP says otherwise
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Closed by the `ops/lint_http.sh` scope fix.
+
+The W2.5 title registered in `quality/steps.yml` reads "eight pulls". The SOP title uses
+the other common word for a fetch, and that word is in the NET idiom list of
+`ops/lint_http.sh`.
+
+Reason. The registry is scanned by the shell rules, and rule SH-PYTHON-C takes its network
+conjunct at file scope rather than line scope. The registry already carries two `python -c`
+verify commands, at W1.4 and W1.16, so the conjunct is satisfied for the whole file. The
+SOP's word anywhere in the registry therefore turns `ops/lint_http.sh` red, and that script
+is the verify command of both W1.13 and W2.3. Reproduced in a temporary tree before the
+title was changed.
+
+What closes it. Either the registry leaves the shell rules' scan list, or the conjunct
+becomes line-scoped for a registry file. Until one of those lands, no step title may name a
+request count in the SOP's own words. The decision that keeps the reworded title is
+D-P2-07.
+
+## DEV-24 -- the staged schedules are regular season only
+
+Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Closed by the phase 07 re-pull.
+
+Seven of the eight staged schedule payloads are the staging cache's `gameType=R` response,
+not the `gameTypes=R,F,D,L,W` form the SOP specifies. AAA 2023 is the exception, was
+fetched in the SOP's form, and returned five extra games: the International League and the
+Pacific Coast League championship series.
+
+Consequence, stated plainly so that no later step overstates its coverage. No postseason
+day can enter the Statcast scope or the day-exceptions table, so the 2022-2026 Statcast
+record is not complete and cannot be completed from what is on disk. DT-01 and DT-02 are
+bounded accordingly: they cover the regular season of the seasons they name. W6.0 builds
+its day list from Final games of any non-exhibition type once the fuller schedules land.
+
+Why it is not repaired now. Completing the open seasons costs 6 statsapi requests, and MLB
+2026 cannot be completed at all under the seal. Nothing in the current analysis set depends
+on it, because the MLB 2022-2025 postseason is pre-ABS. The re-pull is scheduled for phase
+07 under D-P2-04, and this entry closes when that re-pull lands and W6.0 re-derives its
+scope.

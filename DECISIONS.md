@@ -967,3 +967,124 @@ the gate erased its own cause and four rounds of proving never saw it.
   both exit 0), the three RETIRED steps being bookkeeping, `make prove` rewriting the 26
   receipts under `quality/receipts/` by design, and three declared GD-04 limits that this
   run actually caught and that DEV-18's paragraph can therefore be tightened against.
+
+## Decisions applied under the execution posture, phase 02 (2026-09-23, Madrid)
+
+Phase 02 ran eleven SOP steps across eight build chains and six verifiers. The agents
+raised the items below and were not permitted to write here, so the docs lane records
+them. Each entry states the recommended default as the applied choice, under the standing
+posture at the top of this file. The owner may override any of them. The deviations the
+same lanes raised are in `docs/DEVIATIONS.md`, entries DEV-20 to DEV-24.
+
+### D-P2-01 Four neutral-site 2026 games sit outside the ABS population
+
+Owner: W2.6 `test_regime_marker`. Status: applied and coded.
+
+SOP W2.6 asserts the ABS regime marker on every Final 2026 MLB game. It holds on 2,338 of
+2,342. The four exceptions are neutral-site special events at parks with no ABS hardware:
+823669 (Field of Dreams, 2026-08-13), 823745 (Williamsport, 2026-08-23), and
+825093 and 825094 (Estadio Alfredo Harp Helu, Mexico City, 2026-04-25 and 2026-04-26).
+They are not pre-ABS games. They belong to neither arm, so they leave the ABS population
+altogether rather than joining the control side. Coded as `feeds.NON_ABS_VENUE_GAME_PKS`
+and asserted as an exact set, so a fifth such game fails the gate instead of widening it
+silently.
+
+### D-P2-02 The challenge allotment is two in regulation and three in extra innings
+
+Owner: W2.6 `test_token_start`. Status: applied and coded.
+
+SOP W2.6 asserts `remaining + usedFailed == 2` for every team-game. It holds on 4,640 of
+4,676 team-games. All 36 exceptions read remaining 0 with usedFailed 3, and every one of
+the 34 games involved went past the ninth inning. A team that has spent both tokens is
+granted a third in extra innings. The allotment is therefore stated as two in regulation
+and three in extra innings. The test asserts both halves together, so an allotment of
+three implies an inning past the ninth. That is stricter than loosening the identity to
+accept either value anywhere. Coded as `feeds.EXTRA_INNING_ALLOTMENT`.
+
+### D-P2-03 The AAA arm stays 2024-2025, with 2023 pending a full-season scan
+
+Owner: chapter 3 design. Status: applied, carried forward from 2026-09-22.
+
+The 2023 AAA feeds sampled carry no ABS challenge data at all, while 2024 and 2025 carry
+it throughout. The AAA arm is therefore 2024-2025. A full-season scan of 2023 may find
+challenge records, and the arm widens only if it does. Nothing downstream may assume a
+2023 AAA challenge series exists before that scan reports.
+
+### D-P2-04 The staged schedules are re-pulled with all five game types in phase 07
+
+Owner: W2.5 / W2.6 / W6.0. Status: applied as a phase 07 item.
+
+Seven of the eight staged schedule payloads are the staging cache's `gameType=R` response
+rather than the SOP's `gameTypes=R,F,D,L,W` form. AAA 2023 is the exception and returned
+five extra games, the International League and Pacific Coast League championship series.
+Completing the other open seasons costs 6 statsapi requests, which phase 07 issues through
+the overnight launcher. MLB 2026 cannot be completed under the seal. The current analysis
+set is unaffected: the MLB 2022-2025 postseason is pre-ABS, so no ABS comparison moves.
+
+### D-P2-05 `schedule_game` keeps fifteen columns
+
+Owner: W2.5. Status: applied.
+
+The table carries the SOP's thirteen columns in the SOP's order, plus `status_coded` and
+`status_detailed`. Without the coded state DT-14 cannot be stated at all. MLB reports a
+cancelled or postponed game with `abstractGameState` Final and an empty officials array:
+1 in MLB 2024, 1 in MLB 2026, 26 in AAA 2023, 18 in AAA 2024 and 23 in AAA 2025. The SOP
+sentence "every Final game has exactly one Home Plate official" is false as written in
+five of eight seasons. The two columns stay, and DT-14 reads the coded state.
+
+### D-P2-06 The umpires-per-season band stays, with the two AAA seasons pinned
+
+Owner: W2.5. Status: applied.
+
+SOP W2.5 states a band of 75 to 110 distinct umpires per season. It holds for all five MLB
+seasons, at 96, 94, 90, 92 and 91, and for AAA 2024 at 87. AAA 2023 measures 71 and AAA
+2025 measures 70. Triple-A works three-umpire crews from a smaller roster; 2,047 of 2,324
+AAA 2025 games carry no second-base umpire. The band is kept as the SOP writes it and the
+two AAA seasons are pinned to their exact measured counts. Widening the band would hide
+the crew-size difference that produced the miss.
+
+### D-P2-07 The W2.5 step title keeps its reworded verb
+
+Owner: W2.5 / W1.13 / W2.3. Status: applied.
+
+The title registered in `quality/steps.yml` says "eight pulls" where the SOP title uses the
+other word for a fetch. That word sits in the `ops/lint_http.sh` NET idiom list. The
+registry already carries two `python -c` verify commands, at W1.4 and W1.16, and rule
+SH-PYTHON-C takes its network conjunct at file scope. Writing the SOP title verbatim
+therefore turns `ops/lint_http.sh` red, and that script is the verify command of W1.13 and
+W2.3. Confirmed in a temporary tree. The reworded title stays and DEV-23 records it.
+
+### D-P2-08 Feed 823543 is quarantined, and phase 03 adds a pre-import guard
+
+Owner: W2.6 / W9.7. Status: applied; the guard lands in phase 03.
+
+A sealed 2026 regular-season feed, gamePk 823543 with `officialDate` 2026-09-22, was found
+sitting readable in the staging cache. It was quarantined rather than deleted, because the
+unseal ceremony needs the evidence of how it got there. It is recorded in
+`quality/sealed_manifest.json`. Containment held: nothing was imported, and the gamePk
+appears nowhere under `data/` outside the staging cache. Phase 03 adds a pre-import guard
+that rejects any 2026 feed whose `gameData.datetime.officialDate` is 2026-09-22 or later,
+whatever date the manifest carries. Keying on the manifest bucket rather than on
+`officialDate` is what let the file through, so the guard reads the feed itself.
+
+### D-P2-09 The B2 credentials are deferred, and W1.9 lands as code plus a dry run
+
+Owner: W1.9. Status: deferred to the owner, per the posture's credential clause.
+
+`B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY` are unset and no bucket exists. The `b2`
+tool authorizes before it plans, so even its own dry run is unavailable without the pair.
+W1.9 therefore lands as code plus a dry run, and the mirror itself waits for phase 07. The
+three live assertions in `tests/data/test_b2.py` keep skipping until the key pair is in
+`.env`, which is gitignored and never in the repository.
+
+### D-P2-10 The W2.5 season-total assertion is left off until after the unseal ceremony
+
+Owner: W2.5 / W9.7. Status: applied.
+
+SOP W2.5 states a 2026 total of 2,512 games over 212 dates, with the postseason histogram
+F 12, D 20, L 14 and W 7. The request that would return it runs to mid-November, and SOP
+section 2.4 seals every 2026 game of type F, D, L or W outright. The step asserts instead
+the regular-season entry exactly, at 2,459 schedule rows, which is the SOP's own number,
+together with the arithmetic 2,459 + 12 + 20 + 14 + 7 = 2,512. The full assertion turns on
+automatically once a full-range 2026 payload exists, which is after the W9.7 unseal
+ceremony. It is left off until then.
