@@ -1,0 +1,21 @@
+# W4.3, the 28-view Savant ABS leaderboard sweep. Owner W4, fleet phase 02.
+#
+# The verify command is offline, needs no datum on disk and sends nothing: it
+# refuses absump.http.get for the whole run and re-reads the manifest afterwards
+# to show no row was added. It checks the enumeration in
+# config/leaderboard_views.yml against the selector domains W2.11 verified,
+# against the contract's own view count and against the W2.11 plan; it builds
+# the leg the launcher runs and asserts its order, its addresses and its
+# sealed-set marks; it refreshes DT-24 over synthetic pages built from
+# contracts/savant_absdata.yml by W2.11; it mutates the enumeration six ways and
+# the swept set four ways and requires each corruption to be caught by the right
+# clause; and it runs the refresh over whatever the launcher has swept onto
+# disk, which is nothing until the Savant chain reaches this leg.
+#
+# DT-24 belongs to W2.11 and is not copied here. This step imports W2.11's
+# checker and refreshes it over the swept views, so the two cannot disagree.
+- id: W4.3
+  title: "Leaderboard sweep, 28 views at 10 s spacing"
+  verify: "uv run --locked python -m absump.ingest.savant_leaderboard_sweep --check"
+  expect_exit: 0
+  owner: W4

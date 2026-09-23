@@ -1,0 +1,281 @@
+# contracts/savant_absdata.yml -- the Savant ABS leaderboard page contract.
+#
+# Owner: SOP step W2.11. Assertion: DT-24.
+#
+# The CSV export is dead. `?...&csv=true` returns HTTP 500 with a text/html body
+# even with the exact canonical parameters the page's own serverParams declare,
+# and the `year=` form fails the same way, so two independent parameter forms
+# fail. The data therefore comes out of the page HTML: the page carries its own
+# rows in a script block as `absData`, beside `serverParams` and `leagueData`.
+# `use-it-or-lose-it`'s `_download_log.csv` records HTTPError 500 on all 28 of
+# their `abs-challenges` CSV pulls, which is why their claimed per-player Savant
+# reconciliation is absent from their live verification report.
+#
+# Every number below was measured on the pull date in `dt24.pull_date`. SOP
+# section 0.5 rule 4: a number that came from an endpoint lives in config/ or in
+# a contract, never hard-coded in a module. `src/absump/ingest/savant_leaderboard.py`
+# reads this file and holds no endpoint number of its own.
+#
+# Dates are written as YAML scalars and never as a comparison, so the GD-04 date
+# rule does not read a held-out day out of this file.
+
+schema: absump/contract/savant_absdata/1
+
+source:
+  host: baseballsavant.mlb.com
+  path: /leaderboard/abs-challenges
+  # The canonical form. `season[]` percent-encoded, not `year`: the `year=` form
+  # 301-redirects and must be followed with -L. Both facts are encoded in
+  # absump.http, which refuses the `year=` form and the `csv=true` export.
+  query_template: "level={level}&challengeType={challenge_type}&season%5B%5D={season}"
+  season_parameter: "season[]"
+  year_parameter_redirects: true
+  url_constant: absump.http.SAVANT_ABS_LEADERBOARD_URL
+  # The page's own script bundle, for reference when a key changes name.
+  js_bundle: builds.mlbstatic.com/baseballsavant.mlb.com/v1/sections/leaderboard/builds/6e80a27f769a1b869733f151a002355fac6e1339/scripts/build/abs.js
+
+parse:
+  # SOP W2.11, verbatim. The module asserts its own literal equals this string.
+  absdata_regex: '(?:var|const|let)\s+absData\s*=\s*(\[.*?\]);\s*\n'
+  absdata_flags: DOTALL
+  # serverParams and leagueData are objects with nested objects and arrays, so a
+  # non-greedy brace match would truncate them. They are read with a balanced
+  # JSON scan from the first brace after the assignment, not with a regex.
+  objects:
+    - serverParams
+    - leagueData
+
+pull:
+  # 7 challenge types x 2 levels x 2 seasons = 28 page fetches. SOP section 10.1
+  # costs the same 28 at the A3 Savant delay, about 5 minutes and ~45 MB
+  # compressed. The delay and the daily cap are not restated here: absump.http
+  # reads them from config/throttle.yml, which is the one source of truth.
+  views: 28
+  host: baseballsavant.mlb.com
+  # The page is a whole-season aggregate with no date parameter, so the only
+  # thing that keeps a 2026 view inside the open window is the day it is pulled.
+  # The baseline page was pulled before any game of the seal boundary day was
+  # final. A 2026 view pulled later aggregates sealed days and is a sealed-set
+  # input, not an open-set one. The 2025 and AAA views are unaffected.
+  season_2026_is_a_season_aggregate: true
+
+selectors:
+  ddlChalType:
+    - batter
+    - batting-team
+    - catcher
+    - pitcher
+    - catching-team
+    - team-summary
+    - league
+  ddlLevel:
+    - mlb
+    - aaa
+  seasons:
+    - 2026
+    - 2025
+  ddlMinChal: [0, 1, 2, 5, 10, 20]
+  ddlMinOppChal: [0, 1, 2, 5, 10, 20]
+  ddlLeverage: ["", "vlow", "low", "med", "high"]
+  ddlBallStrike: ["", "in", "out"]
+
+# serverParams verbatim, for level mlb, challengeType batter, season 2026.
+server_params:
+  season: ["2026"]
+  challengeType: batter
+  gameType: ["R"]
+  dataMode: for
+  dataCount: chal
+  minChal: 1
+  minOppChal: 0
+  level: mlb
+  fielderMode: as-challenger
+  splitYear: "1"
+  sort:
+    column: overturns_vs_exp
+    direction: desc
+  validSeasons: [2026]
+
+dt24:
+  # THE PULL DATE. Every count under `views`, `league_data` and `totals` was
+  # measured on this day.
+  pull_date: "2026-09-22"
+
+  # THE PULL-DATE TOLERANCE, one number and one date.
+  #
+  #   6.0 percent, from the pull date above.
+  #
+  # A page pulled on the pull date matches every count exactly. A page pulled
+  # later matches no count exactly, because the season is still running: a count
+  # is then a floor that may be exceeded by up to 6.0 percent and may never be
+  # undercut.
+  #
+  # Where 6.0 comes from. 2,459 regular-season games were scheduled for 2026 and
+  # 2,343 were Final by the day before the pull date, so 116 games could still
+  # enter the table (counted from data/staging/statsapi/schedule/sport1-2026.json,
+  # which is provenance-carrying staging, not a new request). The league took
+  # 10,167 challenges over those 2,343 games, which is 4.34 per game, so at most
+  # about 503 further challenges can appear. 503 of 10,167 is 4.9 percent, and
+  # 6.0 percent is that projection with headroom for the higher challenge rate of
+  # late-season games. The band does not widen after the regular season ends:
+  # serverParams pins gameType to R, so no postseason challenge ever enters it.
+  #
+  # How the one number is applied. A total is read against a fraction of
+  # itself, rounded up, so a nonzero baseline always gets at least one unit of
+  # room. A count of records over a threshold is read against a fraction of the
+  # view's record count instead, because such a count can be zero at the
+  # baseline and a fraction of zero is zero, which would refuse a pitcher who
+  # crosses ten challenges in the closing week. A rate is a ratio rather than a
+  # count, so it is read against a fraction of the rate itself. The tightest
+  # clause is the pitcher max, 8 with a band of 8 to 9: a pitcher who reaches 10
+  # fails DT-24.6, which is the intended signal to re-baseline rather than a
+  # defect in the puller.
+  #
+  # RECOMMENDED DEFAULT, for the owner decision this criterion needs: keep 6.0
+  # percent and re-baseline the whole table from the first pull taken after the
+  # regular season ends, at which point the tolerance can go back to 0.
+  tolerance_percent: 6.0
+
+  # A stated rate is the computed rate to two decimal places. The SOP text
+  # rounds three of the four and truncates the fourth (53.998... is written
+  # 53.99), so the assertion is a distance in percentage points and not a string
+  # match. 0.01 accepts either rendering and rejects a real drift.
+  rate_epsilon_points: 0.01
+
+  views:
+    batter:
+      league_side: batting
+      records: 524
+      keys: 86
+      sum_n_challenges: 4612
+      sum_n_overturns: 2259
+      overturn_rate_percent: 48.98
+      records_ge_10_challenges: 176
+      records_ge_20_challenges: 61
+      max_n_challenges: null
+    catcher:
+      league_side: fielding
+      records: 107
+      keys: 87
+      sum_n_challenges: 5382
+      sum_n_overturns: 3163
+      overturn_rate_percent: 58.77
+      records_ge_10_challenges: 91
+      records_ge_20_challenges: 77
+      max_n_challenges: 172
+    pitcher:
+      league_side: fielding
+      records: 104
+      keys: 87
+      sum_n_challenges: 173
+      sum_n_overturns: 68
+      overturn_rate_percent: 39.31
+      records_ge_10_challenges: 0
+      records_ge_20_challenges: 0
+      max_n_challenges: 8
+
+  # leagueData, verbatim. The batting block carries no n_overturns and no
+  # n_fails of its own; both are in `totals` and in the batter view sum.
+  league_data:
+    batting:
+      n_total_sample: 102656
+      n_challenges: 4612
+      n_chal_reasonable: 3087
+      n_chal_reasonable_opps: 15248
+      exp_chal: 4610.751422593446
+    fielding:
+      n_total_sample: 231223
+      n_challenges: 5555
+      n_overturns: 3231
+      n_fails: 2324
+      n_chal_reasonable: 3918
+      n_chal_reasonable_opps: 14755
+      exp_chal: 5311.611977218711
+
+  totals:
+    n_challenges: 10167
+    n_overturns: 5490
+    n_fails: 4677
+    overturn_rate_percent: 53.99
+
+  # The first record of the batter view, verbatim as far as the SOP states it.
+  # The remaining keys are the mirrored `*_against` family and the derived
+  # columns the sort reads; their names are not recorded here because they were
+  # not measured. DT-24 asserts the key COUNT, which was measured, and the
+  # presence of the keys below, which were.
+  first_record:
+    view: batter
+    year: 2026
+    player_name: CJ Abrams
+    player_at_bat: 682928
+    id: 682928
+    team_abbr: WSH
+    player_team: 120
+    parent_org: WSH
+    parent_org_code: 120
+    level: MLB
+    levelCode: 1
+    n_total_sample: 337
+    n_challenges: 14
+    n_overturns: 12
+    n_fails: 2
+    exp_chal: 11.273643649277934
+    rate_challenges: 0.04154302670623145
+    exp_rate_challenges: 0.03345294851417785
+    rate_overturns: 0.8571428571428571
+    exp_rate_overturns: 0.527714464642565
+    n_chal_reasonable: 12
+    n_chal_reasonable_opps: 41
+    rate_reasonable_opp_taken: 0.2926829268292683
+    net_chal_gained_runs: 0.7109747108701477
+    runs_gained_per_chal: 0.10518913274725816
+
+  # Every record carries at least these. The `*_against` mirror is required for
+  # each of the counting and rate keys.
+  required_keys:
+    - year
+    - player_name
+    - id
+    - team_abbr
+    - level
+    - n_total_sample
+    - n_challenges
+    - n_overturns
+    - n_fails
+    - exp_chal
+  mirrored_key_suffix: _against
+
+csv_export:
+  # The probe table this step keeps. Rendered from the rows below, so the file
+  # and this contract cannot drift apart.
+  table: out/tables/leaderboard_csv_probe.csv
+  columns:
+    - probe_date
+    - param_form
+    - http_status
+    - content_type
+    - bytes
+    - outcome
+    - note
+  probes:
+    - probe_date: "2026-09-22"
+      param_form: "season[]"
+      http_status: 500
+      content_type: text/html
+      bytes: 80549
+      outcome: dead
+      note: canonical parameters taken from the page's own serverParams
+    - probe_date: "2026-09-22"
+      param_form: "year="
+      http_status: 500
+      content_type: text/html
+      bytes: 80647
+      outcome: dead
+      note: second independent parameter form, same failure
+    - probe_date: "2026-11-01"
+      param_form: "season[]"
+      http_status: ""
+      content_type: ""
+      bytes: ""
+      outcome: scheduled
+      note: SOP W2.11 asks for one re-test in November; record the result either way
