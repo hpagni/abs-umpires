@@ -1,8 +1,8 @@
-........................................................................ [ 60%]
-...............................................                          [100%]
+........................................................................ [ 56%]
+.......................................................                  [100%]
 =============================== warnings summary ===============================
 tests/guard/test_seal_immutability.py::test_the_seal_holds_no_readable_rows
-  /Users/hudsonpagni/sports-project/tests/guard/test_seal_immutability.py:207: VacuousGuard: GD-10 vacuous: no sealed rows yet, data/sealed/ is empty in phase 01
+  /Users/hudsonpagni/sports-project/tests/guard/test_seal_immutability.py:212: VacuousGuard: GD-10 vacuous: no sealed rows yet, data/sealed/ is empty in phase 01
     warnings.warn(
 
 tests/guard/test_seal_receipts.py::test_every_fit_artifact_has_a_receipt
@@ -22,11 +22,7 @@ tests/guard/test_seal_receipts.py::test_the_ordering_script_runs_and_reports
     warnings.warn(
 
 tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
-  /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:98: UserWarning: GD-10 pairing vacuous: docs/prereg/SEAL.md records no UNSEALED line in phase 01
-    warnings.warn(
-
-tests/guard/test_unseal_receipt.py::test_the_unseal_script_writes_the_receipt
-  /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:116: UserWarning: OWNER ITEM: ops/unseal.sh (not this lane's path) does not yet write quality/receipts/unseal-<tag>.log; the pairing rule is defined and asserted here, the writer is missing
+  /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:101: UserWarning: GD-10 pairing vacuous: docs/prereg/SEAL.md records no UNSEALED line in phase 01
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
@@ -56,5 +52,15 @@ tests/guard/test_unseal_receipt.py::test_the_unseal_script_writes_the_receipt
 [redteam] E18 the label assembled with jinja's ~ operator -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_label__redteam.sql:4 reads the held-out analysis set -- SELECT game_pk FROM {{ ref('stg_pitch') }} WHERE analysis_set = '{{ held }}'
 [redteam] E19 the fact table parked in a jinja variable -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_table__redteam.sql:4 unqualified raw fact-table read -- SELECT game_pk, plate_x FROM {{ tbl }}
 [redteam] E20 an executable under an excluded prefix -> make test-guard exit 2   GD-04 FAIL: quality/receipts/probe__redteam.sh:2 unqualified raw fact-table read -- duckdb -c "SELECT plate_x FROM fct_pitch"
+[redteam] E21 the held-out view in upper case -> make test-guard exit 2   GD-04 FAIL: sql/shouted__redteam.sql:1 names the held-out pitch view -- SELECT GAME_PK, PLATE_X FROM V_PITCH_SEALED
+[redteam] E22 the partition read by path from ops/ -> make test-guard exit 2   GD-05 FAIL: ops/nightly_pull__redteam.py:3 reads the held-out partition off disk -- frame = pl.read_parquet('data/sealed/pitch/*.parquet')
+[redteam] E23 a glob inside the label path segment -> make test-guard exit 2   GD-05 FAIL: sql/globbed__redteam.sql:1 the held-out label outside the two allowlisted files -- SELECT * FROM read_parquet('data/seal*/pitch/*.parquet')
+[redteam] E24 the boundary reached by date arithmetic -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/arith__redteam.py:3 literal boundary-date comparison -- CUT = date(2026, 9, 19) + timedelta(days=3)
+[redteam] E25 the view assembled from character codes -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/ordinal__redteam.py:1 names the held-out pitch view -- q = "SELECT * FROM " + chr(118)+chr(95)+"pitch_sealed"
+[redteam] E26 the label with a character escaped -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/escape__redteam.py:1 the held-out label outside the two allowlisted files -- split = "seal\x65d"
+[redteam] E27 the held-out view in mixed case (sibling of E21) -> make test-guard exit 2   GD-04 FAIL: sql/mixedcase__redteam.sql:1 names the held-out pitch view -- select * from Uv_pitch_sealed
+[redteam] E28 the partition behind a ? glob (sibling of E23) -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/quessglob__redteam.py:2 the held-out label outside the two allowlisted files -- df = pl.read_parquet("seale?/pitch/part.parquet")
+[redteam] E29 the partition read as a SQL FROM from ops/ (sibling of E22) -> make test-guard exit 2   GD-05 FAIL: ops/attach__redteam.py:2 reads the held-out partition off disk -- df = duckdb.sql("SELECT * FROM sealed/pitch/x.parquet")
+[redteam] E30 the label with an octal escape (sibling of E26) -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/octal__redteam.py:1 the held-out label outside the two allowlisted files -- split = "seal\145d"
 [redteam] make test-guard -> exit 0   GD-04: 0 violation(s) in the repository
-GD-09 pass: 24 of 24 checks; the guard fails when it should and is green when it should
+GD-09 pass: 34 of 34 checks; the guard fails when it should and is green when it should

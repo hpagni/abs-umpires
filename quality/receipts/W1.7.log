@@ -1,21 +1,2 @@
-..............................F......................................... [ 94%]
+........................................................................ [ 94%]
 ....                                                                     [100%]
-=================================== FAILURES ===================================
-___________________ test_lint_http_passes_on_this_repository ___________________
-
-    def test_lint_http_passes_on_this_repository() -> None:
-        result = run_lint("-q")
->       assert result.returncode == 0, result.stdout + result.stderr
-E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
-E           [SH-CURL] ops/env-setup.sh:8:if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
-E           [R-RSCRIPT] ops/env-setup.sh:15:Rscript -e '
-E           [R-RSCRIPT] ops/env-setup.sh:29:Rscript -e '
-E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-E
-E       assert 1 == 0
-E        +  where 1 = CompletedProcess(args=['/Users/hudsonpagni/sports-project/ops/lint_http.sh', '-q'], returncode=1, stdout='', stderr="L...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n").returncode
-
-tests/unit/test_http_etiquette.py:495: AssertionError
-=========================== short test summary info ============================
-FAILED tests/unit/test_http_etiquette.py::test_lint_http_passes_on_this_repository

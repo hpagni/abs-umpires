@@ -34,7 +34,8 @@
 # never carries the variable, and the owner's one ceremony shell is the only
 # place this script is ever meant to run.
 #
-# On success it appends one UNSEALED line to docs/prereg/SEAL.md carrying the
+# On success it writes quality/receipts/unseal-<tag>.log and then appends one
+# UNSEALED line to docs/prereg/SEAL.md carrying the
 # UTC timestamp, the Europe/Madrid timestamp and the tag's commit SHA. It
 # appends with >> and never rewrites that file.
 #
@@ -58,6 +59,7 @@ cd "$root" || exit 2
 TAG="prereg-v1"
 PREREG="PREREGISTRATION.md"
 SEAL_DOC="docs/prereg/SEAL.md"
+RECEIPT_DIR="quality/receipts"
 REMOTE="origin"
 UNLOCK_ENV="ABS_SEAL_UNLOCK"
 UNLOCK_VALUE="1"
@@ -214,14 +216,38 @@ if [ "$check_only" -eq 1 ]; then
   exit 0
 fi
 
+RECEIPT="$RECEIPT_DIR/unseal-$TAG.log"
 utc=$(date -u "+%Y-%m-%dT%H:%M:%SZ")
 madrid=$(TZ=Europe/Madrid date "+%Y-%m-%d %H:%M %Z")
 head_sha=$(git rev-parse HEAD)
+
+# GD-10, the pairing half. The receipt is written BEFORE the claim, so there is
+# no window in which an UNSEALED line exists with nothing behind it. It carries
+# the same commit=<sha> the line carries; tests/guard/test_unseal_receipt.py
+# fails if the two disagree or the receipt is absent. One receipt per tag, never
+# written by hand. Closes owner item O-G1.
+mkdir -p "$RECEIPT_DIR"
+if [ -e "$RECEIPT" ]; then
+  echo "UNSEAL REFUSED: $RECEIPT already exists; one receipt per tag." >&2
+  exit 1
+fi
+{
+  printf 'UNSEAL RECEIPT\n'
+  printf 'tag=%s\n' "$TAG"
+  printf 'commit=%s\n' "$tag_sha"
+  printf 'head=%s\n' "$head_sha"
+  printf 'remote=%s\n' "$remote_sha"
+  printf 'utc=%s\n' "$utc"
+  printf 'madrid=%s\n' "$madrid"
+  printf 'conditions=%s/%s\n' "$TOTAL" "$TOTAL"
+  printf 'written_by=ops/unseal.sh\n'
+} > "$RECEIPT"
 
 printf 'UNSEALED | utc=%s | madrid=%s | tag=%s | commit=%s | head=%s | remote=%s\n' \
   "$utc" "$madrid" "$TAG" "$tag_sha" "$head_sha" "$remote_sha" >> "$SEAL_DOC"
 
 echo "UNSEAL OK ($TOTAL/$TOTAL). Appended one UNSEALED line to $SEAL_DOC."
+echo "  receipt  = $RECEIPT"
 echo "  tag $TAG = $tag_sha (on $REMOTE as $remote_sha)"
 echo "  HEAD     = $head_sha"
 echo "  utc      = $utc"

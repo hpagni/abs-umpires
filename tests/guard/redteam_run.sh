@@ -539,6 +539,50 @@ refuse_if_present "$E26"
 printf 'split = "%s\\x65d"\n' "$FRAG" > "$E26"
 created="$created $E26"
 assert_caught "E26 the label with a character escaped" "$E26" GD-05
+
+# ---------------------------------------------------------------- SIBLINGS
+# Round 4, stopping-rule condition 2 (CLASS, NOT SPELLING). Each of E21-E26
+# closed a class. A repair made at the class level must also catch a sibling
+# from that class that no verifier demonstrated; a repair that only catches the
+# exact spelling that was planted is a declared limit, not a repair. These four
+# are the undemonstrated siblings, and all four were caught on first probe.
+
+# E27. Sibling of E21 (case folding): mixed case, not upper, and the SQL verb
+#      lower-cased too, so nothing about the line matches E21's spelling.
+E27="sql/mixedcase__redteam.sql"
+refuse_if_present "$E27"
+printf 'select * from %s\n' \
+  "$(printf '%s' "$VIEW" | sed 's/^\(.\)/\U\1/')" > "$E27"
+created="$created $E27"
+assert_caught "E27 the held-out view in mixed case (sibling of E21)" "$E27"
+
+# E28. Sibling of E23 (glob-tolerant path): a single-character glob, not a star.
+E28="src/absump/ch3/quessglob__redteam.py"
+refuse_if_present "$E28"
+# The glob is assembled from $HELD, never written out: this file is scanned like
+# any other, and a literal partition path here would fail GD-05 on the red team
+# itself. Replacing the final character with `?` still matches the real path.
+printf 'import polars as pl\ndf = pl.read_parquet("%s/pitch/part.parquet")\n' \
+  "$(printf '%s' "$HELD" | sed 's/.$/?/')" > "$E28"
+created="$created $E28"
+assert_caught "E28 the partition behind a ? glob (sibling of E23)" "$E28" GD-05
+
+# E29. Sibling of E22 (repo-wide read rule 6c): the read spelled as a SQL FROM
+#      against a path, from ops/, rather than as a dataframe read call.
+E29="ops/attach__redteam.py"
+refuse_if_present "$E29"
+printf 'import duckdb\ndf = duckdb.sql("SELECT * FROM %s/pitch/x.parquet")\n' \
+  "$HELD" > "$E29"
+created="$created $E29"
+assert_caught "E29 the partition read as a SQL FROM from ops/ (sibling of E22)" "$E29" GD-05
+
+# E30. Sibling of E26 (ordinal/escape decoding): an octal escape rather than hex.
+E30="src/absump/ch3/octal__redteam.py"
+refuse_if_present "$E30"
+printf 'split = "%s\\145d"\n' "$FRAG" > "$E30"
+created="$created $E30"
+assert_caught "E30 the label with an octal escape (sibling of E26)" "$E30" GD-05
+
 revert_files
 
 # ------------------------------------------------------- 3. green after the revert

@@ -17,6 +17,7 @@ it. Nothing else under ``tests/`` is exempt.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -216,3 +217,37 @@ def test_the_live_repository_is_clean() -> None:
     result = run_lint()
     assert result.returncode == 0, result.stderr
     assert "LINT HTTP OK" in result.stdout
+
+
+def test_the_documented_rule_count_matches_the_gate() -> None:
+    """Gate-doc parity, round 4.
+
+    `sop/SOP-final.md` and `docs/DEVIATIONS.md` DEV-04 both state the size of this
+    rule table. Round 3 grew the table from 29 rules to 37 and left both documents
+    saying 29 -- a binding pre-registration misstating the size of its own gate.
+    This test reads the count out of the linter's own banner and requires the two
+    documents to agree with it, so the pair cannot drift apart again: a rule added
+    without touching the prose fails here, in the same commit that adds it.
+    """
+    result = run_lint()
+    assert result.returncode == 0, result.stderr
+    banner = re.search(r"\((\d+) rules\)", result.stdout)
+    assert banner, f"ops/lint_http.sh printed no rule count:\n{result.stdout}"
+    count = banner.group(1)
+
+    repo_root = LINT_HTTP.resolve().parents[1]
+    # docs/DEVIATIONS.md is tracked and is present in every clone, so it is
+    # asserted unconditionally. sop/ is excluded by .gitignore (the SOP is not
+    # published), so in a clone SOP-final.md is simply absent; it is checked
+    # where it exists and skipped where it does not, rather than failing a
+    # reviewer's clone for a file the publish policy keeps out of the repo.
+    required = (repo_root / "docs" / "DEVIATIONS.md", f"{count}-rule table")
+    optional = (repo_root / "sop" / "SOP-final.md", f"table of {count} named rules")
+    checks = [required] + ([optional] if optional[0].is_file() else [])
+    for doc, phrase in checks:
+        text = doc.read_text(encoding="utf-8")
+        assert phrase in text, (
+            f"{doc.name} does not say '{phrase}'. ops/lint_http.sh reports {count} rules; "
+            "the gate and the document that describes it have drifted apart. "
+            "Update the prose in the same commit as the rule table."
+        )

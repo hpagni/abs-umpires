@@ -113,8 +113,61 @@ computed elsewhere, or a boundary reached by a loop); a character code built by
 arithmetic rather than written down (`chr(115 + 3)`); a datum other than a date
 copied into a fixture (a `gamePk` alone is not a spelling any rule can read);
 and anything under `data/` or `research/`, which D-03 keeps out of git entirely.
-The pre-commit hook, the red-team run and GD-10 are the layers that cover what a
-static line-scan cannot.
+A character code built by arithmetic is the honest counterpart to catching one
+written down: this file assembles its own banned tokens from ordinals so that it
+does not flag itself, and it cannot ban ordinal arithmetic without flagging
+itself.  Also uncaught: a query assembled across several lines through variables
+the taint pass does not model, a jinja `~` concatenation of a FACT TABLE name
+(the label and the view are tracked, a table name is not), and a base64 blob
+abutting an identifier with no quote between them, where `redact_blobs` eats the
+leading character.  The pre-commit hook, the red-team run and GD-10 are the
+layers that cover what a static line-scan cannot.  The same list is in
+`docs/DEVIATIONS.md` DEV-18, which is the copy a reviewer reaches; if you change
+one, change both.
+
+WHAT THIS IS, AND THE STOPPING RULE.  GD-04 is a DETECTION layer, not the
+control.  The control is the seal: the held-out rows are in an encrypted
+partition, a deliberate read must run `ops/unseal.sh`, which is irreversible and
+six-gated, and GD-10 pairs every UNSEALED line to a receipt that script writes
+itself.  This scan's claim is bounded and testable, and is not exhaustiveness:
+it catches the ACCIDENT -- a chapter reaching past the boundary day by habit --
+and every evasion CLASS ever demonstrated against it, at file and line, before
+the commit lands.  A scanner asked to defeat an author who already holds the
+decryption key cannot succeed, and claiming otherwise is the one thing here that
+would be dishonest; it is also how a gate gets switched off.
+
+The scan is CLOSED for a phase when four conditions hold, each checkable:
+
+  1. CLOSURE.  Every evasion any verifier has demonstrated is either caught with
+     file and line and pinned BOTH as a unit regression test and as a plant in
+     tests/guard/redteam_run.sh, or is written as a declared limit both above
+     and in docs/DEVIATIONS.md, naming the layer that covers it.  Zero misses
+     sit in neither place.
+  2. CLASS, NOT SPELLING.  Each repair is made at the class level -- case
+     folding, escape and ordinal decoding, file-scope conjunct, morpheme family,
+     glob-tolerant path segment, read-call scope -- and ships with at least one
+     SIBLING plant from the same class that nobody demonstrated.  A finding that
+     can only be closed by one regex per spelling is a declared limit, not a
+     repair.
+  3. MUTATION-PROOF.  GD-09 fails when any rule is neutered, and every new rule
+     adds a GD-09 check, so the table cannot rot into a no-op.
+  4. NO NEW CLASS.  One independent, time-boxed red team per round, run in an
+     isolated clone or under --root, never in the live tree.  A round ends when
+     a full budget yields no miss in a NEW class; a new spelling inside a class
+     already declared is fine and does not reopen the scanner.  Two consecutive
+     no-new-class rounds close the scanner for the phase.
+
+The honest finish line is "no evasion in the pinned corpus, and no new class
+since round N", never "no evasion exists".  Standing obligation, so this is not
+a permanent exemption: the red team runs again at each phase boundary and on any
+change to the rule table, and the limit list above is re-read at the same time.
+
+NOT A MISS, recorded so round 5 does not re-report it: a date literal reduced by
+an offset (`date(2026, 9, 25) - timedelta(days=1)`) is caught, because a base at
+or after the boundary is already a rule 4 violation on its own; and an offset
+that lands BEFORE the boundary (`date(2026, 9, 20) + timedelta(days=1)`) is not
+a violation at all.  Rule 4b reading a written `+` offset is therefore closed at
+the class level, not by spelling.
 
 WHAT IS ALLOWLISTED.  Exactly two paths, by exact path: `src/absump/seal.py`
 and `quality/sql/analysis_set.sql`.  GD-05's count is two.
@@ -126,6 +179,12 @@ Run it directly for a precise, machine-readable answer:
 
     uv run python tests/guard/gd04_scan.py             # the whole repository
     uv run python tests/guard/gd04_scan.py --path P    # one path only
+    uv run python tests/guard/gd04_scan.py --root DIR  # another tree entirely
+
+`--root` exists so that nobody ever has to plant an evasion in the live tree to
+test the scanner. It matches the ROOT argument `ops/lint_http.sh` already takes.
+Round 2 planted in the repository and corrupted two other lanes' receipts; SOP
+W9.7 now requires an isolated clone or a scratch root for every red-team run.
 
 Exit 0 when clean, 1 when it finds something, 2 when it cannot run.
 """
@@ -1074,9 +1133,19 @@ def main(argv: list[str] | None = None) -> int:
         "--no-allowlist", action="store_true", help="scan the two defining files too"
     )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument(
+        "--root",
+        default=None,
+        help="scan this tree instead of the repository: a clone, or any scratch directory. "
+        "Red-team plants belong here, never in the live tree (SOP W9.7).",
+    )
     args = parser.parse_args(argv)
     allowlist = frozenset() if args.no_allowlist else ALLOWLIST
-    found = scan_repository(allowlist=allowlist, only=args.path)
+    root = Path(args.root).resolve() if args.root else REPO_ROOT
+    if not root.is_dir():
+        print(f"GD-04: --root {root} is not a directory", file=sys.stderr)
+        return 2
+    found = scan_repository(root=root, allowlist=allowlist, only=args.path)
     if args.json:
         print(
             json.dumps(

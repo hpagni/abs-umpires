@@ -6,36 +6,11 @@ check for merge conflicts................................................Passed
 check for added large files..............................................Passed
 detect private key.......................................................Passed
 don't commit to branch..................................................Skipped
-ruff check...............................................................Failed
-- hook id: ruff-check
-- exit code: 1
-
-E501 Line too long (104 > 100)
-  --> tests/guard/gd04_scan.py:26:101
-   |
-24 | row in silence.  That installer now lives at `ops/env-setup.sh`, and a test
-25 | fails if any file under either directory carries the executable bit or a
-26 | shebang, so nothing runnable is there to skip.  Both directories are now walked from the filesystem, and
-   |                                                                                                     ^^^^
-27 | anything runnable or code-shaped in them is scanned like any other file.  A test
-28 | walks them on disk and asserts it, rather than repeating the claim in prose.
-   |
-
-Found 1 error.
-
+ruff check...............................................................Passed
 ruff format..............................................................Passed
 Detect hardcoded secrets.................................................Passed
 no raw data, research notes or logs in git...............................Passed
-HTTP requests only from the two allowed call sites.......................Failed
-- hook id: http-etiquette
-- exit code: 1
-
-LINT HTTP FAIL: request idiom outside the two allowed call sites.
-  [SH-CURL] ops/env-setup.sh:8:if ! command -v uv >/dev/null 2>&1; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
-  [R-RSCRIPT] ops/env-setup.sh:15:Rscript -e '
-  [R-RSCRIPT] ops/env-setup.sh:29:Rscript -e '
-Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-
+HTTP requests only from the two allowed call sites.......................Passed
 no read of the held-out set, and no held-out datum.......................Passed
 strip notebook outputs...............................(no files to check)Skipped
+.................                                                        [100%]

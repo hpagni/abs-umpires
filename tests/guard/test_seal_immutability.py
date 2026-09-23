@@ -16,7 +16,12 @@ there" catches a deletion and misses an insertion, and an insertion is how an
 open row would reach the sealed side, or a sealed row an open directory, after
 the count in the pre-registration was published.
 
-PHASE 01 STATUS. Nothing has been sealed. data/sealed/ is empty and the
+PHASE 01 STATUS, AND ITS EXPIRY. Nothing has been sealed. data/sealed/ is empty
+and the vacuity is declared rather than hidden (VacuousGuard). It is not
+permanent: test_the_vacuity_expires_when_the_seal_carries_rows is inert while
+the partition is empty and becomes a hard assertion the moment it is not, so
+the phase-02 pull cannot land rows while GD-06 compares nothing to nothing.
+The original note follows. data/sealed/ is empty and the
 manifest lists nothing, so the recomputation compares two empty sets. That is a
 real check of an empty state, not a check that was skipped, but it proves
 nothing about a populated seal, so GD-10 says so through a warning that pytest
@@ -209,6 +214,34 @@ def test_the_seal_holds_no_readable_rows() -> None:
             VacuousGuard,
             stacklevel=1,
         )
+
+
+def test_the_vacuity_expires_when_the_seal_carries_rows() -> None:
+    """The expiry. Phase 01 declares GD-06/GD-10 vacuous because data/sealed/ is empty.
+
+    That is honest now and dangerous later: the moment the phase-02 pull seals real
+    rows, an empty manifest would let `drift` compare nothing against nothing and
+    report GD-06 green while the containment check slept. This test is the alarm
+    clock. It is inert while the partition is empty and becomes a hard assertion
+    the instant it is not, so phase 02 cannot begin with the guard asleep.
+    """
+    sealed = files_under(REPO_ROOT / SEALED_ROOT)
+    if not sealed:
+        return
+    loaded = manifest()
+    entries = loaded["entries"]
+    assert entries, (
+        f"GD-06 FAIL: {SEALED_ROOT}/ carries {len(sealed)} file(s) but "
+        "quality/sealed_manifest.json lists no entries. The vacuity declared for "
+        "phase 01 has expired: the manifest must record what was sealed before the "
+        "drift check means anything."
+    )
+    assert loaded["game_count"] > 0, (
+        "GD-06 FAIL: the seal carries rows and the manifest claims game_count 0"
+    )
+    assert loaded["frozen_at"] is not None, (
+        "GD-06 FAIL: the seal carries rows and the manifest records no freeze time"
+    )
 
 
 def test_the_seal_log_records_no_unsealing() -> None:
