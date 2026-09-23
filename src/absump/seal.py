@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import hashlib as _hashlib
+import inspect as _inspect
 import os as _os
 import subprocess as _subprocess
 from functools import lru_cache
@@ -75,6 +76,15 @@ Stage = Literal["dev", "sealed"]
 # allowlisted Python file, so that no other module has to spell them.
 OPEN: str = "open"
 HELD_OUT: str = "sealed"
+
+# The only column names this module will partition on. `paths` states the rule
+# at its line 24: the date is always the official date, never the game date. A
+# caller does not get to choose which column the boundary is applied to, because
+# the game date of game 825030 is 2026-09-16T01:40:00Z while its official date
+# is 2026-09-15, so a frame partitioned on the wrong column crosses the boundary
+# by a day without saying so. `assert_unsealed` derives the column from this
+# tuple; a name outside it is refused rather than honoured.
+OFFICIAL_DATE_COLUMNS: tuple[str, ...] = ("official_date", "officialDate")
 
 _REMOTE: str = "origin"
 _GIT_TIMEOUT_S: float = 20.0
@@ -132,6 +142,11 @@ def _first_held_out_date() -> _dt.date:
 # --------------------------------------------------------------- frame access
 def _columns(df: Any) -> tuple[str, ...]:
     """Column names, for polars, pandas, pyarrow or a mapping of sequences."""
+    schema = getattr(df, "collect_schema", None)  # polars LazyFrame
+    if schema is not None and hasattr(df, "collect"):
+        # Reading `.columns` off a LazyFrame resolves the schema and warns; this
+        # is the same answer through the door polars asks for.
+        return tuple(schema().names())
     names = getattr(df, "column_names", None)  # pyarrow.Table
     if names is not None:
         return tuple(names)
@@ -164,6 +179,59 @@ def _values(df: Any, date_col: str) -> list[Any]:
     return list(column)
 
 
+def _as_official_date(value: Any) -> _dt.date:
+    """`paths.as_official_date`, minus the datetime path, which fails closed.
+
+    `paths.as_official_date` takes `.date()` off a datetime. That is the UTC
+    calendar day, which is the game date, not the official date: for game 825030
+    it returns 2026-09-16 for a game whose official date is 2026-09-15. A game
+    date *string* already raises there. This makes a game date *datetime* raise
+    in the same way, so both shapes fail closed at the boundary check instead of
+    one of them being silently truncated onto the wrong side.
+    """
+    if isinstance(value, _dt.datetime):
+        raise SealViolation(
+            f"{value!r} is a datetime. The boundary is applied to the official "
+            "date only, and truncating a timestamp to its UTC calendar day is "
+            "the game date, which can fall on the other side of the boundary. "
+            "Pass a date, or the ISO yyyy-mm-dd official date."
+        )
+    return paths.as_official_date(value)
+
+
+def _official_date_column(df: Any, date_col: str | None = None) -> str:
+    """The official-date column of `df`, derived here and not taken on trust.
+
+    `date_col` may be omitted, in which case the frame is searched for one of
+    `OFFICIAL_DATE_COLUMNS`. If it is given it is still checked against that
+    tuple: passing the name of a game-date column, typed or not, is refused.
+    """
+    columns = _columns(df)
+    present = [name for name in OFFICIAL_DATE_COLUMNS if name in columns]
+    if date_col is not None:
+        if date_col not in OFFICIAL_DATE_COLUMNS:
+            raise SealViolation(
+                f"column {date_col!r} is not an official-date column. The boundary "
+                f"is applied to one of {OFFICIAL_DATE_COLUMNS} and to nothing else, "
+                "because a game-date column carries the UTC calendar day and can "
+                "fall on the other side of the boundary from the official date."
+            )
+        if date_col not in columns:
+            raise ValueError(f"{date_col!r} is not a column; columns are {columns}")
+        return date_col
+    if not present:
+        raise SealViolation(
+            f"no official-date column in {columns}. This frame cannot be shown to "
+            f"be open: name the column one of {OFFICIAL_DATE_COLUMNS}."
+        )
+    if len(present) > 1:
+        raise SealViolation(
+            f"{present} are both present; which one carries the official date is "
+            "ambiguous, so the frame is refused. Keep one."
+        )
+    return present[0]
+
+
 def _held_out_mask(df: Any, date_col: str) -> list[bool]:
     """True for every row on the far side of the boundary. A null date is True.
 
@@ -179,7 +247,7 @@ def _held_out_mask(df: Any, date_col: str) -> list[bool]:
         if value is None:
             mask.append(True)
             continue
-        mask.append(paths.as_official_date(value) >= boundary)
+        mask.append(_as_official_date(value) >= boundary)
     return mask
 
 
@@ -204,39 +272,49 @@ def _filter(df: Any, mask: list[bool]) -> Any:
     raise TypeError(f"{type(df).__name__} cannot be filtered by this module")
 
 
-def assert_unsealed(df: Any, date_col: str) -> None:
+def assert_unsealed(df: Any, date_col: str | None = None) -> None:
     """Raise `SealViolation` unless every row of `df` is inside the open window.
 
     This is layer 1 of the guard at the one place it can be checked cheaply:
     the training frame, immediately before a fit. Every W3/W4/W5/W8 fit
     function with `stage="dev"` calls it.
+
+    The column is derived here, by `_official_date_column`, and not taken from
+    the caller on trust. `date_col` may still be passed, for the spelling SOP
+    W1.8 uses, but it is checked against `OFFICIAL_DATE_COLUMNS` and refused if
+    it names anything else. A datetime value is refused too, by
+    `_as_official_date`, so a game-date frame fails closed whether its dates
+    arrive as strings or as timestamps.
     """
-    mask = _held_out_mask(df, date_col)
+    column = _official_date_column(df, date_col)
+    mask = _held_out_mask(df, column)
     offenders = sum(mask)
     if offenders == 0:
         return
-    dates = [v for v, keep in zip(_values(df, date_col), mask, strict=True) if keep]
-    shown = sorted({"null" if d is None else paths.as_official_date(d).isoformat() for d in dates})
+    dates = [v for v, keep in zip(_values(df, column), mask, strict=True) if keep]
+    shown = sorted({"null" if d is None else _as_official_date(d).isoformat() for d in dates})
     raise SealViolation(
-        f"{offenders} of {len(mask)} rows in column {date_col!r} fall on or after "
+        f"{offenders} of {len(mask)} rows in column {column!r} fall on or after "
         f"{_first_held_out_date().isoformat()}: {', '.join(shown[:5])}"
         f"{' ...' if len(shown) > 5 else ''}. "
         "A dev-stage fit trains on the open window only."
     )
 
 
-def sealed_only(df: Any, date_col: str) -> Any:
+def sealed_only(df: Any, date_col: str | None = None) -> Any:
     """The rows on the far side of the boundary. Refuses unless `_unlocked()`.
 
     The only way to get a held-out frame in this codebase, and it is shut until
-    all six preconditions of SOP phase 5 hold at once.
+    all six preconditions of SOP phase 5 hold at once. The column is derived the
+    same way `assert_unsealed` derives it, so the two halves of layer 1 cannot
+    disagree about which date the boundary applies to.
     """
     if not _unlocked():
         raise SealViolation(
             "the held-out set is closed: " + "; ".join(unlock_report()["failed"]) + ". "
             "Only the owner opens it, after the W9.7 ceremony."
         )
-    return _filter(df, _held_out_mask(df, date_col))
+    return _filter(df, _held_out_mask(df, _official_date_column(df, date_col)))
 
 
 def frame(name: str = "pitch", *, set: str = OPEN, con: Any = None) -> Any:
@@ -389,6 +467,23 @@ def unlock_report() -> dict[str, Any]:
     }
 
 
+# The six conjuncts of the chain below, as source text. `_selfcheck` reads the
+# chain and asserts every one of them is still in it, in this order, with five
+# `and`s joining them. Without this, a conjunct can be deleted and every test in
+# the repository still passes: with the environment variable unset and no tag,
+# the chain is False whatever it contains, so no assertion on its *value* can
+# tell six conjuncts from one. The unit tests flip each conjunct and demand a
+# refusal; this is the half of that pinning which the W1.8 verify command runs.
+_UNLOCK_CONJUNCTS: tuple[str, ...] = (
+    '_os.environ.get(UNLOCK_ENV) == "1"',
+    "_tag_exists(tag)",
+    '_is_ancestor(tag, "HEAD")',
+    "_worktree_clean()",
+    "_prereg_hash_matches()",
+    "_tag_is_pushed(_REMOTE)",
+)
+
+
 def _unlocked() -> bool:
     """SOP W9.7, layer 2, verbatim: all six preconditions, or closed.
 
@@ -419,22 +514,22 @@ def _selfcheck() -> int:
     literal tuples, and nothing touches the warehouse or the network.
     """
     failures: list[str] = []
-    total = 7
+    total = 9
 
     missing = [n for n in _REQUIRED_NAMES if not hasattr(_module(), n)]
     if missing:
-        failures.append(f"1/7 missing public name(s): {', '.join(missing)}")
+        failures.append(f"1/9 missing public name(s): {', '.join(missing)}")
 
     try:
         boundary = _first_held_out_date()
         tag = _prereg_tag()
     except Exception as exc:
         boundary, tag = None, "?"
-        failures.append(f"2/7 config/seal.yml: {exc}")
+        failures.append(f"2/9 config/seal.yml: {exc}")
 
     for path in (Path(__file__).resolve(), REPO_ROOT / "quality" / "sql" / "analysis_set.sql"):
         if not path.is_file():
-            failures.append(f"3/7 allowlisted path missing: {path}")
+            failures.append(f"3/9 allowlisted path missing: {path}")
 
     open_frame = {"official_date": ["2026-09-20", "2026-09-21", _dt.date(2025, 10, 29)]}
     try:
@@ -445,26 +540,60 @@ def _selfcheck() -> int:
     mixed = {"official_date": ["2026-09-21", "2026-09-23"]}
     try:
         assert_unsealed(mixed, "official_date")
-        failures.append("5/7 a frame past the boundary was accepted")
+        failures.append("5/9 a frame past the boundary was accepted")
     except SealViolation:
         pass
 
     if _os.environ.get(UNLOCK_ENV) is not None:
-        failures.append(f"6/7 {UNLOCK_ENV} is set in this shell; SOP rule 0.5.1 forbids it here")
+        failures.append(f"6/9 {UNLOCK_ENV} is set in this shell; SOP rule 0.5.1 forbids it here")
     else:
         try:
             sealed_only(mixed, "official_date")
-            failures.append("6/7 sealed_only returned rows while the gate is shut")
+            failures.append("6/9 sealed_only returned rows while the gate is shut")
         except SealViolation:
             pass
 
     try:
         frame("pitch", set=HELD_OUT)
-        failures.append("7/7 frame returned rows while the gate is shut")
+        failures.append("7/9 frame returned rows while the gate is shut")
     except SealViolation:
         pass
     except Exception as exc:
-        failures.append(f"7/7 frame raised {type(exc).__name__} instead of SealViolation: {exc}")
+        failures.append(f"7/9 frame raised {type(exc).__name__} instead of SealViolation: {exc}")
+
+    # 8. All six conjuncts are still in the chain, and the report still lists
+    #    six clauses. A deleted conjunct changes nothing about the chain's value
+    #    in an allowed state of the repository, so it has to be caught here.
+    chain = _inspect.getsource(_unlocked).split("return (", 1)[-1]
+    absent = [text for text in _UNLOCK_CONJUNCTS if text not in chain]
+    if absent:
+        failures.append(f"8/9 _unlocked() lost conjunct(s): {'; '.join(absent)}")
+    elif chain.count(" and ") != len(_UNLOCK_CONJUNCTS) - 1:
+        failures.append(
+            f"8/9 _unlocked() joins {chain.count(' and ') + 1} conjuncts, not "
+            f"{len(_UNLOCK_CONJUNCTS)}"
+        )
+    report = unlock_report()
+    if len(report["checks"]) != len(_UNLOCK_CONJUNCTS):
+        failures.append(f"8/9 unlock_report() lists {len(report['checks'])} clauses, not six")
+
+    # 9. The column is derived here, not taken from the caller, and a datetime
+    #    fails closed exactly like a game-date string does.
+    open_day = (boundary - _dt.timedelta(days=1)).isoformat() if boundary else "2026-01-01"
+    try:
+        assert_unsealed({"official_date": [open_day]})
+    except SealViolation as exc:
+        failures.append(f"9/9 an open frame was rejected with no column named: {exc}")
+    try:
+        assert_unsealed({"game_date_utc": [open_day]}, "game_date_utc")
+        failures.append("9/9 a caller-chosen non-official date column was accepted")
+    except SealViolation:
+        pass
+    try:
+        assert_unsealed({"official_date": [_dt.datetime(2026, 1, 1, 1, 40)]})
+        failures.append("9/9 a datetime was accepted; it must fail closed like a string")
+    except SealViolation:
+        pass
 
     if failures:
         for line in failures:
