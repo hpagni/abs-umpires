@@ -360,3 +360,31 @@ declared does not reopen the scanner. Two consecutive no-new-class rounds close 
 phase. The honest finish line is "no evasion in the pinned corpus and no new class since
 round N", never "no evasion exists". Standing obligation: the red team runs again at each
 phase boundary and on any change to the rule table, and this list is re-read at the same time.
+
+## DEV-19 -- `renv::restore()` rewrites a tracked file, and the hook that hid it
+
+Raised 2026-09-23 (Europe/Madrid). Status: CLOSED in round 5. Pre-tag.
+
+`DECISIONS.md` asserted that `make py` and `make r` "are idempotent on a machine that is
+already set up". `make r` is not. `renv::restore()` regenerates the tracked file
+`renv/activate.R` from renv's own template on every run, adding trailing whitespace to 344
+of its lines; the diff is whitespace-only and the restore is otherwise a no-op. The
+consequence was visible only once per clone: `ops/bootstrap.sh` restores, W1.13's
+`pre-commit run --all-files` then meets the trailing-whitespace hook, the hook repairs the
+file and exits 1, and the step fails. Every later run is green because the first one fixed
+the cause, so a gate that fails exactly once looked like a gate that passes. It also meant
+`make prove` wrote to a tracked source file in a clean clone, which no step declares.
+
+Reproduction, independent of prove: clone the repository, `git status --porcelain` is
+empty, `Rscript -e 'renv::restore(prompt = FALSE)'` exits 0, `git status --porcelain` is
+now ` M renv/activate.R`. Plain `Rscript` through `.Rprofile` does not do this; restore
+does.
+
+The repair is in two halves, both needed. The trailing-whitespace hook excludes
+`^renv/activate\.R$`, because renv owns that file's formatting and will regenerate it
+whatever the hook does; and the file is committed as renv writes it, so restore is a true
+no-op and the tree stays clean. `tests/unit/test_precommit_config.py` pins the exclude, its
+uniqueness, and the whitespace in the tracked file. The general lesson for later phases: a
+gate that repairs what it measures reports the repaired state, so a one-shot failure in a
+fresh clone is invisible to any number of repeat runs on a warm one. Fresh-clone proving,
+not repeat proving, is what tests determinism.

@@ -27,6 +27,18 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        # renv owns renv/activate.R: `renv::restore()` regenerates it from
+        # the renv package's own template on every run, and that template
+        # carries trailing whitespace on 344 lines. Without this exclude the
+        # first `make prove` of a fresh clone failed W1.13 -- ops/bootstrap.sh
+        # runs restore, this hook then rewrote the file and exited 1, and
+        # runs 2 and 3 were green, so the gate erased its own cause and
+        # proving wrote to a tracked source file. The regenerated file is now
+        # committed exactly as renv writes it, so restore is a true no-op and
+        # the hook has nothing left to fight. This is the only path excluded
+        # and the only file in the tree whose formatting another tool owns;
+        # tests/unit/test_precommit_config.py pins both facts.
+        exclude: ^renv/activate\.R$
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-toml
