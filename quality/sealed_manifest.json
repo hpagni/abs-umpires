@@ -1,16 +1,35 @@
 {
-  "schema": "absump/sealed_manifest@1",
-  "written_by": "SOP step W9.7, fleet phase 01",
-  "written_at_madrid": "2026-09-23 05:13 CEST",
-  "note": "GD-06, seal immutability. This file is the record of what is under data/sealed/. The guard recomputes the record from the directory and fails if the two disagree in either direction: a file that is not listed, a listed file that is gone, or a listed file whose bytes changed. It is empty because nothing has been sealed. Phase 11 writes the entries at the seal event and docs/prereg/SEAL.md records the same event in prose.",
-  "hash_algorithm": "sha256",
-  "root": "data/sealed",
-  "seal_start_date": "2026-09-22",
-  "seal_start_date_source": "config/seal.yml:seal_start_date",
-  "prereg_tag": "prereg-v1",
-  "prereg_tag_source": "config/seal.yml:prereg_tag",
-  "frozen_at": null,
-  "game_count": 0,
-  "date_range": null,
-  "entries": []
+ "schema": "absump/sealed_manifest@1",
+ "written_by": "SOP step W9.7, fleet phase 02",
+ "written_at_madrid": "2026-09-23 11:44 CEST",
+ "note": "GD-06, seal immutability. This file is the record of what is under data/sealed/. The guard recomputes the record from the directory and fails if the two disagree in either direction: a file that is not listed, a listed file that is gone, or a listed file whose bytes changed. Phase 02 sealed nothing by pulling; the one entry is a quarantine. Game 823543 was scheduled on an open day and its officialDate landed inside the sealed window, so the staging puller's copy was moved under the seal unread and is recorded here by digest. frozen_at is that quarantine, not the seal event: docs/prereg/SEAL.md records the seal event in prose when it happens.",
+ "hash_algorithm": "sha256",
+ "root": "data/sealed",
+ "seal_start_date": "2026-09-22",
+ "seal_start_date_source": "config/seal.yml:seal_start_date",
+ "prereg_tag": "prereg-v1",
+ "prereg_tag_source": "config/seal.yml:prereg_tag",
+ "frozen_at": "2026-09-23T11:37:46+02:00",
+ "game_count": 1,
+ "date_range": {
+  "first": "2026-09-22",
+  "last": "2026-09-22"
+ },
+ "entries": [
+  {
+   "path": "data/sealed/quarantine/823543.json",
+   "bytes": 670874,
+   "sha256": "d763058283c7d2d412d8981132db25344570a6b3e35d76c13140afb9672f7531"
+  }
+ ],
+ "quarantine": [
+  {
+   "file": "823543.json",
+   "officialDate": "2026-09-22",
+   "from": "data/staging/statsapi/feeds/sport1/2026",
+   "to": "data/sealed/quarantine/823543.json",
+   "reason": "schedule date 2026-09-21 but officialDate in the sealed window; pulled by the pre-fleet staging puller",
+   "quarantined_at": "2026-09-23T11:37:46+02:00"
+  }
+ ]
 }

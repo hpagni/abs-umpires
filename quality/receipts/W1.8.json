@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/guard/test_no_sealed_reads.py tests/unit/test_seal_official_date.py tests/unit/test_seal_unlock_conjuncts.py -q && uv run --locked python -m absump.seal --selfcheck && bash ops/check_seal_order.sh && bash ops/preregister.sh --check",
-  "duration_s": 3,
+  "duration_s": 4,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "11b1da3cda9a24b33a4c13a28de480ed7c47f937",
+  "git_sha": "a8355cbaad847b07150387f1cd0a7ee9cf50eadc",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.8.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.8",
-  "timestamp_madrid": "2026-09-23 09:26:51 CEST",
+  "timestamp_madrid": "2026-09-23 11:43:47 CEST",
   "title": "Seal module, the static scan and the one-way door"
 }
