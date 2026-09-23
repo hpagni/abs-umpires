@@ -1,0 +1,90 @@
+# .pre-commit-config.yaml -- SOP step W1.13.
+#
+# Install once, from the repository root:
+#   uv run --locked pre-commit install
+# Run over everything, which is what `scripts/prove.sh W1.13` does:
+#   SKIP=no-commit-to-branch uv run --locked pre-commit run --all-files
+#
+# `no-commit-to-branch --branch main` is deliberate and it stays. The repository
+# is public from its first commit (D-02) and the seal depends on commit ordering
+# (SOP section 0.5 rule 1), so from W1.13 on every change reaches main through a
+# pull request that the seal-guard workflow has passed. That hook declares
+# always_run, so it fires on `pre-commit run --all-files` as well as on a commit,
+# and a run from a checkout of main would always fail. The W1.13 verify command
+# therefore skips that one hook by name and tests/unit/test_precommit_config.py
+# asserts it is still configured. Skipping it in the linter is not relaxing it:
+# on a commit to main it still refuses.
+#
+# Every rev below is a tag, never a branch or a moving ref, so a clean clone gets
+# the same hook code this machine ran.
+
+minimum_pre_commit_version: "4.6.2"
+default_install_hook_types: ["pre-commit"]
+default_stages: ["pre-commit"]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        # 5120 kB is SOP section 0.5 rule 4's ceiling in kilobytes. Anything
+        # larger is a datum or a model artifact and belongs in out/ or in the B2
+        # mirror, not in a public git history.
+        args: ["--maxkb=5120"]
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      # ruff is pinned to the same 0.16.8 in pyproject.toml's dev group, so the
+      # hook and `make fmt` cannot disagree about what formatted means.
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      # gitleaks-system runs the gitleaks already on PATH instead of building it
+      # from source. Same repository, same tag, same command as the `gitleaks`
+      # hook id; it only skips the Go toolchain download, which this machine has
+      # no Go for. .gitleaks.toml (W1.12) is the ruleset. CI runs
+      # `gitleaks detect --redact --no-banner` over full history as a separate
+      # job (W1.16), so a machine without the binary is still covered.
+      - id: gitleaks-system
+        # Upstream's manifest omits pass_filenames for this id, so pre-commit
+        # appends the file list and `gitleaks git` rejects it with
+        # "accepts at most 1 arg(s)". Set it here.
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: no-raw-data
+        name: no raw data, research notes or logs in git
+        description: refuses any staged path under data/, research/ or logs/.
+        entry: ops/hook_no_raw_data.sh
+        language: script
+        pass_filenames: true
+
+      - id: http-etiquette
+        name: HTTP requests only from the two allowed call sites
+        description: ops/lint_http.sh, SOP section 0.5 rule 2.
+        entry: ops/lint_http.sh
+        args: ["-q"]
+        language: script
+        pass_filenames: false
+        always_run: true
+
+      - id: nb-clean
+        name: strip notebook outputs
+        description: empties outputs and execution counts before a notebook is committed.
+        entry: ops/hook_nb_clean.py
+        language: script
+        types: ["jupyter"]

@@ -1,0 +1,46 @@
+# tests/guard/redteam.patch -- GD-09, the red team. SOP step W9.7.
+#
+# Two planted violations, one per file, in the two places the R1 static scan
+# could not see: a Chapter 1 R script and the Chapter 3 solver. The guard must
+# fail on both, by file and line. `bash tests/guard/redteam_run.sh` applies
+# this patch, asserts the two failures, reverts, re-runs clean and exits 0.
+#
+# THE PLACEHOLDER. The held-out label is written here as `@H@` and is rendered
+# to the real label at apply time. The reason is GD-04 itself: this file has a
+# `.patch` suffix, the scan reads every format that can carry a read, and a
+# patch that carried the literal label would fail the guard it exists to test.
+# The rendering is one substitution, `@H@` -> the label, done by
+# redteam_run.sh into a temporary file; the temporary patch is what git applies.
+# To apply it by hand, from the repository root:
+#
+#     sed 's/@H@/<the held-out label>/g' tests/guard/redteam.patch | git apply
+#
+# The two hunks are keyed to the stubs W9.7 wrote. When the owning W3 and W5
+# steps replace those stubs with the real script and the real solver, this
+# patch is regenerated against them and the planted lines move. The run script
+# reads the planted line numbers back from the files, so nothing here needs a
+# line number written by hand.
+diff --git a/R/ch1/20_surfaces.R b/R/ch1/20_surfaces.R
+--- a/R/ch1/20_surfaces.R
++++ b/R/ch1/20_surfaces.R
+@@ -28,6 +28,7 @@ surface_frame <- function(con) {
+
+ fit_surfaces <- function(con) {
+   d <- surface_frame(con)
++  d <- dplyr::filter(d, analysis_set == '@H@')
+   message(nrow(d), " open pitches")
+   stop("R/ch1/20_surfaces.R is a stub; the owning W3 step writes the fit.")
+ }
+diff --git a/src/absump/ch3/dp_fast.py b/src/absump/ch3/dp_fast.py
+--- a/src/absump/ch3/dp_fast.py
++++ b/src/absump/ch3/dp_fast.py
+@@ -34,7 +34,8 @@ def state_shape() -> tuple[int, int, int, int]:
+
+ def value_frame(con: Any) -> Any:
+     """The one read. Chapter 3 trains on the open view and nothing else."""
+-    return con.execute("SELECT * FROM v_pitch_open").pl()
++    rows = con.execute("SELECT * FROM v_pitch_@H@").pl()
++    return rows
+
+
+ def solve(*, con: Any = None) -> Any:

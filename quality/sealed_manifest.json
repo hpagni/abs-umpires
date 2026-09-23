@@ -1,0 +1,16 @@
+{
+  "schema": "absump/sealed_manifest@1",
+  "written_by": "SOP step W9.7, fleet phase 01",
+  "written_at_madrid": "2026-09-23 05:13 CEST",
+  "note": "GD-06, seal immutability. This file is the record of what is under data/sealed/. The guard recomputes the record from the directory and fails if the two disagree in either direction: a file that is not listed, a listed file that is gone, or a listed file whose bytes changed. It is empty because nothing has been sealed. Phase 11 writes the entries at the seal event and docs/prereg/SEAL.md records the same event in prose.",
+  "hash_algorithm": "sha256",
+  "root": "data/sealed",
+  "seal_start_date": "2026-09-22",
+  "seal_start_date_source": "config/seal.yml:seal_start_date",
+  "prereg_tag": "prereg-v1",
+  "prereg_tag_source": "config/seal.yml:prereg_tag",
+  "frozen_at": null,
+  "game_count": 0,
+  "date_range": null,
+  "entries": []
+}
