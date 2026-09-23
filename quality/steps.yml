@@ -1,0 +1,213 @@
+# quality/steps.yml -- the step registry. SOP section 0.1.
+#
+# Owner: SOP step W9.1, fleet phase 01.
+#
+# Every piece of work in this project has a step id of the form W<workstream>.<number>.
+# Ids are stable. A retired step keeps its id, is marked retired with a date and a
+# reason, and is never reused.
+#
+# A step is not done until `make prove` says so. `scripts/prove.sh <step-id>` runs the
+# verify command registered here and writes a receipt to quality/receipts/<step-id>.json.
+# `make prove` runs every registered step and prints one line each: PASS, FAIL, MISSING
+# or RETIRED. It exits non-zero if any non-retired registered step is FAIL.
+#
+# FIELDS
+#   id          W<workstream>.<number>. Unique. Required.
+#   title       One line, no trailing period. Required for a live step.
+#   verify      The shell command prove.sh runs, from the repository root. Required
+#               for a live step. Absent on a retired step.
+#   expect_exit The exit code that counts as PASS. 0 for every step in this registry.
+#   owner       The owning workstream, W1 W2 W3 W6 W7 W9. Must match the id.
+#   needs       Optional, comma-separated paths. If any is absent, or is still one of the
+#               stubs W1.14 wrote (they open a comment line with the placeholder marker),
+#               the step is reported MISSING and its verify command is not run. This is how
+#               `make prove` distinguishes "not built yet" from "built and failing".
+#   retired     true on a retired id. Pairs with reason and date.
+#   reason      Why the id was retired.
+#   date        Madrid-stamped date of the retirement, YYYY-MM-DD.
+#
+# PARSER. yq is not installed on this machine and phase 01 adds no dependency for one
+# line, so quality/write_receipt.py reads this file with a strict reader that accepts a
+# deliberately small YAML subset: a top-level sequence of flat mappings, one `- key: value`
+# opener per record, two-space `key: value` continuations, comments on their own line, and
+# scalars that are bare, 'single-quoted' or "double-quoted". Nested structures, block
+# scalars and inline lists are rejected with an error naming the line. Keep this file
+# inside that subset.
+#
+# A step's owning workstream may narrow its own verify command later. The rule is that the
+# command must be runnable from a clean clone with no 2026 datum on disk, and must exit 0
+# only when the step's SOP acceptance test actually passes.
+
+- id: W1.1
+  title: "Preflight and disk floor"
+  verify: "bash ops/preflight.sh"
+  expect_exit: 0
+  owner: W1
+  needs: ops/preflight.sh
+
+- id: W1.2
+  title: "Repo and layout"
+  verify: "uv run --locked pytest tests/unit/test_layout.py -q"
+  expect_exit: 0
+  owner: W1
+  needs: tests/unit/test_layout.py, .gitignore, LICENSE, DATA_LICENSE.md
+
+- id: W1.3
+  title: "gh workflow scope"
+  verify: "gh api user -i 2>/dev/null | grep -i ^x-oauth-scopes | grep -qi workflow"
+  expect_exit: 0
+  owner: W1
+  needs: .github/workflows/ci.yml
+
+- id: W1.4
+  title: "Python environment from uv.lock"
+  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
+  expect_exit: 0
+  owner: W1
+  needs: pyproject.toml, uv.lock
+
+- id: W1.5
+  title: "R toolchain, CmdStan 2.40.0 and the rhat smoke fit"
+  verify: "Rscript R/00_setup.R"
+  expect_exit: 0
+  owner: W1
+  needs: R/00_setup.R, renv.lock, .Rprofile
+
+- id: W1.6
+  title: "Store, paths, DuckDB"
+  verify: "uv run --locked pytest tests/unit/test_paths.py -q"
+  expect_exit: 0
+  owner: W1
+  needs: src/absump/paths.py, src/absump/db.py, tests/unit/test_paths.py
+
+- id: W1.7
+  title: "HTTP client, the one chokepoint"
+  verify: "uv run --locked pytest tests/unit/test_http_etiquette.py tests/unit/test_throttle_budget.py -q"
+  expect_exit: 0
+  owner: W1
+  needs: src/absump/http.py, config/throttle.yml, tests/unit/test_http_etiquette.py
+
+- id: W1.8
+  title: "Seal module, the static scan and the one-way door"
+  verify: "uv run --locked pytest tests/guard/test_no_sealed_reads.py -q && uv run --locked python -m absump.seal --selfcheck && bash ops/check_seal_order.sh && bash ops/preregister.sh --check"
+  expect_exit: 0
+  owner: W1
+  needs: src/absump/seal.py, ops/preregister.sh, ops/check_seal_order.sh, tests/guard/test_no_sealed_reads.py
+
+- id: W1.12
+  title: "Secrets, gitleaks clean over full history"
+  verify: "gitleaks detect --redact --no-banner"
+  expect_exit: 0
+  owner: W1
+  needs: .env.example, .gitleaks.toml
+
+- id: W1.13
+  title: "pre-commit hooks"
+  verify: "uv run --locked pre-commit run --all-files"
+  expect_exit: 0
+  owner: W1
+  needs: .pre-commit-config.yaml
+
+- id: W1.14
+  title: "Makefile"
+  verify: "uv run --locked pytest tests/unit/test_makefile.py -q"
+  expect_exit: 0
+  owner: W1
+  needs: Makefile, tests/unit/test_makefile.py
+
+- id: W1.16
+  title: "GitHub Actions, ci.yml and seal-guard.yml"
+  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
+  expect_exit: 0
+  owner: W1
+  needs: .github/workflows/ci.yml, .github/workflows/seal-guard.yml
+
+- id: W2.1
+  title: "Layout and the no-raw-data guard"
+  verify: "uv run --locked pytest tests/unit/test_layout.py -q -k git_tracks_nothing"
+  expect_exit: 0
+  owner: W2
+  needs: .git/hooks/pre-commit, tests/unit/test_layout.py
+
+- id: W2.2
+  title: "Pinned dependencies"
+  verify: "uv run --locked pytest tests/unit/test_deps.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: tests/unit/test_deps.py
+
+- id: W2.3
+  title: "HTTP, delegated to W1.7"
+  verify: "uv run --locked pytest tests/unit/test_http_delegation.py -q && bash ops/lint_http.sh"
+  expect_exit: 0
+  owner: W2
+  needs: tests/unit/test_http_delegation.py, ops/lint_http.sh
+
+- id: W2.4
+  title: "Seal definition, routing and the unseal gate"
+  verify: "uv run --locked pytest tests/unit/test_seal_classifier.py tests/unit/test_seal_config_agrees.py -q && bash ops/seal_check.sh"
+  expect_exit: 0
+  owner: W2
+  needs: quality/sql/analysis_set.sql, config/seal.yml, docs/prereg/SEAL.md, ops/unseal.sh, ops/seal_check.sh, tests/unit/test_seal_classifier.py, tests/unit/test_seal_config_agrees.py
+
+- id: W6.1
+  title: "Repo public and the SSAC form fields recorded"
+  verify: "test -s abstract/FORM-FIELDS.md && gh repo view hpagni/abs-umpires --json visibility -q .visibility | grep -qx PUBLIC"
+  expect_exit: 0
+  owner: W6
+  needs: abstract/FORM-FIELDS.md
+
+- id: W9.1
+  title: "Scaffold and make prove"
+  verify: "bash scripts/prove.sh --check"
+  expect_exit: 0
+  owner: W9
+  needs: quality/steps.yml, quality/write_receipt.py, scripts/prove.sh
+
+- id: W9.2
+  title: "Environment verification, RP-01 to RP-08"
+  verify: "make verify-env"
+  expect_exit: 0
+  owner: W9
+  needs: ops/verify_env.sh
+
+- id: W9.3
+  title: "Synthetic fixtures with all seven traps"
+  verify: "uv run --locked pytest tests/fixtures/test_synth_traps.py -q"
+  expect_exit: 0
+  owner: W9
+  needs: tests/fixtures/synth_feed.py, tests/fixtures/test_synth_traps.py, quality/fixtures_attest.json, tests/fixtures/expected/challenges.json
+
+- id: W9.7
+  title: "The sealed guard, four layers"
+  verify: "uv run --locked pytest tests/guard -q && bash tests/guard/redteam_run.sh"
+  expect_exit: 0
+  owner: W9
+  needs: tests/guard/redteam_run.sh
+
+# Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
+# carry no body text in SOP-final, because the assembly folded them into their successors.
+# Phase 04 owns the successors. Phase 01 writes the rows so that `make prove` has a
+# complete id space from its first run. SOP section 0.1: a retired step keeps its id and
+# is marked retired; it is never reused.
+
+- id: W3.0
+  title: "Retired, folded into W3.2 at assembly"
+  retired: true
+  reason: "folded into W3.2 at assembly"
+  date: 2026-09-23
+  owner: W3
+
+- id: W3.1
+  title: "Retired, folded into W3.2 at assembly"
+  retired: true
+  reason: "folded into W3.2 at assembly"
+  date: 2026-09-23
+  owner: W3
+
+- id: W7.11
+  title: "Retired, folded into W7.10 at assembly"
+  retired: true
+  reason: "folded into W7.10 at assembly"
+  date: 2026-09-23
+  owner: W7

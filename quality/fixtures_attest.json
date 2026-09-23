@@ -1,0 +1,136 @@
+{
+  "schema": "fixtures_attest/1",
+  "step": "W9.3",
+  "stamp": "2026-09-23 04:49 CEST",
+  "stamp_is_generation_time_not_a_data_filter": true,
+  "generated_by": "tests/fixtures/synth_feed.py --attest",
+  "policy": "sha256 and shape of locally cached responses, never their content. Phase 01 may not read a 2026 datum, so only pre-2026 caches are read; 2026 caches are counted and nothing more. Nothing under data/ is ever copied into the repository, and no fixture is derived from a real response.",
+  "fixture_header_sha256": "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c",
+  "fixture_header_matches_cache": true,
+  "sources": [
+    {
+      "kind": "statcast_export_header",
+      "season": "2023",
+      "n_files": 110,
+      "n_distinct_header_sha256": 1,
+      "header_sha256": [
+        "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c"
+      ],
+      "n_columns": 119,
+      "encoding": "utf-8-sig"
+    },
+    {
+      "kind": "statcast_export_header",
+      "season": "2024",
+      "n_files": 185,
+      "n_distinct_header_sha256": 1,
+      "header_sha256": [
+        "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c"
+      ],
+      "n_columns": 119,
+      "encoding": "utf-8-sig"
+    },
+    {
+      "kind": "statcast_export_header",
+      "season": "2025",
+      "n_files": 184,
+      "n_distinct_header_sha256": 1,
+      "header_sha256": [
+        "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c"
+      ],
+      "n_columns": 119,
+      "encoding": "utf-8-sig"
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport1-2022.json",
+      "bytes": 4396993,
+      "sha256": "2c37205c4d0357801c60356b858878074d030b866db56fa3d3fa86ee2380be1e",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport1-2023.json",
+      "bytes": 4394454,
+      "sha256": "64afb267e3d044465365c17938b350d61229d7dcd890574e76ffc4de316aa01c",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport1-2024.json",
+      "bytes": 4382652,
+      "sha256": "bd194d41b314af1b17a43086c7fea88ebf3a69ac0f9dd3e5b93bf0b4f52fc223",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport1-2025.json",
+      "bytes": 4370252,
+      "sha256": "37dc5ed42b5a682a00fd66caeb8391ac81b6dec1cd71022904eacbe6e414aab9",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport11-2024.json",
+      "bytes": 3925333,
+      "sha256": "5ef1b0a6bcedf0488c9ac174084d901a145706cbd248219a4ac87dd194aac25b",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    },
+    {
+      "kind": "statsapi_schedule",
+      "path": "data/staging/statsapi/schedule/sport11-2025.json",
+      "bytes": 3945956,
+      "sha256": "f4b387192dc6010efdc84f4d76532a6fbe5a651bedc27df1da4644863f915f06",
+      "top_level_keys": [
+        "copyright",
+        "dates",
+        "totalEvents",
+        "totalGames",
+        "totalGamesInProgress",
+        "totalItems"
+      ]
+    }
+  ],
+  "ut20": {
+    "status": "deferred",
+    "reason": "no local real feed cached; UT-20 deferred to phase 02",
+    "pre_2026_gumbo_feeds_cached": 0,
+    "gumbo_feeds_cached_from_2026": 2195,
+    "note": "UT-20 validates the generator against one locally cached real feed. It fails locally if the feed shape changes and stays green in CI, which never sees real data. A skip is recorded as a skip, not as a pass."
+  }
+}

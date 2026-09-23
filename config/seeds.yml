@@ -1,0 +1,32 @@
+# config/seeds.yml -- every seed used anywhere in this repository. SOP W9.2.
+#
+# One file, eight integers, read at run time. No script invents a seed and no
+# script hard-codes one: a stochastic call takes its seed from here by key, so a
+# rerun of any chapter reproduces the same draws, and the eight numbers below are
+# the whole surface that has to stay fixed for RP-07 (determinism) to hold.
+#
+# The values are the ones SOP-final.md section 6.1 lists under W9.2, verbatim.
+# Do not renumber them, do not reuse one key for a second purpose, and do not add
+# a key without an SOP step that names it. tests/unit/test_seeds.py asserts this
+# file against that list key by key and fails on an extra key as well as a
+# missing one.
+#
+# Most values are dates read as YYYYMMDD. That is a convention for readability
+# only; nothing parses them as dates.
+
+# Chapter 1, the descriptive umpire layer.
+ch1_gam_bootstrap: 20260922    # cluster bootstrap over umpire-games, mgcv GAM band
+ch1_ump_power: 20260923        # umpire-level power simulation
+
+# Chapter 2, the Bayesian layer. Chains are seeded base + chain index, so the
+# four chains of one fit are distinct and the fit as a whole is reproducible.
+ch2_brms_chain_base: 424242    # brms/cmdstanr chain seed base
+ch2_sbc: 7001                  # simulation-based calibration
+ch2_recovery: 7002             # parameter recovery
+ch2_power_grid: 7003           # prospective power grid
+
+# Chapter 3, the decision-process layer.
+ch3_dp_bootstrap: 19730317     # bootstrap over the dynamic-programming twin
+
+# Phase 8, the betting layer.
+p8_walkforward: 20261208       # walk-forward split assignment

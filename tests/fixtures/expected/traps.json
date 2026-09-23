@@ -1,0 +1,72 @@
+{
+  "n_traps": 7,
+  "traps": [
+    {
+      "id": 1,
+      "name": "automatic_ball pitch-number offset",
+      "locator": "liveData.plays.allPlays[1].playEvents[1]",
+      "assertion": "isPitch false, details.eventType automatic_ball, no pitchNumber; Statcast emits a row for it, so pitch_number runs one ahead",
+      "tests": [
+        "UT-01",
+        "UT-02"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "four-event intentional walk",
+      "locator": "liveData.plays.allPlays[2].playEvents[0:4]",
+      "assertion": "every event pitchNumber 0 and details.call.code VB; four corrected keys, one naive key",
+      "tests": [
+        "UT-02",
+        "UT-03"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "pitch-level MJ with the play-level flag false",
+      "locator": "liveData.plays.allPlays[3].playEvents[2].details.hasReview",
+      "assertion": "details.hasReview true while allPlays[3].about.hasReview is false",
+      "tests": [
+        "UT-04",
+        "UT-05"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "play-level MJ with no challenge word in the description",
+      "locator": "liveData.plays.allPlays[4].reviewDetails",
+      "assertion": "reviewType MJ at play level, resolves to the last isPitch, and result.description does not contain 'challenged'",
+      "tests": [
+        "UT-06",
+        "UT-08"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "overturned challenge storing the post-challenge call",
+      "locator": "liveData.plays.allPlays[5].playEvents[2].reviewDetails",
+      "assertion": "isOverturned true while details.call.code holds C, the call after the challenge; the original call was a ball",
+      "tests": [
+        "UT-07"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "MF replay record that must be filtered",
+      "locator": "liveData.plays.allPlays[6].reviewDetails.reviewType",
+      "assertion": "reviewType MF; it is a review record but not a challenge",
+      "tests": [
+        "UT-09"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "AAA-shaped MJ record with no player key",
+      "locator": "liveData.plays.allPlays[7].playEvents[1].reviewDetails",
+      "assertion": "reviewType MJ with no 'player' key; challenger_id null, challenger_role unknown, no crash",
+      "tests": [
+        "UT-10"
+      ]
+    }
+  ]
+}

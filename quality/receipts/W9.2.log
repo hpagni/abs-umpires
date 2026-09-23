@@ -1,0 +1,18 @@
+bash ops/verify_env.sh
+verify-env: SOP W9.2, RP-01..RP-06, in /Users/hudsonpagni/sports-project
+RP-01  OK        lockfile current
+RP-02  OK        env installs from the lock alone
+RP-03  OK        R env matches renv.lock
+RP-04  OK        CmdStan 2.40.0 pinned, DYLD_LIBRARY_PATH unset
+RP-05  OK        arrow 25.0.1 on both sides, seam agrees to 1e-12
+RP-06  OK        every stochastic call seeded
+RP-07  DEFERRED  determinism: make all twice, quality/compare_out.py --tol 1e-8
+                 make all has no content in phase 01. Owner SOP W9.9, fleet phase 12,
+                 app-and-memo. Not counted below.
+RP-08  DEFERRED  cold rebuild from a clean checkout
+                 Owner SOP W6.11, fleet phase 06, abstract-freeze-and-submit.
+                 Not counted below.
+RP-09  ELSEWHERE throttle config and budget table agree
+                 pytest tests/unit/test_throttle_budget.py, runs under make test.
+                 Not one of the six.
+6/6 OK

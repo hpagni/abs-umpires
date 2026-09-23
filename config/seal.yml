@@ -1,0 +1,23 @@
+# config/seal.yml -- SOP section 2.4, step W2.4.
+#
+# The Python-side mirror of the one frozen predicate in
+# quality/sql/analysis_set.sql. SQL is canonical; this file repeats the same
+# constants so Python and R code do not re-derive them. UT-17
+# (tests/unit/test_seal_config_agrees.py) asserts the two agree, case by case,
+# so a drift here fails the build rather than silently reclassifying a game.
+#
+# Partitioning uses gameData.datetime.officialDate, never gameDate: game 825030
+# is a 2026-09-15 game carrying gameDate 2026-09-16T01:40:00Z, and the UTC
+# timestamp would put it on the wrong side of the seal.
+#
+# Scope is MLB 2026 only. AAA and MLB 2015-2025 are prior-regime data that the
+# public literature has had for months.
+#
+# Frozen at tag prereg-v1. After that tag, changes go in DEVIATIONS.md.
+
+seal_start_date: "2026-09-22"
+regular_season_end: "2026-09-27"
+postseason_end_estimate: "2026-11-01"
+sealed_game_types: ["R","F","D","L","W"]
+excluded_game_types: ["S","A","E"]
+prereg_tag: "prereg-v1"

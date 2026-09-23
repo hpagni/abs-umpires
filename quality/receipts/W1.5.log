@@ -1,0 +1,21 @@
+DYLD_LIBRARY_PATH: empty
+library:           /Users/hudsonpagni/sports-project/renv/library/macos/R-4.5/aarch64-apple-darwin20
+CmdStan path set to: /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
+
+versions
+  R            4.5.2
+  brms         2.23.0
+  mgcv         1.9.4
+  arrow        25.0.1
+  duckdb       1.5.5
+  data.table   1.18.2.1
+  baseballr    2.0.0
+  cmdstanr     0.9.0
+  renv         1.2.4
+  cmdstan      2.40.0
+  cmdstan_path /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
+stack load: 1.5 s
+
+stan: 2 chains x 200 draws = 400 draws, rhat = 1.00154, 0.6 s
+
+R SMOKE OK (2.1 s)

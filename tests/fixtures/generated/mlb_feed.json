@@ -1,0 +1,1500 @@
+{
+  "gamePk": 999001,
+  "gameData": {
+    "game": {
+      "pk": 999001,
+      "type": "R",
+      "season": "2025"
+    },
+    "datetime": {
+      "officialDate": "2025-06-15",
+      "dayNight": "night"
+    },
+    "teams": {
+      "away": {
+        "id": 901,
+        "abbreviation": "SYA",
+        "name": "Synthetic Away"
+      },
+      "home": {
+        "id": 900,
+        "abbreviation": "SYH",
+        "name": "Synthetic Home"
+      }
+    }
+  },
+  "liveData": {
+    "plays": {
+      "allPlays": [
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "Synthetic Batter 1 strikes out swinging.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 0,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 1,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": false,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 1,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6001,
+              "fullName": "Synthetic Batter 1",
+              "link": "/api/v1/people/6001"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.2,
+                  "pZ": 2.3
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001000001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "*B",
+                  "description": "Ball In Dirt"
+                },
+                "description": "Ball In Dirt",
+                "code": "*B",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -1.2,
+                  "pZ": 1.1
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001000002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "S",
+                  "description": "Swinging Strike"
+                },
+                "description": "Swinging Strike",
+                "code": "S",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 2,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.4,
+                  "pZ": 1.5
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001000003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:10:00.000Z",
+          "atBatIndex": 0
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Groundout",
+            "eventType": "field_out",
+            "description": "Synthetic Batter 2 grounds out, shortstop to first baseman.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 1,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 1,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": false,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 2,
+            "strikes": 1,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6002,
+              "fullName": "Synthetic Batter 2",
+              "link": "/api/v1/people/6002"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            2,
+            3
+          ],
+          "actionIndex": [
+            1
+          ],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.1,
+                  "pZ": 2.6
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001001001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "description": "Automatic Ball - Pitch Timer",
+                "event": "Automatic Ball - Pitch Timer",
+                "eventType": "automatic_ball",
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 0
+              },
+              "index": 1,
+              "isPitch": false,
+              "type": "action"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                },
+                "description": "Ball",
+                "code": "B",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 2,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -1.05,
+                  "pZ": 3.6
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001001002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "X",
+                  "description": "In play, out(s)"
+                },
+                "description": "In play, out(s)",
+                "code": "X",
+                "isInPlay": true,
+                "isStrike": false,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 2,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.0,
+                  "pZ": 2.2
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 3,
+              "playId": "00000000-0000-4000-8000-999001001003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:11:00.000Z",
+          "atBatIndex": 1
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Intent Walk",
+            "eventType": "walk",
+            "description": "Synthetic Batter 3 intentionally walks.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 2,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 1,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": false,
+            "hasOut": false
+          },
+          "count": {
+            "balls": 4,
+            "strikes": 0,
+            "outs": 0
+          },
+          "matchup": {
+            "batter": {
+              "id": 6003,
+              "fullName": "Synthetic Batter 3",
+              "link": "/api/v1/people/6003"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Intent Ball"
+                },
+                "description": "Intent Ball",
+                "code": "VB",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "coordinates": {}
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001002001",
+              "pitchNumber": 0,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Intent Ball"
+                },
+                "description": "Intent Ball",
+                "code": "VB",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 2,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "coordinates": {}
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001002002",
+              "pitchNumber": 0,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Intent Ball"
+                },
+                "description": "Intent Ball",
+                "code": "VB",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 3,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "coordinates": {}
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001002003",
+              "pitchNumber": 0,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Intent Ball"
+                },
+                "description": "Intent Ball",
+                "code": "VB",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 4,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "coordinates": {}
+              },
+              "index": 3,
+              "playId": "00000000-0000-4000-8000-999001002004",
+              "pitchNumber": 0,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:12:00.000Z",
+          "atBatIndex": 2
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "Synthetic Batter 4 called out on strikes.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 3,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 2,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": false,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 1,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6004,
+              "fullName": "Synthetic Batter 4",
+              "link": "/api/v1/people/6004"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                },
+                "description": "Ball",
+                "code": "B",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -1.3,
+                  "pZ": 2.1
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001003001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.55,
+                  "pZ": 2.9
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001003002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 2,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.1149,
+                  "pZ": 2.05
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001003003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": false,
+                "reviewType": "MJ",
+                "challengeTeamId": 901,
+                "player": {
+                  "id": 6004,
+                  "fullName": "Synthetic Batter 4",
+                  "link": "/api/v1/people/6004"
+                },
+                "inProgress": false
+              }
+            }
+          ],
+          "playEndTime": "2025-06-15T20:13:00.000Z",
+          "atBatIndex": 3
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "Synthetic Batter 5 called out on strikes.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 4,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 2,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": true,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6005,
+              "fullName": "Synthetic Batter 5",
+              "link": "/api/v1/people/6005"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.3,
+                  "pZ": 2.4
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001004001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "S",
+                  "description": "Swinging Strike"
+                },
+                "description": "Swinging Strike",
+                "code": "S",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 2,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.6,
+                  "pZ": 1.4
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001004002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 3,
+                "outs": 1
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -0.83,
+                  "pZ": 1.82
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001004003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:14:00.000Z",
+          "atBatIndex": 4,
+          "reviewDetails": {
+            "isOverturned": false,
+            "reviewType": "MJ",
+            "challengeTeamId": 901,
+            "player": {
+              "id": 6005,
+              "fullName": "Synthetic Batter 5",
+              "link": "/api/v1/people/6005"
+            },
+            "inProgress": false
+          }
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Strikeout",
+            "eventType": "strikeout",
+            "description": "Synthetic Batter 6 called out on strikes.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 5,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 2,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": true,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 1,
+            "strikes": 3,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6006,
+              "fullName": "Synthetic Batter 6",
+              "link": "/api/v1/people/6006"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                },
+                "description": "Ball",
+                "code": "B",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -1.5,
+                  "pZ": 2.8
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001005001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.62,
+                  "pZ": 2.7
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001005002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 2,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.1151,
+                  "pZ": 2.05
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001005003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": true,
+                "reviewType": "MJ",
+                "challengeTeamId": 900,
+                "player": {
+                  "id": 7003,
+                  "fullName": "Synthetic Catcher",
+                  "link": "/api/v1/people/7003"
+                },
+                "inProgress": false
+              }
+            }
+          ],
+          "playEndTime": "2025-06-15T20:15:00.000Z",
+          "atBatIndex": 5
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Single",
+            "eventType": "single",
+            "description": "Synthetic Batter 7 singles on a line drive to left fielder.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 6,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 3,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": true,
+            "hasOut": false
+          },
+          "count": {
+            "balls": 0,
+            "strikes": 0,
+            "outs": 0
+          },
+          "matchup": {
+            "batter": {
+              "id": 6007,
+              "fullName": "Synthetic Batter 7",
+              "link": "/api/v1/people/6007"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "X",
+                  "description": "In play, no out"
+                },
+                "description": "In play, no out",
+                "code": "X",
+                "isInPlay": true,
+                "isStrike": false,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 0,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.0,
+                  "pZ": 2.5
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001006001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:16:00.000Z",
+          "atBatIndex": 6,
+          "reviewDetails": {
+            "isOverturned": true,
+            "reviewType": "MF",
+            "challengeTeamId": 901,
+            "inProgress": false
+          }
+        },
+        {
+          "result": {
+            "type": "atBat",
+            "event": "Flyout",
+            "eventType": "field_out",
+            "description": "Synthetic Batter 8 flies out to center fielder.",
+            "rbi": 0,
+            "awayScore": 0,
+            "homeScore": 0
+          },
+          "about": {
+            "atBatIndex": 7,
+            "halfInning": "top",
+            "isTopInning": true,
+            "inning": 3,
+            "isComplete": true,
+            "isScoringPlay": false,
+            "hasReview": false,
+            "hasOut": true
+          },
+          "count": {
+            "balls": 1,
+            "strikes": 1,
+            "outs": 1
+          },
+          "matchup": {
+            "batter": {
+              "id": 6008,
+              "fullName": "Synthetic Batter 8",
+              "link": "/api/v1/people/6008"
+            },
+            "batSide": {
+              "code": "R",
+              "description": "Right"
+            },
+            "pitcher": {
+              "id": 5001,
+              "fullName": "Synthetic Pitcher",
+              "link": "/api/v1/people/5001"
+            },
+            "pitchHand": {
+              "code": "R",
+              "description": "Right"
+            }
+          },
+          "pitchIndex": [
+            0,
+            1,
+            2
+          ],
+          "actionIndex": [],
+          "runnerIndex": [],
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                },
+                "description": "Ball",
+                "code": "B",
+                "isInPlay": false,
+                "isStrike": false,
+                "isBall": true,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 0,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": -1.1,
+                  "pZ": 3.5
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 0,
+              "playId": "00000000-0000-4000-8000-999001007001",
+              "pitchNumber": 1,
+              "isPitch": true,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                },
+                "description": "Called Strike",
+                "code": "C",
+                "isInPlay": false,
+                "isStrike": true,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": true
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 0
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.91,
+                  "pZ": 3.3
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 1,
+              "playId": "00000000-0000-4000-8000-999001007002",
+              "pitchNumber": 2,
+              "isPitch": true,
+              "type": "pitch",
+              "reviewDetails": {
+                "isOverturned": false,
+                "reviewType": "MJ",
+                "challengeTeamId": 901,
+                "inProgress": false
+              }
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "X",
+                  "description": "In play, out(s)"
+                },
+                "description": "In play, out(s)",
+                "code": "X",
+                "isInPlay": true,
+                "isStrike": false,
+                "isBall": false,
+                "type": {
+                  "code": "FF",
+                  "description": "Four-Seam Fastball"
+                },
+                "hasReview": false
+              },
+              "count": {
+                "balls": 1,
+                "strikes": 1,
+                "outs": 1
+              },
+              "pitchData": {
+                "startSpeed": 93.4,
+                "coordinates": {
+                  "pX": 0.05,
+                  "pZ": 2.45
+                },
+                "strikeZoneTop": 3.4,
+                "strikeZoneBottom": 1.71588785
+              },
+              "index": 2,
+              "playId": "00000000-0000-4000-8000-999001007003",
+              "pitchNumber": 3,
+              "isPitch": true,
+              "type": "pitch"
+            }
+          ],
+          "playEndTime": "2025-06-15T20:17:00.000Z",
+          "atBatIndex": 7
+        }
+      ],
+      "playsByInning": []
+    },
+    "boxscore": {
+      "teams": {
+        "home": {
+          "players": {
+            "ID5001": {
+              "person": {
+                "id": 5001,
+                "fullName": "Synthetic Pitcher",
+                "link": "/api/v1/people/5001"
+              },
+              "position": {
+                "code": "1",
+                "abbreviation": "P"
+              }
+            },
+            "ID7003": {
+              "person": {
+                "id": 7003,
+                "fullName": "Synthetic Catcher",
+                "link": "/api/v1/people/7003"
+              },
+              "position": {
+                "code": "2",
+                "abbreviation": "C"
+              }
+            }
+          }
+        },
+        "away": {
+          "players": {
+            "ID6001": {
+              "person": {
+                "id": 6001,
+                "fullName": "Synthetic Batter 1",
+                "link": "/api/v1/people/6001"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6002": {
+              "person": {
+                "id": 6002,
+                "fullName": "Synthetic Batter 2",
+                "link": "/api/v1/people/6002"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6003": {
+              "person": {
+                "id": 6003,
+                "fullName": "Synthetic Batter 3",
+                "link": "/api/v1/people/6003"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6004": {
+              "person": {
+                "id": 6004,
+                "fullName": "Synthetic Batter 4",
+                "link": "/api/v1/people/6004"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6005": {
+              "person": {
+                "id": 6005,
+                "fullName": "Synthetic Batter 5",
+                "link": "/api/v1/people/6005"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6006": {
+              "person": {
+                "id": 6006,
+                "fullName": "Synthetic Batter 6",
+                "link": "/api/v1/people/6006"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6007": {
+              "person": {
+                "id": 6007,
+                "fullName": "Synthetic Batter 7",
+                "link": "/api/v1/people/6007"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            },
+            "ID6008": {
+              "person": {
+                "id": 6008,
+                "fullName": "Synthetic Batter 8",
+                "link": "/api/v1/people/6008"
+              },
+              "position": {
+                "code": "7",
+                "abbreviation": "LF"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
