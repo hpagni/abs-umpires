@@ -1,0 +1,232 @@
+# .github/workflows/seal-guard.yml -- SOP step W1.16, fleet phase 01.
+#
+# The sealed guard, in CI, on push and on pull request. It runs the checks in
+# SOP W9.7 layers 3 and 4, then the pre-registration and sealed-provenance
+# checks that W1.16 adds on top of them.
+#
+# Layer 3 is the static scan (GD-04, GD-05): tests/guard/test_no_sealed_reads.py
+# walks the whole repository and fails on a sealed read outside the two
+# allowlisted paths. Layer 4 is the receipts (GD-01, GD-02). Both are pure git
+# and file scans. This workflow reads no data and issues no request.
+#
+# PHASE 01 NOTE. The tag prereg-v1 is created in SOP W3.13, fleet phase 04, not
+# here. Until it exists this workflow prints a skip with its reason and exits 0 --
+# but only while out/sealed/ holds no file and out/ carries no fit receipt. The
+# moment either appears, a missing tag is a hard failure. That switch is in the
+# check itself, not in a continue-on-error a later phase has to remember to
+# remove. There is no continue-on-error anywhere in this file.
+
+name: seal-guard
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seal-guard-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  seal-guard:
+    name: seal-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The guard reads history, tags and tag commit dates. A shallow clone
+          # would let a missing tag look like a passing check.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: astral-sh/setup-uv@v10.2.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: uv sync --locked
+        run: uv sync --locked
+
+      - name: W9.7 layer 3, the static scan (GD-04, GD-05)
+        run: uv run --locked pytest tests/guard/test_no_sealed_reads.py -q
+
+      - name: W9.7 layer 4, the receipts (GD-01, GD-02)
+        run: uv run --locked pytest tests/guard -q
+
+      - name: pre-registration tag and sealed provenance
+        run: |
+          set -eu
+          uv run --locked python - <<'PY'
+          """W1.16 seal-guard: the pre-registration tag, the lock, and sealed provenance.
+
+          Checks, in order:
+            1. the tag prereg-v1 exists;
+            2. PREREGISTRATION.md still matches quality/prereg.lock;
+            3. every file under out/sealed/ has a sibling provenance.json carrying
+               prereg_tag, the tag's commit SHA, fit_started_at and input_max_game_date;
+            4. no provenance.json anywhere under out/ has fit_started_at earlier than
+               the tag's commit date.
+
+          Before the tag exists, 2 to 4 have nothing to check. That is a skip with a
+          printed reason, and only while out/sealed/ is empty of files and out/ carries
+          no fit receipt. Either of those with no tag is a hard failure: it would mean a
+          fit ran before the pre-registration it claims to be bound by.
+          """
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import subprocess
+          import sys
+          from datetime import datetime
+
+          TAG = "prereg-v1"
+          ROOT = pathlib.Path.cwd()
+          SHA_KEYS = ("prereg_commit", "prereg_sha", "prereg_commit_sha", "prereg_tag_sha")
+          SKIP_NAMES = {".gitkeep", "provenance.json"}
+
+          failures: list[str] = []
+
+
+          def git(*args: str) -> subprocess.CompletedProcess:
+              return subprocess.run(
+                  ["git", *args], cwd=ROOT, capture_output=True, text=True, check=False
+              )
+
+
+          def sealed_files() -> list[pathlib.Path]:
+              d = ROOT / "out" / "sealed"
+              if not d.is_dir():
+                  return []
+              return sorted(p for p in d.rglob("*") if p.is_file() and p.name not in SKIP_NAMES)
+
+
+          def provenance_files() -> list[pathlib.Path]:
+              d = ROOT / "out"
+              if not d.is_dir():
+                  return []
+              return sorted(p for p in d.rglob("provenance.json") if p.is_file())
+
+
+          def as_dt(text: str) -> datetime | None:
+              try:
+                  return datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
+              except (ValueError, AttributeError):
+                  return None
+
+
+          # ---------------------------------------------------------- 1. the tag
+          tag_exists = git("rev-parse", "-q", "--verify", f"refs/tags/{TAG}").returncode == 0
+          sealed = sealed_files()
+          receipts = provenance_files()
+
+          if not tag_exists:
+              blockers = [str(p.relative_to(ROOT)) for p in sealed + receipts]
+              if blockers:
+                  print(f"SEAL-GUARD FAIL: the tag {TAG} does not exist, but these files do:")
+                  for b in blockers:
+                      print(f"  {b}")
+                  print(
+                      "A sealed output or a fit receipt without a pre-registration tag means a "
+                      "fit ran before the pre-registration it claims to be bound by."
+                  )
+                  sys.exit(1)
+              print(
+                  f"SEAL-GUARD SKIP: the tag {TAG} does not exist yet. It is created in SOP "
+                  "step W3.13, fleet phase 04. out/sealed/ holds no file and out/ carries no "
+                  "provenance.json, so there is no sealed output to bind to a tag. This skip "
+                  "becomes a hard failure the moment either appears."
+              )
+              sys.exit(0)
+
+          tag_sha = git("rev-list", "-n", "1", TAG).stdout.strip()
+          tag_date_raw = git("log", "-1", "--format=%cI", tag_sha).stdout.strip()
+          tag_date = as_dt(tag_date_raw)
+          print(f"{TAG} -> {tag_sha}  committed {tag_date_raw}")
+          if tag_date is None:
+              failures.append(f"could not read the commit date of {TAG}: {tag_date_raw!r}")
+
+          # ------------------------------------ 2. PREREGISTRATION.md vs prereg.lock
+          prereg = ROOT / "PREREGISTRATION.md"
+          lock = ROOT / "quality" / "prereg.lock"
+          if not prereg.is_file():
+              failures.append(f"{TAG} exists but PREREGISTRATION.md is absent")
+          elif not lock.is_file():
+              failures.append(f"{TAG} exists but quality/prereg.lock is absent")
+          else:
+              digest = hashlib.sha256(prereg.read_bytes()).hexdigest()
+              locked = re.search(r"\b[0-9a-f]{64}\b", lock.read_text(encoding="utf-8"))
+              if locked is None:
+                  failures.append("quality/prereg.lock carries no sha256")
+              elif locked.group(0) != digest:
+                  failures.append(
+                      "PREREGISTRATION.md no longer matches quality/prereg.lock: "
+                      f"file {digest}, lock {locked.group(0)}"
+                  )
+              else:
+                  print(f"PREREGISTRATION.md matches quality/prereg.lock ({digest[:12]})")
+
+          # ------------------------------------ 3. sibling provenance for sealed output
+          for path in sealed:
+              rel = path.relative_to(ROOT)
+              sidecar = path.parent / "provenance.json"
+              if not sidecar.is_file():
+                  failures.append(f"{rel} has no sibling provenance.json")
+                  continue
+              try:
+                  meta = json.loads(sidecar.read_text(encoding="utf-8"))
+              except (OSError, json.JSONDecodeError) as exc:
+                  failures.append(f"{sidecar.relative_to(ROOT)} is not readable JSON: {exc}")
+                  continue
+              if meta.get("prereg_tag") != TAG:
+                  failures.append(
+                      f"{sidecar.relative_to(ROOT)}: prereg_tag is {meta.get('prereg_tag')!r}, "
+                      f"expected {TAG!r}"
+                  )
+              found_sha = next((meta[k] for k in SHA_KEYS if k in meta), None)
+              if found_sha is None:
+                  failures.append(
+                      f"{sidecar.relative_to(ROOT)}: no tag commit SHA under any of {SHA_KEYS}"
+                  )
+              elif str(found_sha) != tag_sha:
+                  failures.append(
+                      f"{sidecar.relative_to(ROOT)}: tag commit SHA is {found_sha}, "
+                      f"expected {tag_sha}"
+                  )
+              for key in ("fit_started_at", "input_max_game_date"):
+                  if not str(meta.get(key, "")).strip():
+                      failures.append(f"{sidecar.relative_to(ROOT)}: {key} is missing or empty")
+
+          # ------------------------------------ 4. no fit started before the tag
+          for sidecar in receipts:
+              rel = sidecar.relative_to(ROOT)
+              try:
+                  meta = json.loads(sidecar.read_text(encoding="utf-8"))
+              except (OSError, json.JSONDecodeError) as exc:
+                  failures.append(f"{rel} is not readable JSON: {exc}")
+                  continue
+              started = as_dt(str(meta.get("fit_started_at", "")))
+              if started is None:
+                  failures.append(f"{rel}: fit_started_at is missing or not ISO 8601")
+                  continue
+              if tag_date is not None and started < tag_date:
+                  failures.append(
+                      f"{rel}: fit_started_at {started.isoformat()} is earlier than the "
+                      f"{TAG} commit date {tag_date.isoformat()}"
+                  )
+
+          if failures:
+              print(f"SEAL-GUARD FAIL: {len(failures)} problem(s)")
+              for line in failures:
+                  print(f"  {line}")
+              sys.exit(1)
+
+          print(
+              f"SEAL-GUARD PASS: {TAG} at {tag_sha[:12]}, {len(sealed)} sealed file(s), "
+              f"{len(receipts)} provenance file(s)"
+          )
+          PY

@@ -40,16 +40,120 @@ usage() {
   exit 2
 }
 
-# run_one <id> <expect_exit> <cmd>  -- runs the verify command, writes the receipt,
-# returns the command's exit code.
-run_one() {
-  local step="$1" expect="$2" cmd="$3" start exit_code
+# ---------------------------------------------------------------- idempotence
+# SOP section 9.1 asks every pipeline step to be safe to re-run: two runs in a
+# row leave the tree as they found it. prove.sh used to fail that. It truncated
+# quality/receipts/<id>.log on every run and the receipt json carries a
+# timestamp, so every `make prove` dirtied about forty files. W1.13 runs
+# pre-commit over all files, pre-commit's trailing-whitespace hook rewrote those
+# same logs, and the step failed on churn it had caused itself.
+#
+# Two rules fix it, and both are content comparisons, not mtime comparisons:
+#
+#   1. The captured output is normalised first (terminal escape sequences
+#      removed, no trailing whitespace on any line, exactly one final newline)
+#      so that the trailing-whitespace and end-of-file-fixer hooks have nothing
+#      left to fix, then written only if it differs from the log already on
+#      disk. Escapes are colour, not content: the receipt log is a file, and a
+#      file that carries them is neither diffable nor readable.
+#
+#      What is deliberately NOT normalised is any clock or duration a verify
+#      command prints of its own accord. gitleaks stamps the hour, uv prints how
+#      long a sync took. Those logs still change on every run, and that is the
+#      command's output changing, not prove.sh rewriting an unchanged file.
+#      Masking them here would edit evidence. The owning step fixes it by
+#      quieting its own command.
+#   2. The receipt json is compared against the one already on disk with the two
+#      fields that move on their own removed, timestamp_madrid and duration_s.
+#      If the proof is otherwise identical, the file on disk is left alone and
+#      keeps the stamp of the run that established the current outcome. Every
+#      other field, including exit, status, git_sha and git_dirty, is compared,
+#      so a real change is still written.
+
+# stable_log <captured> <destination> -- normalise, then write only on a change.
+stable_log() {
+  "$PY" - "$1" "$2" <<'EOF_STABLE_LOG'
+import os
+import re
+import sys
+
+src, dest = sys.argv[1], sys.argv[2]
+with open(src, "rb") as fh:
+    text = fh.read().decode("utf-8", "replace")
+text = re.sub(r"\x1b\[[0-9;?]*[ -/]*[@-~]", "", text)
+lines = [line.rstrip() for line in text.split("\n")]
+while lines and lines[-1] == "":
+    lines.pop()
+new = "\n".join(lines) + "\n" if lines else ""
+old = None
+if os.path.exists(dest):
+    with open(dest, encoding="utf-8", errors="replace") as fh:
+        old = fh.read()
+if old != new:
+    with open(dest, "w", encoding="utf-8") as fh:
+        fh.write(new)
+EOF_STABLE_LOG
+}
+
+# stable_receipt <step> <cmd> <exit> <duration> -- write the receipt, then put
+# the previous file back if the only differences are the stamp and the duration.
+stable_receipt() {
+  local step="$1" cmd="$2" code="$3" dur="$4" json saved
+  json="$RECEIPTS/$step.json"
+  saved=""
+  if [ -f "$json" ]; then
+    saved="$(mktemp "${TMPDIR:-/tmp}/absump-receipt-XXXXXX")"
+    cp "$json" "$saved"
+  fi
+  "$PY" "$REG" --step "$step" --cmd "$cmd" --exit "$code" --duration "$dur" > /dev/null
+  local rc=$?
+  if [ -n "$saved" ]; then
+    "$PY" - "$saved" "$json" <<'EOF_STABLE_RECEIPT'
+import json
+import shutil
+import sys
+
+VOLATILE = ("timestamp_madrid", "duration_s")
+old_path, new_path = sys.argv[1], sys.argv[2]
+
+
+def proof(path):
+    with open(path, encoding="utf-8") as fh:
+        return {k: v for k, v in json.load(fh).items() if k not in VOLATILE}
+
+
+try:
+    unchanged = proof(old_path) == proof(new_path)
+except (OSError, ValueError):
+    unchanged = False
+if unchanged:
+    shutil.copyfile(old_path, new_path)
+EOF_STABLE_RECEIPT
+    rm -f "$saved"
+  fi
+  return $rc
+}
+
+# run_step <id> <cmd> -- run the verify command, capture it, write both files.
+# Echoes the command's own exit code on stdout.
+run_step() {
+  local step="$1" cmd="$2" start tmp code
   mkdir -p "$RECEIPTS"
+  tmp="$(mktemp "${TMPDIR:-/tmp}/absump-log-XXXXXX")"
   start=$(date +%s)
-  eval "$cmd" > "$RECEIPTS/$step.log" 2>&1
-  exit_code=$?
-  "$PY" "$REG" --step "$step" --cmd "$cmd" --exit "$exit_code" \
-       --duration "$(( $(date +%s) - start ))" > /dev/null
+  eval "$cmd" > "$tmp" 2>&1
+  code=$?
+  stable_log "$tmp" "$RECEIPTS/$step.log"
+  rm -f "$tmp"
+  stable_receipt "$step" "$cmd" "$code" "$(( $(date +%s) - start ))"
+  echo "$code"
+}
+
+# run_one <id> <expect_exit> <cmd>  -- runs the verify command, writes the receipt,
+# returns 0 when the command exited with the registered expect_exit.
+run_one() {
+  local step="$1" expect="$2" cmd="$3" exit_code
+  exit_code=$(run_step "$step" "$cmd")
   if [ "$exit_code" -ne "$expect" ]; then
     return 1
   fi
@@ -62,7 +166,17 @@ case "$1" in
   --check)
     fail=0
     "$PY" "$REG" --check || fail=1
-    "$PY" "$REG" --selftest || fail=1
+    # The receipt-writer selftest writes a receipt into a fresh temporary
+    # directory and prints that path and the Madrid stamp it read back. Both
+    # move on every run, and this step's own receipt log is what `make prove`
+    # commits, so the two volatile substrings are masked here. Nothing is
+    # weakened: write_receipt.py --selftest itself asserts the stamp matches the
+    # Madrid pattern and exits non-zero when it does not, and its exit code is
+    # still what decides this check.
+    selftest_out=$("$PY" "$REG" --selftest 2>&1) || fail=1
+    printf '%s\n' "$selftest_out" | sed -E \
+      -e 's|-> /.*/(W[0-9.]+\.json)$|-> <temporary directory>/\1|' \
+      -e 's|stamped [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*$|stamped <Madrid timestamp, pattern asserted by write_receipt.py --selftest>|'
     [ -x scripts/prove.sh ] || { echo "scripts/prove.sh is not executable" >&2; fail=1; }
     [ -f "$RECEIPTS/.gitkeep" ] || { echo "$RECEIPTS/.gitkeep is absent" >&2; fail=1; }
     # Every live step's verify command must be a non-empty single line.
@@ -138,12 +252,7 @@ if [ -n "$NEEDS_MISSING" ]; then
 fi
 CMD=$("$PY" "$REG" --field verify --step "$STEP")
 EXPECT=$("$PY" "$REG" --field expect_exit --step "$STEP")
-START=$(date +%s)
-mkdir -p "$RECEIPTS"
-eval "$CMD" > "$RECEIPTS/$STEP.log" 2>&1
-EXIT=$?
-"$PY" "$REG" --step "$STEP" --cmd "$CMD" --exit "$EXIT" \
-     --duration "$(( $(date +%s) - START ))"
+EXIT=$(run_step "$STEP" "$CMD")
 if [ "$EXIT" -eq "$EXPECT" ]; then
   printf "%-7s %-8s %s\n" "$STEP" "PASS" "$CMD"
 else

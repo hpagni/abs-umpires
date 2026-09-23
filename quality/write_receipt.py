@@ -32,8 +32,26 @@ PLACEHOLDER = "ABSUMP" + "_PLACEHOLDER"
 
 # The twenty-one steps fleet phase 01 owns, and the three ids it registers as retired.
 PHASE01 = [
-    "W1.1", "W1.2", "W1.3", "W1.4", "W1.5", "W1.6", "W1.7", "W1.8", "W1.12", "W1.13",
-    "W1.14", "W1.16", "W2.1", "W2.2", "W2.3", "W2.4", "W6.1", "W9.1", "W9.2", "W9.3",
+    "W1.1",
+    "W1.2",
+    "W1.3",
+    "W1.4",
+    "W1.5",
+    "W1.6",
+    "W1.7",
+    "W1.8",
+    "W1.12",
+    "W1.13",
+    "W1.14",
+    "W1.16",
+    "W2.1",
+    "W2.2",
+    "W2.3",
+    "W2.4",
+    "W6.1",
+    "W9.1",
+    "W9.2",
+    "W9.3",
     "W9.7",
 ]
 RETIRED = ["W3.0", "W3.1", "W7.11"]
@@ -54,11 +72,11 @@ def _scalar(raw, lineno):
         return ""
     if raw[0] == "'":
         if len(raw) < 2 or raw[-1] != "'":
-            raise RegistryError("line %d: unterminated single-quoted scalar" % lineno)
+            raise RegistryError(f"line {lineno}: unterminated single-quoted scalar")
         return raw[1:-1].replace("''", "'")
     if raw[0] == '"':
         if len(raw) < 2 or raw[-1] != '"':
-            raise RegistryError("line %d: unterminated double-quoted scalar" % lineno)
+            raise RegistryError(f"line {lineno}: unterminated double-quoted scalar")
         body, out, i = raw[1:-1], [], 0
         while i < len(body):
             c = body[i]
@@ -72,7 +90,7 @@ def _scalar(raw, lineno):
         return "".join(out)
     if raw[0] in "[]{}|>&*!%@`":
         raise RegistryError(
-            "line %d: %r is outside the YAML subset this registry uses" % (lineno, raw[0])
+            f"line {lineno}: {raw[0]!r} is outside the YAML subset this registry uses"
         )
     if raw in ("true", "false"):
         return raw == "true"
@@ -83,20 +101,20 @@ def _scalar(raw, lineno):
 
 def _split(text, lineno):
     if ":" not in text:
-        raise RegistryError("line %d: expected `key: value`, got %r" % (lineno, text))
+        raise RegistryError(f"line {lineno}: expected `key: value`, got {text!r}")
     key, _, value = text.partition(":")
     key = key.strip()
     if not re.match(r"^[a-z_]+$", key):
-        raise RegistryError("line %d: %r is not a registry field name" % (lineno, key))
+        raise RegistryError(f"line {lineno}: {key!r} is not a registry field name")
     return key, _scalar(value, lineno)
 
 
 def load_registry(path=STEPS):
     """Read quality/steps.yml into a list of dicts. Strict: it raises, it never guesses."""
     if not os.path.exists(path):
-        raise RegistryError("%s does not exist" % path)
+        raise RegistryError(f"{path} does not exist")
     records, current = [], None
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         for lineno, line in enumerate(fh.read().splitlines(), start=1):
             if line.strip() == "" or line.lstrip().startswith("#"):
                 continue
@@ -107,14 +125,14 @@ def load_registry(path=STEPS):
                 current[key] = value
             elif line.startswith("  ") and not line[2:3].isspace():
                 if current is None:
-                    raise RegistryError("line %d: continuation before any record" % lineno)
+                    raise RegistryError(f"line {lineno}: continuation before any record")
                 key, value = _split(line[2:], lineno)
                 if key in current:
-                    raise RegistryError("line %d: field %r repeated" % (lineno, key))
+                    raise RegistryError(f"line {lineno}: field {key!r} repeated")
                 current[key] = value
             else:
                 raise RegistryError(
-                    "line %d: indentation is outside the YAML subset: %r" % (lineno, line)
+                    f"line {lineno}: indentation is outside the YAML subset: {line!r}"
                 )
     for rec in records:
         rec["needs"] = [p.strip() for p in str(rec.get("needs", "")).split(",") if p.strip()]
@@ -156,16 +174,16 @@ def missing_needs(rec, root=ROOT):
 def madrid_now():
     """Madrid-stamped timestamp. Never a hand-computed offset from UTC."""
     env = dict(os.environ, TZ="Europe/Madrid")
-    return subprocess.check_output(
-        ["date", "+%Y-%m-%d %H:%M:%S %Z"], env=env
-    ).decode().strip()
+    return subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S %Z"], env=env).decode().strip()
 
 
 def _git(args, root=ROOT):
     try:
-        return subprocess.check_output(
-            ["git"] + args, cwd=root, stderr=subprocess.DEVNULL
-        ).decode().strip()
+        return (
+            subprocess.check_output(["git", *args], cwd=root, stderr=subprocess.DEVNULL)
+            .decode()
+            .strip()
+        )
     except (subprocess.CalledProcessError, OSError):
         return ""
 
@@ -173,7 +191,7 @@ def _git(args, root=ROOT):
 def write_receipt(step, cmd, exit_code, duration, out_dir=RECEIPTS, root=ROOT):
     rec = find(step) or {}
     expect = rec.get("expect_exit", 0)
-    log = os.path.join("quality", "receipts", "%s.log" % step)
+    log = os.path.join("quality", "receipts", f"{step}.log")
     receipt = {
         "step": step,
         "title": rec.get("title", ""),
@@ -193,11 +211,11 @@ def write_receipt(step, cmd, exit_code, duration, out_dir=RECEIPTS, root=ROOT):
     }
     if not os.path.isdir(out_dir):
         os.makedirs(out_dir)
-    path = os.path.join(out_dir, "%s.json" % step)
+    path = os.path.join(out_dir, f"{step}.json")
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(receipt, fh, indent=2, sort_keys=True)
         fh.write("\n")
-    print("receipt %s %s exit=%d %ss -> %s" % (step, receipt["status"], exit_code, duration, path))
+    print(f"receipt {step} {receipt['status']} exit={exit_code} {duration}s -> {path}")
     return receipt
 
 
@@ -208,52 +226,54 @@ def check(records=None):
     try:
         records = records if records is not None else load_registry()
     except RegistryError as exc:
-        return ["quality/steps.yml does not parse: %s" % exc]
+        return [f"quality/steps.yml does not parse: {exc}"]
 
     seen = {}
     for rec in records:
         step = rec.get("id")
         line = rec.get("_line")
         if not step:
-            problems.append("line %s: record has no id" % line)
+            problems.append(f"line {line}: record has no id")
             continue
         if not ID_RE.match(str(step)):
-            problems.append("line %s: %r is not a W<workstream>.<number> id" % (line, step))
+            problems.append(f"line {line}: {step!r} is not a W<workstream>.<number> id")
             continue
         if step in seen:
-            problems.append("%s registered twice, lines %s and %s" % (step, seen[step], line))
+            problems.append(f"{step} registered twice, lines {seen[step]} and {line}")
             continue
         seen[step] = line
         workstream = str(step).split(".")[0]
         if rec.get("owner") != workstream:
-            problems.append("%s: owner %r does not match the id" % (step, rec.get("owner")))
+            problems.append("{}: owner {!r} does not match the id".format(step, rec.get("owner")))
         if not rec.get("title"):
-            problems.append("%s: no title" % step)
+            problems.append(f"{step}: no title")
         if rec["retired"]:
             if rec.get("verify"):
-                problems.append("%s: a retired step carries no verify command" % step)
+                problems.append(f"{step}: a retired step carries no verify command")
             if not rec.get("reason"):
-                problems.append("%s: retired without a reason" % step)
+                problems.append(f"{step}: retired without a reason")
             if not DATE_RE.match(str(rec.get("date", ""))):
-                problems.append("%s: retired without a YYYY-MM-DD date" % step)
+                problems.append(f"{step}: retired without a YYYY-MM-DD date")
         else:
             if not str(rec.get("verify", "")).strip():
-                problems.append("%s: no verify command" % step)
+                problems.append(f"{step}: no verify command")
             if rec.get("expect_exit") != 0:
-                problems.append("%s: expect_exit is %r, not 0" % (step, rec.get("expect_exit")))
+                problems.append(
+                    "{}: expect_exit is {!r}, not 0".format(step, rec.get("expect_exit"))
+                )
 
     for step in PHASE01:
         rec = seen.get(step)
         if rec is None:
-            problems.append("%s is a phase 01 step and is not registered" % step)
+            problems.append(f"{step} is a phase 01 step and is not registered")
         elif find(step, records)["retired"]:
-            problems.append("%s is a live phase 01 step and is marked retired" % step)
+            problems.append(f"{step} is a live phase 01 step and is marked retired")
     for step in RETIRED:
         rec = find(step, records)
         if rec is None:
-            problems.append("%s must be registered as retired and is absent" % step)
+            problems.append(f"{step} must be registered as retired and is absent")
         elif not rec["retired"]:
-            problems.append("%s must be marked retired" % step)
+            problems.append(f"{step} must be marked retired")
     return problems
 
 
@@ -261,16 +281,18 @@ def selftest():
     """Write a receipt into a temp dir and read it back. Proves the writer runs."""
     with tempfile.TemporaryDirectory() as tmp:
         rec = write_receipt("W9.1", "true", 0, 0, out_dir=tmp)
-        with open(os.path.join(tmp, "W9.1.json"), "r", encoding="utf-8") as fh:
+        with open(os.path.join(tmp, "W9.1.json"), encoding="utf-8") as fh:
             back = json.load(fh)
     for field in ("step", "cmd", "exit", "duration_s", "git_sha", "timestamp_madrid"):
         if field not in back:
-            raise SystemExit("selftest: receipt is missing %s" % field)
+            raise SystemExit(f"selftest: receipt is missing {field}")
     if back["step"] != "W9.1" or back["exit"] != 0 or back["status"] != "PASS":
         raise SystemExit("selftest: receipt does not read back as written")
     if not re.match(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \w+$", back["timestamp_madrid"]):
-        raise SystemExit("selftest: timestamp is not Madrid-stamped: %r" % back["timestamp_madrid"])
-    print("selftest OK: receipt written and read back, stamped %s" % rec["timestamp_madrid"])
+        raise SystemExit(
+            "selftest: timestamp is not Madrid-stamped: {!r}".format(back["timestamp_madrid"])
+        )
+    print("selftest OK: receipt written and read back, stamped {}".format(rec["timestamp_madrid"]))
 
 
 def main(argv=None):
@@ -292,14 +314,14 @@ def main(argv=None):
     if args.check:
         problems = check()
         for line in problems:
-            sys.stderr.write("steps.yml: %s\n" % line)
+            sys.stderr.write(f"steps.yml: {line}\n")
         if problems:
             return 1
         records = load_registry()
         live = [r for r in records if not r["retired"]]
         print(
-            "steps.yml OK: %d registered, %d live, %d retired"
-            % (len(records), len(live), len(records) - len(live))
+            f"steps.yml OK: {len(records)} registered, {len(live)} live, "
+            f"{len(records) - len(live)} retired"
         )
         return 0
 
@@ -329,7 +351,7 @@ def main(argv=None):
             return 2
         rec = find(args.step)
         if rec is None:
-            sys.stderr.write("%s is not registered in quality/steps.yml\n" % args.step)
+            sys.stderr.write(f"{args.step} is not registered in quality/steps.yml\n")
             return 3
         value = rec.get(args.field, "")
         print(", ".join(value) if isinstance(value, list) else value)
@@ -347,5 +369,5 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except RegistryError as exc:
-        sys.stderr.write("quality/steps.yml: %s\n" % exc)
+        sys.stderr.write(f"quality/steps.yml: {exc}\n")
         sys.exit(4)
