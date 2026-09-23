@@ -153,14 +153,15 @@ scan_all() {
 assert_caught() {
   label=$1
   path=$2
+  code=${3:-GD-04}
   checks=$((checks + 1))
   guard "$work/guard.log"
   guard_exit=$?
   scan_path "$path" "$work/scan.log"
-  hit=$(grep -m 1 "^GD-04 FAIL: ${path}:" "$work/scan.log" | sed 's/^.*GD-04 FAIL/GD-04 FAIL/')
+  hit=$(grep -m 1 "^${code} FAIL: ${path}:" "$work/scan.log" | sed "s/^.*${code} FAIL/${code} FAIL/")
   if [ "$guard_exit" -eq 0 ] || [ -z "$hit" ]; then
-    printf '[redteam] %s -> NOT CAUGHT: make test-guard exit %s, no GD-04 line for %s\n' \
-      "$label" "$guard_exit" "$path" >&2
+    printf '[redteam] %s -> NOT CAUGHT: make test-guard exit %s, no %s line for %s\n' \
+      "$label" "$guard_exit" "$code" "$path" >&2
     sed -n '1,6p' "$work/scan.log" >&2
     fails=$((fails + 1))
   else
@@ -340,6 +341,143 @@ refuse_if_present "$E9"
 } > "$E9"
 created="$created $E9"
 assert_caught "E9 the second fact table" "$E9"
+revert_files
+
+# ------------------------------- 2b. the nine spellings the R2 red team got past
+# Each one was MISSED by the R2 scanner and is planted here so it cannot come
+# back. No banned literal is written in this file: every fragment is built at
+# run time out of $HELD, $FRAG, $VIEW, $FACT and $BOUNDARY.
+PRE=${BOUNDARY%?}
+LAST=${BOUNDARY#"$PRE"}
+
+# E10. The label as a quoted literal in chapter code, with no read beside it.
+#      GD-05 as the SOP writes it: SOP-final.md line 1757.
+{
+  printf '\n\ndef _split() -> str:\n'
+  printf '    split = "%s"\n' "$HELD"
+  printf '    return split\n'
+} >> "$PY_FILE"
+assert_caught "E10 the label alone in ch3, no read on the line" "$PY_FILE" "GD-05"
+revert_files
+
+# E11. The held-out partition read straight off disk, by path.
+E11="src/absump/ch3/parquet__redteam.py"
+refuse_if_present "$E11"
+printf 'def rows(con):\n    return con.execute("SELECT * FROM read_parquet(%sdata/%s/pitch/*.parquet%s)").pl()\n' \
+  "'" "$HELD" "'" > "$E11"
+created="$created $E11"
+assert_caught "E11 the held-out partition read by path" "$E11" "GD-05"
+revert_files
+
+# E12. The boundary day built from two fragments, in python.
+{
+  printf '\n\nFIRST = "%s" + "%s"\n' "$PRE" "$LAST"
+  printf 'def _window(con: Any) -> Any:\n'
+  printf '    return con.execute("SELECT * FROM staging_pitch WHERE official_date >= " + FIRST).pl()\n'
+} >> "$PY_FILE"
+assert_caught "E12 the boundary day in two fragments, python" "$PY_FILE"
+revert_files
+
+# E13. The same day built by paste() in R.
+Y=$(printf '%s' "$BOUNDARY" | cut -d- -f1)
+M=$(printf '%s' "$BOUNDARY" | cut -d- -f2)
+D=$(printf '%s' "$BOUNDARY" | cut -d- -f3)
+{
+  printf '\n# the cut day, assembled so the literal does not appear\n'
+  printf 'cut_day <- as.Date(paste("%s", "%s", "%s", sep = "-"))\n' "$Y" "$M" "$D"
+  printf 'late <- function(d) dplyr::filter(d, official_date >= cut_day)\n'
+} >> "$R_FILE"
+assert_caught "E13 the boundary day built by paste(), R" "$R_FILE"
+revert_files
+
+# E14. A pull window in a config, with no comparison anywhere near it.
+E14="config/backfill__redteam.yml"
+refuse_if_present "$E14"
+{
+  printf 'backfill:\n'
+  printf '  start: "%s-09-15"\n' "$Y"
+  printf '  end: "%s-09-30"\n' "$Y"
+} > "$E14"
+created="$created $E14"
+assert_caught "E14 a pull window through the seal, in a config" "$E14"
+revert_files
+
+# E15. A held-out game copied into a fixture. A datum, not a query.
+E15="tests/fixtures/late_game__redteam.json"
+refuse_if_present "$E15"
+printf '{"gamePk": 825412, "officialDate": "%s", "venue": "Wrigley Field"}\n' "$DAY_AFTER" > "$E15"
+created="$created $E15"
+assert_caught "E15 a held-out game copied into a fixture" "$E15"
+revert_files
+
+# E16. The query carried as base64 and decoded at run time.
+E16="notebooks/encoded__redteam.ipynb"
+refuse_if_present "$E16"
+made_notebooks2=0
+if [ ! -d notebooks ]; then
+  mkdir -p notebooks
+  made_notebooks2=1
+fi
+B64=$(printf 'SELECT * FROM %s' "$VIEW" | base64 | tr -d '\n')
+{
+  printf '{\n "cells": [\n  {\n   "cell_type": "code",\n   "outputs": [],\n   "source": [\n'
+  printf '    "q = base64.b64decode(\\"%s\\").decode()\\n",\n' "$B64"
+  printf '    "rows = con.execute(q).pl()\\n"\n'
+  printf '   ]\n  }\n ],\n "nbformat": 4,\n "nbformat_minor": 5\n}\n'
+} > "$E16"
+created="$created $E16"
+assert_caught "E16 the query carried as base64 in a notebook" "$E16"
+revert_files
+
+# E17. A plot blob whose base64 run abuts the view name in an output cell.
+E17="notebooks/abutting__redteam.ipynb"
+refuse_if_present "$E17"
+abut=$(head -c 700 /dev/urandom | base64 | tr -d '\n' | tr -d '+/=')
+{
+  printf '{\n "cells": [\n  {\n   "cell_type": "code",\n   "outputs": [\n'
+  printf '    {"output_type": "stream", "text": "%s%s"}\n' "$abut" "$VIEW"
+  printf '   ],\n   "source": []\n  }\n ],\n "nbformat": 4,\n "nbformat_minor": 5\n}\n'
+} > "$E17"
+created="$created $E17"
+assert_caught "E17 a blob run abutting the view name" "$E17"
+revert_files
+if [ "$made_notebooks2" -eq 1 ]; then
+  rmdir notebooks 2>/dev/null
+fi
+
+# E18. The label assembled with jinja's concat operator, in a dbt model.
+E18="dbt/models/marts/jinja_label__redteam.sql"
+refuse_if_present "$E18"
+{
+  printf "{%% set held = '%s' ~ 'ed' %%}\n" "$FRAG"
+  printf "{{ config(materialized='view') }}\n\n"
+  printf "SELECT game_pk FROM {{ ref('stg_pitch') }} WHERE %s = '{{ held }}'\n" "$COL"
+} > "$E18"
+created="$created $E18"
+assert_caught "E18 the label assembled with jinja's ~ operator" "$E18"
+revert_files
+
+# E19. The raw fact table parked in a jinja variable and read through it.
+E19="dbt/models/marts/jinja_table__redteam.sql"
+refuse_if_present "$E19"
+{
+  printf "{%% set tbl = '%s' %%}\n" "$FACT"
+  printf "{{ config(materialized='table') }}\n\n"
+  printf "SELECT game_pk, plate_x FROM {{ tbl }}\n"
+} > "$E19"
+created="$created $E19"
+assert_caught "E19 the fact table parked in a jinja variable" "$E19"
+revert_files
+
+# E20. A runnable script under an excluded prefix. The R2 finding: the two
+#      evidence directories were excluded by path, and one already held a
+#      mode-755 installer.
+E20="quality/receipts/probe__redteam.sh"
+refuse_if_present "$E20"
+printf '#!/bin/sh\nduckdb -c "SELECT plate_x FROM %s"\n' "$FACT" > "$E20"
+chmod +x "$E20"
+created="$created $E20"
+assert_caught "E20 an executable under an excluded prefix" "$E20"
 revert_files
 
 # ------------------------------------------------------- 3. green after the revert

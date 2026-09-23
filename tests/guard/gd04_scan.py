@@ -13,13 +13,17 @@ WHAT IT WALKS.  The union of two listings:
     `contracts/`, which adds anything a `.gitignore` line would otherwise hide
     inside a directory that executes.
 
-WHAT IT NEVER WALKS.  `quality/receipts/` and `logs/` are excluded by prefix.
-Those two directories hold this guard's own transcripts, and a transcript quotes
-the failure text verbatim; without the exclusion every red-team run wrote the
-file that made the next run red, which is exactly what happened in phase 01.
-Excluding them is safe because neither directory is importable, runnable or
-compiled: nothing under either one can read a row.  No other
-directory is excluded, and none that executes ever is.
+WHAT IT SKIPS, AND HOW LITTLE.  Under `quality/receipts/` and `logs/` a file is
+skipped only when it is in a transcript format (`.log`, `.json`, `.txt`, and the
+rest of `EVIDENCE_SUFFIXES`) and is not executable.  Those two directories hold
+this guard's own transcripts, and a transcript quotes the failure text verbatim;
+without the skip every red-team run wrote the file that made the next run red,
+which is what happened in phase 01.  The skip is by format and mode, never by
+path alone, because the R2 verifier found `logs/env-setup.sh` sitting there at
+mode 755: a runnable script under an excluded prefix could read every held-out
+row in silence.  Both directories are now walked from the filesystem, and
+anything runnable or code-shaped in them is scanned like any other file.  A test
+walks them on disk and asserts it, rather than repeating the claim in prose.
 
 WHAT IT FAILS ON.
 
@@ -31,9 +35,49 @@ WHAT IT FAILS ON.
   3. a read of a raw fact table that the enclosing statement does not restrict
      to the open label.  Statement-scoped and comment-blind: a comment cannot
      forgive a read, and a formatter that breaks `FROM` and the table name onto
-     two lines does not hide one.
+     two lines does not hide one.  On the analysis surface below, a table name
+     parked in a jinja or shell variable and read through it counts too.
   4. a literal date comparison that can select a day on or after the boundary
      day in `config/seal.yml` -- any such day, not only the boundary itself.
+     Read over three spellings of the line, the same three the label rules read:
+     as written, with its string seams closed, and with quoted date fragments
+     fused back into the ISO day they spell, so `"2026-09-2" + "2"` and
+     `paste("2026", "09", "22", sep = "-")` are the literal the SOP names.  An
+     assignment (`=`, `<-`, `:=`) counts as a comparison: the day lands in a
+     name and the comparison happens a line later, against the name.
+  5. ON THE ANALYSIS SURFACE ONLY: a held-out day written down with no
+     comparison at all.  `end: "2026-09-30"` in a config the nightly pull reads,
+     or `"officialDate": "2026-09-24"` in a fixture, selects held-out rows and
+     no operator appears anywhere near it.  A date that rule 4 has already read
+     and let through is rule 4's business and is not reported twice.
+  6. ON THE ANALYSIS SURFACE ONLY: GD-05.  The held-out label as a quoted string
+     literal or as a path segment, with no read beside it.  `split = "<label>"`
+     in chapter code names the held-out set, and
+     `read_parquet('data/<label>/...')` reads the partition off disk without
+     naming a view or a fact table.
+
+Every line is also read with any short base64 run decoded, so a query carried as
+a blob and decoded at runtime is read as the query it is; and the view name is
+looked for in the raw line as a plain substring, because redacting a blob by
+shape can otherwise swallow the first character of an identifier abutting it.
+
+THE ANALYSIS SURFACE.  `ANALYSIS_SURFACE`: R/, dbt/, notebooks/, sql/,
+quality/sql/, app/, tools/, config/, scripts/, src/absump/ch*, tests/fixtures/.
+Rules 1 to 4 run over the whole repository.  Rules 5 and 6 run here only, and the
+reason is on disk: outside this surface the same spelling is a receipt stamp
+(`quality/steps.yml`), a tag message (`ops/preregister.sh`), a dbt target name
+(`dbt/profiles.yml.example`) or a seal module doing its job
+(`src/absump/paths.py`), and a rule that cried wolf there would be switched off
+within a week.  `config/seal.yml` is exempt from rule 5 and from nothing else:
+the guard reads its own boundary day out of that file.
+
+WHAT THIS STILL DOES NOT CATCH, stated so that no one has to find it twice: a
+held-out day or the label written with no comparison OUTSIDE the analysis
+surface (in `ops/`, say, where rules 1 to 4 still apply); the label spelled with
+`chr()` arithmetic, which this file itself uses and therefore cannot ban; a
+datum other than a date copied into a fixture (a `gamePk` alone is not a
+spelling any rule can read); and anything under `data/` or `research/`, which
+D-03 keeps out of git entirely.
 
 WHAT IS ALLOWLISTED.  Exactly two paths, by exact path: `src/absump/seal.py`
 and `quality/sql/analysis_set.sql`.  GD-05's count is two.
@@ -52,7 +96,10 @@ Exit 0 when clean, 1 when it finds something, 2 when it cannot run.
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import json
+import os
 import re
 import subprocess
 import sys
@@ -91,17 +138,53 @@ WALKED_ROOTS: tuple[str, ...] = (
     "config",
     "contracts",
     "quality/sql",
+    # Walked so that anything runnable under an evidence directory is listed.
+    # The transcripts themselves are dropped again by is_excluded().
+    "quality/receipts",
+    "logs",
 )
 
-# Excluded by prefix. Evidence only, and exactly two directories: a receipt and
-# a gate log quote this guard's own failure text verbatim, so scanning them made
-# every red-team run write the file that turned the next run red. Neither
-# directory is importable, runnable or compiled, so excluding them removes no
-# read. Nothing that executes is excluded, and a test asserts that.
+# Two directories hold this guard's own transcripts, and a transcript quotes the
+# failure text verbatim, so scanning them made every red-team run write the file
+# that turned the next run red. The exclusion is by FORMAT inside those two
+# directories, never by path alone: only a transcript is skipped, and only when
+# it is not executable. `logs/env-setup.sh`, mode 755, is scanned like any other
+# script, and so is a chmod +x file dropped under `quality/receipts/`. A test
+# walks both directories on disk and asserts it.
 EXCLUDED_PREFIXES: tuple[str, ...] = (
     "quality/receipts/",
     "logs/",
 )
+
+# The only formats the two evidence directories may hide behind. A transcript,
+# a receipt, a note. Nothing here is importable, runnable or compiled, and an
+# executable bit overrides the whole list.
+EVIDENCE_SUFFIXES: frozenset[str] = frozenset(
+    {".log", ".json", ".txt", ".md", ".out", ".err", ".jsonl", ".csv", ".tsv", ".diff", ".patch"}
+)
+
+# Where a date literal or the held-out label, written down with no comparison at
+# all, still selects held-out rows: configs the pull reads, models, notebooks,
+# fixtures, chapter code. Rules 1 to 4 run over the whole repository; rules 5 and
+# 6 run here, because outside this surface the same spelling is prose, a receipt
+# stamp or a target name, and a rule that cried wolf there would be turned off.
+ANALYSIS_SURFACE: tuple[str, ...] = (
+    "R/",
+    "dbt/",
+    "notebooks/",
+    "sql/",
+    "quality/sql/",
+    "app/",
+    "tools/",
+    "config/",
+    "scripts/",
+    "src/absump/ch",
+    "tests/fixtures/",
+)
+
+# The one file on that surface that must name the boundary day: the guard reads
+# its own boundary out of it. It is exempt from rule 5 and from nothing else.
+BOUNDARY_CONFIG = "config/seal.yml"
 
 # Never descended into during the filesystem walk.
 SKIP_DIR_NAMES: frozenset[str] = frozenset(
@@ -187,7 +270,15 @@ _QUOTED_HELD = rf"['\"]{_HELD}['\"]"
 # an opening quote. Removing seams turns paste0("seal", "ed") into
 # paste0("sealed") and "seal" + "ed" into "sealed", which is how a label spelled
 # in two pieces stops being invisible.
-_SEAM = re.compile(r"['\"]\s*(?:,|\+|\.|&|\|\|)?\s*['\"]")
+_SEAM = re.compile(r"['\"]\s*(?:,|\+|\.|&|~|\|\||\|)?\s*['\"]")
+
+# A date spelled as three quoted fragments: paste("2026", "09", "22", sep = "-")
+# in R, and the same idea with + in python. Closing an ordinary seam would give
+# 20260922, which no date rule reads, so the fragments are fused back into the
+# ISO spelling instead.
+_FRAGMENT_DATE = re.compile(
+    r"['\"](\d{4})['\"]\s*[,+.&~|]{0,2}\s*['\"](\d{1,2})['\"]\s*[,+.&~|]{0,2}\s*['\"](\d{1,2})['\"]"
+)
 
 # 1. The routing column meeting the held-out label on one line.
 RULE_ANALYSIS_SET = re.compile(
@@ -226,7 +317,7 @@ QUALIFIES_OPEN = re.compile(
 # A date literal in a comparison, either ISO or a three-integer constructor.
 _ISO = r"(\d{4})-(\d{2})-(\d{2})"
 RULE_DATE_CMP = re.compile(
-    rf"(>=|<=|>|<|=|\bBETWEEN\b|\bAND\b)\s*"
+    rf"(>=|<=|<-|:=|>|<|=|\bBETWEEN\b|\bAND\b)\s*"
     rf"(?:DATE\s+|TIMESTAMP\s+|as\.Date\s*\(\s*|pl\.date\s*\(\s*|date\s*\(\s*|datetime\s*\(\s*)?"
     rf"['\"]?{_ISO}",
     re.IGNORECASE,
@@ -243,9 +334,29 @@ _COMPLEMENT_OPS: tuple[str, ...] = tuple(
 )
 
 _ASSIGN = re.compile(
-    r"^[ \t\"',]*(?P<name>[A-Za-z_][A-Za-z0-9_.]*)\s*(?:<-|:=|=)\s*(?P<rhs>[^=].*)$"
+    r"^[ \t\"',{%$]*(?:set\s+|let\s+|const\s+|var\s+|local\s+|export\s+)?"
+    r"(?P<name>[A-Za-z_][A-Za-z0-9_.]*)\s*(?:<-|:=|=)\s*(?P<rhs>[^=].*)$"
 )
 _HELD_TOKEN = re.compile(rf"(?<![A-Za-z0-9_]){_HELD}(?![A-Za-z0-9_])")
+
+# 5. A held-out date written down with no comparison at all: a window in a
+#    config, a game copied into a fixture, a manifest, a command-line argument.
+#    Rule 4 needs an operator; `end: "2026-09-30"` has none and reads eight
+#    held-out days.
+_ISO_ANY = re.compile(r"(?<![0-9])(\d{4})-(\d{2})-(\d{2})(?![0-9])")
+
+# 6. GD-05 on the analysis surface: the held-out label as a quoted literal or as
+#    a path segment. `split = "<label>"` names it with no read beside it, and
+#    read_parquet('data/<label>/...') reads the partition off disk without ever
+#    naming a view or a fact table.
+RULE_LABEL_LITERAL = re.compile(_QUOTED_HELD)
+RULE_LABEL_PATH = re.compile(rf"/{_HELD}(?![A-Za-z0-9_])|(?<![A-Za-z0-9_]){_HELD}/")
+
+# A base64 payload short enough to be a query rather than a plot. The long runs
+# are already redacted by shape; what is left is decoded and scanned as text.
+_B64_PAYLOAD = re.compile(r"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{16,504}={0,2}(?![A-Za-z0-9+/=])")
+_B64_MAX_LINE = 200_000
+_B64_MAX_PAYLOADS = 24
 
 _SQL_LINE_COMMENT = re.compile(r"--[^\n]*")
 _HASH_COMMENT = re.compile(r"(?<!['\"])#[^\n]*")
@@ -265,9 +376,10 @@ class Violation:
     line: int
     rule: str
     text: str
+    code: str = "GD-04"
 
     def __str__(self) -> str:
-        return f"GD-04 FAIL: {self.path}:{self.line} {self.rule} -- {self.text.strip()[:90]}"
+        return f"{self.code} FAIL: {self.path}:{self.line} {self.rule} -- {self.text.strip()[:90]}"
 
 
 def redact_blobs(line: str) -> str:
@@ -289,9 +401,81 @@ def join_seams(text: str) -> str:
     return joined
 
 
+def fuse_fragment_dates(text: str) -> str:
+    """Three quoted fragments fused back into the ISO date they spell.
+
+    `paste("2026", "09", "22", sep = "-")` and `"2026" + "09" + "22"` are the
+    same day as the literal the SOP names. Closing an ordinary seam gives
+    20260922, which no date rule reads, so the dashes are put back here.
+    """
+
+    def fuse(match: re.Match[str]) -> str:
+        year, month, day = match.group(1), match.group(2), match.group(3)
+        return f"'{year}-{int(month):02d}-{int(day):02d}'"
+
+    return _FRAGMENT_DATE.sub(fuse, text)
+
+
+def date_spellings(bare: str) -> list[str]:
+    """The comment-stripped line, its seams closed, and its date fragments fused.
+
+    The seam-joiner is what defeats a label spelled in two pieces. A date
+    spelled in two pieces is the same evasion one rule over, so the date rules
+    read the same three spellings the label rules read.
+    """
+    out = [bare]
+    for candidate in (
+        join_seams(bare),
+        fuse_fragment_dates(bare),
+        fuse_fragment_dates(join_seams(bare)),
+    ):
+        if candidate not in out:
+            out.append(candidate)
+    return out
+
+
+def decoded_payloads(text: str, limit: int = _B64_MAX_PAYLOADS) -> list[str]:
+    """Whatever short base64 runs on the line decode to, as text.
+
+    A notebook that carries its query as a blob and decodes it at runtime reads
+    the same rows as a notebook that spells it out. The long runs are redacted
+    by shape before this sees them, so what is offered here is query-sized.
+    """
+    out: list[str] = []
+    if len(text) > _B64_MAX_LINE:
+        return out
+    for match in _B64_PAYLOAD.finditer(text):
+        chunk = match.group(0)
+        if len(chunk) % 4:
+            continue
+        try:
+            raw = base64.b64decode(chunk, validate=True)
+        except (binascii.Error, ValueError):
+            continue
+        try:
+            decoded = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            continue
+        if not decoded or not all(ch.isprintable() or ch in "\n\t" for ch in decoded):
+            continue
+        out.append(decoded)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def on_analysis_surface(relative: str) -> bool:
+    """True where a date or a label written with no comparison still selects rows."""
+    return any(relative.startswith(prefix) for prefix in ANALYSIS_SURFACE)
+
+
 def strip_comments(line: str, relative: str) -> str:
     """The line with its comments removed, so a comment can forgive nothing."""
-    suffix = Path(relative).suffix.lower()
+    suffixes = [part.lower() for part in Path(relative).suffixes]
+    suffix = suffixes[-1] if suffixes else ""
+    if suffix in {".example", ".sample", ".template", ".tmpl", ".in", ".bak", ".orig"}:
+        # `dbt/profiles.yml.example` is a YAML file; read the suffix that says so.
+        suffix = suffixes[-2] if len(suffixes) > 1 else ""
     bare = _BLOCK_COMMENT.sub(" ", line)
     if suffix in {".sql", ".yml", ".yaml"} or suffix == "":
         bare = _SQL_LINE_COMMENT.sub("", bare)
@@ -309,14 +493,16 @@ def _held_literal_in(text: str) -> bool:
     return bool(re.search(_QUOTED_HELD, text))
 
 
-def collect_taint(lines: list[str]) -> tuple[set[str], set[str]]:
-    """Names that carry the held-out label, and names that carry its view.
+def collect_taint(lines: list[str]) -> tuple[set[str], set[str], set[str]]:
+    """Names that carry the held-out label, its view, and a raw fact table.
 
-    A label spelled in two pieces, or parked in a variable, is still the label.
-    Three passes, so the order of the assignments does not matter.
+    A label spelled in two pieces, or parked in a variable, is still the label,
+    and a table name parked in a jinja variable is still that table. Three
+    passes, so the order of the assignments does not matter.
     """
     held: set[str] = set()
     viewy: set[str] = set()
+    facty: set[str] = set()
     for _ in range(3):
         for raw in lines:
             if len(raw) > _TAINT_MAX_LINE or ("=" not in raw and "<-" not in raw):
@@ -338,7 +524,12 @@ def collect_taint(lines: list[str]) -> tuple[set[str], set[str]]:
             for other in list(viewy):
                 if re.fullmatch(rf"\s*{re.escape(other)}\s*", rhs):
                     viewy.add(name)
-    return held, viewy
+            if re.search(rf"['\"]?\b{_FACT}[a-z0-9_]+\b", rhs, re.IGNORECASE):
+                facty.add(name)
+            for other in list(facty):
+                if re.fullmatch(rf"\s*['\"{{}}\s]*{re.escape(other)}['\"{{}}\s]*\s*", rhs):
+                    facty.add(name)
+    return held, viewy, facty
 
 
 def _statement_end(text: str, start: int, line_starts: list[int]) -> int:
@@ -370,7 +561,9 @@ def _line_of(line_starts: list[int], offset: int) -> int:
 def _date_violates(operator: str, day: date, boundary: date) -> bool:
     """True when this comparison can select a day on or after the boundary."""
     operator = operator.upper()
-    if operator in {">=", "=", "BETWEEN", "AND"}:
+    # An assignment is a comparison for this purpose: the day lands in a name
+    # and the comparison happens a line later, against that name.
+    if operator in {">=", "=", "<-", ":=", "BETWEEN", "AND"}:
         return day >= boundary
     if operator == ">":
         return day >= boundary - timedelta(days=1)
@@ -387,21 +580,26 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
     raw_lines = text.splitlines()
     lines = [redact_blobs(line) for line in raw_lines]
     bare_lines = [strip_comments(line, relative) for line in lines]
-    held, viewy = collect_taint(lines)
+    held, viewy, facty = collect_taint(lines)
+    surface = on_analysis_surface(relative)
     found: list[Violation] = []
 
     for number, line in enumerate(lines, start=1):
         if not line.strip():
             continue
+        raw = raw_lines[number - 1]
         joined = join_seams(line)
         bare = bare_lines[number - 1]
+        # What the line carries once a short base64 run is decoded. A query
+        # carried as a blob and decoded at runtime reads the same rows.
+        payloads = decoded_payloads(line)
 
         # Both spellings are read: closing a seam can join two fragments into
         # the banned token, and it can also swallow a quote that a rule needs.
         hit_label = any(
             rule.search(text)
             for rule in (RULE_ANALYSIS_SET, RULE_COMPLEMENT)
-            for text in (line, joined)
+            for text in (line, joined, *payloads)
         )
         if not hit_label and "analysis_set" in line:
             for name in held:
@@ -415,7 +613,10 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
         if hit_label:
             found.append(Violation(relative, number, "reads the held-out analysis set", line))
 
-        hit_view = bool(RULE_VIEW.search(joined)) or bool(RULE_VIEW.search(line))
+        # The raw line is read as a plain substring as well: redacting a blob
+        # by shape can swallow the first character of an identifier that abuts
+        # it, and no base64 alphabet carries the underscores the view name has.
+        hit_view = _VIEW in raw or any(RULE_VIEW.search(text) for text in (joined, line, *payloads))
         if not hit_view and "v_pitch_" in joined:
             stem = _VIEW_STEM.search(joined)
             if stem and stem.group(1) in held:
@@ -432,21 +633,75 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
         if hit_view:
             found.append(Violation(relative, number, "names the held-out pitch view", line))
 
-        for rule in (RULE_DATE_CMP, RULE_DATE_CTOR):
-            for match in rule.finditer(bare):
-                groups = match.groups()
-                try:
-                    day = date(int(groups[1]), int(groups[2]), int(groups[3]))
-                except ValueError:
-                    continue
-                if _date_violates(groups[0], day, boundary_day):
+        # Rule 4, over the same three spellings the label rules read, plus
+        # anything a short base64 run decoded to.
+        hit_date = False
+        candidates = date_spellings(bare)
+        candidates.extend(text for text in payloads if text not in candidates)
+        for candidate in candidates:
+            for rule in (RULE_DATE_CMP, RULE_DATE_CTOR):
+                for match in rule.finditer(candidate):
+                    groups = match.groups()
+                    try:
+                        day = date(int(groups[1]), int(groups[2]), int(groups[3]))
+                    except ValueError:
+                        continue
+                    if _date_violates(groups[0], day, boundary_day):
+                        hit_date = True
+                        break
+                if hit_date:
+                    break
+            if hit_date:
+                break
+        if hit_date:
+            found.append(Violation(relative, number, "literal boundary-date comparison", line))
+
+        # Rule 5. A held-out day written down with no comparison at all: a
+        # window in a config, a game copied into a fixture, an argument. Rule 4
+        # needs an operator; this one does not, and it runs on the surface where
+        # such a date selects rows rather than stamping a receipt.
+        if surface and not hit_date and relative != BOUNDARY_CONFIG:
+            for candidate in candidates:
+                # A date that rule 4 has already read is rule 4's business: it
+                # judged the operator and let this one through, and
+                # `official_date < DATE '<boundary>'` is an open-set read.
+                compared = [
+                    (match.start(), match.end())
+                    for rule in (RULE_DATE_CMP, RULE_DATE_CTOR)
+                    for match in rule.finditer(candidate)
+                ]
+                stop = False
+                for match in _ISO_ANY.finditer(candidate):
+                    if any(start <= match.start() < end for start, end in compared):
+                        continue
+                    try:
+                        day = date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+                    except ValueError:
+                        continue
+                    if day >= boundary_day:
+                        found.append(Violation(relative, number, "held-out date literal", line))
+                        stop = True
+                        break
+                if stop:
+                    break
+
+        # Rule 6, GD-05. The held-out label as a quoted literal or as a path
+        # segment, anywhere on the analysis surface. It needs no read beside it:
+        # naming the label in chapter code is itself the violation, and a sealed
+        # partition read by path names it and nothing else.
+        if surface:
+            for candidate in (bare, join_seams(bare), *payloads):
+                if RULE_LABEL_LITERAL.search(candidate) or RULE_LABEL_PATH.search(candidate):
                     found.append(
-                        Violation(relative, number, "literal boundary-date comparison", line)
+                        Violation(
+                            relative,
+                            number,
+                            "the held-out label outside the two allowlisted files",
+                            line,
+                            "GD-05",
+                        )
                     )
                     break
-            else:
-                continue
-            break
 
     # Rule 3 is statement-scoped, and reads the text with its comments removed.
     bare_text = "\n".join(bare_lines)
@@ -466,8 +721,36 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
             Violation(relative, number, "unqualified raw fact-table read", lines[number - 1])
         )
 
-    found.sort(key=lambda v: (v.line, v.rule))
-    return found
+    # A raw fact table parked in a name and read through it. Rule 3 reads the
+    # table by its own name anywhere in the repository; this reads it through a
+    # jinja or shell variable, and it runs on the analysis surface, where a
+    # `{{ tbl }}` after a FROM is a read rather than a generator writing a plant.
+    for name in sorted(facty) if surface else []:
+        use = re.compile(
+            rf"(?:\bFROM\b|\bJOIN\b|\bref\s*\(|\bsource\s*\(|read_parquet|\.table\s*\()"
+            rf"[^;]{{0,120}}?(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])",
+            re.IGNORECASE | re.DOTALL,
+        )
+        for match in use.finditer(bare_text):
+            at = match.start()
+            window = bare_text[match.end() : _statement_end(bare_text, at, line_starts)]
+            if QUALIFIES_OPEN.search(window):
+                continue
+            number = _line_of(line_starts, at) + 1
+            found.append(
+                Violation(relative, number, "unqualified raw fact-table read", lines[number - 1])
+            )
+
+    seen: set[tuple[int, str, str]] = set()
+    unique: list[Violation] = []
+    for violation in found:
+        key = (violation.line, violation.rule, violation.code)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(violation)
+    unique.sort(key=lambda v: (v.line, v.code, v.rule))
+    return unique
 
 
 def _git_listing(root: Path) -> set[str]:
@@ -512,15 +795,32 @@ def _walk_listing(root: Path) -> set[str]:
     return out
 
 
-def is_excluded(relative: str) -> bool:
-    """Receipts and logs only. Neither is importable, runnable or compiled."""
-    return any(relative.startswith(prefix) for prefix in EXCLUDED_PREFIXES)
+def is_excluded(relative: str, root: Path = REPO_ROOT) -> bool:
+    """A transcript under one of the two evidence directories, and nothing else.
+
+    The prefix is necessary and not sufficient. The file must also be in a
+    transcript format and must not be executable, so a `.sh` dropped under
+    `logs/`, or a chmod +x file under `quality/receipts/`, is scanned like any
+    other file in the repository. The claim that nothing runnable is excluded is
+    made true here rather than asserted in prose.
+    """
+    if not any(relative.startswith(prefix) for prefix in EXCLUDED_PREFIXES):
+        return False
+    if Path(relative).suffix.lower() not in EVIDENCE_SUFFIXES:
+        return False
+    path = root / relative
+    try:
+        if path.is_file() and os.access(path, os.X_OK):
+            return False
+    except OSError:
+        return False
+    return True
 
 
 def shipped_files(root: Path = REPO_ROOT) -> list[str]:
     """Every file the scan considers: git's listing, plus the directories that execute."""
     return sorted(
-        path for path in (_git_listing(root) | _walk_listing(root)) if not is_excluded(path)
+        path for path in (_git_listing(root) | _walk_listing(root)) if not is_excluded(path, root)
     )
 
 

@@ -8,10 +8,11 @@ test that can actually fail: every fixture under
 path whose second line leaves the chokepoint, and each one is asserted to be
 reported with its own path and line number.
 
-The fixtures live on disk rather than as string literals here, so this module
-itself contains no request idiom and needs no exemption from the linter it
-tests. ``tests/unit/fixtures/lint_http/`` is exempt because it is the planted
-material; nothing else under ``tests/`` is.
+The fixtures live on disk rather than as string literals here, so the planted
+material is all in one place: ``tests/unit/fixtures/lint_http/`` is exempt
+because it is the planted material, and this module is exempt because the
+receipt-log test below has to quote the linter's own recorded output back at
+it. Nothing else under ``tests/`` is exempt.
 """
 
 from __future__ import annotations
@@ -157,6 +158,57 @@ def test_the_six_idioms_section_2_3_names_are_still_rules() -> None:
     text = LINT_HTTP.read_text(encoding="utf-8")
     for idiom in ("requests", "httpx", "urllib", "curl", "httr2"):
         assert idiom in text, f"section 2.3 names {idiom} and it is not a rule"
+
+
+# What a receipt log holds after a failing run: this linter's own output, one
+# "[RULE] path:line:text" line per hit, naming files that may since have gone.
+RECORDED_FAILURE = """LINT HTTP FAIL: request idiom outside the two allowed call sites.
+  [ANY-URLREAD] src/absump/ingest/deleted.py:3:frame = read_csv_auto('https://statsapi.mlb.com/feed.csv')
+  [ANY-HTTPFS] sql/deleted.sql:2:INSTALL httpfs; SELECT * FROM read_csv_auto('https://statsapi.mlb.com/feed.csv');
+  [ANY-USERINFO] tools/deleted.py:1:URL = "https://someone:token@statsapi.mlb.com/api/v1/schedule"
+  [ANY-ODDSKEY] tools/deleted.py:2:ODDS = "https://api.the-odds-api.com/v4/sports?apiKey=xxxxxxxxxxxxxxxx"
+Allowed: src/absump/http.py and R/lib/http.R.
+"""
+
+
+def test_a_receipt_log_does_not_trigger_the_linter_on_its_own_output(
+    tmp_path: Path,
+) -> None:
+    """One failing run must not disable the gate for good.
+
+    quality/ is scanned, and quality/receipts/<step>.log records this linter's
+    own failure output verbatim. The round-2 verifier found that after a single
+    failure the linter read its own complaint back and failed on it every run
+    afterwards, naming files that no longer existed, so the gate could only be
+    cleared by restoring a receipt by hand. A receipt is evidence, not code.
+    """
+    shutil.copytree(ALLOWED, tmp_path, dirs_exist_ok=True)
+    receipts = tmp_path / "quality" / "receipts"
+    receipts.mkdir(parents=True)
+    (receipts / "W1.7.log").write_text(RECORDED_FAILURE, encoding="utf-8")
+    (receipts / "W1.7.json").write_text(
+        '{"step": "W1.7", "status": "FAIL", "log": "quality/receipts/W1.7.log"}\n',
+        encoding="utf-8",
+    )
+    result = run_lint("-q", str(tmp_path))
+    assert result.returncode == 0, (
+        "the linter read a receipt log and failed on its own recorded output\n" + result.stderr
+    )
+
+
+def test_the_round_two_shapes_are_each_a_named_rule() -> None:
+    """The three shapes the round-2 verifier got through with, pinned by rule id."""
+    listed = run_lint("-l")
+    assert listed.returncode == 0, listed.stderr
+    for rule_id in ("PY-DYNIMPORT", "SH-EXECVAR", "SH-CONCAT", "SH-PYTHON-C"):
+        assert rule_id in listed.stdout, f"{rule_id} is not in the rule table"
+    text = LINT_HTTP.read_text(encoding="utf-8")
+    python_c = next(ln for ln in text.splitlines() if ln.startswith("rule SH-PYTHON-C"))
+    body = text.split(python_c, 1)[1].split("rule R-RSCRIPT", 1)[0]
+    assert body.rstrip().endswith("file"), (
+        "SH-PYTHON-C reads its conjunct on the matched line, so a here-doc whose "
+        "program text is on the following lines is invisible to it"
+    )
 
 
 def test_the_live_repository_is_clean() -> None:

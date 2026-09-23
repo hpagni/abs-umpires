@@ -18,6 +18,11 @@
 #   MISSING  a path in the step's `needs` is absent, or still carries the ABSUMP_PLACEHOLDER
 #            marker W1.14 wrote into its stub, so the step is not built yet and its command
 #            is not run
+#   PENDING-OWNER
+#            the step carries a `pending_owner` note in the registry: the work is done as
+#            far as this machine may take it and the remaining move belongs to the owner,
+#            so the command is not run and the status is not a failure. This is how the
+#            two parked GitHub Actions steps are told apart from work nobody started
 #   RETIRED  the id is registered, retired, and never runs again
 #
 # Two deviations from the snippet in SOP section 0.1, both deliberate:
@@ -57,12 +62,34 @@ usage() {
 #      disk. Escapes are colour, not content: the receipt log is a file, and a
 #      file that carries them is neither diffable nor readable.
 #
-#      What is deliberately NOT normalised is any clock or duration a verify
-#      command prints of its own accord. gitleaks stamps the hour, uv prints how
-#      long a sync took. Those logs still change on every run, and that is the
-#      command's output changing, not prove.sh rewriting an unchanged file.
-#      Masking them here would edit evidence. The owning step fixes it by
-#      quieting its own command.
+#      A first attempt left every clock and duration a verify command printed
+#      of its own accord, on the argument that masking them would edit
+#      evidence. That was wrong twice over. It left the clause unmet, because
+#      gitleaks stamps the hour on every line it prints, uv prints how many
+#      milliseconds a sync took and pytest prints the number of the temporary
+#      directory it made, so four tracked receipt logs changed on every run and
+#      `git status` was dirty after every sweep. And it was not evidence: the
+#      minute a scan started and the width of a temporary directory's counter
+#      prove nothing about the step. So the normaliser now also replaces those
+#      three families of run-local token with a named placeholder, one family
+#      per rule, and appends a line naming the rules that fired. The reader can
+#      see exactly what was replaced and why, which is the opposite of masking.
+#      Nothing that carries meaning is touched: counts, sizes, versions,
+#      package names, file paths, rule ids, pass and fail lines all survive
+#      byte for byte.
+#
+#        RN-01 clock      a leading wall-clock stamp, 6:54AM INF -> <clock> INF
+#        RN-02 elapsed    "in 17ms", "in 1.63s" -> "in <elapsed>"
+#        RN-03 tmpdir     a pytest temporary directory, pytest-411 -> pytest-<n>
+#        RN-04 timing     a duration a step times itself, on a line that already says
+#                         elapsed, took, duration, load or smoke ok, so that a delay or a
+#                         budget printed as seconds is left alone: "stack load: 1.8 s" ->
+#                         "stack load: <elapsed> s". The same id also covers a duration in
+#                         the tail position of a comma-separated status line, which is how
+#                         the R smoke fit reports its sampler: ", 0.6 s" -> ", <elapsed> s"
+#
+#      If a step's own command grows a fourth kind of run-local token, the rule
+#      for it belongs here, with an id, not in a one-off sed in that step.
 #   2. The receipt json is compared against the one already on disk with the two
 #      fields that move on their own removed, timestamp_madrid and duration_s.
 #      If the proof is otherwise identical, the file on disk is left alone and
@@ -81,7 +108,43 @@ src, dest = sys.argv[1], sys.argv[2]
 with open(src, "rb") as fh:
     text = fh.read().decode("utf-8", "replace")
 text = re.sub(r"\x1b\[[0-9;?]*[ -/]*[@-~]", "", text)
+
+# Run-local tokens, one rule per family. See the RN table in the header
+# comment. Each rule is (id, pattern, replacement); a rule that changes
+# nothing is not reported.
+RULES = (
+    ("RN-01 clock", re.compile(r"(?m)^\d{1,2}:\d{2}(?:AM|PM) (?=INF |WRN |ERR |DBG )"), "<clock> "),
+    ("RN-02 elapsed", re.compile(r"\bin \d+(?:\.\d+)?(?:ns|us|\u00b5s|ms|s|m)\b"), "in <elapsed>"),
+    ("RN-03 tmpdir", re.compile(r"\bpytest-\d+\b"), "pytest-<n>"),
+    (
+        "RN-04 timing",
+        re.compile(
+            r"(?mi)^(.*\b(?:elapsed|took|duration|load|smoke ok)\b[^0-9\n]*?)"
+            r"\d+(?:\.\d+)?(\s*(?:ms|s)\b)"
+        ),
+        r"\1<elapsed>\2",
+    ),
+    (
+        "RN-04 timing",
+        re.compile(r"(?m),\s\d+(?:\.\d+)?\s(ms|s)$"),
+        r", <elapsed> \1",
+    ),
+)
+fired = []
+for name, pattern, repl in RULES:
+    text, hits = pattern.subn(repl, text)
+    if hits and name not in fired:
+        fired.append(name)
+
 lines = [line.rstrip() for line in text.split("\n")]
+while lines and lines[-1] == "":
+    lines.pop()
+if fired:
+    lines.append("")
+    lines.append(
+        "-- scripts/prove.sh normalised run-local tokens in this log: "
+        + ", ".join(fired)
+    )
 while lines and lines[-1] == "":
     lines.pop()
 new = "\n".join(lines) + "\n" if lines else ""
@@ -194,32 +257,41 @@ case "$1" in
     exit 0
     ;;
   --all)
-    pass=0; failed=0; missing=0; retired_n=0; total=0
-    printf "%-7s %-8s %s\n" "STEP" "STATUS" "DETAIL"
-    while IFS=$'\x1f' read -r id owner retired expect needs label cmd; do
+    pass=0; failed=0; missing=0; retired_n=0; pending=0; total=0
+    printf "%-7s %-13s %s\n" "STEP" "STATUS" "DETAIL"
+    while IFS=$'\x1f' read -r id owner retired expect needs label cmd pending_owner; do
       total=$((total + 1))
       if [ "$retired" = "1" ]; then
         retired_n=$((retired_n + 1))
-        printf "%-7s %-8s %s\n" "$id" "RETIRED" "$label"
+        printf "%-7s %-13s %s\n" "$id" "RETIRED" "$label"
+        continue
+      fi
+      # A step parked on a decision the owner has taken and recorded reads
+      # PENDING-OWNER, not MISSING. MISSING means nobody has built it yet and
+      # someone still should. PENDING-OWNER means the work is done as far as
+      # this machine may take it and the remaining move is the owner's.
+      if [ -n "$pending_owner" ]; then
+        pending=$((pending + 1))
+        printf "%-7s %-13s %s\n" "$id" "PENDING-OWNER" "$pending_owner"
         continue
       fi
       if [ -n "$needs" ]; then
         missing=$((missing + 1))
-        printf "%-7s %-8s %s\n" "$id" "MISSING" "not built yet: $needs"
+        printf "%-7s %-13s %s\n" "$id" "MISSING" "not built yet: $needs"
         continue
       fi
       start=$(date +%s)
       if run_one "$id" "$expect" "$cmd"; then
         pass=$((pass + 1))
-        printf "%-7s %-8s %s (%ss)\n" "$id" "PASS" "$cmd" "$(( $(date +%s) - start ))"
+        printf "%-7s %-13s %s (%ss)\n" "$id" "PASS" "$cmd" "$(( $(date +%s) - start ))"
       else
         failed=$((failed + 1))
-        printf "%-7s %-8s %s (%ss, log %s)\n" "$id" "FAIL" "$cmd" \
+        printf "%-7s %-13s %s (%ss, log %s)\n" "$id" "FAIL" "$cmd" \
                "$(( $(date +%s) - start ))" "$RECEIPTS/$id.log"
       fi
     done < <("$PY" "$REG" --registry)
     echo
-    echo "make prove: $total registered, $pass PASS, $failed FAIL, $missing MISSING, $retired_n RETIRED"
+    echo "make prove: $total registered, $pass PASS, $failed FAIL, $missing MISSING, $pending PENDING-OWNER, $retired_n RETIRED"
     [ "$failed" -eq 0 ] || exit 1
     exit 0
     ;;
@@ -235,7 +307,7 @@ RETIRED=$("$PY" "$REG" --field retired --step "$STEP" 2>/dev/null) || {
 }
 if [ "$RETIRED" = "True" ]; then
   REASON=$("$PY" "$REG" --field reason --step "$STEP")
-  printf "%-7s %-8s %s\n" "$STEP" "RETIRED" "$REASON"
+  printf "%-7s %-13s %s\n" "$STEP" "RETIRED" "$REASON"
   exit 0
 fi
 NEEDS_MISSING=$("$PY" - "$STEP" <<'EOF_NEEDS'
@@ -246,16 +318,21 @@ rec = find(sys.argv[1])
 print(", ".join(missing_needs(rec)) if rec else "")
 EOF_NEEDS
 )
+PENDING_OWNER=$("$PY" "$REG" --field pending_owner --step "$STEP" 2>/dev/null || true)
+if [ -n "$PENDING_OWNER" ] && [ "$PENDING_OWNER" != "None" ]; then
+  printf "%-7s %-13s %s\n" "$STEP" "PENDING-OWNER" "$PENDING_OWNER"
+  exit 0
+fi
 if [ -n "$NEEDS_MISSING" ]; then
-  printf "%-7s %-8s %s\n" "$STEP" "MISSING" "not built yet: $NEEDS_MISSING"
+  printf "%-7s %-13s %s\n" "$STEP" "MISSING" "not built yet: $NEEDS_MISSING"
   exit 1
 fi
 CMD=$("$PY" "$REG" --field verify --step "$STEP")
 EXPECT=$("$PY" "$REG" --field expect_exit --step "$STEP")
 EXIT=$(run_step "$STEP" "$CMD")
 if [ "$EXIT" -eq "$EXPECT" ]; then
-  printf "%-7s %-8s %s\n" "$STEP" "PASS" "$CMD"
+  printf "%-7s %-13s %s\n" "$STEP" "PASS" "$CMD"
 else
-  printf "%-7s %-8s %s (log %s)\n" "$STEP" "FAIL" "$CMD" "$RECEIPTS/$STEP.log"
+  printf "%-7s %-13s %s (log %s)\n" "$STEP" "FAIL" "$CMD" "$RECEIPTS/$STEP.log"
 fi
 exit $EXIT

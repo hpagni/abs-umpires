@@ -1,5 +1,6 @@
 #!/bin/sh
-# ops/guard_scan.sh -- GD-04 at the commit boundary. SOP step W9.7, layer 3.
+# ops/guard_scan.sh -- GD-04 and GD-05 at the commit boundary. SOP step W9.7,
+# layer 3.
 #
 # One line of delegation: the scan itself is tests/guard/gd04_scan.py, which is
 # the same engine `make test-guard` runs, so the hook and the test suite cannot
@@ -10,7 +11,9 @@
 #   bash ops/guard_scan.sh --path P     one path
 #
 # It exits 1 with a file:line for every read of the held-out set it finds, 0
-# when the tree is clean. It reads no data row and opens no database.
+# when the tree is clean. A GD-05 line names the held-out label where the label
+# has no business being; a GD-04 line names a read. Both fail the commit. It
+# reads no data row and opens no database.
 set -u
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root" || exit 2

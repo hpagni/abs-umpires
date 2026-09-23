@@ -17,6 +17,17 @@
 # made: a client library, a shell-out, an interpreter one-liner, a library that
 # fetches a URL on your behalf, or a credential riding in a URL.
 #
+# Round 2. The verifier then found five more holes, of three shapes. A module
+# named as a string rather than imported by keyword, import_module("requests"),
+# which PY-DYNIMPORT now reads. An interpreter started in a shell script whose
+# program text is on the following lines, so a same-line conjunct never sees it;
+# SH-PYTHON-C and R-RSCRIPT now read their conjunct over the whole file and know
+# the stdin and here-doc forms. And a command name held in a shell variable,
+# BIN="curl" then "$BIN" -sS URL, which SH-CURL, SH-EXECVAR and SH-CONCAT read.
+# It also found that scanning quality/receipts made one failure permanent, since
+# a receipt records this linter's own output verbatim; receipts are now excluded
+# and the any-language rules carry an include list instead of reading every byte.
+#
 # Usage: ops/lint_http.sh [-q|--quiet] [-l|--list] [ROOT]
 #   -q     print only failures and the final line.
 #   -l     print the rule table and the scan set, then exit 0. Nothing is read.
@@ -80,7 +91,13 @@ if [ -z "$SCAN_DIRS$SCAN_FILES" ]; then
     exit 2
 fi
 
-SKIP='--exclude-dir=__pycache__ --exclude-dir=.ipynb_checkpoints
+# quality/receipts holds this linter's own recorded output, one
+# "[RULE] path:line:text" per line. Scanning it makes a single failure permanent:
+# the failure is written to a receipt, the receipt is scanned, and every later run
+# fails on the receipt however clean the tree is. The round-2 verifier reproduced
+# exactly that. Receipts are evidence, not code, so they are never read.
+SKIP='--exclude-dir=receipts
+--exclude-dir=__pycache__ --exclude-dir=.ipynb_checkpoints
 --exclude-dir=.Rproj.user --exclude-dir=renv --exclude-dir=.git
 --exclude-dir=.venv --exclude-dir=node_modules --exclude-dir=target
 --exclude-dir=.pytest_cache --exclude-dir=.ruff_cache'
@@ -88,7 +105,10 @@ SKIP='--exclude-dir=__pycache__ --exclude-dir=.ipynb_checkpoints
 PY_INC="--include=*.py --include=*.ipynb --include=*.pyi"
 R_INC="--include=*.R --include=*.r --include=*.Rmd --include=*.rmd --include=*.qmd --include=*.Rnw"
 SH_INC="--include=*.sh --include=*.bash --include=*.zsh --include=*.mk --include=Makefile --include=*.yml --include=*.yaml --include=*.toml"
-ANY_INC=""
+# The any-language rules used to run with no --include at all, so they read
+# every byte under the scan set including .log files. They now carry the union of
+# the three lists above plus SQL and the data formats a URL can hide in.
+ANY_INC="$PY_INC $R_INC $SH_INC --include=*.sql --include=*.json --include=*.jinja --include=*.j2 --include=*.md --include=*.txt --include=*.cfg --include=*.ini"
 
 # ---------------------------------------------------------------------------
 # The rule table.
@@ -108,8 +128,12 @@ HITS=""
 NET='(curl|wget|urllib|requests|httpx|aiohttp|http\.client|socket|urlopen|httr|download\.file|fromJSON|readLines|baseballr|httpfs|https?://)'
 ARGV='[[(][[:space:]]*["'"'"'](curl|wget)["'"'"'][[:space:]]*,[[:space:]]*(["'"'"']-|["'"'"']https?://|c\(|[A-Za-z_][A-Za-z0-9_]*[[:space:]]*[],)(])'
 
+# Sixth field SCOPE: 'line' (default) reads the conjunct on the matched line;
+# 'file' reads it anywhere in the same file. A shell script that starts an
+# interpreter puts the program text on the following lines, so its conjunct
+# cannot be a same-line test; that is how the here-doc python -c escaped.
 rule() {
-    _id=$1; _lang=$2; _re=$3; _conj=$4; _msg=$5
+    _id=$1; _lang=$2; _re=$3; _conj=$4; _msg=$5; _scope=${6:-line}
     case "$_lang" in
         py) _inc="$PY_INC"; _files="" ;;
         R)  _inc="$R_INC";  _files="" ;;
@@ -120,7 +144,17 @@ rule() {
     _out=$(cd "$ROOT" && grep -rnE --binary-files=without-match $SKIP $_inc \
              -- "$_re" $SCAN_DIRS $_files 2>/dev/null)
     if [ -n "$_out" ] && [ "$_conj" != "-" ]; then
-        _out=$(printf '%s\n' "$_out" | grep -E -- "$_conj")
+        if [ "$_scope" = "file" ]; then
+            _out=$(printf '%s\n' "$_out" | while IFS= read -r _hit; do
+                [ -n "$_hit" ] || continue
+                _f=${_hit%%:*}
+                if (cd "$ROOT" && grep -qE -- "$_conj" "$_f" 2>/dev/null); then
+                    printf '%s\n' "$_hit"
+                fi
+            done)
+        else
+            _out=$(printf '%s\n' "$_out" | grep -E -- "$_conj")
+        fi
     fi
     if [ -n "$_out" ]; then
         _out=$(printf '%s\n' "$_out" | grep -vE "$ALLOWED" | grep -vE "$EXEMPT")
@@ -148,6 +182,9 @@ rule PY-HTTPCLIENT py \
   'http\.client|HTTPSConnection[[:space:]]*\(|HTTPConnection[[:space:]]*\(|from[[:space:]]+http[[:space:]]+import[[:space:]]+client' \
   '-' 'http.client, the stdlib connection the SOP forgot'
 rule PY-AIOHTTP py 'aiohttp' '-' 'aiohttp'
+rule PY-DYNIMPORT py \
+  '(importlib\.import_module|__import__)[[:space:]]*\([[:space:]]*(["'"'"'][[:space:]]*(requests|httpx|aiohttp|urllib[a-z0-9_.]*|http\.client|pycurl|urllib3|socket|ssl|websockets?|treq|grequests|pandas|polars|duckdb|pyarrow)|[A-Za-z_]|["'"'"'][^"'"'"']*["'"'"'][[:space:]]*[+%])' \
+  '-' 'a module named in a string: import_module("requests"), __import__(name)'
 rule PY-SOCKET py \
   'socket\.(socket|create_connection)[[:space:]]*\(|ssl\.(wrap_socket|create_default_context)[[:space:]]*\(' \
   '-' 'a raw socket or TLS context, which is HTTP with extra steps'
@@ -159,21 +196,27 @@ rule PY-SHELLOUT py \
   'subprocess or os.system carrying curl, wget or a URL'
 rule PY-ARGV-CURL py "$ARGV" '-' 'curl or wget as an argv element, no trailing space needed'
 rule SH-CURL sh \
-  '(^|[^A-Za-z0-9_.-])curl([[:space:]]+(-|["'"'"']?https?://|\$)|[[:space:]]*$)' \
-  '-' 'curl in a shell script or the Makefile'
+  '(^|[^A-Za-z0-9_.-])curl([[:space:]]+(-|["'"'"']?https?://|\$)|[[:space:]]*$|["'"'"'][[:space:]]*($|[;)&|]))' \
+  '-' 'curl in a shell script or the Makefile, including a quoted BIN="curl"'
 rule SH-WGET sh \
-  '(^|[^A-Za-z0-9_.-])wget([[:space:]]+(-|["'"'"']?https?://|\$)|[[:space:]]*$)' \
-  '-' 'wget in a shell script or the Makefile'
+  '(^|[^A-Za-z0-9_.-])wget([[:space:]]+(-|["'"'"']?https?://|\$)|[[:space:]]*$|["'"'"'][[:space:]]*($|[;)&|]))' \
+  '-' 'wget in a shell script or the Makefile, including a quoted BIN="wget"'
+rule SH-EXECVAR sh \
+  '^[[:space:]]*((command|exec|eval|env|sudo|time|nohup)[[:space:]]+)*["'"'"']?\$\{?[A-Za-z_][A-Za-z0-9_]*\}?["'"'"']?[[:space:]]' \
+  "$NET" 'a command held in a shell variable, on a line naming a network idiom'
+rule SH-CONCAT sh \
+  '["'"'"'](c|cu|cur|w|wg|wge)["'"'"']["'"'"'][A-Za-z0-9_.-]*["'"'"']' \
+  '-' 'curl or wget split across two adjacent quoted fragments, as in "cu""rl"'
 rule SH-ARGV-CURL sh "$ARGV" '-' 'curl or wget quoted as an argument'
 rule SH-HTTPIE sh \
   'httpie|(^|[^A-Za-z0-9_.-])https?[[:space:]]+(GET|POST|PUT|DELETE|HEAD)[[:space:]]|openssl[[:space:]]+s_client' \
   '-' 'httpie or openssl s_client'
 rule SH-PYTHON-C sh \
-  'python3?[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-c|uv[[:space:]]+run[[:space:]][^|;]*[[:space:]]-c[[:space:]]' \
-  "$NET" 'a python -c one-liner that names a network idiom'
+  'python3?[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-c|uv[[:space:]]+run[[:space:]][^|;]*[[:space:]]-c[[:space:]]|python3?[[:space:]]+-([[:space:]]|$)|python3?[[:space:]]*<<|uv[[:space:]]+run[[:space:]][^|;]*[[:space:]]-([[:space:]]|$)' \
+  "$NET" 'python -c, python - or a here-doc, in a file that names a network idiom' file
 rule R-RSCRIPT sh \
-  'Rscript[[:space:]]+(--[a-zA-Z-]+[[:space:]]+)*-e|(^|[[:space:]])R[[:space:]]+(--[a-zA-Z-]+[[:space:]]+)*-e' \
-  "$NET" 'an Rscript -e one-liner that names a network idiom'
+  'Rscript[[:space:]]+(--[a-zA-Z-]+[[:space:]]+)*-e|(^|[[:space:]])R[[:space:]]+(--[a-zA-Z-]+[[:space:]]+)*-e|Rscript[[:space:]]+-([[:space:]]|$)|Rscript[[:space:]]*<<' \
+  "$NET" 'Rscript -e or a here-doc, in a file that names a network idiom' file
 
 # -- R client libraries ------------------------------------------------------
 rule R-HTTR R 'httr::|library\(httr\)|require\(httr\)' '-' 'httr'

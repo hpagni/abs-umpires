@@ -38,3 +38,11 @@ tests/b27_httpx_probe.py	2	PY-HTTPX	tests was never scanned
 tools/b28_requests_get.py	2	PY-REQUESTS	control: caught before
 notebooks/b29_urllib.py	2	PY-URLLIB	control: caught before
 Makefile	2	SH-CURL	the Makefile was never scanned
+src/absump/ch3/b40_dynamic_import.py	3	PY-DYNIMPORT	module named as a string
+tools/b41_dunder_import.py	2	PY-DYNIMPORT	__import__ by string
+app/b42_dynamic_httpx.py	3	PY-DYNIMPORT	httpx named as a string
+scripts/b43_heredoc_python_c.sh	2	SH-PYTHON-C	here-doc python -c
+ops/b44_python_stdin.sh	2	SH-PYTHON-C	program on stdin
+scripts/b45_curl_in_var.sh	2	SH-CURL	quoted BIN="curl"
+ops/b46_exec_var.sh	3	SH-EXECVAR	command name in a variable
+tools/b47_split_word.sh	2	SH-CONCAT	curl split across two fragments

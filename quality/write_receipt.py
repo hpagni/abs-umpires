@@ -339,6 +339,7 @@ def main(argv=None):
                         ", ".join(missing_needs(rec)),
                         str(rec.get("reason", rec.get("title", ""))),
                         str(rec.get("verify", "")),
+                        str(rec.get("pending_owner", "")),
                     ]
                 )
                 + "\n"

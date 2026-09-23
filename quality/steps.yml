@@ -22,6 +22,12 @@
 #               stubs W1.14 wrote (they open a comment line with the placeholder marker),
 #               the step is reported MISSING and its verify command is not run. This is how
 #               `make prove` distinguishes "not built yet" from "built and failing".
+#   pending_owner
+#               Optional, one line of prose. The step is parked on a move only the owner can
+#               make, and the line says which move. `make prove` prints PENDING-OWNER and the
+#               line, does not run the verify command, and does not count the step as failed
+#               or as missing. Use it only when the build side is finished: MISSING still
+#               means nobody has built the thing yet.
 #   retired     true on a retired id. Pairs with reason and date.
 #   reason      Why the id was retired.
 #   date        Madrid-stamped date of the retirement, YYYY-MM-DD.
@@ -58,6 +64,7 @@
   expect_exit: 0
   owner: W1
   needs: .github/workflows/ci.yml
+  pending_owner: "the gh token on this machine has repo, read:org and gist and no workflow scope, so nothing under .github/workflows/ may be committed. Both workflow files are written and parked at ops/ci-pending/. The owner re-authorises gh with the workflow scope, or grants it on the token, and this step and W1.16 go green together."
 
 - id: W1.4
   title: "Python environment from uv.lock"
@@ -121,13 +128,14 @@
   expect_exit: 0
   owner: W1
   needs: .github/workflows/ci.yml, .github/workflows/seal-guard.yml
+  pending_owner: "blocked behind W1.3. ops/ci-pending/ci.yml and ops/ci-pending/seal-guard.yml are complete and parse; they move to .github/workflows/ in the same commit that the workflow scope arrives."
 
 - id: W2.1
   title: "Layout and the no-raw-data guard"
   verify: 'uv run --locked pytest tests/unit/test_layout.py -q -k "no_data_tracked or hook or guard or installer"'
   expect_exit: 0
   owner: W2
-  needs: .git/hooks/pre-commit, .git/hooks/pre-commit.framework, ops/hook_precommit_guard.sh, ops/install_git_hooks.sh, tests/unit/test_layout.py
+  needs: ops/hook_precommit_guard.sh, ops/install_git_hooks.sh, tests/unit/test_layout.py
 
 - id: W2.2
   title: "Pinned dependencies"
@@ -200,6 +208,13 @@
   expect_exit: 0
   owner: W9
   needs: tests/guard/redteam_run.sh, tests/guard/redteam.patch, tests/guard/test_no_sealed_reads.py, tests/guard/test_seal_receipts.py, tests/guard/test_seal_immutability.py, tests/guard/test_dbt_dev_target.py, tests/guard/test_commit_guards.py, tests/guard/test_redteam.py, quality/sealed_manifest.json, quality/prereg.lock
+
+- id: W9.13
+  title: "Writing rules, the three prose rules and the number trace"
+  verify: "bash ops/lint_prose.sh && uv run --locked python quality/check_numbers.py"
+  expect_exit: 0
+  owner: W9
+  needs: ops/lint_prose.sh, quality/check_numbers.py
 
 # Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
 # carry no body text in SOP-final, because the assembly folded them into their successors.
