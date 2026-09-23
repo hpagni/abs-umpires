@@ -1,25 +1,27 @@
-=== W9.7 the sealed guard, four layers -- gate run 2026-09-23 06:46 CEST ===
-Repairs made after the phase 01 verifiers refuted GD-04 and GD-09.
-Files this run exercises: tests/guard/gd04_scan.py, tests/guard/test_no_sealed_reads.py,
-tests/guard/redteam_run.sh, ops/guard_scan.sh, .pre-commit-config.yaml (one hook entry).
+........................................................................ [ 69%]
+................................                                         [100%]
+=============================== warnings summary ===============================
+tests/guard/test_seal_immutability.py::test_the_seal_holds_no_readable_rows
+  /Users/hudsonpagni/sports-project/tests/guard/test_seal_immutability.py:207: VacuousGuard: GD-10 vacuous: no sealed rows yet, data/sealed/ is empty in phase 01
+    warnings.warn(
 
---- git status --porcelain before the run, saved for the byte comparison after ---
-entries:       79
+tests/guard/test_seal_receipts.py::test_every_fit_artifact_has_a_receipt
+  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:123: VacuousGuard: GD-01 vacuous: no fit artifacts under out/ yet, because phase 01 fits nothing
+    warnings.warn(
 
---- 1. the scan is green at rest (the phase 01 self-poisoning is gone) ---
-GD-04: 0 violation(s) in the repository
-exit=0
+tests/guard/test_seal_receipts.py::test_every_receipt_carries_the_contract_keys
+  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:142: VacuousGuard: GD-01 vacuous: no fit receipts under out/ yet, because phase 01 fits nothing
+    warnings.warn(
 
---- 2. W9.7 verify, as quality/steps.yml names it ---
-$ uv run --locked pytest tests/guard -q && bash tests/guard/redteam_run.sh
+tests/guard/test_seal_receipts.py::test_no_held_out_artifact_predates_the_pre_registration
+  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:168: VacuousGuard: GD-02 vacuous: no fit receipts yet, so no artifact can have touched a held-out row
+    warnings.warn(
+
+tests/guard/test_seal_receipts.py::test_the_ordering_script_runs_and_reports
   /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:212: VacuousGuard: GD-12 vacuous: no fit receipts yet and prereg-v1 is not tagged yet, so no ordering has been tested
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-pytest exit=0
-(pytest tests/guard exit=0)
-
---- 3. GD-09, the red team: plant, expect FAIL with file:line, revert, expect PASS ---
 [redteam] checking the guard is green before anything is planted
 [redteam] make test-guard -> exit 0 at rest, nothing planted
 [redteam] applying tests/guard/redteam.patch
@@ -35,64 +37,16 @@ pytest exit=0
 [redteam] E7 an importable symlink out of the repository -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/probe__redteam.py:2 names the held-out pitch view -- return con.execute("SELECT * FROM v_pitch_sealed").pl()
 [redteam] E8 the complement of the open label -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:47 reads the held-out analysis set -- "SELECT plate_x FROM v_pitch_open WHERE analysis_set != 'open'"
 [redteam] E9 the second fact table -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/challenge_all__redteam.sql:3 unqualified raw fact-table read -- SELECT * FROM fct_challenge
+[redteam] E10 the label alone in ch3, no read on the line -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/dp_fast.py:46 the held-out label outside the two allowlisted files -- split = "sealed"
+[redteam] E11 the held-out partition read by path -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/parquet__redteam.py:2 the held-out label outside the two allowlisted files -- return con.execute("SELECT * FROM read_parquet('data/sealed/pitch/*.parquet')").pl()
+[redteam] E12 the boundary day in two fragments, python -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:45 literal boundary-date comparison -- FIRST = "2026-09-2" + "2"
+[redteam] E13 the boundary day built by paste(), R -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:45 held-out date literal -- cut_day <- as.Date(paste("2026", "09", "22", sep = "-"))
+[redteam] E14 a pull window through the seal, in a config -> make test-guard exit 2   GD-04 FAIL: config/backfill__redteam.yml:3 held-out date literal -- end: "2026-09-30"
+[redteam] E15 a held-out game copied into a fixture -> make test-guard exit 2   GD-04 FAIL: tests/fixtures/late_game__redteam.json:1 held-out date literal -- {"gamePk": 825412, "officialDate": "2026-09-23", "venue": "Wrigley Field"}
+[redteam] E16 the query carried as base64 in a notebook -> make test-guard exit 2   GD-04 FAIL: notebooks/encoded__redteam.ipynb:7 names the held-out pitch view -- "q = base64.b64decode(\"U0VMRUNUICogRlJPTSB2X3BpdGNoX3NlYWxlZA==\").decode()\n",
+[redteam] E17 a blob run abutting the view name -> make test-guard exit 2   GD-04 FAIL: notebooks/abutting__redteam.ipynb:6 names the held-out pitch view -- {"output_type": "stream", "text": "<blob>_pitch_sealed"}
+[redteam] E18 the label assembled with jinja's ~ operator -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_label__redteam.sql:4 reads the held-out analysis set -- SELECT game_pk FROM {{ ref('stg_pitch') }} WHERE analysis_set = '{{ held }}'
+[redteam] E19 the fact table parked in a jinja variable -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_table__redteam.sql:4 unqualified raw fact-table read -- SELECT game_pk, plate_x FROM {{ tbl }}
+[redteam] E20 an executable under an excluded prefix -> make test-guard exit 2   GD-04 FAIL: quality/receipts/probe__redteam.sh:2 unqualified raw fact-table read -- duckdb -c "SELECT plate_x FROM fct_pitch"
 [redteam] make test-guard -> exit 0   GD-04: 0 violation(s) in the repository
-GD-09 pass: 13 of 13 checks; the guard fails when it should and is green when it should
-(bash tests/guard/redteam_run.sh exit=0)
-
---- 4. SOP line 1947 acceptance: make prove-guard-redteam ---
-[redteam] E6 the view in a notebook past two megabytes -> make test-guard exit 2   GD-04 FAIL: notebooks/ch1_explore__redteam.ipynb:10 names the held-out pitch view -- "rows = con.execute(\"SELECT * FROM v_pitch_sealed\").pl()\n"
-[redteam] E7 an importable symlink out of the repository -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/probe__redteam.py:2 names the held-out pitch view -- return con.execute("SELECT * FROM v_pitch_sealed").pl()
-[redteam] E8 the complement of the open label -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:47 reads the held-out analysis set -- "SELECT plate_x FROM v_pitch_open WHERE analysis_set != 'open'"
-[redteam] E9 the second fact table -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/challenge_all__redteam.sql:3 unqualified raw fact-table read -- SELECT * FROM fct_challenge
-[redteam] make test-guard -> exit 0   GD-04: 0 violation(s) in the repository
-GD-09 pass: 13 of 13 checks; the guard fails when it should and is green when it should
-(make prove-guard-redteam exit=0)
-
---- 5. make test-guard on the worktree this run leaves behind ---
-    warnings.warn(
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-(make test-guard exit=0)
-
---- 6. the worktree is byte-identical to the state before the run ---
-git status --porcelain is unchanged: every plant was reverted.
---- 7. what each refuted finding now does, and where it is pinned ---
-verify-seal-redteam.log F2 self-poisoning: quality/receipts/ and logs/ are excluded by
-  prefix in tests/guard/gd04_scan.py. Nothing that executes is excluded, and
-  test_the_only_exclusions_are_evidence pins the set to exactly those two.
-  test_a_receipt_quoting_the_guard_does_not_poison_the_scan replays the phase 01
-  transcript: it really does carry banned text, and it no longer reaches the scan.
-F3 label in a variable: a taint pass carries a value from its assignment to its use,
-  and a seam-joiner closes the gap between fragments, so paste0("seal","ed") is the
-  label. Pinned by test_p3_* and by red-team plant E1.
-F4 per-line rules: rule 3 now reads statements, not lines, so FROM and the table on two
-  lines is one read. Pinned by test_p5_* and plant E3.
-F5 file-wide forgiveness: the open restriction must appear after the read and inside the
-  same statement, and comments are stripped before the question is asked. Pinned by
-  test_p6_*, test_a_distant_open_query_*, test_qualification_ahead_of_the_read_*, plant E4.
-F6 one date literal: every day on or after the boundary is compared numerically, and `>`
-  the day before counts. Pinned by test_p7_* and plant E5.
-F7 size and symlinks: neither is a reason to skip. A base64 run is redacted in place, so
-  a 2.1 MB notebook is scanned with its line numbers intact, and a symlink is followed.
-  Pinned by test_p9b_*, test_p10_* and plants E6, E7.
-verify-verify-guard.log cause 1, the complement: `!= 'open'` is a read of the held-out
-  rows and no longer qualifies anything. Pinned by test_the_complement_* and plant E8.
-verify-verify-guard.log cause 3, one fact table: rule 3 matches every fct_ table.
-  Pinned by test_the_second_fact_table_* and plant E9.
-verify-verify-guard.log (c) reporting defect: redteam_run.sh no longer prints a result
-  before the check that produces it. Every line above is quoted from the guard's own
-  output, and the verdict follows the check.
-
---- 8. limits this run does not close, stated rather than hidden ---
-a. The scan reads text. An author who spells the label with chr() or base64 evades rule 1,
-   as tests/guard/gd04_scan.py says in the comment above its own token assembly. The scan
-   cannot ban ordinal arithmetic without failing itself.
-b. SOP line 1757 words GD-05 as "no `sealed` string outside those two allowlisted files".
-   Implemented as a use rule, not a bare-token rule: the token appears today in
-   src/absump/paths.py, src/absump/db.py, ops/*.sh and dbt/profiles.yml.example as a
-   directory name and in prose, so a bare-token rule would be red at rest on files this
-   step does not own. What is enforced is that the label may not reach the routing column,
-   a view name or a fact-table read, by any spelling.
-c. GD-10, GD-01, GD-02 and GD-12 remain vacuous in phase 01 and say so through
-   VacuousGuard warnings; that part of the phase 01 build was verified and is unchanged.
-GATE RESULT: PASS
+GD-09 pass: 24 of 24 checks; the guard fails when it should and is green when it should

@@ -53,6 +53,7 @@ from gd04_scan import (
     boundary_date,
     is_excluded,
     is_scannable,
+    on_analysis_surface,
     scan_repository,
     scan_text,
     shipped_files,
@@ -96,19 +97,73 @@ def test_every_directory_that_executes_is_walked() -> None:
         assert name in WALKED_ROOTS, f"{name}/ is not walked"
 
 
-def test_the_only_exclusions_are_evidence() -> None:
-    """Receipts and gate logs. Nothing that executes is excluded.
+def test_the_only_exclusions_are_transcripts() -> None:
+    """A transcript format under one of two directories, and nothing else.
 
-    This is the self-poisoning fix. A receipt quotes the guard's failure text
-    verbatim, so scanning receipts made every red-team run write the file that
-    turned the next run red. Neither directory is importable, runnable or
-    compiled, so excluding them removes no read.
+    This is the self-poisoning fix, narrowed after the R2 red team. A receipt
+    quotes the guard's failure text verbatim, so scanning receipts made every
+    red-team run write the file that turned the next run red. The skip is by
+    FORMAT and by mode: a `.sql` or a `.sh` under either prefix is scanned, and
+    so is an executable whatever its suffix.
     """
     assert set(EXCLUDED_PREFIXES) == {"quality/receipts/", "logs/"}
     for prefix in EXCLUDED_PREFIXES:
-        assert is_excluded(prefix + "anything.sql")
+        assert is_excluded(prefix + "run.log")
+        assert not is_excluded(prefix + "anything.sql"), f"{prefix} hides a .sql file"
+        assert not is_excluded(prefix + "fetch.sh"), f"{prefix} hides a shell script"
+        assert not is_excluded(prefix + "probe.py"), f"{prefix} hides a python file"
     for name in WALKED_ROOTS:
+        if name + "/" in set(EXCLUDED_PREFIXES):
+            continue
         assert not is_excluded(name + "/anything.sql"), f"{name}/ must not be excluded"
+
+
+def test_nothing_runnable_is_excluded_on_disk() -> None:
+    """The claim the R2 verifier refuted, made an assertion over the real tree.
+
+    `logs/env-setup.sh` is mode 755 and sat under an excluded prefix. The prose
+    said nothing runnable was excluded; nothing checked it. This walks both
+    directories as they are on disk and fails on any file that executes, or is
+    code-shaped, and is skipped.
+    """
+    runnable_suffixes = {".sh", ".bash", ".zsh", ".py", ".r", ".sql", ".ipynb", ".pl", ".rb", ""}
+    skipped_but_runnable = []
+    for prefix in EXCLUDED_PREFIXES:
+        base = REPO_ROOT / prefix.rstrip("/")
+        if not base.is_dir():
+            continue
+        for path in base.rglob("*"):
+            if not path.is_file():
+                continue
+            relative = str(path.relative_to(REPO_ROOT))
+            if not is_excluded(relative):
+                continue
+            executable = os.access(path, os.X_OK)
+            if executable or path.suffix.lower() in runnable_suffixes:
+                skipped_but_runnable.append(relative)
+    assert not skipped_but_runnable, (
+        "these files execute or are code, and the scan skips them: "
+        + ", ".join(sorted(skipped_but_runnable))
+    )
+
+
+def test_an_executable_under_an_excluded_prefix_is_scanned(tmp_path: Path) -> None:
+    """The R2 plants C1 and C2, as strings and as a real listing."""
+    script = f'duckdb -c "SELECT * FROM {_VIEW}"\n'
+    for relative in ("logs/env-setup.sh", "quality/receipts/fetch.sh"):
+        assert not is_excluded(relative), f"{relative} is skipped"
+        assert scan_text(relative, script, BOUNDARY), f"{relative} carries a read and is silent"
+    listed = set(shipped_files())
+    on_disk = REPO_ROOT / "logs" / "env-setup.sh"
+    if on_disk.is_file():
+        assert "logs/env-setup.sh" in listed, "the toolchain installer is not even listed"
+
+
+def test_a_transcript_is_still_skipped() -> None:
+    """And the self-trigger stays gone: a `.log` under either prefix is skipped."""
+    assert is_excluded("quality/receipts/W9.7.log")
+    assert is_excluded("logs/evidence/W9.7.log")
+    assert is_excluded("quality/receipts/W9.7.json")
 
 
 def test_a_receipt_quoting_the_guard_does_not_poison_the_scan(tmp_path: Path) -> None:
@@ -396,6 +451,125 @@ def test_gd09_plants_in_both_ch3_and_R_are_caught() -> None:
         assert relative not in ALLOWLIST
         found = scan_text(relative, line + "\n", BOUNDARY)
         assert found, f"the guard did not fail on the plant in {relative}"
+
+
+# ================================ the nine spellings the R2 red team got past
+# Every one of these read held-out rows while the R2 scanner stayed silent. They
+# are pinned here as strings, so `make test-guard` fails on a regression without
+# waiting for the worktree round trip in GD-09.
+def test_a_pull_window_with_no_comparison_is_caught() -> None:
+    """R2 B1a. `end: "<late day>"` in a config the nightly pull reads."""
+    year = BOUNDARY[:4]
+    config = f'backfill:\n  start: "{year}-09-15"\n  end: "{year}-09-30"\n'
+    found = scan_text("config/backfill.yml", config, BOUNDARY)
+    assert "held-out date literal" in rules(found), config
+
+
+def test_a_held_out_game_copied_into_a_fixture_is_caught() -> None:
+    """R2 B2. A datum, not a query: the cheapest way held-out data enters git."""
+    from datetime import date, timedelta
+
+    later = (date.fromisoformat(BOUNDARY) + timedelta(days=2)).isoformat()
+    fixture = f'{{"gamePk": 825412, "officialDate": "{later}"}}\n'
+    found = scan_text("tests/fixtures/generated/late_game.json", fixture, BOUNDARY)
+    assert "held-out date literal" in rules(found), fixture
+
+
+def test_a_boundary_day_built_from_fragments_is_caught() -> None:
+    """R2 B3 and B7. The seam-joiner, applied to the date rules at last."""
+    python_plant = f'FIRST = "{BOUNDARY[:-1]}" + "{BOUNDARY[-1]}"\n'
+    assert scan_text("src/absump/ch3/window.py", python_plant, BOUNDARY), python_plant
+    year, month, day = BOUNDARY.split("-")
+    r_plant = f'cut_day <- as.Date(paste("{year}", "{month}", "{day}", sep = "-"))\n'
+    assert scan_text("R/ch1/20_surfaces.R", r_plant, BOUNDARY), r_plant
+
+
+def test_a_query_carried_as_base64_is_caught() -> None:
+    """R2 B4a. The blob decodes to a read of the held-out view."""
+    import base64 as _b64
+
+    payload = _b64.b64encode(f"SELECT * FROM {_VIEW}".encode()).decode()
+    cell = f'    "q = base64.b64decode(\\"{payload}\\").decode()",\n'
+    found = scan_text("notebooks/ch1.ipynb", cell, BOUNDARY)
+    assert "names the held-out pitch view" in rules(found), cell
+
+
+def test_a_blob_abutting_the_view_name_is_caught() -> None:
+    """R2 B4c. The redaction used to swallow the first letter of the name."""
+    blob = "QUJD" * 200
+    line = f'{{"output_type": "stream", "text": "{blob}{_VIEW}"}}\n'
+    found = scan_text("notebooks/ch1.ipynb", line, BOUNDARY)
+    assert "names the held-out pitch view" in rules(found), line[-60:]
+
+
+def test_the_label_assembled_with_jinja_concat_is_caught() -> None:
+    """R2 B5b. dbt is where `~` is the ordinary way to join two strings."""
+    model = (
+        f"{{% set held = '{_HELD[:4]}' ~ '{_HELD[4:]}' %}}\n"
+        f"SELECT game_pk FROM {{{{ ref('stg_pitch') }}}} WHERE analysis_set = '{{{{ held }}}}'\n"
+    )
+    found = scan_text("dbt/models/marts/late_pitch.sql", model, BOUNDARY)
+    assert found, model
+
+
+def test_a_fact_table_parked_in_a_jinja_variable_is_caught() -> None:
+    """R2 B5c. Taint used to follow the label and the view, never a table."""
+    model = f"{{% set tbl = '{_FACT}pitch' %}}\nSELECT game_pk, plate_x FROM {{{{ tbl }}}}\n"
+    found = scan_text("dbt/models/marts/all_pitch.sql", model, BOUNDARY)
+    assert "unqualified raw fact-table read" in rules(found), model
+
+
+def test_the_held_out_partition_read_by_path_is_caught() -> None:
+    """R2 B6. No view, no fact table: a parquet path and a glob."""
+    line = f"con.execute(\"SELECT * FROM read_parquet('data/{_HELD}/pitch/*.parquet')\")\n"
+    found = scan_text("src/absump/ch3/dp_fast.py", line, BOUNDARY)
+    assert found and any(v.code == "GD-05" for v in found), line
+
+
+# ======================================================================= GD-05
+def test_gd05_the_label_alone_in_chapter_code_is_caught() -> None:
+    """SOP-final.md line 1757, and the F8 the two red teams raised.
+
+    `split = "<label>"` names the held-out set with no read on the line. The
+    earlier scanner implemented GD-05 as a count of the allowlist; this is the
+    rule.
+    """
+    found = scan_text("src/absump/ch3/dp_fast.py", f'split = "{_HELD}"\n', BOUNDARY)
+    assert [v for v in found if v.code == "GD-05"], "GD-05 is still only a count"
+
+
+def test_gd05_runs_on_the_analysis_surface() -> None:
+    """Every directory where a chapter, a model or a notebook can read a row."""
+    for relative in (
+        "R/ch1/20_surfaces.R",
+        "dbt/models/marts/x.sql",
+        "notebooks/ch1.ipynb",
+        "src/absump/ch3/dp_fast.py",
+        "config/pull.yml",
+        "tests/fixtures/generated/x.json",
+    ):
+        assert on_analysis_surface(relative), f"{relative} is off the GD-05 surface"
+
+
+def test_gd05_does_not_fire_on_the_seal_machinery() -> None:
+    """The rule runs where a read is written, not where the seal is defined.
+
+    `src/absump/paths.py`, `dbt/profiles.yml.example`'s target name and a step
+    receipt all name the label for their own reasons. A rule that failed on
+    those would be switched off within a week, and that is stated here rather
+    than in prose alone.
+    """
+    assert not on_analysis_surface("src/absump/paths.py")
+    assert not on_analysis_surface("quality/steps.yml")
+    assert not on_analysis_surface("ops/preregister.sh")
+
+
+def test_the_repository_is_green_under_the_two_surface_rules() -> None:
+    """Rules 5 and 6 over the real tree, which is the only test that matters."""
+    found = [
+        v for v in scan_repository() if v.rule.startswith(("held-out date", "the held-out label"))
+    ]
+    assert not found, "\n".join(str(v) for v in found)
 
 
 # ================================================== layer 2 and the ordering

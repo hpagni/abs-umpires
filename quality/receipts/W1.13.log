@@ -6,22 +6,7 @@ check for merge conflicts................................................Passed
 check for added large files..............................................Passed
 detect private key.......................................................Passed
 don't commit to branch..................................................Skipped
-ruff check...............................................................Failed
-- hook id: ruff-check
-- exit code: 1
-
-E501 Line too long (132 > 100)
-   --> tests/guard/test_no_sealed_reads.py:171:101
-    |
-170 | def test_p2_boundary_date_literal_in_ch3_is_caught() -> None:
-171 |     text = f"    return con.execute(\n        \"SELECT * FROM v_pitch_open WHERE official_date >= DATE '{BOUNDARY}'\"\n    ).pl()\n"
-    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-172 |     found = scan_text("src/absump/ch3/dp_fast.py", text, BOUNDARY)
-173 |     assert "literal boundary-date comparison" in rules(found)
-    |
-
-Found 1 error.
-
+ruff check...............................................................Passed
 ruff format..............................................................Passed
 Detect hardcoded secrets.................................................Passed
 no raw data, research notes or logs in git...............................Passed
@@ -30,5 +15,12 @@ HTTP requests only from the two allowed call sites.......................Failed
 - files were modified by this hook
 
 LINT HTTP OK
+
+no read of the held-out set, and no held-out datum.......................Failed
+- hook id: sealed-read-guard
+- exit code: 1
+
+GD-04 FAIL: src/absump/ch3/dp_fast.py:47 reads the held-out analysis set -- "SELECT plate_x FROM v_pitch_open WHERE analysis_set != 'open'"
+GD-04: 1 violation(s) in the repository
 
 strip notebook outputs...............................(no files to check)Skipped

@@ -83,8 +83,11 @@ repos:
         always_run: true
 
       - id: sealed-read-guard
-        name: no read of the held-out set
-        description: ops/guard_scan.sh, GD-04, SOP W9.7 layer 3.
+        name: no read of the held-out set, and no held-out datum
+        description: >
+          ops/guard_scan.sh, GD-04 and GD-05, SOP W9.7 layer 3. It also refuses a
+          held-out day copied into a config or a fixture, which the no-raw-data
+          hook cannot see because that hook reads paths and not content.
         entry: ops/guard_scan.sh
         language: script
         pass_filenames: false

@@ -1,5 +1,5 @@
-Resolved 178 packages in 3ms
-Installed 19 packages in 17ms
+Resolved 178 packages in <elapsed>
+Installed 19 packages in <elapsed>
  + arro3-core==0.8.3
  + arviz==1.3.0
  + arviz-base==1.3.0
@@ -19,3 +19,5 @@ Installed 19 packages in 17ms
  + xarray==2026.7.0
  + xarray-einstats==0.11.0
  + zarr==3.4.0
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-02 elapsed
