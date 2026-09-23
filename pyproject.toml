@@ -1,0 +1,65 @@
+# Python toolchain for abs-umpires, frozen. SOP-final.md section 2.2 is the one
+# place these pins live; W1.4 transcribes them and adds nothing that is not a
+# build requirement. Every version below was the current PyPI release on
+# 2026-09-22 (SOP section 2.2, "Python pins").
+
+[project]
+name = "absump"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "httpx==0.28.1",          # the single shared client, per-request timeouts, HTTP/2
+  "tenacity==9.1.4",        # bounded retry on 5xx and timeouts; never retries a 4xx
+  "orjson==3.12.0",         # 10,000+ feeds; stdlib json is the bottleneck (5.4 ms per 781 KB feed)
+  "zstandard==0.25.0",      # raw on disk at ~10x; streaming decompress
+  "polars==1.44.2",
+  "pyarrow==25.0.1",        # exact match to R arrow 25.0.1: one Parquet dialect
+  "duckdb==1.5.5",          # pinned EXPLICITLY, see note below
+  "pandas>=2.3.3,<3.0",     # pandas 3.0 is a breaking release; used only at seams
+  "numpy==2.5.3", "scipy==1.18.1",
+  "numba==0.67.0",          # the dp_fast twin
+  "scikit-learn==1.9.1", "lightgbm==4.7.0", "statsmodels==0.15.0",
+  "matplotlib==3.11.2", "joblib==1.6.0",
+  "dbt-core==1.12.5", "dbt-duckdb[md]==1.11.0",
+  "typer==0.27.2", "tqdm==4.70.1", "python-dotenv==1.2.3",
+  "pandera[polars]==0.33.1", "jsonschema==4.26.0",
+  "pypdf==6.1.3",           # W7.22 page-count gate; a real reader, not a /Count regex
+]
+
+# duckdb is pinned explicitly even though dbt-duckdb[md] 1.11.0 also pins 1.5.5:
+# dbt-duckdb declares duckdb>=1.0.0 and only the md extra narrows it, so a routine
+# `uv lock --upgrade` could otherwise move the Python duckdb off 1.5.5 while the
+# duckdb CLI stays at 1.5.5, and the two then write incompatible database files.
+# `uv lock --check` does not catch that. SOP section 2.2, version-contradiction table.
+
+[dependency-groups]
+dev = ["pytest==9.1.1","pytest-xdist==3.8.0","pytest-cov==7.1.0",
+       "hypothesis==6.168.0","ruff==0.16.8","pre-commit==4.6.2",
+       "b2==5.0.0","ipykernel==7.3.0"]
+bayes-fallback = ["pymc==6.3.2","nutpie==0.16.11","arviz==1.3.0"]
+
+[project.scripts]
+absump = "absump.cli:app"
+
+[tool.uv]
+# bayes-fallback is optional and is not synced by default: it costs ~600 MB and
+# chapter 2 falls back to PyMC only if brms fails after reparameterisation.
+# W1.4's own install command is `uv sync --all-groups`, which opts into it once.
+default-groups = ["dev"]
+
+[build-system]
+requires = ["hatchling==1.32.4"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/absump"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+[tool.ruff.lint]
+select = ["E","F","I","UP","B","SIM","PD","NPY","RUF"]
+[tool.pytest.ini_options]
+addopts = "-q --strict-markers"
+markers = ["network: hits a live endpoint; excluded in CI"]
+testpaths = ["tests"]

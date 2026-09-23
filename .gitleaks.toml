@@ -1,0 +1,37 @@
+# gitleaks configuration for abs-umpires, pinned to gitleaks 8.30.1 (SOP W1.12).
+#
+# Two callers use it: the pre-commit hook (W1.13) and the CI secrets job
+# (W1.16). Both run the same command over full history:
+#
+#     gitleaks detect --redact --no-banner
+#
+# The repository is public from commit 1 (D-02), so a key that reaches a push is
+# public from that moment. This config extends the upstream ruleset instead of
+# replacing it: useDefault keeps every rule gitleaks ships with, and the one
+# rule below adds the provider the upstream set does not cover.
+
+title = "abs-umpires"
+
+[extend]
+useDefault = true
+
+# Backblaze B2 application key IDs are absent from the upstream ruleset. A key
+# ID is the literal "00" followed by lowercase hex. SOP W1.12 names the pattern
+# 00[0-9a-f]{22}. The word boundary on each side is the only addition, and it is
+# there for one reason: a 40-character git commit SHA beginning "00" contains a
+# substring matching the bare pattern. About one commit in 256 starts that way,
+# and every fit receipt under out/ carries a git_sha (GD-01, GD-02), so the
+# unbounded form would eventually fail the CI secrets job on an ordinary commit.
+# A real key ID appears as a standalone token, so the boundaries cost nothing.
+[[rules]]
+id = "backblaze-b2-key-id"
+description = "Backblaze B2 application key ID"
+regex = '''\b00[0-9a-f]{22}\b'''
+
+# .env.example is the committed template. It holds names, one bucket name and
+# comments, never a value, so it is allowlisted by path (SOP W1.12). The
+# allowlist names that one file and nothing else. It deliberately does not cover
+# .env, which is gitignored and must never reach a scan at all.
+[[allowlists]]
+description = "the committed environment template"
+paths = ['''(^|/)\.env\.example$''']
