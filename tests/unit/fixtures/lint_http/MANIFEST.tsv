@@ -1,0 +1,40 @@
+# relpath	line	rule	note  -- every row must be flagged by ops/lint_http.sh
+src/absump/ingest/b01_subprocess_curl.py	2	PY-SHELLOUT	argv curl, no trailing space
+src/absump/ingest/b02_os_system_wget.py	2	PY-SHELLOUT	wget via os.system
+src/absump/ingest/b03_polars_url.py	2	PY-FETCHLIB	polars fetches for you
+src/absump/ingest/b04_duckdb_httpfs.py	2	PY-FETCHLIB	duckdb httpfs
+src/absump/ingest/b05_pandas_read_json.py	2	PY-FETCHLIB	pandas fetches for you
+src/absump/ingest/b06_httpx_post.py	2	PY-HTTPX	post, not get
+src/absump/ingest/b07_httpx_from_import.py	2	PY-HTTPX	httpx. never appears
+src/absump/ingest/b08_requests_from_import.py	2	PY-REQUESTS	requests. never appears
+src/absump/ingest/b09_http_client.py	2	PY-HTTPCLIENT	stdlib connection
+src/absump/ingest/b10_aiohttp.py	2	PY-AIOHTTP	async client
+src/absump/ingest/b11_pyarrow_fs.py	2	PY-FETCHLIB	pyarrow filesystem
+src/absump/ingest/b12_raw_socket.py	2	PY-SOCKET	raw socket
+src/absump/ch3/b39_urlopen.py	2	PY-URLLIB	urlopen import
+R/ch1/b13_download_file.R	2	R-DOWNLOAD	download.file
+R/ch1/b14_bare_request.R	2	R-HTTR2	bare request()
+R/ch2/b15_jsonlite.R	2	R-FETCHLIB	jsonlite fetches
+R/ch2/b16_read_csv_url.R	2	R-URLCONN	url() connection
+R/ch2/b33_system_curl.R	2	R-SYSTEM	system() shell-out
+R/ch3/b17_httr_get.R	2	R-HTTR	httr
+R/ch3/b18_baseballr.R	2	R-BASEBALLR	baseballr fetches
+R/p8/b19_arrow_url.R	2	R-FETCHLIB	arrow fetches
+R/p8/b20_system2_curl.R	2	R-SYSTEM	argv vector curl
+R/ch1/b38_readlines_url.R	2	R-READLINES	readLines on a url
+R/lib/b21_dbi_httpfs.R	2	ANY-URLREAD	httpfs from R
+R/ch1/b30_httr2_ns.R	2	R-HTTR2	control: caught before
+ops/b22_curl_pull.sh	2	SH-CURL	ops was never scanned
+ops/b31_python_c.sh	2	SH-PYTHON-C	python -c one-liner
+ops/b35_userinfo.sh	2	ANY-USERINFO	credential in URL
+scripts/b23_curl_pull.sh	2	SH-CURL	scripts was never scanned
+scripts/b32_rscript_e.sh	2	R-RSCRIPT	Rscript -e one-liner
+scripts/b34_odds_key.sh	5	ANY-ODDSKEY	api key in URL
+scripts/b37_wget.sh	2	SH-WGET	wget
+app/b24_httpx_get.py	2	PY-HTTPX	app was never scanned
+sql/b25_httpfs_url.sql	2	ANY-URLREAD	sql was never scanned
+dbt/models/marts/b26_url_source.sql	2	ANY-URLREAD	dbt was never scanned
+tests/b27_httpx_probe.py	2	PY-HTTPX	tests was never scanned
+tools/b28_requests_get.py	2	PY-REQUESTS	control: caught before
+notebooks/b29_urllib.py	2	PY-URLLIB	control: caught before
+Makefile	2	SH-CURL	the Makefile was never scanned
