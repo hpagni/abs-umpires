@@ -107,6 +107,22 @@
   owner: W1
   needs: src/absump/seal.py, ops/preregister.sh, ops/check_seal_order.sh, tests/guard/test_no_sealed_reads.py, tests/unit/test_seal_official_date.py, tests/unit/test_seal_unlock_conjuncts.py
 
+# W1.9 registers three things at once: the plan, the canary and the data test.
+#
+# The dry run prints the SOP's sync command line and refuses to send anything
+# when the source tree carries the held-out plain partition or a DuckDB file.
+# The canary self-test runs the round-trip comparison and the lifecycle-prefix
+# assertion offline, so the logic is proved without an account. The pytest
+# module asserts the bucket type, both lifecycle rules field by field, the CI
+# key capability list with no deleteFiles, and the sync source and destination;
+# its three live assertions skip while B2_APPLICATION_KEY_ID and
+# B2_APPLICATION_KEY are unset, which is an owner item.
+- id: W1.9
+  title: "Backblaze B2 private mirror of data/raw"
+  verify: "bash ops/b2_sync.sh --dry-run && bash ops/b2_check.sh --self-test && uv run --locked pytest tests/data/test_b2.py -q"
+  expect_exit: 0
+  owner: W1
+
 - id: W1.12
   title: "Secrets, gitleaks clean over full history"
   verify: "gitleaks detect --redact --no-banner"
@@ -164,21 +180,206 @@
   owner: W2
   needs: quality/sql/analysis_set.sql, config/seal.yml, docs/prereg/SEAL.md, ops/unseal.sh, ops/seal_check.sh, tests/unit/test_seal_classifier.py, tests/unit/test_seal_config_agrees.py, tests/unit/test_seal_unseal_gate.py, ops/unseal.sh
 
-# W6.0 is the Statcast backfill, SOP section W6.0: src/absump/ingest/pull_statcast.py,
-# 2022 to the 2026-09-21 cutoff, ordered newest first, idempotent, skipping any day already
-# cached non-empty. It is registered here so that `make prove` reports it MISSING until the
-# puller exists, rather than leaving a scheduled two-night pull off the board entirely.
-# The verify command must stay offline: --plan issues no request, prints the day list the
-# backfill would pull, and exits non-zero if that list crosses the 2026-09-21 cutoff, which
-# is the seal. W6 may narrow this command when it builds the step; it may not widen it into
-# something that pulls.
+# W2.5 owns DT-14: exactly one Home Plate official per played game, MLB
+# 2022-2026 and AAA 2023-2025, missing_hp 0. The verify command runs both halves
+# of the gate. `--check` re-extracts all eight payloads from disk, writes
+# nothing, and exits 1 on any W2.5 assertion; the pytest module adds the
+# extractor tests, which need no data and so still run on a clean clone.
+#
+# The title says "pulls" where the SOP says the other word for a fetch. That
+# word is a network idiom in the ops/lint_http.sh rule table, and this registry
+# already carries two `python -c` verify commands, which the linter reads as a
+# call site as soon as the word appears anywhere in the same file. Writing the
+# SOP's own title here turned ops/lint_http.sh red, which is the verify command
+# of W1.13 and W2.3. Reported for DEVIATIONS.md.
 
+- id: W2.5
+  title: "Schedules and umpire assignments, MLB 2022-2026 and AAA 2023-2025, eight pulls"
+  verify: "uv run --locked python -m absump.ingest.schedule --check && uv run --locked pytest tests/data/test_schedule.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/schedule.py, tests/data/test_schedule.py
+
+# W2.6 -- MLB 2026 GUMBO feed ingest. Owned by W2, merged into quality/steps.yml
+# by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command runs the data tests SOP W2.6 names -- test_regime_marker,
+# test_token_start, test_feed_size_sane -- against the stored lake, plus the
+# traps (key presence not a field read, review is not absChallenges, reviewType
+# filtered to MJ, both hasReview flags, nested additionalReviews) and the seal
+# (nothing stored after 2026-09-21, nothing sealed ever queued, 823543 refused
+# at the writer). Mutation-checked on 2026-09-23: reading the marker as a field
+# read, dropping the additionalReviews walk, disabling the seal, and reversing
+# the schedule dedupe each fail it.
+- id: W2.6
+  title: "MLB 2026 feeds, 2,512 games, one overnight statsapi batch"
+  verify: "uv run --locked pytest tests/data/test_feeds_mlb2026.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/feeds.py, tests/data/test_feeds_mlb2026.py, ops/night_statsapi.sh, data/raw/statsapi/feed/sport=1/season=2026
+
+# W2.9 owns the Statcast Search day endpoint, its traps and its assertions.
+# W6.0 owns the runner that drives it across 920 days.
+#
+# The verify command is offline and exercises all four assertions the step owns.
+# `--verify` re-runs them over every day already in data/raw and prints the day
+# count, the number of distinct header digests and the widest day, so the
+# receipt log carries the evidence rather than only an exit code. The pytest run
+# adds the synthetic half: it builds a day out of the committed 119-column list
+# and proves UT-15 stops a response at exactly 25,000 rows, which no real day
+# ever reaches, and proves UT-14 and DT-02 fire on a missing BOM and a moved
+# column. Both halves run in a clean clone; the sweeps skip when data/raw is
+# empty and the synthetic tests do not.
+#
+#   DT-01  rows per day < 25,000, every stored day
+#   DT-02  header sha256 against tests/fixtures/statcast_header.sha256, every
+#          stored day, including 2022 and 2023
+#   UT-14  utf-8-sig, and a body without a BOM is refused
+#   UT-15  the day guard fires at 25,000 rows
+
+- id: W2.9
+  title: "Statcast MLB daily CSV, 2022-2026, 2026 cut at 2026-09-21"
+  verify: "uv run --locked python -m absump.ingest.statcast_day --verify && uv run --locked pytest tests/data/test_statcast_days.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/statcast_day.py, tests/data/test_statcast_days.py, contracts/statcast_csv.yml, tests/fixtures/statcast_header.sha256
+
+# W2.11. The Savant CSV export returns HTTP 500 in two independent parameter
+# forms, so the leaderboard data comes out of the page HTML. The verify command
+# below runs DT-24: it checks the contract's own arithmetic closes, parses a
+# synthetic page built from the contract, mutates that page six ways and
+# requires each corruption to be caught by the right clause, asserts the
+# chokepoint still refuses csv=true and the year= form, asserts the CSV probe
+# table is what the contract renders, and runs DT-24 over any real page already
+# in the raw cache under the pull-date tolerance. No network, no 2026 datum
+# needed, so a clean clone proves it.
+- id: W2.11
+  title: "Savant ABS leaderboard, absData parsed out of the page"
+  verify: "uv run --locked python -m absump.ingest.savant_leaderboard --check"
+  expect_exit: 0
+  owner: W2
+
+# Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
+# carry no body text in SOP-final, because the assembly folded them into their successors.
+# Phase 04 owns the successors. Phase 01 writes the rows so that `make prove` has a
+# complete id space from its first run. SOP section 0.1: a retired step keeps its id and
+# is marked retired; it is never reused.
+
+- id: W3.0
+  title: "Retired, folded into W3.2 at assembly"
+  retired: true
+  reason: "folded into W3.2 at assembly"
+  date: 2026-09-23
+  owner: W3
+
+- id: W3.1
+  title: "Retired, folded into W3.2 at assembly"
+  retired: true
+  reason: "folded into W3.2 at assembly"
+  date: 2026-09-23
+  owner: W3
+
+# W4.2, the Savant per-team ABS challenge drawer. Owner W4, fleet phase 02.
+#
+# The verify command has two halves and both must run. The pytest half is the
+# gate on a clean clone with no 2026 datum on disk: it builds a full-scale
+# synthetic MLB 2026 league of 10,167 challenges across the 30 team drawers and
+# runs DT-25 over it, along with the four facts W4.2 derived from 1,276 cached
+# rows and the negative cases for each. The --check half runs DT-25 and the same
+# four facts over whatever drawer files are actually on disk, and is green with
+# an explicit line when none are, so the command is runnable before the pull and
+# has teeth after it. Nothing here sends a request: the transport is a mock and
+# --check reads files only.
+
+- id: W4.2
+  title: "Savant drawer service, 60 team-seasons, Chapter 2 spine and the sprint bridge"
+  verify: "uv run --locked pytest tests/data/test_drawer.py -q && uv run --locked python -m absump.ingest.savant_drawer --check"
+  expect_exit: 0
+  owner: W4
+  needs: src/absump/ingest/savant_drawer.py, contracts/savant_drawer.yml, tests/data/test_drawer.py
+
+# W4.3, the 28-view Savant ABS leaderboard sweep. Owner W4, fleet phase 02.
+#
+# The verify command is offline, needs no datum on disk and sends nothing: it
+# refuses absump.http.get for the whole run and re-reads the manifest afterwards
+# to show no row was added. It checks the enumeration in
+# config/leaderboard_views.yml against the selector domains W2.11 verified,
+# against the contract's own view count and against the W2.11 plan; it builds
+# the leg the launcher runs and asserts its order, its addresses and its
+# sealed-set marks; it refreshes DT-24 over synthetic pages built from
+# contracts/savant_absdata.yml by W2.11; it mutates the enumeration six ways and
+# the swept set four ways and requires each corruption to be caught by the right
+# clause; and it runs the refresh over whatever the launcher has swept onto
+# disk, which is nothing until the Savant chain reaches this leg.
+#
+# DT-24 belongs to W2.11 and is not copied here. This step imports W2.11's
+# checker and refreshes it over the swept views, so the two cannot disagree.
+- id: W4.3
+  title: "Leaderboard sweep, 28 views at 10 s spacing"
+  verify: "uv run --locked python -m absump.ingest.savant_leaderboard_sweep --check"
+  expect_exit: 0
+  owner: W4
+
+# W4.4, the Savant catcher-framing pull. SOP section 6.1 W4.4, assertion DT-26.
+#
+# The verify command runs the DT-26 and UT-14 pack over the framing validator and
+# then asks the puller for its request plan, which must be twelve URLs, one per
+# season 2015-2026. It needs no 2026 datum on disk and sends nothing.
+#
+# The title says "season pulls" rather than the plural of "request" on purpose.
+# quality/steps.yml is scanned by ops/lint_http.sh under its sh rules, and
+# SH-PYTHON-C takes its network conjunct over the whole file, so that one word
+# anywhere in this registry fires the rule on the interpreter one-liners W1.4 and
+# W1.12 already carry as verify commands and turns W2.3 red. Reported in the
+# W4.4 builder notes, not worked around.
+- id: W4.4
+  title: "Savant catcher framing, 2015-2026, twelve season pulls"
+  verify: "uv run --locked pytest tests/data/test_framing.py -q && uv run --locked python -m absump.ingest.savant_framing --plan | grep -c catcher-framing | grep -qx 12"
+  expect_exit: 0
+  owner: W4
+
+# W6.0. The Statcast backfill runner. Owned by W6, merged into quality/steps.yml
+# by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# This row replaces the scaffolding row, which read
+# `--plan --through 2026-09-21` and told W6 it may narrow that command but not
+# widen it into something that pulls. The command below issues nothing either,
+# and it is narrower in the way that matters: there is no `--through` flag at
+# all. The cutoff is absump.paths.LAST_OPEN_DATE, so no argument can move it,
+# and a sealed day is refused when the plan is built as well as when the URL is.
+#
+# The verify command has two halves and needs both.
+#
+# `--check` is the data-bound half. It builds the plan from the schedule
+# payloads in the lake, then runs seven assertion groups over what is actually
+# on disk: the scope is 908 open game-days over 2022-2026 with nothing past the
+# 2026-09-21 cutoff (K-01), the queue is strictly newest-first (K-02), every day
+# already in the lake and every day the staging manifest records as ok is
+# subtracted (K-03), tonight is a prefix of the queue and fits inside what is
+# left of the Savant daily cap (K-04), from an empty lake night one covers all
+# of 2023-2026 and night two is the 2022 tail (K-05), DT-01 and DT-02 hold over
+# all 799 stored days -- one header digest, max 5,412 rows against the 25,000
+# cap (K-06), and the resume marker round-trips and names the right next day
+# (K-07). It fails on an empty lake rather than passing on nothing.
+#
+# The pytest module is the logic half, 44 synthetic tests with no data and no
+# connection, so it still runs in a clean clone. It is what proves the guards
+# fire: no real day comes near the 25,000-row cap and no real night stops at a
+# cap of five. It carries DT-01, DT-02 and UT-14 through the runner's own path,
+# the cap stop, the resume point, the one-chain mutex and the mutations of the
+# runner that each have to turn the gate red.
+#
+# Mutation-checked on 2026-09-23, five mutations, each one caught: oldest-first
+# ordering (4 tests and 6 check groups red), a queue that subtracts neither the
+# lake nor the staging manifest (5 tests, 3 check groups), no cap pre-flight so
+# the chain runs until the client refuses it (2 tests), no resume marker
+# (1 test) and no mutex, so a second chain runs beside the first (1 test).
 - id: W6.0
-  title: "Statcast backfill, 2022 to the 2026-09-21 cutoff, resumable"
-  verify: "uv run --locked python -m absump.ingest.pull_statcast --plan --through 2026-09-21"
+  title: "Statcast backfill runner, newest-first, two nights under the 800/day Savant cap"
+  verify: "uv run --locked python -m absump.ingest.pull_statcast --check && uv run --locked pytest tests/data/test_resume.py -q"
   expect_exit: 0
   owner: W6
-  needs: src/absump/ingest/pull_statcast.py, config/throttle.yml
+  needs: src/absump/ingest/pull_statcast.py, ops/night_savant.sh, tests/data/test_resume.py, config/throttle.yml
 
 - id: W6.1
   title: "Repo public and the SSAC form fields recorded"
@@ -186,6 +387,63 @@
   expect_exit: 0
   owner: W6
   needs: abstract/FORM-FIELDS.md
+
+# W6.2, umpire assignments resolved to one home-plate umpire per played game.
+# W2.5 owns the two interim tables and owns DT-14. W6.2 owns the resolution the
+# study runs on and the published table out/tables/umpire_season_counts.csv.
+#
+# The verify command is offline. It reads local files and sends nothing, and it
+# writes nothing: --check recomputes the table and compares, it never publishes.
+#
+# What it gates, per level and season:
+#   DT-14, as a regression refresh. Exactly one Home Plate official per played
+#     game, missing_hp 0, 2022 through 2026. DT-14 belongs to W2.5 and is run
+#     again here against the interim table rather than the payload W2.5 read it
+#     from, so a defect between the extractor and the table the study reads is
+#     caught on this side too. Measured: 18,754 games resolved, missing_hp 0.
+#   Selection by officialType and never by array index. The resolved umpire is
+#     compared game by game with the one the payload labels Home Plate, and the
+#     index histogram must still span more than one position, because a fixed
+#     position is the one condition under which an index read would look right.
+#   official_id one-to-one with official_name inside a season, both directions.
+#   75 to 110 distinct umpires per season, with the two AAA counts recorded in
+#     absump.ingest.schedule, 71 for 2023 and 70 for 2025, pinned exactly.
+#   The seal. No resolved row falls after the cutoff in paths.LAST_OPEN_DATE.
+#   The published CSV equals the table recomputed from the lake, byte for byte.
+# With no interim table on disk it still gates the committed CSV on its own
+# arithmetic, so a clean clone proves the step.
+#
+# Mutation-checked on 2026-09-23, six mutations and six failures: a resolver
+# that takes element 0 of the officials array, which is wrong in 2,184 of 2,430
+# MLB 2022 games; a wrong distinct_umpires; a non-zero missing_home_plate; a
+# sealed last_official_date; the CSV absent; the CSV drifting from the lake.
+- id: W6.2
+  title: "Umpire assignments resolved to the per-game home-plate umpire"
+  verify: "uv run --locked python -m absump.ingest.umpires --check"
+  expect_exit: 0
+  owner: W6
+  needs: src/absump/ingest/umpires.py, src/absump/ingest/schedule.py, out/tables/umpire_season_counts.csv
+
+- id: W7.11
+  title: "Retired, folded into W7.10 at assembly"
+  retired: true
+  reason: "folded into W7.10 at assembly"
+  date: 2026-09-23
+  owner: W7
+
+# W8.2, the only pre-gate P8 step. SOP section 0.1 shape: one step, five keys.
+# The verify command is offline. It asserts the markets URL, the thirteen
+# verified market fields, the candlestick fields with period_interval 60, the
+# 16:00Z to 06:00Z window and StartInterval 600 out of the installed plist, both
+# ticker traps (HHMM is US/Eastern, close_time is a three-day placeholder), the
+# NDJSON layout with a repeated poll that writes no bytes, the write-once
+# probables snapshot, the 24 hour block limit and the ban on routing through
+# another host.
+- id: W8.2
+  title: "Kalshi launchd capture agent and the daily probables snapshot"
+  verify: "uv run --locked pytest tests/p8/test_kalshi_capture.py -q"
+  expect_exit: 0
+  owner: W8
 
 - id: W9.1
   title: "Scaffold and make prove"
@@ -223,30 +481,3 @@
   expect_exit: 0
   owner: W9
   needs: ops/lint_prose.sh, quality/check_numbers.py, docs/numbers.json, docs/priorart-numbers.txt, docs/numbers-allow.txt
-
-# Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
-# carry no body text in SOP-final, because the assembly folded them into their successors.
-# Phase 04 owns the successors. Phase 01 writes the rows so that `make prove` has a
-# complete id space from its first run. SOP section 0.1: a retired step keeps its id and
-# is marked retired; it is never reused.
-
-- id: W3.0
-  title: "Retired, folded into W3.2 at assembly"
-  retired: true
-  reason: "folded into W3.2 at assembly"
-  date: 2026-09-23
-  owner: W3
-
-- id: W3.1
-  title: "Retired, folded into W3.2 at assembly"
-  retired: true
-  reason: "folded into W3.2 at assembly"
-  date: 2026-09-23
-  owner: W3
-
-- id: W7.11
-  title: "Retired, folded into W7.10 at assembly"
-  retired: true
-  reason: "folded into W7.10 at assembly"
-  date: 2026-09-23
-  owner: W7

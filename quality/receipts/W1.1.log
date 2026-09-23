@@ -1,4 +1,4 @@
-ok    disk: 48.7 GiB free on /System/Volumes/Data (floor 15 GiB)
+ok    disk: 47.9 GiB free on /System/Volumes/Data (floor 15 GiB)
 ok    path: uv -> /Users/hudsonpagni/.local/bin/uv
 ok    path: R -> /usr/local/bin/R
 ok    path: Rscript -> /usr/local/bin/Rscript
