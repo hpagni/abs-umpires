@@ -1457,3 +1457,86 @@ from a static season, 2015-2025, and never from 2026.
 
 - Owner sign-off, phase 03 decisions: **not given**. Recorded 2026-09-24 by the agent that
   applied the defaults above. Each entry names what would reverse it.
+
+## Owner R0 answers, 2026-09-24 (Madrid) — binding, taken before the prereg-v1 tag
+
+Hudson Pagni answered the three R0 questions himself on 2026-09-24 (Europe/Madrid). Every
+entry below is **the owner's own answer**, not an agent default and not a recommended
+default awaiting sign-off. Two of the three had been argued both ways by agents, and SOP
+section 9.6 item 12 makes the owner's answer a condition of done, so the answers are
+recorded here before the tag rather than inferred after it.
+
+### D-R0-01 OWNER ANSWER, D-12: AAA carries two challenge tokens, and the chapter-3 DP is 3x3
+
+Owner: Hudson Pagni, 2026-09-24. Status: **binding owner answer**, applied. This is the
+owner speaking, not an applied default.
+
+**The answer: two tokens for AAA, a 3x3 solve.** It supersedes both prior agent positions
+and closes the conflict between them. The 2026-09-22 D-12 entry said two tokens and 3x3,
+from a 12-team-game sample. The 2026-09-24 phase-03 entry D-P3-06 reversed that to three
+tokens and 4x4, from a 712-team-game partial-2024 measurement. Both lines are superseded by
+this one.
+
+What was traded, written honestly so a later reader can see it. The evidence for three was
+the larger of the two samples, 712 AAA 2024 team-games against 12, and its mode was 3 with
+21 team-games audited otherwise. The SOP's own R2 position also pointed to three. The
+evidence for two was the earlier sample, which was drawn entirely after the mid-season
+changeover, and the owner's reading of the rule the chapter is about. The owner chose two.
+The consequence is that chapter 3's AAA arm is solved 3x3, three home token states by three
+away token states, and so matches the MLB dimension rather than standing a state wider.
+Every chapter-3 table, figure and timing estimate keyed on the AAA state space is sized
+from 3x3 from here.
+
+If the full AAA 2024-2025 feed corpus is later pulled and contradicts this answer, that
+becomes a DEVIATIONS entry with the measurement in it. It does not become a silent
+re-reversal. The audit table `out/tables/aaa_allotment_audit.csv` stays where it is, and a
+second mode concentrated before the D-57 changeover would still mean the season carries two
+rule versions.
+
+The settled MLB fact recorded beside it, unchanged by this answer: 4,684 MLB 2026
+team-games, 99.1% of them starting with 2 tokens and 0.8% showing a third. Every one of the
+third-token games goes to extra innings, which is the published rule. Per the earlier
+applied default D-P3-07, that extra-inning token is modelled in the dynamic program and
+stated in the pre-registration.
+
+### D-R0-02 OWNER ANSWER, D-13: roster height plus offset is primary, ABS-measured is a pre-registered robustness arm
+
+Owner: Hudson Pagni, 2026-09-24. Status: **binding owner answer**, applied. This is the
+owner speaking, not an applied default.
+
+**The answer: roster height plus the measured offset is the primary batter-height cohort
+for all seasons, and the ABS-measured cohort is a pre-registered robustness arm.** Both
+cohorts are named in the pre-registration, and the arm is declared before the tag rather
+than chosen after a result.
+
+The coverage that drove it, ABS-measured batter-seasons against all batter-seasons, read
+from `data/interim/dim_batter_season` and verified against the warehouse dimension on
+2026-09-24: 2022 303 of 693, 43.7%; 2023 371 of 656, 56.6%; 2024 447 of 651, 68.7%; 2025
+533 of 673, 79.2%; 2026 658 of 662, 99.4%. Roster height plus the offset covers 100% of
+every one of those seasons.
+
+The calibration, from `data/interim/dim_batter_season/calibration.json` over the 658 batters
+who carry both heights: offset 0.0022 in, standard deviation 0.2909 in. At the 53.5%
+fraction that sets the zone top, that standard deviation propagates to roughly 0.08 in of
+zone-top error.
+
+The reason in one sentence: full coverage with small unbiased noise beats an exact
+measurement available for only 43.7% of the 2022 batters, because that 43.7% is the
+survivorship-biased subset still active in 2026.
+
+What would reverse it: a measured offset that is not small or not unbiased in a season
+other than 2026, which would make the primary cohort carry a systematic error rather than
+noise.
+
+### D-R0-03 OWNER ANSWER, R0 review: the prereg-v1 tag is pushed on green gates, with no prior read
+
+Owner: Hudson Pagni, 2026-09-24. Status: **binding owner answer**, applied. This is the
+owner speaking, not an applied default.
+
+**The answer: push the prereg-v1 tag once the gates are green, without a prior read of the
+estimands.** The owner was offered a pre-tag read of the estimands and declined it. He was
+told that any change made after the tag becomes a logged deviation rather than an edit, and
+he accepted that.
+
+This closes the R0 owner-review item that phase 04 raised as a condition of the M1 ceremony.
+No further owner read is outstanding before the tag.

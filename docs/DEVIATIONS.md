@@ -833,3 +833,62 @@ from, and the full-corpus measurement is recorded beside them in a comment.
 
 What would reopen it: a re-pull of the drawer in which either play reproduces, which would make
 this a defect of our read rather than of the service.
+
+## DEV-42 -- UT-11 and DT-11: the `t` band is stated over pitches at 70 mph or more, and the population below that floor is counted rather than dropped
+
+Raised 2026-09-24 (Europe/Madrid) by the W3.3 fix agent. Status: CLOSED by this entry.
+Merged from `logs/decisions-pending/ut11-band.md`.
+
+What the SOP said. SOP-final section 5A.A1, section 3 (W3.3) and section 6.2 stated UT-11's
+clause as `t in (0.30, 0.60)` s at both `y = 17/12` and `y = 8.5/12`, with no speed
+qualifier. Section 6.3 stated DT-11 as 0 pitches with `t >= 0.60 s` in the analysis sample
+after W3.7 excludes position-player pitching.
+
+What the data does. Over the W3.3 sample of 39,272 pitches, five 2026 days and one day per
+prior season, the 39,149 pitches at 70 mph or more all fall inside the band, range 0.3332 to
+0.5126 s. 123 pitches, 0.313%, are under 70 mph. The slowest is 69.9 mph and the largest `t`
+is 1.1312 s, which is outside (0.30, 0.60).
+
+Those 123 are real pitches, not defects: eephus pitches and position players pitching. A
+50 mph lob genuinely takes longer than 0.60 s to cover 60 feet, and the geometry is not
+wrong for them. Every other UT-11 clause holds over all 39,272 with no filter. The closed
+form matches a brute-force smallest-positive-root solve to 8.882e-16 s, `t_mid > t_front` is
+violated by 0 of 39,272, and `dz < 0` where the vertical velocity at the plate is negative
+is violated by 0 of 39,271. The architect had already written the same finding on DT-11:
+the physics is correct, and the threshold is what is wrong.
+
+What was changed. The band is a sanity check on the kinematics, not a claim about baseball,
+so it is now stated over the one population it is meaningful for. The excluded population is
+named and counted rather than silently dropped.
+
+1. The SOP clause text, `sop/SOP-final.md` (sections 5A.A1, 3/W3.3, 6.2, and the R-43 row's
+   neighbours) and `sop/SOP-final-part1.md`, now states the band over pitches with
+   `release_speed >= 70` mph, the competitive-speed population. Pitches below that floor,
+   eephus and position players pitching, 123 of 39,272 in the W3.3 sample, are outside the
+   clause's population. The clause text says they are counted and named by the test, not
+   dropped in silence, and that they stay under `t_mid > t_front` and `dz < 0`, which are
+   asserted at every speed.
+2. DT-11, SOP section 6.3, same defect and same fix. Its clause now reads 0 pitches with
+   `t >= 0.60 s` among pitches at `release_speed >= 70` mph in the analysis sample after
+   W3.7 excludes position-player pitching. That is the same explicit population as UT-11's
+   band. Pitches below 70 mph are counted and reported, never silently excluded.
+3. `tests/ch1/test_zone.R`: the assertion's printed label now carries the population, and
+   the two clauses that carry no filter say so in their detail. A RECORD line prints the
+   excluded population on every run, with the count, the share, the slowest speed and the
+   largest `t`. A header block and a comment above the clause state the same in prose.
+
+The band was **not** widened. Widening (0.30, 0.60) to swallow a 1.1312 s pitch would have
+destroyed what the clause exists for, which is catching the larger quadratic root. That
+root's smallest value in this sample is 7.0596 s, risk R-43.
+
+What is not changed. The historical drafts `sop/SOP-part1-draft.md` and
+`sop/SOP-part2-revision-R2.md` still carry the old wording. They are the record of what was
+proposed rather than the binding text, and were left alone deliberately. Nothing about the
+geometry changed: round trip max absolute delta 8.882e-16 ft, the Python twin agrees to
+0.000e+00 ft over 100,000 rows, and the golden file to 1.492e-13.
+
+What would reopen it: a pitch at 70 mph or more that falls outside the band, which would
+make the floor a wrong cut rather than a population statement.
+
+Evidence: `logs/evidence/W3.3.log`, the gate transcript that raised it, and
+`logs/evidence/W3.3-fix.log`, this fix.
