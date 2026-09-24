@@ -1,0 +1,48 @@
+uv run --locked pytest tests/data -q
+....................sss................................................. [ 18%]
+.............s..........................................s............... [ 36%]
+..................s..s................s......F...F...................... [ 55%]
+..................................s..................................... [ 73%]
+........................................................................ [ 92%]
+...........................s.s.                                          [100%]
+=================================== FAILURES ===================================
+_______________________ test_every_source_day_has_a_part _______________________
+
+    def test_every_source_day_has_a_part() -> None:
+        """One Parquet part per raw day, for every season the lake holds."""
+        seen = 0
+        for season in range(2015, 2027):
+            days = nz.day_files("mlb", season)
+            if not days:
+                continue
+            seen += len(days)
+            missing = [
+                day.isoformat() for day, _ in days if not nz.out_path("mlb", season, day).exists()
+            ]
+>           assert not missing, f"{season}: {len(missing)} days not converted, first {missing[0]}"
+E           AssertionError: 2022: 53 days not converted, first 2022-08-14
+E           assert not ['2022-08-14', '2022-08-15', '2022-08-16', '2022-08-17', '2022-08-18', '2022-08-19', ...]
+
+tests/data/test_normalize.py:699: AssertionError
+____________________ test_check_passes_on_the_built_corpus _____________________
+
+capsys = <_pytest.capture.CaptureFixture object at 0x1105af1a0>
+
+    def test_check_passes_on_the_built_corpus(capsys: Any) -> None:
+        """`--check` is the command line form of the clauses above."""
+        seasons = [season for season in range(2015, 2027) if nz.day_files("mlb", season)]
+        if not seasons:
+            pytest.skip("no raw Statcast days on this machine")
+>       assert nz.check(levels=("mlb",), seasons=seasons) == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = <function check at 0x10974e3e0>(levels=('mlb',), seasons=[2022, 2023, 2024, 2025, 2026])
+E        +    where <function check at 0x10974e3e0> = nz.check
+
+tests/data/test_normalize.py:763: AssertionError
+----------------------------- Captured stdout call -----------------------------
+W2.14 check: mlb 2022: 53 days not converted, first 2022-08-14
+W2.14 check: mlb 2022: summary records 69 days, disk holds 122
+=========================== short test summary info ============================
+FAILED tests/data/test_normalize.py::test_every_source_day_has_a_part - Asser...
+FAILED tests/data/test_normalize.py::test_check_passes_on_the_built_corpus - ...
+make[1]: *** [test-data] Error 1
