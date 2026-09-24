@@ -46,6 +46,7 @@ EXPECTED_SCAN_DIRS = [
     "quality",
 ]
 EXPECTED_EXEMPT = (
+    "tests/unit/test_coverage_contract.py",
     "ops/lint_http.sh",
     "ops/ci-pending/",
     "ops/env-setup.sh",
@@ -146,6 +147,41 @@ def test_the_linter_scans_every_directory_that_holds_code() -> None:
     assert "src/absump/http\\.py" in text and "R/lib/http\\.R" in text
 
 
+def test_the_coverage_contract_exemption_stays_narrow() -> None:
+    """The one exempt file that is neither this linter nor planted material.
+
+    tests/unit/test_coverage_contract.py resolves the five SOP section 6.2
+    modules with importlib.import_module(module), which PY-DYNIMPORT reads as a
+    module named in a variable. The names come from SOP_MODULES, a literal
+    tuple pinned by that file's own first test, and all five are first-party
+    absump modules, so the call cannot name a transport. The exemption is by
+    path and therefore turns off all thirty-seven rules inside that file, so
+    this test keeps the hole the size of the one line that needs it: any other
+    request idiom appearing there fails here, where the linter no longer can.
+    """
+    text = (REPO_ROOT / "tests" / "unit" / "test_coverage_contract.py").read_text(encoding="utf-8")
+    for idiom in (
+        "requests",
+        "httpx",
+        "aiohttp",
+        "urllib",
+        "http.client",
+        "socket",
+        "subprocess",
+        "curl",
+        "wget",
+        "http://",
+        "https://",
+    ):
+        assert idiom not in text, (
+            f"tests/unit/test_coverage_contract.py now carries {idiom!r}; it is exempt "
+            "from ops/lint_http.sh, so the linter will not see it"
+        )
+    assert text.count("import_module") == 1, (
+        "the exemption covers one dynamic import, the coverage contract's own"
+    )
+
+
 def test_the_exemption_list_is_exactly_the_six_documented_paths() -> None:
     """Exemptions are how this guard is quietly disabled, so they are pinned."""
     text = LINT_HTTP.read_text(encoding="utf-8")
@@ -195,6 +231,45 @@ def test_a_receipt_log_does_not_trigger_the_linter_on_its_own_output(
     result = run_lint("-q", str(tmp_path))
     assert result.returncode == 0, (
         "the linter read a receipt log and failed on its own recorded output\n" + result.stderr
+    )
+
+
+def test_the_vendored_dbt_directories_are_not_scanned(tmp_path: Path) -> None:
+    """dbt/dbt_packages/ and dbt/logs/ are third-party output, not our code.
+
+    `dbt deps` downloads dbt_utils, dbt_date and dbt_expectations into
+    dbt/dbt_packages/, and dbt writes its own run log into dbt/logs/. Both are
+    in .gitignore, so neither is ever committed or reviewed here, and the
+    packages ship GitHub Actions workflows that carry curl lines. Scanning them
+    put four bypasses on the board that no commit of ours could clear and that
+    `dbt deps` would put back on any clean tree. This pins the exclusion the way
+    the receipt test above pins quality/receipts/: by planting the exact shape
+    and requiring the gate to stay green.
+    """
+    shutil.copytree(ALLOWED, tmp_path, dirs_exist_ok=True)
+    vendored = tmp_path / "dbt" / "dbt_packages" / "dbt_date" / ".github" / "workflows"
+    vendored.mkdir(parents=True)
+    (vendored / "ci.yml").write_text(
+        "      - run: curl -sf http://localhost:8123/ping >/dev/null\n", encoding="utf-8"
+    )
+    dbt_logs = tmp_path / "dbt" / "logs"
+    dbt_logs.mkdir(parents=True)
+    (dbt_logs / "dbt.log").write_text(RECORDED_FAILURE, encoding="utf-8")
+    result = run_lint("-q", str(tmp_path))
+    assert result.returncode == 0, (
+        "the linter read vendored dbt output and failed on third-party code\n" + result.stderr
+    )
+
+    # The exclusion is by directory name, so our own dbt code is still read.
+    ours = tmp_path / "dbt" / "models" / "marts"
+    ours.mkdir(parents=True)
+    (ours / "mart_smuggled.sql").write_text(
+        "-- select * from read_json_auto('https://statsapi.mlb.com/api/v1/schedule')\n",
+        encoding="utf-8",
+    )
+    still_scanned = run_lint("-q", str(tmp_path))
+    assert still_scanned.returncode == 1, (
+        "dbt/models is inside the scan set and must still be read:\n" + still_scanned.stdout
     )
 
 

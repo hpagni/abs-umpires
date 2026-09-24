@@ -45,15 +45,22 @@ from gd04_scan import (
     _VIEW,
     ALLOWLIST,
     EXCLUDED_PREFIXES,
+    EXEMPT_DIRS,
+    EXEMPT_MIN_REASON,
+    EXEMPT_NEVER,
     NON_CODE_SUFFIXES,
     REPO_ROOT,
     SCANNED_DIR_SKIPS,
     WALKED_ROOTS,
     Violation,
     boundary_date,
+    exemption_claim,
+    exemption_place_ok,
+    exemption_site_ok,
     is_excluded,
     is_scannable,
     on_analysis_surface,
+    read_scannable,
     scan_repository,
     scan_text,
     shipped_files,
@@ -102,11 +109,14 @@ def test_the_only_exclusions_are_transcripts() -> None:
 
     This is the self-poisoning fix, narrowed after the R2 red team. A receipt
     quotes the guard's failure text verbatim, so scanning receipts made every
-    red-team run write the file that turned the next run red. The skip is by
+    red-team run write the file that turned the next run red. dbt/logs/ is the
+    third directory on the same footing: dbt's own debug log echoes the SQL of
+    the build that just ran, so it quotes our compiled boundary comparison back
+    at the next run. The skip is by
     FORMAT and by mode: a `.sql` or a `.sh` under either prefix is scanned, and
     so is an executable whatever its suffix.
     """
-    assert set(EXCLUDED_PREFIXES) == {"quality/receipts/", "logs/"}
+    assert set(EXCLUDED_PREFIXES) == {"quality/receipts/", "logs/", "dbt/logs/"}
     for prefix in EXCLUDED_PREFIXES:
         assert is_excluded(prefix + "run.log")
         assert not is_excluded(prefix + "anything.sql"), f"{prefix} hides a .sql file"
@@ -714,3 +724,134 @@ def test_the_seal_machinery_writing_its_own_directory_is_not_a_read() -> None:
     """`out/<label>/` is where the seal writes; listing it is not a read."""
     machinery = f'sealed="$root/out/{_HELD}"\nfind "$sealed" -type f\n'
     assert not scan_text("ops/seal_check.sh", machinery, BOUNDARY)
+
+
+# ------------------------------------------------------ the rule-3 scope exemption
+#
+# The owner decision scopes rule 3 so that warehouse CONSTRUCTION and
+# whole-warehouse MEASUREMENT are not analysis reads. These pin it from both
+# sides: the marker buys the exemption only where the site really is that kind
+# of site, and an analysis read of a fact table stays strict everywhere.
+
+MARKER = "GD-04-EXEM" + "PT"
+REASON = "the reason, long enough to be a sentence and not a shrug"
+FACT_READ = f"select * from {{{{ ref('{_FACT}pitch') }}}}\n"
+
+
+def marked(kind: str, comment: str = "--", reason: str = REASON) -> str:
+    return f"{comment} {MARKER}: {kind} -- {reason}\n"
+
+
+def test_a_construction_site_without_the_marker_still_fails() -> None:
+    """The exemption is declared, never inferred from the path."""
+    found = scan_text(f"dbt/models/marts/{_FACT}called_pitch.sql", FACT_READ, BOUNDARY)
+    assert rules(found) == {"unqualified raw fact-table read"}
+
+
+def test_a_construction_site_with_the_marker_is_scoped_out() -> None:
+    path = f"dbt/models/marts/{_FACT}called_pitch.sql"
+    assert not scan_text(path, marked("construction") + FACT_READ, BOUNDARY)
+
+
+def test_a_dbt_test_is_construction_and_a_staging_model_is_not() -> None:
+    """Both are dbt SQL; only one has an assertion about a fact table as output."""
+    body = marked("construction") + FACT_READ
+    assert not scan_text("dbt/tests/assert_something.sql", body, BOUNDARY)
+    assert scan_text("dbt/models/staging/stg_something.sql", body, BOUNDARY)
+
+
+def test_a_mart_that_is_not_a_fact_table_cannot_claim_construction() -> None:
+    """The property is the model's OWN output, not the directory it sits in."""
+    found = scan_text(
+        "dbt/models/marts/v_called_pitch_open.sql", marked("construction") + FACT_READ, BOUNDARY
+    )
+    assert "unqualified raw fact-table read" in rules(found)
+
+
+def test_an_analysis_read_without_the_qualifier_still_fails() -> None:
+    """The strict half of the decision, with no marker anywhere near it."""
+    for path in (
+        "src/absump/ch2/estimate.py",
+        "R/ch1/20_surfaces.R",
+        "notebooks/explore.ipynb",
+        "sql/adhoc.sql",
+    ):
+        found = scan_text(path, f"q = 'select * from marts.{_FACT}called_pitch'\n", BOUNDARY)
+        assert "unqualified raw fact-table read" in rules(found), path
+
+
+def test_an_analysis_read_with_the_open_qualifier_is_still_forgiven() -> None:
+    line = f"q = \"select * from marts.{_FACT}called_pitch where analysis_set = 'open'\"\n"
+    assert not scan_text("src/absump/ch2/estimate.py", line, BOUNDARY)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "src/absump/ch1/load.py",
+        "src/absump/ch2/estimate.py",
+        "src/absump/ch3/window.py",
+        "R/ch1/20_surfaces.R",
+        "notebooks/explore.py",
+        "tests/fixtures/one_game.py",
+    ],
+)
+def test_the_marker_grants_nothing_on_the_analysis_surface(path: str) -> None:
+    """A chapter that decorates itself as construction is caught twice."""
+    body = marked("construction", "#") + f"q = 'select * from marts.{_FACT}pitch'\n"
+    found = scan_text(path, body, BOUNDARY)
+    assert "unqualified raw fact-table read" in rules(found), path
+    assert "GD-04 exemption marker where it grants nothing" in rules(found), path
+    assert not exemption_place_ok(path)
+
+
+def test_a_measurement_marker_needs_a_whole_warehouse_profile() -> None:
+    """One table under a measurement banner is an analysis read wearing a hat."""
+    one = marked("measurement", "#") + f"q = 'select count(*) from marts.{_FACT}challenge'\n"
+    assert "unqualified raw fact-table read" in rules(scan_text("tests/data/one.py", one, BOUNDARY))
+    many = (
+        marked("measurement", "#")
+        + f"q = 'select count(*) from marts.{_FACT}challenge'\n"
+        + f"r = 'select count(*) from marts.{_FACT}pitch'\n"
+        + "s = 'select count(*) from staging.stg_feed_pitch'\n"
+        + "t = 'select count(*) from marts.dim_game'\n"
+    )
+    assert not scan_text("tests/data/many.py", many, BOUNDARY)
+
+
+def test_the_marker_must_be_a_comment_and_must_give_a_reason() -> None:
+    path = f"dbt/models/marts/{_FACT}called_pitch.sql"
+    live = f"select '{MARKER}: construction -- {REASON}' as note\n" + FACT_READ
+    assert "unqualified raw fact-table read" in rules(scan_text(path, live, BOUNDARY))
+    assert exemption_claim(path, live) is None
+    shrug = marked("construction", reason="because") + FACT_READ
+    assert "unqualified raw fact-table read" in rules(scan_text(path, shrug, BOUNDARY))
+    assert len("because") < EXEMPT_MIN_REASON
+
+
+def test_the_exemption_never_reaches_the_chapters_or_the_notebooks() -> None:
+    """The directories the decision names, as a property of the table itself."""
+    for prefix in ("src/absump/ch", "R/", "notebooks/"):
+        assert prefix in EXEMPT_NEVER
+    for place in EXEMPT_NEVER:
+        assert not exemption_place_ok(place + "anything.py")
+
+
+def test_every_marker_in_the_repository_is_one_the_scanner_grants() -> None:
+    """No marker sits in the tree unearned, and none of them is a dead letter."""
+    for relative in shipped_files():
+        if not is_scannable(relative):
+            continue
+        text = read_scannable(relative)
+        if text is None or MARKER + ":" not in text:
+            continue
+        claim = exemption_claim(relative, text)
+        if claim is None:
+            continue
+        kind, reason, _number = claim
+        assert exemption_place_ok(relative), f"{relative}: marker where it grants nothing"
+        assert len(reason) >= EXEMPT_MIN_REASON, relative
+        assert any(exemption_site_ok(relative, kind, text, line) for line in text.splitlines()), (
+            f"{relative}: claims {kind} and is not one"
+        )
+        assert any(relative.startswith(prefix) for prefix in EXEMPT_DIRS), relative
