@@ -68,8 +68,8 @@ three-regime number with an interval is W3.16's.
 Generator: `ops/sprint_join_checkpoint.py`. Dependency: W2.15.
 
 The corrected join is standing. The Methods sentence of the abstract reads
-its two slots from `docs/numbers.json`, and they are filled: 1,353,830 called
-pitches in 10,559 games, MLB regular seasons, open set, batters with an
+its two slots from `docs/numbers.json`, and they are filled: 1,492,502 called
+pitches in 12,061 games, MLB regular seasons, open set, batters with an
 ABS-measured height.
 
 The correction is the flip of the overturned calls. Statcast `description`
@@ -84,8 +84,8 @@ as three columns, and no row disagrees with the rule in either direction.
 | join, MLB 2026 games | 2,342 | `out/tables/join_report.csv` |
 | join, pitches matched both sides | 691,287 | `out/tables/join_report.csv` |
 | join, rows unmatched either side | 0 | `out/tables/join_report.csv` |
-| called pitches, ABS-measured height | 1,353,830 | `fct_called_pitch` |
-| games behind that count | 10,559 | `fct_called_pitch` |
+| called pitches, ABS-measured height | 1,492,502 | `fct_called_pitch` |
+| games behind that count | 12,061 | `fct_called_pitch` |
 | DT-28, challenged pitches keyed | 10,168 | `stg_statcast_pitches` |
 | DT-28, challenged pitches with no key | 0 | `stg_statcast_pitches` |
 | DT-28, key shared with another called pitch | 18 | `stg_statcast_pitches` |

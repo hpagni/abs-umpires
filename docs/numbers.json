@@ -93,7 +93,7 @@
     },
     {
       "slot": "N_CALLED",
-      "value": 1353830,
+      "value": 1492502,
       "units": "counts",
       "what": "MLB regular-season called pitches, open set, batters with an ABS-measured height",
       "source": "warehouse/abs.duckdb main_marts.fct_called_pitch",
@@ -102,7 +102,7 @@
     },
     {
       "slot": "N_GAMES",
-      "value": 10559,
+      "value": 12061,
       "units": "counts",
       "what": "distinct games behind N_CALLED",
       "source": "warehouse/abs.duckdb main_marts.fct_called_pitch",
