@@ -33,14 +33,20 @@
 --
 -- DT-04's blank-coordinate rows are the other half. They are bounded rather
 -- than zero, at the count tests/data/test_warehouse_pack.py publishes: the mart
--- keeps 591 called pitches whose tracking columns are blank and 21 more whose
+-- keeps 762 called pitches whose tracking columns are blank and 22 more whose
 -- raw coordinate exists without the kinematics the mid-plane re-projection
 -- needs. Each carries tracked = false, W3.7's analysis table filters on that
 -- flag, and the count is published in out/tables/data_quality.csv. The bound
 -- catches a regression that starts dropping coordinates without failing on the
--- 612 rows that are flagged and explained.
+-- 784 rows that are flagged and explained.
+--
+-- Re-cut 2026-09-24 from 700 to 900 after the 110-day MLB 2022 backfill grew
+-- the mart from 1,610,220 to 1,836,071 rows. The blank rate barely moved,
+-- 0.038% to 0.043%, and every blank row is still exactly untracked or missing
+-- kinematics, so this is a count bound following its corpus, not a relaxed
+-- assertion. Kept in step with test_warehouse_pack.BLANK_MID_IN_MART_MAX.
 
-{% set blank_mid_in_mart_max = 700 %}
+{% set blank_mid_in_mart_max = 900 %}
 
 with join_sides as (
 
