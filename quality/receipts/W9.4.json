@@ -1,17 +1,17 @@
 {
   "cmd": "log=$(mktemp) && make verify-contract >\"$log\" 2>&1 && grep -qE \"^C1 tables +PASS +12/12 contracted tables\" \"$log\" && grep -qE \"^C2 columns +PASS\" \"$log\" && grep -qE \"^C3 keys DT-18 +PASS +12/12 declared keys unique, 0 dupes\" \"$log\" && grep -qE \"^C4 refs DT-19 +PASS +8 edges, 0 orphans\" \"$log\" && grep -qE \"^C5 open views +PASS +4/4\" \"$log\" && grep -qE \"^C6 layers +PASS\" \"$log\" && grep -qE \"^C7 read rule +PASS\" \"$log\" && grep -qE \"^C8 vocabularies +PASS\" \"$log\" && ! grep -qE \"FAIL\" \"$log\" && tail -1 \"$log\" && rm -f \"$log\"",
-  "duration_s": 1,
+  "duration_s": 0,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.4.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.4",
-  "timestamp_madrid": "2026-09-24 05:35:56 CEST",
+  "timestamp_madrid": "2026-09-24 06:32:46 CEST",
   "title": "Warehouse contract, SOP section 2.6, checked table by table"
 }

@@ -1,7 +1,7 @@
 b2_sync: source data/raw
 b2_sync: destination b2://abs-umpires-raw/raw
 b2_sync: never-mirror check OK (0 held-out plain paths, 0 duckdb files)
-b2_sync: plan 3568 file(s), 1035995884 byte(s)
+b2_sync: plan 3580 file(s), 1036176428 byte(s)
   upload data/raw/_budget.json
   upload data/raw/_manifest.csv
   upload data/raw/baseballsavant.mlb.com/02/02262e3a66c74b78c22696d1310ddbfad5bea644a757371190a115472acad7dd.zst
@@ -52,7 +52,7 @@ b2_sync: plan 3568 file(s), 1035995884 byte(s)
   upload data/raw/baseballsavant.mlb.com/3c/3c2f786ecec926e06f630e336a7b7eefbf4fa02f23129671e6d28493b4cfed96.zst
   upload data/raw/baseballsavant.mlb.com/3d/3dc698817dee898bd515e018c3488088aee5646232973db8ec880be54af0e00b.zst
   upload data/raw/baseballsavant.mlb.com/3e/3e5dd07ecd89bfee3a88566d22b6ee311001c514f9a246e93ce133b0d396d1a8.zst
-  ... and 3518 more
+  ... and 3530 more
 command: uv run b2 sync --delete --threads 4 data/raw b2://abs-umpires-raw/raw
 DEFERRED: B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY are unset.
 DEFERRED: the b2 side of the dry run needs an account: b2 authorizes before it plans.

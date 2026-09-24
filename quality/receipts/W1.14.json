@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.14.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.14",
-  "timestamp_madrid": "2026-09-24 05:30:31 CEST",
+  "timestamp_madrid": "2026-09-24 06:27:12 CEST",
   "title": "Makefile"
 }

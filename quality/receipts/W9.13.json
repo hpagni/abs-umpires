@@ -1,17 +1,17 @@
 {
   "cmd": "bash ops/lint_prose.sh; rc_prose=$?; uv run --locked python quality/check_numbers.py; rc_numbers=$?; [ $rc_prose -eq 0 ] && [ $rc_numbers -eq 0 ]",
-  "duration_s": 1,
+  "duration_s": 0,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.13.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.13",
-  "timestamp_madrid": "2026-09-24 05:39:43 CEST",
+  "timestamp_madrid": "2026-09-24 06:36:35 CEST",
   "title": "Writing rules, the three prose rules and the number trace"
 }

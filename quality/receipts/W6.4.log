@@ -1,39 +1,6 @@
 W6.4 join: 2,342 games, 691,287 pitches matched both sides, 0 unmatched
 W6.4 correction: 10,168 challenged called pitches, 5,490 overturned and flipped, 0 without an original call
 W6.4 DT-28 refresh: 10,168 challenged pitches, 0 without a bridge key, 18 sharing it with another called pitch, 28 with any pitch
-W6.4 slots: N_CALLED 1,353,830, N_GAMES 10,559, 2022-04-07 to 2026-09-21
+W6.4 slots: N_CALLED 1,492,502, N_GAMES 12,061, 2022-04-07 to 2026-09-21
 W6.4 OK: the corrected join is standing and both artifacts are current
-..F.                                                                     [100%]
-=================================== FAILURES ===================================
-______________________ test_dt28_drawer_coordinate_bridge ______________________
-
-con = <_duckdb.DuckDBPyConnection object at 0x<addr>>
-
-    def test_dt28_drawer_coordinate_bridge(con: Any) -> None:
-        """DT-28 as written: 100% matched, 0 ambiguous, 0 unmatched. Needs W4.2."""
-        files = _drawer_files()
-        if not files:
-            pytest.skip("data/raw/savant/abs_drawer is empty. W4.2 has not pulled it yet.")
-        from absump.ingest.savant_drawer import load
-
-        drawer = [row for path in files for row in load(path)]
-        statcast = _sql_list(_dataset_parts(jn.STATCAST_DATASET))
-        pitches = [
-            {"game_pk": int(g), "plate_X": x, "plate_Z": z, "id": (int(g), int(ab), int(pn))}
-            for g, ab, pn, x, z in con.execute(
-                f"SELECT game_pk, at_bat_number, pitch_number, plate_x_mid, plate_z_mid "
-                f"FROM read_parquet({statcast}) WHERE plate_x_mid IS NOT NULL"
-            ).fetchall()
-        ]
-        result = jn.drawer_bridge(drawer, pitches)
->       assert (result.n_ambiguous, result.n_unmatched) == (0, 0)
-E       assert (56, 18746) == (0, 0)
-E
-E         At index 0 diff: 56 != 0
-E         Use -v to get more diff
-
-tests/data/test_join.py:586: AssertionError
-=========================== short test summary info ============================
-FAILED tests/data/test_join.py::test_dt28_drawer_coordinate_bridge - assert (...
-
--- scripts/prove.sh normalised run-local tokens in this log: RN-07 objaddr
+....                                                                     [100%]

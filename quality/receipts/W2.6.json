@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/data/test_feeds_mlb2026.py -q",
-  "duration_s": 26,
+  "duration_s": 25,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.6.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.6",
-  "timestamp_madrid": "2026-09-24 05:31:50 CEST",
+  "timestamp_madrid": "2026-09-24 06:28:30 CEST",
   "title": "MLB 2026 feeds, 2,512 games, one overnight statsapi batch"
 }

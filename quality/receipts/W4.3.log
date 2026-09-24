@@ -124,6 +124,6 @@ swept views on disk: 28 of 28, pull date 2026-09-24
   PASS DT-24.8 fielding views ['catcher', 'pitcher'] sum n_challenges 5603, page leagueData [5603], contract 5555
   PASS DT-24.9 league totals challenges 10238 contract 10167, overturns 5525 contract 5490, fails 4713 contract 4677, rate 53.9656 percent contract 53.99, limit 3.2394 points
 
-  PASS W4.3.13 offline: manifest unchanged at 244 rows
+  PASS W4.3.13 offline: manifest unchanged at 256 rows
 
 W4.3: 107 checks, 107 passed, 0 failed

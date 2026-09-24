@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 --select staging intermediate >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && grep -qE '16 view models' \"$log\" && grep -q 'PASS dt_03_umpire_non_empty_count_is_zero' \"$log\" && rm -f \"$log\" && echo 'W2.17 warehouse: 10 staging models and 6 intermediate models on the dev target, DT-03 green.' && uv run --locked python tests/guard/gd04_scan.py --path dbt",
-  "duration_s": 28,
+  "duration_s": 29,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.17.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.17",
-  "timestamp_madrid": "2026-09-24 05:33:44 CEST",
+  "timestamp_madrid": "2026-09-24 06:30:27 CEST",
   "title": "Warehouse, staging and intermediate models"
 }
