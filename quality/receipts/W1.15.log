@@ -14,7 +14,7 @@ smoke: a data lake is present and no check reads it; all twelve run
           CmdStan path set to: /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
           smoke-r stan: 2 chains x 200 draws = 400, rhat = 1.00154, <elapsed> s
           smoke-r bam: 50000 called pitches, 28557 strikes, edf 29.61, deviance explained 0.326, <elapsed> s
-          smoke-r OK: cmdstan 2.40.0, rhat 1.00154 < 1.01, bam converged (1.9 s)
+          smoke-r OK: cmdstan 2.40.0, rhat 1.00154 < 1.01, bam converged (<elapsed> s)
  6/12  joinkey     OK       <elapsed> s
           smoke-joinkey OK: 17 pitch slots over 4 at-bats, corrected key gives 17 distinct keys, naive key gives 10 and loses 7
  7/12  plateplane  OK       <elapsed> s

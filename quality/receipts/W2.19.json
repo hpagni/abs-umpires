@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && for t in assert_challenge_reconciliation_zero assert_drawer_bridge_complete assert_join_complete assert_no_duplicate_pitch_keys assert_null_rate_thresholds assert_original_call_reconstructed assert_row_count_by_day assert_seal_not_crossed assert_token_start dt_10_fct_challenge_holds_only_mj_reviews dt_11_stg_pitch_joined_plane_is_mid_or_front dt_12_mlb_2026_zone_ratio_distinct_count_is_bounded dt_12_mlb_2022_2025_zone_ratio_distinct_count_exceeds_1000 dt_17_fct_called_pitch_fielder_2_is_never_null_in_2026 dt_18_fct_pitch_declared_pitch_key_is_unique dt_18_int_pitch_declared_pitch_key_is_unique dt_19_fct_team_game_tokens_game_pk_resolves_to_dim_game; do grep -q \"PASS $t\" \"$log\" || { echo \"W2.19: $t is not PASS in the dbt build log\" >&2; exit 1; }; done && rm -f \"$log\" && echo 'W2.19 data tests: 9 singular tests and the generic layer green on the dev target.' && uv run --locked python tests/guard/gd04_scan.py --path dbt",
-  "duration_s": 37,
+  "duration_s": 41,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.19.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.19",
-  "timestamp_madrid": "2026-09-24 05:34:57 CEST",
+  "timestamp_madrid": "2026-09-24 06:31:48 CEST",
   "title": "Data tests, the dbt generic and singular layer"
 }

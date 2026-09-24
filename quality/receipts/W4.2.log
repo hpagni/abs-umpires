@@ -1,8 +1,8 @@
 ....................................................                     [100%]
 PASS  DT-25.schema  drawer 66-key schema, 45 named keys required: 45/45 required keys present on 38938 rows
-FAIL  DT-25.edge  edge_dist_calc reproduced by SOP section 2.5: max abs error 0.766860 in on 38938/38938 rows, tolerance 1e-06 in
+PASS  DT-25.edge  edge_dist_calc reproduced by SOP section 2.5: max abs error 0.000000 in on 38938/38938 rows, tolerance 1e-06 in (2 named exceptions)
 PASS  DT-25.overturn  is_challengeABS_overturned == XOR(original_isStrike_ump == 1, edge_dist_calc < 0): 38938/38938 rows, 29006/29006 outside the +/- 0.5 in band
 PASS  DT-25.role  role from challenging_player_id, and role == batter iff original_isStrike_ump == 1: 38938/38938 classified, 0 unresolved, 18198 batter, 0 role/call mismatches
 PASS  DT-25.forbidden  team_summary_mode present in the feed and read by nothing: 0 read site(s) in this module, key present on every row: True
 PASS  DT-25  drawer completeness: distinct play_id over against == False: 30/30 mlb 2026 team-seasons, 10167 distinct play_id (4612 batting + 5555 fielding) against 10167 (4612 + 5555), tolerance +/- 137
-5/6 assertions pass over 60/60 cached team-seasons.
+6/6 assertions pass over 60/60 cached team-seasons.

@@ -148,7 +148,9 @@ take_lock() {
 #                         budget printed as seconds is left alone: "stack load: 1.8 s" ->
 #                         "stack load: <elapsed> s". The same id also covers a duration in
 #                         the tail position of a comma-separated status line, which is how
-#                         the R smoke fit reports its sampler: ", 0.6 s" -> ", <elapsed> s"
+#                         the R smoke fit reports its sampler: ", 0.6 s" -> ", <elapsed> s",
+#                         and the parenthesised shape the same line now prints,
+#                         "(1.9 s)" -> "(<elapsed> s)"
 #
 #        RN-05 freespace  the free-space quantity a disk check prints, which moves with
 #                         whatever else the machine is doing: "34.9 GiB free" ->
@@ -234,6 +236,15 @@ RULES = (
         "RN-04 timing",
         re.compile(r"(?m),\s\d+(?:\.\d+)?\s(ms|s)$"),
         r", <elapsed> \1",
+    ),
+    (
+        # The same sampler duration, in the parenthesised shape ops/smoke.sh
+        # now prints it: "bam converged (1.9 s)" -> "bam converged (<elapsed> s)".
+        # Anchored at end of line and on the space before the unit, so a version
+        # like "(2.40.0)" or a bare "(12s)" is not touched.
+        "RN-04 timing",
+        re.compile(r"(?m)\(\d+(?:\.\d+)?\s(ms|s)\)$"),
+        r"(<elapsed> \1)",
     ),
     (
         "RN-05 freespace",

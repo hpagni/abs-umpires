@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python ops/sprint_join_checkpoint.py --check && uv run --locked pytest tests/data/test_join.py tests/data/test_warehouse_pack.py -q -k dt28",
   "duration_s": 4,
-  "exit": 1,
+  "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
+  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W6.4.log",
   "owner": "W6",
   "schema": "absump/receipt/1",
-  "status": "FAIL",
+  "status": "PASS",
   "step": "W6.4",
-  "timestamp_madrid": "2026-09-24 05:35:48 CEST",
+  "timestamp_madrid": "2026-09-24 06:32:38 CEST",
   "title": "SSAC sprint checkpoint on the corrected join and the two Methods slots"
 }
