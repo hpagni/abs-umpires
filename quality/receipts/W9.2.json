@@ -1,17 +1,17 @@
 {
   "cmd": "make verify-env",
-  "duration_s": 5,
+  "duration_s": 6,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.2.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.2",
-  "timestamp_madrid": "2026-09-24 03:22:03 CEST",
+  "timestamp_madrid": "2026-09-24 05:35:55 CEST",
   "title": "Environment verification, RP-01 to RP-08"
 }

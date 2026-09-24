@@ -69,6 +69,30 @@ probe table
   PASS out/tables/leaderboard_csv_probe.csv matches the contract, 3 probes
 
 pages in the raw cache
-  none on disk; the 28-view pull has not run here
+  views ['batter', 'catcher', 'pitcher'], pull date 2026-09-24
+  PASS DT-24.1 batter records 526, contract 524, floor +6.0 percent
+  PASS DT-24.2 batter keys [86], contract [86]
+  PASS DT-24.3 batter records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 batter required keys absent from at least one record: []
+  PASS DT-24.4 batter sum n_challenges 4635 contract 4612, sum n_overturns 2269 contract 2259, floor +6.0 percent
+  PASS DT-24.5 batter overturn rate 48.9536 percent, contract 48.98, limit 2.9388 points
+  PASS DT-24.6 batter >=10 chal 177 contract 176, >=20 chal 62 contract 61, max 48 contract not measured, floor +6.0 percent
+  PASS DT-24.1 catcher records 107, contract 107, floor +6.0 percent
+  PASS DT-24.2 catcher keys [87], contract [87]
+  PASS DT-24.3 catcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 catcher required keys absent from at least one record: []
+  PASS DT-24.4 catcher sum n_challenges 5429 contract 5382, sum n_overturns 3187 contract 3163, floor +6.0 percent
+  PASS DT-24.5 catcher overturn rate 58.7033 percent, contract 58.77, limit 3.5262 points
+  PASS DT-24.6 catcher >=10 chal 91 contract 91, >=20 chal 77 contract 77, max 175 contract 172, floor +6.0 percent
+  PASS DT-24.1 pitcher records 104, contract 104, floor +6.0 percent
+  PASS DT-24.2 pitcher keys [87], contract [87]
+  PASS DT-24.3 pitcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 pitcher required keys absent from at least one record: []
+  PASS DT-24.4 pitcher sum n_challenges 174 contract 173, sum n_overturns 69 contract 68, floor +6.0 percent
+  PASS DT-24.5 pitcher overturn rate 39.6552 percent, contract 39.31, limit 2.3586 points
+  PASS DT-24.6 pitcher >=10 chal 0 contract 0, >=20 chal 0 contract 0, max 8 contract 8, floor +6.0 percent
+  PASS DT-24.8 batting views ['batter'] sum n_challenges 4635, page leagueData [4635], contract 4612
+  PASS DT-24.8 fielding views ['catcher', 'pitcher'] sum n_challenges 5603, page leagueData [5603], contract 5555
+  PASS DT-24.9 league totals challenges 10238 contract 10167, overturns 5525 contract 5490, fails 4713 contract 4677, rate 53.9656 percent contract 53.99, limit 3.2394 points
 
-DT-24: 52 checks, 52 passed, 0 failed
+DT-24: 76 checks, 76 passed, 0 failed

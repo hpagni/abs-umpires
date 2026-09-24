@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python -m absump.ingest.statcast_day --verify && uv run --locked pytest tests/data/test_statcast_days.py -q",
-  "duration_s": 59,
+  "duration_s": 65,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.9.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.9",
-  "timestamp_madrid": "2026-09-24 03:19:08 CEST",
+  "timestamp_madrid": "2026-09-24 05:32:57 CEST",
   "title": "Statcast MLB daily CSV, 2022-2026, 2026 cut at 2026-09-21"
 }

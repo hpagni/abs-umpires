@@ -1,61 +1,63 @@
 b2_sync: source data/raw
 b2_sync: destination b2://abs-umpires-raw/raw
 b2_sync: never-mirror check OK (0 held-out plain paths, 0 duckdb files)
-b2_sync: plan 3198 file(s), 833117805 byte(s)
+b2_sync: plan 3568 file(s), 1035995884 byte(s)
   upload data/raw/_budget.json
   upload data/raw/_manifest.csv
+  upload data/raw/baseballsavant.mlb.com/02/02262e3a66c74b78c22696d1310ddbfad5bea644a757371190a115472acad7dd.zst
   upload data/raw/baseballsavant.mlb.com/04/041e3c2fba99359a8d04020ce7e1121d26cfa4f28fc919e40aacd1446a84c335.zst
+  upload data/raw/baseballsavant.mlb.com/05/052d08cad3a9725a0317a932c514710911250c96341990d47dc840f494e16563.zst
+  upload data/raw/baseballsavant.mlb.com/05/053f3109bedfb913a8a5255e7200b186b4472264ef439f40a09ed3a7a06ed4af.zst
+  upload data/raw/baseballsavant.mlb.com/05/05752115511f33a35ebef041ba432645e704afbb30f467a2fdfdbc9d1970b686.zst
+  upload data/raw/baseballsavant.mlb.com/06/06eefda729a7d189d8d22e862dc755057eb58bf5fa0732ed2c66d3db8b402a27.zst
   upload data/raw/baseballsavant.mlb.com/08/0882b3ef014c252075183a6d90b0957994aa5901c92fa566ef10725506ad5e7c.zst
+  upload data/raw/baseballsavant.mlb.com/08/088c17b7bdcb62e7769532ed3291a2a88619b1c3372ee1fd9fe44a5d6b1e26bf.zst
+  upload data/raw/baseballsavant.mlb.com/09/095c84a7792f2e92fa4920925c7b09c75c6b0fee1b490ed1939d62d034d35282.zst
+  upload data/raw/baseballsavant.mlb.com/09/09cd7e2d11f89187bd8f736228d5ce065be126e0f8e0f2e46992522b3f1c3a1b.zst
+  upload data/raw/baseballsavant.mlb.com/09/09d681041d368c09ce464a3092fbb7953452fe3acc07cd7cfeff8c9f67be530c.zst
+  upload data/raw/baseballsavant.mlb.com/0a/0a66675b180bf9f973225859fdba584338bf07a5774bbd52ec556afca73590a1.zst
+  upload data/raw/baseballsavant.mlb.com/0b/0b23e3d95b0c8b9e0ae35a135e8dac4882b07fa5b4e6e88a877aa5ca3f4f8b8a.zst
+  upload data/raw/baseballsavant.mlb.com/0c/0c28e185d0048783499a5514e06d6e8f8f975b739d1833f3824f672237272ab1.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0d5184742bab8a8473515388d19b743d9b60ea05f47467a8c585ac43bcfe3da4.zst
+  upload data/raw/baseballsavant.mlb.com/0f/0f184f68252320d78dd38b6fefdf3bfc67640e60344ba48414c669e201f5022f.zst
   upload data/raw/baseballsavant.mlb.com/0f/0f9c7ed273537d3f9221e02c72e020cee793cf93ff0e5b689cfc8b2016e8a2bf.zst
+  upload data/raw/baseballsavant.mlb.com/13/13395a11c25f6889ea1f92f7c820607495a6785c6503bee712988b2417e366dd.zst
+  upload data/raw/baseballsavant.mlb.com/13/13c03162c4ca38a02968498797642aad9761646d0aa4ae4f2852c87c1ea013c9.zst
+  upload data/raw/baseballsavant.mlb.com/15/154e571047f37845a7418cb0548ca8b58cc1c01c824f7da7fda4039288faa17b.zst
+  upload data/raw/baseballsavant.mlb.com/18/18f432bee2fe8ec8c8c697f0b7d83b59ada38fdb101b9b22d087d86f416a0ea6.zst
+  upload data/raw/baseballsavant.mlb.com/19/19a0edbf2e411a6882bd297beab33b1a0dd87bf2d926db301c34b510199276aa.zst
+  upload data/raw/baseballsavant.mlb.com/19/19d41ecb9cf66794324d41a0b9fe7aafef141595b2bf032fae44051ec7f218d8.zst
+  upload data/raw/baseballsavant.mlb.com/1a/1a4b4ae81b661e2062960284cd9f220326e4fb416baaf72d2ec8c174c5579479.zst
+  upload data/raw/baseballsavant.mlb.com/1e/1e755845e31801ab5482ce5919fb4913f9e9bfed455a07d873b5aa3e445b4def.zst
   upload data/raw/baseballsavant.mlb.com/1e/1e7e3e16e8a8e1571a98dc096561b05ff33df9ca856ddd1fb8650ce3b69d9718.zst
+  upload data/raw/baseballsavant.mlb.com/1f/1fc75064db777a8b20357c6350558c83c816e6884b97b8b323f9072c7ab8cbee.zst
+  upload data/raw/baseballsavant.mlb.com/24/24215e4ae30d36a1120c77b14ad84295bec67faace317540914d1849fb52a2d9.zst
+  upload data/raw/baseballsavant.mlb.com/25/252e3a8cb0147ac5710ac2eaa2b00fe2d27c718a81f7b4524fcb7e4dc5cdf1d5.zst
+  upload data/raw/baseballsavant.mlb.com/28/28d90790100e49f18685f404d686e70ed30a97403f5c85f6d7e99412df13d397.zst
   upload data/raw/baseballsavant.mlb.com/29/29ffac7a32ffebc91022076c39a7da1c23e1187131666a5254c7fb0cc0e28ff7.zst
-  upload data/raw/baseballsavant.mlb.com/6b/6b2311a9419f2503452d2961df113a15fc562914383aca3b3b5c8ddaedbc16bb.zst
-  upload data/raw/baseballsavant.mlb.com/73/73c883cad87b8f1da63ed870480f9a4d5ff203cc110fb35d29fe24d17f5fe382.zst
-  upload data/raw/baseballsavant.mlb.com/79/79986a4709793c54d1ab9ce0f66373dd9b9a2e07a12e8d9b03ab7706dd9f5d7a.zst
-  upload data/raw/baseballsavant.mlb.com/7c/7cb4afef1258c6fa27525dfc0ff71d6adbd8a49f207bb49e018705dc7ea73eec.zst
-  upload data/raw/baseballsavant.mlb.com/86/869ed3e15f729455623a4ba2a2322f95201f003f63aa3cd1c1081ae46fb10b11.zst
-  upload data/raw/baseballsavant.mlb.com/9a/9a2dedbf2b9c64cd199539d7fe060901fde9e3dfdda7736677c79d1ca33f2f67.zst
-  upload data/raw/baseballsavant.mlb.com/c3/c38cd617404a5713c286fd7b4cb86fa1ac03e0553619582527d491fe984cc25f.zst
-  upload data/raw/baseballsavant.mlb.com/e0/e06709358ceb1a8471dbe05511e51b9ce0397d5c4a7f51a7515a0ff0a5396e0b.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-07/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-08/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-09/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-10/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-11/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-12/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-13/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-14/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-15/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-16/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-17/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-18/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-19/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-20/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-21/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-22/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-23/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-24/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-25/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-26/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-27/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-28/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-29/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-04-30/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-01/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-02/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-03/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-04/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-05/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-06/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-07/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-08/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-09/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-10/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-11/pitches.csv.zst
-  ... and 3148 more
+  upload data/raw/baseballsavant.mlb.com/2a/2a46e14f27949f4d7999931bfa0066d03631fcf0eb76012a95767c1fe8e8b844.zst
+  upload data/raw/baseballsavant.mlb.com/2d/2d4ccbf83785947edd95011068b6cd7c003e5e373a7f3d8022d57736aef9ec58.zst
+  upload data/raw/baseballsavant.mlb.com/33/3358c1c83b9be839beff532db7f3294977b6de086195c0b75554726a53ec55b6.zst
+  upload data/raw/baseballsavant.mlb.com/34/34eb1273ba0bd1a3229498a6c62ac5e2cfc263c2c76c8751ad5cbd181764a575.zst
+  upload data/raw/baseballsavant.mlb.com/35/3530fb93066a12eca3623215ddaec45ba0d2c57bd1043a2da7096543bb7e4583.zst
+  upload data/raw/baseballsavant.mlb.com/35/3545ff56028c93b0cbd9bbd478cd40aca467e3b7549cfd27f223692692b2dedf.zst
+  upload data/raw/baseballsavant.mlb.com/35/35ddfc9f4d276def16b2a3e21f3b5397549aa572e4e45fc4595feb7897a30caa.zst
+  upload data/raw/baseballsavant.mlb.com/36/366dd7b4961561a70628b03601614de0f03608a26f0e682dc4b4293b255d4aef.zst
+  upload data/raw/baseballsavant.mlb.com/36/3693110db25061a3aca880a98bee5fcbbc22714cc2e41379efde9509ade3868b.zst
+  upload data/raw/baseballsavant.mlb.com/37/371d756c8d9985d33e1df100edcd7b4e937cd7dd4ce72be5929040fb0a3acd02.zst
+  upload data/raw/baseballsavant.mlb.com/39/39f47321458dde45a3572fa005ba6b23ac3c97e98a99a786bd6bb731250455ae.zst
+  upload data/raw/baseballsavant.mlb.com/3a/3a0166891298947544d753bcfd326023045693f7880b11ae90f19fbd6a811b03.zst
+  upload data/raw/baseballsavant.mlb.com/3a/3a8964249a8dfca2774f0bfab2c3855c7327e2841a1a3ef8bb0ba6784b1a8665.zst
+  upload data/raw/baseballsavant.mlb.com/3c/3c0887d2a1e7a38ca8476a576c65076bda98719c2b410203164aa14d33e53edf.zst
+  upload data/raw/baseballsavant.mlb.com/3c/3c2f786ecec926e06f630e336a7b7eefbf4fa02f23129671e6d28493b4cfed96.zst
+  upload data/raw/baseballsavant.mlb.com/3d/3dc698817dee898bd515e018c3488088aee5646232973db8ec880be54af0e00b.zst
+  upload data/raw/baseballsavant.mlb.com/3e/3e5dd07ecd89bfee3a88566d22b6ee311001c514f9a246e93ce133b0d396d1a8.zst
+  ... and 3518 more
 command: uv run b2 sync --delete --threads 4 data/raw b2://abs-umpires-raw/raw
 DEFERRED: B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY are unset.
 DEFERRED: the b2 side of the dry run needs an account: b2 authorizes before it plans.
 DEFERRED: the owner sets both in .env, which is gitignored. No key is ever written into the repository.
-CANARY SELF-TEST OK (6/6), key _canary/20260924T011622Z.txt, 1024 bytes
+CANARY SELF-TEST OK (6/6), key _canary/<stamp>.txt, 1024 bytes
 ....................sss                                                  [100%]
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-10 canarykey

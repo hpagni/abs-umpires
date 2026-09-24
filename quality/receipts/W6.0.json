@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python -m absump.ingest.pull_statcast --check && uv run --locked pytest tests/data/test_resume.py -q",
-  "duration_s": 33,
+  "duration_s": 35,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W6.0.log",
   "owner": "W6",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W6.0",
-  "timestamp_madrid": "2026-09-24 03:21:52 CEST",
+  "timestamp_madrid": "2026-09-24 05:35:40 CEST",
   "title": "Statcast backfill runner, newest-first, two nights under the 800/day Savant cap"
 }

@@ -1,2 +1,6 @@
-scripts/prove.sh: eval: line 284: unexpected EOF while looking for matching `''
-scripts/prove.sh: eval: line 285: syntax error: unexpected end of file
+Done. PASS=22 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=22
+W1.11 synthetic seed: 200 rows over MLB 2022-2026 and AAA 2023-2025.
+W1.11 sealed-leak hook: on-run-start, dev target only, aborts the run.
+W1.11 lake source: 10 tables through external_location.
+GD-04: 0 violation(s) in dbt
+GD-04: 0 violation(s) in ops/dbt.sh

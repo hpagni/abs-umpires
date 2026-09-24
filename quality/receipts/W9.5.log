@@ -1,151 +1,15 @@
 uv run --locked pytest tests/unit -q
 .......................................................ss............... [  7%]
-...............F...............................................F........ [ 14%]
+........................................................................ [ 14%]
 ........................................................................ [ 21%]
 ........................................................................ [ 29%]
 ........................................................................ [ 36%]
 ........................................................................ [ 43%]
-.................................................................FF..... [ 51%]
+........................................................................ [ 51%]
 ........................................................................ [ 58%]
 ........................................................................ [ 65%]
 ........................................................................ [ 73%]
-...................................................F.................... [ 80%]
+........................................................................ [ 80%]
 ........................................................................ [ 87%]
-........................................................................ [ 95%]
-................................................                         [100%]
-=================================== FAILURES ===================================
-_____________________ test_the_linter_passes_on_this_tree ______________________
-
-    def test_the_linter_passes_on_this_tree() -> None:
-        assert LINT_HTTP.is_file(), "ops/lint_http.sh is missing (owner: W1.7)"
-        done = subprocess.run(
-            ["sh", str(LINT_HTTP), "-q", str(REPO_ROOT)],
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
->       assert done.returncode == 0, done.stdout + done.stderr
-E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
-E           [PY-DYNIMPORT] tests/unit/test_coverage_contract.py:118:        return importlib.import_module(module)
-E           [SH-CURL] dbt/dbt_packages/dbt_utils/.github/workflows/create-table-of-contents.yml:24:          curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:132:              probe() { curl -sf http://localhost:8123/ping >/dev/null; }
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:141:              probe() { curl -sf http://localhost:8080/v1/info | grep -q '"starting":false'; }
-E           [SH-PYTHON-C] quality/steps.yml:77:  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
-E           [SH-PYTHON-C] quality/steps.yml:202:  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
-E           [SH-PYTHON-C] quality/steps.yml:244:# already carries two `python -c` verify commands, which the linter reads as a
-E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-E
-E       assert 1 == 0
-E        +  where 1 = CompletedProcess(args=['sh', '/Users/hudsonpagni/sports-project/ops/lint_http.sh', '-q', '/Users/hudsonpagni/sports-pr...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n').returncode
-
-tests/unit/test_http_delegation.py:83: AssertionError
-___________________ test_lint_http_passes_on_this_repository ___________________
-
-    def test_lint_http_passes_on_this_repository() -> None:
-        result = run_lint("-q")
->       assert result.returncode == 0, result.stdout + result.stderr
-E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
-E           [PY-DYNIMPORT] tests/unit/test_coverage_contract.py:118:        return importlib.import_module(module)
-E           [SH-CURL] dbt/dbt_packages/dbt_utils/.github/workflows/create-table-of-contents.yml:24:          curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:132:              probe() { curl -sf http://localhost:8123/ping >/dev/null; }
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:141:              probe() { curl -sf http://localhost:8080/v1/info | grep -q '"starting":false'; }
-E           [SH-PYTHON-C] quality/steps.yml:77:  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
-E           [SH-PYTHON-C] quality/steps.yml:202:  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
-E           [SH-PYTHON-C] quality/steps.yml:244:# already carries two `python -c` verify commands, which the linter reads as a
-E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-E
-E       assert 1 == 0
-E        +  where 1 = CompletedProcess(args=['/Users/hudsonpagni/sports-project/ops/lint_http.sh', '-q'], returncode=1, stdout='', stderr='L...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n').returncode
-
-tests/unit/test_http_etiquette.py:495: AssertionError
-______________________ test_the_live_repository_is_clean _______________________
-
-    def test_the_live_repository_is_clean() -> None:
-        result = run_lint()
->       assert result.returncode == 0, result.stderr
-E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
-E           [PY-DYNIMPORT] tests/unit/test_coverage_contract.py:118:        return importlib.import_module(module)
-E           [SH-CURL] dbt/dbt_packages/dbt_utils/.github/workflows/create-table-of-contents.yml:24:          curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:132:              probe() { curl -sf http://localhost:8123/ping >/dev/null; }
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:141:              probe() { curl -sf http://localhost:8080/v1/info | grep -q '"starting":false'; }
-E           [SH-PYTHON-C] quality/steps.yml:77:  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
-E           [SH-PYTHON-C] quality/steps.yml:202:  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
-E           [SH-PYTHON-C] quality/steps.yml:244:# already carries two `python -c` verify commands, which the linter reads as a
-E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-E
-E       assert 1 == 0
-E        +  where 1 = CompletedProcess(args=['sh', '/Users/hudsonpagni/sports-project/ops/lint_http.sh'], returncode=1, stdout='', stderr='L...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n').returncode
-
-tests/unit/test_lint_http_bypasses.py:218: AssertionError
-_______________ test_the_documented_rule_count_matches_the_gate ________________
-
-    def test_the_documented_rule_count_matches_the_gate() -> None:
-        """Gate-doc parity, round 4.
-
-        `sop/SOP-final.md` and `docs/DEVIATIONS.md` DEV-04 both state the size of this
-        rule table. Round 3 grew the table from 29 rules to 37 and left both documents
-        saying 29 -- a binding pre-registration misstating the size of its own gate.
-        This test reads the count out of the linter's own banner and requires the two
-        documents to agree with it, so the pair cannot drift apart again: a rule added
-        without touching the prose fails here, in the same commit that adds it.
-        """
-        result = run_lint()
->       assert result.returncode == 0, result.stderr
-E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
-E           [PY-DYNIMPORT] tests/unit/test_coverage_contract.py:118:        return importlib.import_module(module)
-E           [SH-CURL] dbt/dbt_packages/dbt_utils/.github/workflows/create-table-of-contents.yml:24:          curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:132:              probe() { curl -sf http://localhost:8123/ping >/dev/null; }
-E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:141:              probe() { curl -sf http://localhost:8080/v1/info | grep -q '"starting":false'; }
-E           [SH-PYTHON-C] quality/steps.yml:77:  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
-E           [SH-PYTHON-C] quality/steps.yml:202:  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
-E           [SH-PYTHON-C] quality/steps.yml:244:# already carries two `python -c` verify commands, which the linter reads as a
-E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
-E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
-E
-E       assert 1 == 0
-E        +  where 1 = CompletedProcess(args=['sh', '/Users/hudsonpagni/sports-project/ops/lint_http.sh'], returncode=1, stdout='', stderr='L...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n').returncode
-
-tests/unit/test_lint_http_bypasses.py:233: AssertionError
-______________ test_layout_strings_live_only_in_paths_py[duckdb] _______________
-
-key = 'duckdb'
-
-    @pytest.mark.parametrize("key", [k for k in paths.templates() if k not in UNSCANNED_TEMPLATES])
-    def test_layout_strings_live_only_in_paths_py(key):
-        """The one copy rule: these strings appear in paths.py and nowhere else."""
-        template = paths.templates()[key]
-        owner = "src/absump/paths.py"
-        allowed = {owner} | EXTRA_ALLOWED.get(key, set())
-        found = set()
-        for path in _source_files():
-            try:
-                text = path.read_text(encoding="utf-8")
-            except (UnicodeDecodeError, OSError):
-                continue
-            if template in text:
-                found.add(path.relative_to(REPO_ROOT).as_posix())
-        assert owner in found, f"{key} is not written in {owner}"
->       assert found <= allowed, f"{key} also appears in {sorted(found - allowed)}"
-E       AssertionError: duckdb also appears in ['ops/sprint_feed_checkpoint.py', 'ops/sprint_join_checkpoint.py', 'quality/steps.d/W9.4.yml', 'quality/steps.d/W9.6.yml', 'quality/steps.yml', 'quality/verify_contract.py', 'quality/warehouse_contract.yml']
-E       assert {'dbt/profile...eps.yml', ...} <= {'dbt/profile...ump/paths.py'}
-E
-E         Extra items in the left set:
-E         'quality/warehouse_contract.yml'
-E         'quality/steps.yml'
-E         'quality/verify_contract.py'
-E         'ops/sprint_feed_checkpoint.py'
-E         'ops/sprint_join_checkpoint.py'
-E         'quality/steps.d/W9.4.yml'
-E         'quality/steps.d/W9.6.yml'
-
-tests/unit/test_paths.py:300: AssertionError
-=========================== short test summary info ============================
-FAILED tests/unit/test_http_delegation.py::test_the_linter_passes_on_this_tree
-FAILED tests/unit/test_http_etiquette.py::test_lint_http_passes_on_this_repository
-FAILED tests/unit/test_lint_http_bypasses.py::test_the_live_repository_is_clean
-FAILED tests/unit/test_lint_http_bypasses.py::test_the_documented_rule_count_matches_the_gate
-FAILED tests/unit/test_paths.py::test_layout_strings_live_only_in_paths_py[duckdb]
-make[1]: *** [test-unit] Error 1
+........................................................................ [ 94%]
+..................................................                       [100%]

@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/data/test_resume.py -q && launchctl print gui/$(id -u)/com.absump.nightly >/dev/null",
-  "duration_s": 4,
+  "duration_s": 3,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.22.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.22",
-  "timestamp_madrid": "2026-09-24 02:11:53 CEST",
+  "timestamp_madrid": "2026-09-24 05:35:01 CEST",
   "title": "In-season mode, the resumable backfill and the 03:30 launchd nightly"
 }
