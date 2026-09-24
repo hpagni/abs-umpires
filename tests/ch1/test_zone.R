@@ -25,12 +25,25 @@
 # longer than 0.60 s. Pitches under 70 mph are counted, their slowest speed and
 # largest t printed, and they remain under the two clauses that hold at any
 # speed, t_mid > t_front and dz < 0. Nothing here asserts a band the SOP does
-# not state, and nothing is dropped without being named.
+# not state, and nothing is dropped without being named. That population is
+# DEV-42 in docs/DEVIATIONS.md, confirmed under DECISIONS.md D-P4-01 (the R0
+# delegation: an applied default, not an owner answer). A RECORD line also
+# prints the band read with no speed filter at all, so the literal clause's own
+# count is on every run.
 #
-# WHAT IS ON THIS MACHINE. MLB Statcast CSV for 2022-2026 and, for MLB 2026
-# only, the Stats API side (feed_pitch with x0/y0/z0, and pitch_joined). There
-# is no AAA pitch-level data and no pre-2026 feed, so the cross-source plane
-# clause runs for MLB 2026 and is deferred for MLB 2025 and AAA 2024 (DEV-25,
+# THE POPULATION OF THE 0.0011 ft CLAUSE. "2026 CSV re-projected mid -> front
+# matches API pX/pZ to < 0.0011 ft" is asserted over called pitches, the
+# project's definition (called_strike, ball, blocked_ball, as in
+# fct_called_pitch). The SOP set the bar on the 281 pitches of one game. Over
+# every pitch on the five days two batted balls, both curveballs at 72 mph or
+# more, sit above it by at most 2.7e-5 ft. A RECORD line names them on every
+# run. This population is recorded in docs/DEVIATIONS.md DEV-43 and applied under
+# DECISIONS.md D-P4-02 (the R0 delegation).
+#
+# WHAT IS ON THIS MACHINE. MLB Statcast CSV for 2022-2026. The Stats API side
+# (x0/y0/z0) for all of MLB 2026 through feed_pitch and pitch_joined, and for
+# one MLB 2025 game, 776311 on 2025-09-15, as a raw feed under data/raw. There
+# is no AAA pitch-level CSV, so the AAA 2024 plane clause is deferred (DEV-25,
 # DEV-27). Everything that needs only the CSV runs for every season.
 #
 # THE SEAL. Only 2026 dates before config/seal.yml's seal_start_date are read,
@@ -151,6 +164,30 @@ check("UT-12 twin refuses the API reference plane y0",
       r_y0$status != 0L && grepl("ValueError", r_y0$text),
       sprintf("y0 = 50.0022 ft is not a plate plane, exit %d", r_y0$status))
 
+# The other two release columns. A pandas Series carries its column name, so
+# the twin refuses release_pos_x or release_pos_z handed over in place of
+# plate_x or plate_z, and accepts the real plate columns in the same form.
+PY_SERIES <- paste0(
+  "import pandas as pd;",
+  "from absump.geometry import reproject;",
+  "d = pd.DataFrame(dict(plate_x=[0.12], plate_z=[2.31], release_pos_x=[-1.80],",
+  "release_pos_z=[5.90], vx0=[5.104], vy0=[-136.346], vz0=[-5.012], ax=[-9.147],",
+  "ay=[28.540], az=[-13.958]));",
+  "reproject(d.%s, d.%s, d.vx0, d.vy0, d.vz0, d.ax, d.ay, d.az, 17/12, 8.5/12)")
+s_ok <- py_run(sprintf(PY_SERIES, "plate_x", "plate_z"))
+s_rx <- py_run(sprintf(PY_SERIES, "release_pos_x", "plate_z"))
+s_rz <- py_run(sprintf(PY_SERIES, "plate_x", "release_pos_z"))
+check("UT-12 twin accepts plate_x/plate_z columns", s_ok$status == 0L,
+      sprintf("exit %d on pandas columns named plate_x and plate_z", s_ok$status))
+check("UT-12 twin refuses release_pos_x as plate_x",
+      s_rx$status != 0L && grepl("ValueError", s_rx$text),
+      sprintf("exit %d, %s", s_rx$status,
+              if (grepl("ValueError", s_rx$text)) "ValueError raised" else "no ValueError"))
+check("UT-12 twin refuses release_pos_z as plate_z",
+      s_rz$status != 0L && grepl("ValueError", s_rz$text),
+      sprintf("exit %d, %s", s_rz$status,
+              if (grepl("ValueError", s_rz$text)) "ValueError raised" else "no ValueError"))
+
 # The size of the trap, measured rather than quoted: release_pos_y is 54.18 ft,
 # so a caller who substitutes it projects from the wrong plane.
 g24 <- q(sprintf("select plate_x, plate_z, vx0, vy0, vz0, ax, ay, az,
@@ -180,13 +217,16 @@ check("UT-12 R module refuses ay <= 0",
 ## ===========================================================================
 
 # 2.1 the closed form against a brute-force smallest-positive-root solve.
-# Bisection on [0, 1] s of f(t) = 0.5*ay*t^2 + vy0*t + (Y_REF - y), which shares
-# the polynomial with the closed form and none of its algebra. f(0) > 0 and
-# f(1) < 0 are asserted, so the bracket holds the smaller root: the larger one
-# is above 9 s for a real pitch.
+# Bisection of f(t) = 0.5*ay*t^2 + vy0*t + (Y_REF - y), which shares the
+# polynomial with the closed form and none of its algebra, on [0, -vy0/ay].
+# f(0) = Y_REF - y > 0, and -vy0/ay is the vertex of the parabola, where f is at
+# its minimum and negative for any pitch that reaches the plane: f(0) > 0 and
+# f(vertex) < 0 are asserted, and the smaller root is the only root in that
+# bracket, at any speed. The larger root lies beyond the vertex. The solve runs
+# over every pitch of the nine days in 2.2, with no speed filter.
 brute_root <- function(y, vy0, ay, iters = 200L) {
   f <- function(t) 0.5 * ay * t^2 + vy0 * t + (Y_REF_FT - y)
-  lo <- rep(0, length(vy0)); hi <- rep(1, length(vy0))
+  lo <- rep(0, length(vy0)); hi <- -vy0 / ay
   stopifnot(all(f(lo) > 0), all(f(hi) < 0))
   for (i in seq_len(iters)) {
     mid <- 0.5 * (lo + hi)
@@ -196,25 +236,6 @@ brute_root <- function(y, vy0, ay, iters = 200L) {
   0.5 * (lo + hi)
 }
 
-s <- q(sprintf("select plate_x, plate_z, vx0, vy0, vz0, ax, ay, az, release_speed
-                from read_parquet('%s')
-                where vy0 is not null and ay is not null and plate_x is not null
-                  and release_speed >= %d
-                order by game_pk, at_bat_number, pitch_number limit 2000", SC(2024, GOLDEN_DAY),
-               SLOW_MPH))
-for (nm in c("front", "mid")) {
-  y <- if (nm == "front") Y_FRONT_FT else Y_MID_FT
-  closed <- t_at_y(y, s$vy0, s$ay)
-  brute  <- brute_root(y, s$vy0, s$ay)
-  check(sprintf("UT-11 closed form == brute force at %s", nm),
-        max(abs(closed - brute)) < 1e-12,
-        sprintf("max |delta| %.3e s < 1e-12, n = %d", max(abs(closed - brute)), nrow(s)))
-}
-far <- (-s$vy0 + sqrt(s$vy0^2 - 2 * s$ay * (Y_REF_FT - Y_FRONT_FT))) / s$ay
-record("UT-11 the root not taken",
-       sprintf("larger root min %s s, max %s s; the closed form returns max %s s",
-               fmt(min(far), 4), fmt(max(far), 4), fmt(max(t_at_y(Y_FRONT_FT, s$vy0, s$ay)), 4)))
-
 # 2.2 t in (0.30, 0.60) s at both planes over pitches with release_speed >= 70
 # mph, t_mid > t_front pitch by pitch and dz < 0 wherever the vertical velocity
 # at the plate is negative over every pitch at any speed, all of it over five
@@ -223,12 +244,25 @@ all_days <- c(DAYS_2026, unname(DAYS_PRIOR))
 all_seasons <- c(rep(2026, length(DAYS_2026)), names(DAYS_PRIOR))
 n_t <- 0L; n_slow <- 0L; t_lo <- Inf; t_hi <- -Inf; slow_hi <- -Inf; slow_mph <- -Inf
 bad_range <- 0L; bad_order <- 0L; n_vzneg <- 0L; bad_dz <- 0L; dz_means <- numeric(0)
+brute_max <- c(front = 0, mid = 0); far_min <- Inf; closed_max <- -Inf
+lit_out <- 0L; lit_mph <- -Inf; lit_ep <- 0L
 for (i in seq_along(all_days)) {
-  d <- q(sprintf("select plate_x, plate_z, vx0, vy0, vz0, ax, ay, az, release_speed
+  d <- q(sprintf("select plate_x, plate_z, vx0, vy0, vz0, ax, ay, az, release_speed,
+                         pitch_type
                   from read_parquet('%s')
                   where vy0 is not null and ay is not null and plate_x is not null",
                  SC(all_seasons[i], all_days[i])))
   tf <- t_at_y(Y_FRONT_FT, d$vy0, d$ay); tm <- t_at_y(Y_MID_FT, d$vy0, d$ay)
+  brute_max["front"] <- max(brute_max["front"], abs(tf - brute_root(Y_FRONT_FT, d$vy0, d$ay)))
+  brute_max["mid"]   <- max(brute_max["mid"],   abs(tm - brute_root(Y_MID_FT, d$vy0, d$ay)))
+  far_min <- min(far_min, (-d$vy0 + sqrt(d$vy0^2 - 2 * d$ay * (Y_REF_FT - Y_FRONT_FT))) / d$ay)
+  closed_max <- max(closed_max, tm)
+  out <- tf <= 0.30 | tf >= 0.60 | tm <= 0.30 | tm >= 0.60
+  lit_out <- lit_out + sum(out)
+  if (any(out)) {
+    lit_mph <- max(lit_mph, max(d$release_speed[out], na.rm = TRUE))
+    lit_ep <- lit_ep + sum(d$pitch_type[out] %in% "EP")
+  }
   fast <- !is.na(d$release_speed) & d$release_speed >= SLOW_MPH
   n_t <- n_t + sum(fast); n_slow <- n_slow + sum(!fast)
   t_lo <- min(t_lo, min(tf[fast])); t_hi <- max(t_hi, max(tm[fast]))
@@ -247,6 +281,14 @@ for (i in seq_along(all_days)) {
   bad_dz <- bad_dz + sum(dz[vz_plate < 0] >= 0)
   dz_means <- c(dz_means, mean(dz))
 }
+for (nm in c("front", "mid")) {
+  check(sprintf("UT-11 closed form == brute force at %s", nm), brute_max[[nm]] < 1e-12,
+        sprintf("max |delta| %.3e s < 1e-12, n = %d, every speed", brute_max[[nm]],
+                n_t + n_slow))
+}
+record("UT-11 the root not taken",
+       sprintf("larger root min %s s over %d pitches; the closed form returns max %s s",
+               fmt(far_min, 4), n_t + n_slow, fmt(closed_max, 4)))
 # THE POPULATION OF THE t-BAND CLAUSE. (0.30, 0.60) s is a sanity check on the
 # kinematics, not a claim about baseball. A 50 mph lob genuinely takes longer
 # than 0.60 s to reach the plate, so the band is true only of competitive-speed
@@ -265,6 +307,9 @@ record("UT-11 the population the band excludes",
        sprintf("%d of %d pitches (%.3f%%) are under %d mph and are outside the clause's population, asserted on by no band; slowest %s mph, largest t %s s, still far under the smaller of the two far roots",
                n_slow, n_t + n_slow, 100 * n_slow / (n_t + n_slow), SLOW_MPH,
                fmt(slow_mph, 1), fmt(slow_hi, 4)))
+record("UT-11 the band read with no speed filter",
+       sprintf("%d of %d pitches (%.3f%%) fall outside (0.30, 0.60) s at either plane; the fastest of them is %s mph and %d are eephus (EP)",
+               lit_out, n_t + n_slow, 100 * lit_out / (n_t + n_slow), fmt(lit_mph, 1), lit_ep))
 check("UT-11 t_mid > t_front pitch by pitch, every speed", bad_order == 0L,
       sprintf("%d of %d pitches violate it, no speed filter", bad_order, n_t + n_slow))
 check("UT-11 dz < 0 where vz at the plate is negative", bad_dz == 0L,
@@ -307,7 +352,7 @@ for (day in DAYS_2026) {
   r <- reproject(d$plate_x, d$plate_z, d$vx0, d$vy0, d$vz0, d$ax, d$ay, d$az,
                  Y_MID_FT, Y_FRONT_FT)
   e <- pmax(abs(r$x - d$p_x), abs(r$z - d$p_z))
-  called <- d$description %in% c("ball", "called_strike")
+  called <- d$description %in% c("called_strike", "ball", "blocked_ball")
   api_all_max <- max(api_all_max, max(e)); api_called_max <- max(api_called_max, max(e[called]))
   api_n <- api_n + length(e); api_called_n <- api_called_n + sum(called)
   api_over <- api_over + sum(e >= 0.0011)
@@ -325,8 +370,8 @@ for (day in DAYS_2026) {
     else direct_front_api <- max(direct_front_api, max(abs(xx - d$p_x), abs(zz - d$p_z)))
   }
 }
-check("2026 CSV mid -> front matches API pX/pZ", api_called_max < 0.0011,
-      sprintf("max %s ft < 0.0011 over %d called pitches, %d days",
+check("2026 CSV mid -> front matches API pX/pZ, called", api_called_max < 0.0011,
+      sprintf("max %s ft < 0.0011 over %d called pitches (called_strike, ball, blocked_ball), %d days",
               fmt(api_called_max), api_called_n, length(DAYS_2026)))
 record("2026 the same over every pitch",
        sprintf("max %s ft over %d pitches; %d at or above 0.0011 ft: %s", fmt(api_all_max),
@@ -334,10 +379,73 @@ record("2026 the same over every pitch",
 check("2026 CSV reproduces at y = 8.5/12 (direct integration)", direct_mid < 5e-7,
       sprintf("max abs err %s ft, prints as 0.000000, %d pitches", fmt(direct_mid), api_n))
 record("2026 API pX/pZ at y = 17/12 (direct integration)",
-       sprintf("max abs err %s ft, the residual of y0 = 50.0022 against the reference plane 50.0",
+       sprintf("max abs err %s ft: the API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual is what the 0.0011 ft bar allows for",
                fmt(direct_front_api)))
-defer("2025 CSV reproduces at y = 17/12",
-      "the Stats API side for MLB 2025 is not on this machine: data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27). The clause needs x0/y0/z0 from the feed; the CSV alone cannot identify its own plane")
+
+# 2025. The clause needs the Stats API's own release-plane state (x0, y0, z0),
+# which the CSV does not carry. data/interim/feed_pitch holds season=2026 only
+# (DEV-25, DEV-27), and one MLB 2025 game is on disk as a raw feed, 776311 on
+# 2025-09-15. The feed is joined to the CSV on the six kinematic columns, which
+# the SOP measured equal between the two sources, so the join needs neither
+# at_bat_number nor pitch_number and cannot fall into the join-key trap.
+FEED_2025_DAY <- "2025-09-15"; FEED_2025_GAME <- 776311L
+FEED_2025 <- sprintf("%s/data/raw/statsapi/feed/sport=1/season=2025/date=%s/gamepk=%d.json.zst",
+                     ROOT, FEED_2025_DAY, FEED_2025_GAME)
+read_feed <- function(path) {
+  f <- arrow::ReadableFile$create(path)
+  s <- arrow::CompressedInputStream$create(f, codec = arrow::Codec$create("zstd"))
+  chunks <- list()
+  repeat {
+    b <- s$Read(1048576L)
+    if (b$size == 0) break
+    chunks[[length(chunks) + 1L]] <- as.raw(b)
+  }
+  s$close(); f$close()
+  jsonlite::fromJSON(rawToChar(do.call(c, chunks)), simplifyVector = FALSE)
+}
+if (!file.exists(FEED_2025) || !file.exists(SC(2025, FEED_2025_DAY))) {
+  defer("2025 CSV reproduces at y = 17/12",
+        sprintf("the Stats API side for MLB 2025 is not on this machine: %s is absent, and data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27)",
+                sub(paste0(ROOT, "/"), "", FEED_2025, fixed = TRUE)))
+} else {
+  num <- function(v) if (is.null(v)) NA_real_ else as.numeric(v)
+  rows <- list()
+  for (p in read_feed(FEED_2025)$liveData$plays$allPlays) {
+    for (e in p$playEvents) {
+      if (!isTRUE(e$isPitch)) next
+      cc <- e$pitchData$coordinates
+      rows[[length(rows) + 1L]] <- c(
+        x0 = num(cc$x0), y0 = num(cc$y0), z0 = num(cc$z0),
+        vx0 = num(cc$vX0), vy0 = num(cc$vY0), vz0 = num(cc$vZ0),
+        ax = num(cc$aX), ay = num(cc$aY), az = num(cc$aZ))
+    }
+  }
+  api25 <- as.data.frame(do.call(rbind, rows))
+  api25 <- api25[stats::complete.cases(api25), ]
+  csv25 <- q(sprintf("select plate_x, plate_z, vx0, vy0, vz0, ax, ay, az
+                      from read_parquet('%s')
+                      where game_pk = %d and plate_x is not null and vy0 is not null
+                        and ay is not null", SC(2025, FEED_2025_DAY), FEED_2025_GAME))
+  kin <- c("vx0", "vy0", "vz0", "ax", "ay", "az")
+  key <- function(df) do.call(paste, c(lapply(df[kin], function(v) sprintf("%.6f", v)), sep = "|"))
+  api25$k <- key(api25); csv25$k <- key(csv25)
+  m25 <- merge(csv25, api25, by = "k", suffixes = c("", ".api"))
+  kin_diff <- max(abs(as.matrix(m25[kin]) - as.matrix(m25[paste0(kin, ".api")])))
+  one_to_one <- !anyDuplicated(api25$k) && !anyDuplicated(csv25$k)
+  direct25 <- function(y) {
+    tt <- (-m25$vy0 - sqrt(m25$vy0^2 - 2 * m25$ay * (m25$y0 - y))) / m25$ay
+    max(abs(m25$x0 + m25$vx0 * tt + 0.5 * m25$ax * tt^2 - m25$plate_x),
+        abs(m25$z0 + m25$vz0 * tt + 0.5 * m25$az * tt^2 - m25$plate_z))
+  }
+  e25_front <- direct25(Y_FRONT_FT); e25_mid <- direct25(Y_MID_FT)
+  check("2025 CSV reproduces at y = 17/12 (direct integration)",
+        one_to_one && nrow(m25) > 0 && kin_diff == 0 && e25_front < 5e-7,
+        sprintf("max abs err %s ft, prints as %s, %d pitches of game %d on %s",
+                fmt(e25_front), fmt(e25_front, 6), nrow(m25), FEED_2025_GAME, FEED_2025_DAY))
+  record("2025 the join and the other plane",
+         sprintf("%d of %d CSV pitches joined 1:1 on the six kinematic columns, max |delta| %s between the two sources; the same integration to y = 8.5/12 misses by %s ft, so the clause identifies the plane",
+                 nrow(m25), nrow(csv25), fmt(kin_diff, 6), fmt(e25_mid, 4)))
+}
 defer("AAA 2024 CSV reproduces at y = 8.5/12",
       "there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step")
 
