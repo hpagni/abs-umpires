@@ -1,0 +1,14 @@
+# W9.6, the data test pack on the real warehouse. SOP section 0.1 registers this
+# step with the verify command `make test-data`, which is what the gate runs.
+# The pack is the whole of tests/data: the fixture and sweep suites the ingest
+# steps own, plus tests/data/test_warehouse_pack.py, which re-runs sixteen DT
+# assertions against the warehouse file and writes the row counts and null
+# rates SOP section 9.1 asks for into out/tables/data_quality.csv and .md.
+# `needs` names the warehouse because a pack that skipped every warehouse clause
+# should read MISSING, not PASS.
+- id: W9.6
+  title: "Data test pack green on the full warehouse"
+  verify: "make test-data"
+  expect_exit: 0
+  owner: W9
+  needs: tests/data/test_warehouse_pack.py, {duckdb}

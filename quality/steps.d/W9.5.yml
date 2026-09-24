@@ -1,0 +1,20 @@
+# W9.5, the unit test pack. Written to quality/steps.d/ and merged by
+# quality/merge_steps.py. Do not edit the merged copy in quality/steps.yml.
+#
+# The verify command is `make test-unit`, which runs `pytest tests/unit -q`, so
+# the whole directory is the gate and a module added to it is run without a
+# further registry change. SOP section 6.2 is the specification: UT-01 to UT-17
+# and UT-20 in the files the ingest and seal steps own, UT-11 and UT-12 on the
+# Python twin, the coverage contract over the five named modules, and the two
+# hypothesis properties.
+#
+# `needs` names the three files this step wrote. It does not name
+# src/absump/geometry.py: that module is written by the Chapter 1 zone step, and
+# until it lands the twin tests skip with that reason rather than reporting the
+# whole pack as not built.
+- id: W9.5
+  title: "Unit test pack, UT-01 to UT-24 and the coverage contract"
+  verify: "make test-unit"
+  expect_exit: 0
+  owner: W9
+  needs: tests/unit/test_coverage_contract.py, tests/unit/test_properties.py, tests/unit/test_geometry_reproject.py
