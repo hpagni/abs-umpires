@@ -348,6 +348,24 @@ What it does not catch, each with the layer that does:
 7. **Any read performed by a binary or compiled artefact**, and anything under `data/` or
    `research/`, which D-03 keeps out of git entirely. Covered by: the seal, and
    `data/raw/_manifest.csv`.
+8. **A second unqualified fact-table read added to a file that already declares the rule-3
+   scope.** The scope added in phase 03 is read at *file* scope: a dbt model whose own output
+   is a fact table, a dbt test whose output is an assertion about one, and a pack or ledger
+   that counts every row by design declare themselves with a `GD-04-EXEMPT` marker in their
+   header, and the scanner grants it only where it independently recognises the site. A new
+   read added later to one of those files is covered by the marker already there, without
+   anyone declaring it again. It cannot spread: the marker grants nothing in the chapters, the
+   R code, the notebooks, the fixtures or the staging and intermediate models, and a marker
+   written there is itself reported. Covered by: review of that file's diff, the seal, and
+   `dbt/tests/assert_seal_not_crossed.sql`, which fails if any relation in the warehouse holds
+   a row past the boundary at all.
+9. **A query assembled by concatenating a `FROM` in one string onto a table name in the
+   next.** Rule 3 no longer reads a `FROM` or a `JOIN` as governing a relation named across a
+   string terminator or a new mapping key, because in this repository that span is prose
+   beside a provenance label -- `reconstructed from call_original` in one JSON field and the
+   relation in the next -- and four such fields were the only thing the rule found there.
+   `ref(`, `source(`, `read_parquet` and `.table()` keep the loose span. Covered by: the taint
+   pass, which follows a table name through a variable, and review.
 
 **The stopping rule.** The scan is closed for a phase when four conditions hold, each one
 checkable rather than aspirational: (1) the seal layer stands under direct attack, re-proved
@@ -483,3 +501,291 @@ Why it is not repaired now. Completing the open seasons costs 6 statsapi request
 on it, because the MLB 2022-2025 postseason is pre-ABS. The re-pull is scheduled for phase
 07 under D-P2-04, and this entry closes when that re-pull lands and W6.0 re-derives its
 scope.
+
+## DEV-25 -- the W2.16 contract sample and the decisive call_original cases were re-drawn
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by this entry.
+
+The SOP names six games for the reconciliation contract sample and four decisive cases
+for the original-call reconstruction. Four of the six sample games (753191, 752975,
+752300, 780583) and three of the four decisive cases (780583 twice, 753191 once) cite
+games whose feed JSON is not on this machine and cannot be pulled under the seal or the
+request budget, so neither check could be run as written.
+
+Both were re-drawn from the corpus that is on disk, keeping the shape of the assertion.
+The sample is now 824466 3=2+1, 822925 2=1+1, 823334 11=6+5, 824599 12=10+2, 825008
+12=9+3, 824998 16=9+7, all MLB 2026, all delta 0 in challenge_reconciliation.csv. The
+decisive cases are now 822682 ab 56 p 7, 822688 ab 51 p 6, 822683 ab 68 p 2 and the
+retained 822925 ab 8 p 3, all four re-run against feed_challenge and all four agreeing
+with call_original = NOT call_final when is_overturned. Every replacement is dated
+before the 2026-09-22 seal.
+
+One replacement earns its place beyond the substitution. 822683 ab 68 is an overturned
+MJ challenge in the middle of an at-bat that ends field_out, and its result description
+names no challenge at all, so it is a stronger statement of the never-text-match rule
+than the three overturned descriptions it replaces.
+
+## DEV-26 -- the play-level ending events are three, not two
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by this entry.
+
+The SOP and challenges.py both said a play-level MJ challenge ends an at-bat on a called
+strike that is a strikeout or a ball that is a walk. A called third strike that also
+retires a runner is a strikeout_double_play, and the claim fails on it. Measured on what
+is on disk: MLB 2026 resolves 2,560 play-level records, strikeout 1,826, walk 728,
+strikeout_double_play 6; the 665 staged AAA 2024 games carry 602, strikeout 410, walk
+190, strikeout_double_play 2. That is 8 exceptions in 3,162 records. An earlier pass
+reported 7 in 3,085 over a different file set; today's numbers are the measured ones.
+
+The enumeration is now one constant, absump.challenges.AT_BAT_ENDING_EVENT_TYPES. DT-09
+reads the constant instead of repeating a literal set, and the prose in challenges.py
+and in the SOP names all three event types. No row changes: the resolution rule, the
+last isPitch event of the play, was always right and still resolves every record.
+
+## DEV-27 -- W2.15 reports coverage for a level-season it cannot join
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed by the feed pulls under D-P2-04.
+
+The join over mlb 2022..2025 and aaa 2023..2025 produced no game rows, because MLB
+2022-2025 have a Statcast side and no feed side and AAA has neither side. Before today
+the join printed a line and left those seasons unmentioned in the report, so a reader
+could not tell a season that had been requested and had nothing to join from a season
+that was never in the request at all. The join now writes one coverage row per such level-season, with
+game_pk empty, every count zero and the reason in status: no_feed_pitch, no_statcast_pitch
+or no_inputs. The full picture is in out/tables/join_report.md.
+
+The exit code is unchanged in substance and worth stating. A request where no level-season
+had both sources still exits 3, so a regression that empties feed_pitch for 2026 cannot
+pass as a green run. The coverage rows are written first, so the report carries the truth
+either way.
+
+## DEV-28 -- W2.13: the published pitch_keys block must carry the B-1 condition
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed when `absump.joinkey` carries B-1.
+
+The code block printed under "The corrected pitch key" incremented the slot counter on
+`isPitch is True or ev.get("type") == "no_pitch"`. The phase measured a further condition,
+B-1: a `no_pitch` event takes a pitch slot only when it carries `details.call`. A `no_pitch`
+without a call is a timer or an administrative event that Statcast never gives a row, so
+counting it shifts every later slot in that at-bat by one.
+
+A reader implementing the SOP exactly as printed reintroduces the silent false matches the
+step exists to remove, on about 11 percent of games. The published block now carries the
+predicate, and the surrounding prose with it.
+
+The module has not caught up. `absump.joinkey.is_key_event` still reads
+`event.get("isPitch") is True or event.get("type") == NO_PITCH`, with no `details.call` test,
+so the SOP is now ahead of the code rather than behind it. That is the deviation this entry
+carries and it belongs to the W2.13 owner, not to this record. What closes it:
+`is_key_event` gains B-1, UT-03 pins a call-less `no_pitch` as taking no slot, and the join
+report is re-run. Evidence: `logs/evidence/W2.13.log`, `src/absump/joinkey.py`.
+
+## DEV-29 -- W2.13: the intentional-walk at-bats are 77 and 81, not 76 and 80
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the SOP edit. Pre-tag.
+
+The prose read "at-bats 76 and 80 of 776311". Those are `atBatIndex` values, and the key the
+step builds uses `at_bat_number == atBatIndex + 1`. The sentence therefore named a number in
+one convention while the rest of the section used the other. It now reads "at-bats 77 and 81
+(atBatIndex 76 and 80)", which matches `src/absump/joinkey.py` and UT-03. No count changes:
+both at-bats still carry four `no_pitch` events against four Statcast rows.
+
+## DEV-30 -- W2.16: the reconciliation box carries three terms, and the public bar is 10,168
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the SOP edit. Pre-tag.
+
+The first paragraph of W2.16 names three JSON locations. The reconciliation box under it
+summed two of them, pitch level plus play level, and left out
+`reviewDetails.additionalReviews[]`. On MLB 2026, 45 games do not reconcile under the
+two-term sum and every one of them reconciles under the three-term sum. The box now carries
+the third term.
+
+The public bar follows from the same arithmetic. The three-term sum is 10,168 events against
+10,168 gameData tallies across 2,342 games; the two-term sum is 10,167. The SOP already
+printed 10,168 in the W2.16 bar, so the box was the side that disagreed, and it is the side
+that changed. The 10,167 figures elsewhere in the SOP are the Savant leaderboard totals for
+challenges, which are a different count and are left alone.
+
+## DEV-31 -- DT-11: the 0.60 s clause is scoped to the analysis sample
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed when W3.7 lands the exclusion.
+
+DT-11 demanded "0 pitches with `t >= 0.60 s`". Measured over D-61's P0 window, 2,379 called
+pitches sit at or past 0.60 s. The physics is right and the threshold is what is wrong: a
+position-player lob at 40 mph takes longer than 0.60 s to reach the plate and is not a
+tracking defect.
+
+The clause now reads as scoped to the analysis sample after W3.7 excludes position-player
+pitching, with the P0 count of 2,379 stated beside it so the gate cannot be read as zero
+over the raw corpus. What closes it: W3.7 publishes the exclusion, and the count inside the
+analysis sample is then measured and written into the DT-11 row.
+
+## DEV-32 -- DT-12: the distinct-ratio claim is restated, and two per-day anchors were wrong
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the SOP edit. Pre-tag.
+
+DT-12 read "exactly 1 for 2026", which is false for the season. It holds on the sampled day
+and not on the year: 1,144 of 688,686 2026 rows sit off the 0.535 / 0.27 rule, confined to
+2026-04-25, 2026-04-26, 2026-08-13 and 2026-08-23. DT-12 now states both, the single ratio on
+2026-09-15 and the 1,144 rows across the season.
+
+Two per-day anchors in SOP section 2.5 were also off by a small amount against the staged
+days. MLB 2024-09-15 measures 2,446 distinct ratios, not 2,444; MLB 2025-09-15 measures
+1,605, not 1,604. Both are corrected in place. The 2022-09-15 figure of 1,105 reproduces and
+is unchanged. What these 1,144 rows are is an owner question, recorded in DECISIONS.md.
+
+## DEV-33 -- DT-13: the half-millimetre identity is given a season scope
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed when the 2026 question is settled.
+
+DT-13 compared `sz_top*12/0.535` against `sz_bot*12/0.27` at a tolerance of 1e-6 in with no
+season qualifier. It cannot hold that way. Through 2025 the zone is operator-set per pitch and
+the two expressions are not two readings of one height: the worst disagreement over 2022-2025
+is 39.35 in, which is the rule not applying rather than a failure. The gate is now written as
+2026 and AAA 2023 onward.
+
+Inside that scope it still breaches on the 1,144 rows of DEV-32, worst case 0.2409 in, on the
+same four dates. Those rows are carried as a named exception with the dates listed, not as a
+silent tolerance widening. What closes it: the owner decides what the four dates are, and the
+exception is either removed or written into the pre-registration.
+
+## DEV-34 -- DT-01: the "max observed 4,500" gate line is corrected to 5,412
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the SOP edit. Pre-tag.
+
+DEV-20 measured the two Statcast row counts and amended them in this record: the 2026-09-16
+day is 4,501 rows, not 4,500, and the widest stored day is 2023-08-19 at 5,412 rows over 18
+games. The SOP text still carried 4,500 in both places, in the W2.9 trap paragraph and in the
+DT-01 gate row, so the record and the SOP disagreed. Both lines now read the measured figures.
+Neither figure moves the gate, which is `rows < 25000` and passes on every stored day.
+
+## DEV-35 -- W2.15: the 100.000% bar admits the documented game-825000 exception
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed when the owner rules on the game.
+
+W2.15 said the public benchmark is 100.000% on 2,342 games and that anything below it is a
+defect rather than a finding. The run is 2,341 of 2,342. The one game that misses, 825000, is
+a Statcast coordinate artifact already written up against its own row in the join report.
+
+Read as printed, the sentence turns a documented single-game artifact into a build failure and
+gives a later reader a reason to relax the join instead. The sentence now admits the one
+recorded exception by game_pk and holds the bar at 100.000% for every other game, so a second
+failing game still fails. What closes it: the owner either accepts the artifact, which makes
+this entry CLOSED as written, or rules the run failing, which reverts the sentence.
+
+## DEV-36 -- season 2022 is partial against D-61's stated P0 window
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed by a 2022 backfill or by D-61.
+
+D-61 defines P0 as every called pitch with `game_type == 'R'` from 2022-01-01 to 2026-09-21.
+What is on disk for 2022 is 69 days, 2022-04-07 to 2022-06-14, carrying 271,009 geometry rows.
+The season stops in mid-June, so any 2022 figure computed today is a two-month slice and not
+the season the SOP names.
+
+This matters to the pre-trend rather than to the headline. D-13's fork already turns on 2022
+coverage, and a partial season reads as low coverage for a reason that has nothing to do with
+height back-linking, so the two causes have to be kept apart. What closes it: the rest of 2022
+is pulled, or D-61 shortens the window in writing and the abstract follows.
+
+## DEV-37 -- the AAA corpus has gaps, and two W2.15 claims rest on games not on this machine
+
+Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed by the AAA pulls under D-P2-04.
+
+Three gaps, all of the same kind. The AAA 2024 row 753191 in the W2.15 coverage table reports
+224 / 224 / 224 with no supporting bytes under `data/raw` and no line in `join_report.csv`.
+`join_report.csv` covers MLB 2026 alone, so the MLB 2022-2025 and AAA 2023-2025 commands the
+step lists have not been run. Four of the six W2.16 contract games were not on this machine
+and the sample was re-drawn, which DEV-25 records.
+
+None of this is a defect in the code. It is a corpus that is still filling, and the honest
+reading is that the AAA claims are unverified rather than verified. Rows resting on absent
+bytes are marked unverified in place until the pull lands. What closes it: the AAA feeds
+arrive, the level-season commands run, and each row is either reproduced or withdrawn.
+
+## DEV-38 -- W2.11/W4.3: `leagueData` is an array now, and the sweep exited 0 on 28 failures
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the parser and exit-code changes below.
+
+SOP W2.11 records `leagueData` as an object carrying both sides, and the parser demanded one.
+Measured 2026-09-24, the page serves a one-element array holding only the side the view
+belongs to: batting for `batter` and `batting-team`, fielding for `catcher`, `pitcher` and
+`catching-team`. `team-summary` and `league` carry a block of their own shape, and an MLB 2025
+page carries an empty array. Every key inside is unchanged, and `absData` and `serverParams`
+did not move.
+
+The 03:13 pull of 2026-09-24 lost all 28 views to that one sentence and still exited 0,
+because `sweep()` printed each refusal and dropped it. The silent exit is the more serious
+half and is fixed. `sweep()` now carries its refusals, and `main()` exits non-zero when any
+view fails to parse or when no view is captured. Proved by forcing a `ParseError` on every
+view, which exits 1.
+
+The parser now looks for `absData` three ways, loudest first: the W2.11 regex, a balanced JSON
+scan of an `absData` assignment, then any script block whose JSON holds an array of objects
+carrying `n_challenges`, `n_total_sample` or `player_name`. It accepts `leagueData` as either
+container. The 2026-09-24 shape is pinned by two trimmed HTML fixtures and eight tests, so a
+further rename fails by name rather than being swallowed. `contracts/savant_absdata.yml`
+records both measured shapes with their dates. Those two fixtures are held out of git under
+the seal rule; see the notes on DEV-40.
+
+DT-24 passes on the re-parsed pull under the existing 6.0 percent pull-date tolerance. No
+re-baseline is needed and none was taken.
+
+## DEV-39 -- W4.4: the framing endpoint's `year=` parameter is accepted and ignored
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by the URL change below.
+
+Twelve separate requests through `absump.http`, one per season 2015-2026, ten seconds apart,
+each to the exact URL SOP W4.4 writes, all returned the same sha256 `03cdbf7e881c01da`, 13,796
+bytes and 58 rows. That is the live 2026 table. `season=2015` does the same. Nothing in the
+response says so: HTTP 200, `text/csv`, a UTF-8 BOM, and a well-formed body with the 21 SOP
+columns. The tell is on the page, where `serverParams` echoes a year of 2015 while reporting a
+season start and end of 2026, and the page's selects are `ddlSeasonStart` and `ddlSeasonEnd`.
+
+Using `seasonStart=2015&seasonEnd=2015` returns 12,138 bytes and 56 rows, a different body.
+The eleven finished seasons now come back distinct, at 12,138, 13,696, 13,547, 14,323, 15,156,
+13,887, 13,960, 14,242, 14,992, 13,702 and 13,562 bytes.
+
+Any earlier analysis that believed it held 2015-2025 framing held twelve copies of the current
+season. Nothing downstream had consumed it. `URL_TEMPLATE` now uses `seasonStart` and
+`seasonEnd`. The SOP string is kept as `URL_TEMPLATE_YEAR_IGNORED` so the change stays
+legible, and a test asserts the sent URL is not the SOP one and carries no `year=`.
+
+## DEV-40 -- W4.4/DT-26: season 2026 cannot be pinned to a byte count, and a 2026 pull after 2026-09-21 is sealed
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED for the static seasons; the 2026 benchmark
+is the open owner question in D-P3-13.
+
+DT-26 as the SOP writes it pins one season, 2026, to 13,808 bytes, 58 rows, `pitches` from
+2,573 to 8,769 and `rv_tot` from -10.72 to 7.78, measured 2026-09-22. The 2026-09-24 pull
+reads 13,796 bytes, 58 rows, `pitches` to 8,832 and `rv_tot` to 8.13.
+
+Diagnosed without touching sealed per-pitch data. Every quantity grew, which a season-to-date
+aggregate can only do by adding games. The ABS leaderboard, the same host on the same night
+and an independent aggregate, says how many: batting sample 102,656 to 103,304, a gain of 648,
+and fielding 231,223 to 232,743, a gain of 1,520. At the baseline's own per-game rates of 43.8
+and 98.7 over 2,343 final games, that is 14.8 and 15.4 games. Fifteen regular-season games
+were played on 2026-09-22, 16 scheduled with one postponed. The sixteen games of 2026-09-23
+were still in progress in the United States when the pull ran at 01:47 UTC on 2026-09-24. Both
+aggregates therefore advanced by exactly the first sealed day. The byte count fell while every
+quantity grew because the `rv_*` columns are full-precision doubles whose string lengths move.
+
+2026-09-22 is inside the sealed set, so this is not a stale constant. Any 2026 framing
+aggregate pulled after 2026-09-21 is a sealed-set input.
+
+Implemented: seasons 2015-2025 are `static` and keep byte-exact pinning, with bytes, rows,
+sha256, `pitches` minimum and maximum and `rv_tot` minimum and maximum recorded in
+`contracts/savant_framing.yml`, measured once and never again. An unmeasured static season is
+a failing clause rather than a silent pass. Season 2026 is `live`: structure is checked, for
+the BOM, the 21 columns in order, rectangularity, numeric types, non-emptiness and
+qualified-only rows, and the exact figures are reported rather than asserted, under a
+`live_not_pinned` clause that prints both measurements side by side. One thing is still
+asserted for 2026, `live_monotone`: a season-to-date aggregate may grow and may not shrink, so
+a truncated or swapped file still fails. The 2026 pull is marked as sealed-contaminated in the
+output and on `SeasonPull`, and a live season never raises, so it cannot cost the eleven
+seasons that are finished.
+
+The same reasoning is why the two trimmed leaderboard fixtures of 2026-09-24 are not committed.
+They carry `leagueData` and `absData` records from a season-to-date aggregate whose window
+extends past 2026-09-21, in machine-readable form, read by `parse_page`. The eight tests that
+read them are held back with them. What closes it: regenerate both fixtures from a static
+season, or from synthetic records of the same shape, since no test asserts a value from them.

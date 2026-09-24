@@ -1088,3 +1088,304 @@ the regular-season entry exactly, at 2,459 schedule rows, which is the SOP's own
 together with the arithmetic 2,459 + 12 + 20 + 14 + 7 = 2,512. The full assertion turns on
 automatically once a full-range 2026 payload exists, which is after the W9.7 unseal
 ceremony. It is left off until then.
+
+## Decisions applied under the execution posture, phase 03 (2026-09-24, Madrid)
+
+### D-P3-01 `ops/lint_http.sh` does not scan the vendored dbt directories
+
+Owner: W1.7 / W9.5. Status: applied.
+
+`dbt deps` downloads dbt_utils, dbt_date and dbt_expectations into `dbt/dbt_packages/`, and
+their shipped GitHub Actions workflows carry curl lines. Scanning them put four bypasses on
+the board in third-party CI that no commit of ours could clear and that a clean `dbt deps`
+would put straight back. `dbt_packages` joins the skip list; `dbt/logs/` was already covered
+by the `logs` entry. Our own dbt code, `dbt/models`, `dbt/macros`, `dbt/tests` and
+`dbt/seeds`, is still read. Pinned by
+`tests/unit/test_lint_http_bypasses.py::test_the_vendored_dbt_directories_are_not_scanned`,
+which plants a curl in a vendored workflow and a second one in `dbt/models`, then requires
+the vendored one to be ignored and the `dbt/models` one to fail the gate.
+
+### D-P3-02 `tests/unit/test_coverage_contract.py` joins the linter's exemption list
+
+Owner: W1.7 / W9.5. Status: applied.
+
+The SOP section 6.2 coverage contract resolves its five modules with
+`importlib.import_module(module)`, which PY-DYNIMPORT reads as a module named in a variable.
+A static import would make the whole unit pack unrunnable until `absump.zone` and
+`absump.geometry` land, which is the opposite of what a coverage contract is for. The names
+come from `SOP_MODULES`, a literal tuple the file's own first test pins verbatim, and all
+five are first-party, so no string reaches that call that the SOP did not put there. The
+exemption is by path and so turns off all thirty-seven rules inside that file; it is kept the
+size of the one line that needs it by
+`test_the_coverage_contract_exemption_stays_narrow`, which fails if any other request idiom
+appears there or if a second dynamic import is added.
+
+### D-P3-03 The warehouse path is written in `src/absump/paths.py` and nowhere else
+
+Owner: W9.6 / W9.4. Status: applied.
+
+`tests/unit/test_paths.py` holds every layout string to one copy. Phase 03 added seven more
+copies of `warehouse/abs.duckdb`. The two sprint checkpoints and `quality/verify_contract.py`
+now take it from `absump.paths`; `quality/warehouse_contract.yml` and the W9.6 registry record
+name it as the token `{duckdb}`, which `verify_contract.py` and `write_receipt.py` resolve
+through the same module; the rest were prose and were reworded. `--database` still accepts a
+literal path, so an operator can point the checker at a copy by hand.
+
+### D-P3-04 `mart_called_pitches` is rebuilt on `int_called_pitch`, and publishes no bare plate_x
+
+Owner: W1.11 / W2.18. Status: applied.
+
+The W1.11 skeleton was written against the synthetic seed and published `plate_x` and
+`plate_z` aliased off the re-projected pair. Raw Statcast coordinates are front-plane through
+2025 and mid-plane from 2026, so a column called `plate_x` means two different measurements
+depending on the season. Every target but ci now reads `int_called_pitch` and keeps its names,
+including `plate_x_mid`, `plate_x_front` and `plane_source`. The ci target still builds from
+the 200-row seed, which has no re-projected pair, and therefore publishes neither: it also
+drops `play_id` and `pitch_slot`, which a flat seed cannot mean. The step title of W1.15 was
+reworded to "no call to any MLB or Savant host" for the reason recorded at D-P2-07.
+
+### D-P3-05 GD-04 does not scan vendored packages or dbt's own rotated log
+
+Owner: W1.8 / W9.7. Status: applied, with the remainder referred to the owner.
+
+`dbt/dbt_packages/` is third-party source whose integration tests carry date literals, and
+`dbt/logs/` is dbt's debug log, which echoes back the boundary comparison of the build that
+just ran; rotation meant `dbt.log.1` was scanned while `dbt.log` was not. Both are gitignored
+transcripts or vendored code, excluded on the same format-and-mode terms as
+`quality/receipts/`, and `tests/guard/test_no_sealed_reads.py` pins the new prefix list. That
+clears 2,477 of the 2,542 findings. The remaining 65 are ours and are not a scanning defect:
+see the owner item in the phase 03 handoff.
+
+### D-P3-06 D-12 REVERSED: AAA 2024 starts 3 tokens per team, so the AAA DP is 4x4
+
+Owner: W2.16 / W3.20. Status: applied. **This reverses the D-12 entry of 2026-09-22.**
+**OWNER-VISIBLE: it changes the chapter-3 state space.**
+
+The 2026-09-22 entry settled the AAA 2024 allotment at 2 tokens per team. It was reached from
+a 12-team-game sample, all of it after the mid-season changeover. The full-corpus measurement
+now supersedes it. D-12's estimator, the per-game maximum of `remaining` across the
+play-by-play, returns a mode of 3 over 712 AAA 2024 team-games that carry an `absChallenges`
+block. The 21 team-games that measure otherwise are written out one row each to
+`out/tables/aaa_allotment_audit.csv`, with the game, the team side and the observed maximum.
+
+That figure supports the SOP R2 position rather than the older line. The AAA 2024 dynamic
+program is therefore **4x4**, four home token states by four away token states, not 3x3. Every
+chapter-3 table, figure and timing estimate keyed on the AAA state space is sized from 4x4
+from here. The MLB 2026 arm is unaffected and stays at its own allotment.
+
+What would reopen it: a season split. The audit table is the place to look, and a second mode
+concentrated on dates before the D-57 changeover would mean the season carries two rule
+versions rather than one.
+
+### D-P3-07 MLB 2026: the extra-inning token is modelled in the DP and stated in the pre-registration
+
+Owner: W2.16 / W3.4. Status: applied.
+
+MLB 2026 allots 2 tokens per team in regulation. 36 team-games measure a third, and every one
+of them goes to extra innings, which is the published rule rather than a data defect. The
+applied default is to model the extra-inning token in the dynamic program and to say so in the
+pre-registration, rather than to restrict the sample to regulation.
+
+Restricting to regulation was the alternative. It was rejected because extra innings are where
+a token is worth the most, so dropping them removes the part of the state space the chapter is
+about. Modelling the token costs one extra state and is stated rather than silent.
+
+### D-P3-08 The mart follows W2.16's canonical token estimator, not the feed's own arithmetic
+
+Owner: W2.18 / W2.16. Status: applied.
+
+`int_challenge_resolved` derives `tokens_start` from `feed_game` as `remaining + used_failed`.
+That arithmetic disagrees with the measured allotment on 36 of 4,632 MLB 2026 team-games, and
+the 36 are the extra-inning games of D-P3-07. DT-08's canonical estimator is the per-game
+maximum of `remaining` across the play-by-play, which W2.16 owns and the intermediate layer
+cannot see.
+
+The mart follows W2.16. Where the two differ, the W2.16 value is the one published, and the
+feed arithmetic is kept beside it as a diagnostic column rather than dropped. AAA 2024 has no
+`feed_game` row at all, so its tokens are null in this layer and come from W2.16 as well.
+
+### D-P3-09 The deferred and skipped targets of phase 03, and where the machine profile lives
+
+Owner: W1.10 / W9.4. Status: applied.
+
+Four operational defaults, all reversible by the owner:
+
+- **MotherDuck prod target deferred.** `MOTHERDUCK_TOKEN` is unset, so `dbt debug --target
+  prod` skips. The local dev target proves the pipeline end to end and phase 03 completes
+  without the token.
+- **B2 canary skipped.** `B2_APPLICATION_KEY_ID` and `B2_APPLICATION_KEY` are unset, so
+  `ops/b2_check.sh` skips. A skip is recorded as a skip, not as a pass.
+- **The nightly commits locally and does not push.** `ops/nightly.sh` carries `--push` and it
+  is off by default. It stays off until the owner says otherwise.
+- **The machine profile lives at `~/.dbt/profiles.yml`**, copied from
+  `dbt/profiles.yml.example`, so dbt resolves the `absump` profile from the repository root.
+
+### D-P3-10 OPEN, OWNER-VISIBLE: what the 1,144 off-rule 2026 pitches are
+
+Owner: the project owner. Status: **open question, recommended default applied in the
+meantime.** See DEV-32 and DEV-33.
+
+1,144 of 688,686 MLB 2026 rows do not satisfy the 0.535 / 0.27 zone rule. They are confined
+to four dates, 2026-04-25, 2026-04-26, 2026-08-13 and 2026-08-23, and the two implied heights
+disagree by up to 0.2409 in. Two readings fit the evidence. Either Statcast published a
+defective zone on those four dates, or those games did fall back to an operator-set
+zone, as every season through 2025 did.
+
+The two readings are not separable from the CSV alone. A defect would be corrected by a later
+Savant re-publication; a genuine fallback would show up in the feed as well, and the feed for
+those dates is not yet staged.
+
+Recommended default, applied now: treat the four dates as excluded from the
+zone-harmonisation sample, and state the exclusion in the pre-registration with the date list
+and the row count. It costs four days out of a 2026 season and it keeps a possible
+operator-set zone out of a sample whose whole purpose is the machine-set one. The cheap test
+that would settle it is a re-pull of those four days after the seal lifts, compared byte for
+byte against what is stored.
+
+What the owner decides: whether to keep the exclusion, or to pull the four dates' feeds and
+resolve the question before `prereg-v1`.
+
+### D-P3-11 Chapter 1 does not need GUMBO feeds for 2022-2025
+
+Measured 2026-09-24 from the staged schedules, pulled with `hydrate=officials`. Final games
+against games carrying an officials array: 2022, 2,479 of 2,479; 2023, 2,476 of 2,476; 2024,
+2,468 of 2,469; 2025, 2,464 of 2,464; 2026, 2,371 of 2,372. Distinct home-plate umpires per
+season are 96, 94, 90, 92 and 91, inside the SOP's 75-110 band every year.
+
+The W2.15 joins for mlb 2022-2025 returned zero games with reason `no_feed_pitch`. The
+Statcast side is present and the feed side was never pulled. That reads like a hole in the
+three-regime study, and it is not one. Chapter 1 needs four things per called pitch: plate
+coordinates and zone bounds from Statcast, the batter's height from W2.7 at coverage 1.000,
+the season's regime, and the home-plate umpire from the schedule. None of those comes from a
+feed. Feeds carry what only 2026 needs: challenge records, the ABS regime marker and the
+token state.
+
+Applied default: Chapter 1's 2022-2025 arm is built from Statcast joined to the schedule on
+`game_pk`. The zero-game join rows stay in `out/tables/join_report.csv` as honest coverage
+records rather than defects. Pulling 2022-2025 feeds is about 9,900 requests over three
+statsapi nights and is deferred to phase 07, needed only if a later chapter wants per-pitch
+feed fields for those seasons.
+
+Risk accepted: one 2024 game and one 2026 game carry no officials array. Both are the
+postponed or cancelled rows already documented, and neither carries a called pitch.
+
+What would reverse it: a chapter that needs a per-pitch feed field before 2026.
+
+### D-P3-12 GD-04 rule 3 is scoped to analysis reads, and the two scoped kinds declare themselves
+
+Decided 2026-09-24 (Europe/Madrid). Pre-tag. The matching declared limits are DEV-18 items 8
+and 9, because the scanner header and DEV-18 have to agree.
+
+Rule 3 fails a read of a fact table that the enclosing statement does not restrict to
+`analysis_set = 'open'`. Phase 03 built the warehouse, and 64 reads then failed the rule in
+one run. None was an evasion. They were of two kinds the rule was never aimed at.
+
+Warehouse construction. `fct_called_pitch` is built from `fct_pitch`, and `fct_challenge`
+reads the pitch fact to attach its two distance columns. Nine dbt tests assert things about
+those tables: the join is complete, the original call is reconstructed, the reconciliation is
+zero, the null rates hold. Restricting a build or an assertion to the open set changes what
+the warehouse contains, or lets a broken row hide behind the seal from the test written to
+find it.
+
+Whole-warehouse measurement. `tests/data/test_warehouse_pack.py` measures the warehouse
+against the contract, and `agg_closed_season_rowcount` writes the row-count ledger that DT-20
+compares against the previous nightly. A count restricted to the open set cannot see a
+held-out row appear in a closed season, which is the one thing that ledger exists to see.
+
+The decision: rule 3 is scoped so that construction and measurement are not analysis reads,
+while every analysis read stays strict. The scope is not a path allow-list. It is granted only
+when both of two things hold. First, the site declares it: a comment line of its own in the
+file's header reads `GD-04-EXEMPT: <kind> -- <reason>`, with the kind either `construction` or
+`measurement` and a reason of at least 30 characters. A marker trailing live code, or inside a
+string, is not one. Second, the scanner agrees independently, recomputing the site property
+from the path and the file. A marts model must itself be a fact model. A dbt test must be a
+dbt test under `dbt/tests/`. A schema file may claim it only on a `relationships` test target,
+which declares an assertion and has nowhere to put a WHERE clause. A measurement must name
+three or more warehouse relations and be a pack, a checkpoint script or an aggregate ledger.
+
+So a declaration is a claim and never the grant, and a new file cannot inherit the scope in
+silence. The marker grants nothing at all under `src/absump/ch*`, `R/`, `notebooks/`,
+`tests/fixtures/`, `sql/`, `quality/sql/`, `app/`, `tools/`, `scripts/`, `config/` or the
+staging and intermediate models. A marker written in any of those is itself reported as a
+violation, so misuse is loud rather than quiet.
+
+Of the 64, 57 are now declared at 12 sites, 3 are qualified, and 4 were not reads at all.
+What was not exempted: four reads in the two sprint checkpoint scripts were analysis reads
+that had forgotten the qualifier. They measure MLB 2026 rows whose counts land in
+`docs/numbers.json` and are quoted in the abstract. Three now carry `analysis_set = 'open'`.
+Measured against `warehouse/abs.duckdb` on 2026-09-24 before the change, every row those
+three statements touch is already labelled open: 10,168 challenged called pitches, 10,168 MLB
+2026 reviews, 10,168 matched. No published number moves. The fourth reads
+`fct_team_game_tokens`, which is at team-game grain and carries no `analysis_set` column at
+all. The open set is not expressible there, the read is a count and a mode over every MLB 2026
+team-game, and the seal is kept on that relation by `assert_seal_not_crossed` on
+`official_date`. That one is declared rather than qualified.
+
+Four further findings were not reads at all. A `FROM` or a `JOIN` is also an English word, and
+`reconstructed from call_original` in one JSON field, with a relation named in the next field,
+was being read as a query. Rule 3 no longer lets those two keywords reach across a string
+terminator or a new mapping key. `ref(`, `source(`, `read_parquet` and `.table()` are
+unambiguous reads and keep the loose span. That removed the findings in `docs/numbers.json`,
+`quality/warehouse_contract.yml` and the two provenance labels in the sprint checkpoints
+without exempting anything.
+
+Why this does not weaken the seal: the barrier of record is the encrypted partition and the
+six-condition unseal ceremony, and GD-04 is a detection layer, per the stopping rule already
+recorded above. The scope forgives one rule, on files that declare themselves and that the
+scanner recognises. It forgives nothing else: not the held-out label, not the held-out view,
+not a held-out day, not a read of the partition by path, and not an analysis read anywhere.
+GD-05's allowlist is still exactly two paths.
+
+Pinned from both sides in `tests/guard/test_no_sealed_reads.py`. A construction site without
+the marker still fails. An analysis read of a fact table without `analysis_set = 'open'` still
+fails in a chapter, in R, in a notebook and in ad-hoc SQL. The marker grants nothing in
+`src/absump/ch1`, `ch2`, `ch3`, `R/ch1`, `notebooks/` or `tests/fixtures/` and is reported
+there. A marts model that is not a fact model, and a staging model, cannot claim construction.
+A measurement claim over a single relation is refused. A marker in a string or with a one-word
+reason is not a marker. Every marker in the live tree is one the scanner grants.
+
+Standing obligation: the rule table changed, so the red team runs again against it, per
+condition 4 of the stopping rule.
+
+What would reverse it: a red-team run that reaches a held-out row through a declared site.
+
+### D-P3-13 OPEN, OWNER-VISIBLE: the 2026 framing benchmark cannot be taken after the seal
+
+Owner: the project owner. Status: open question, recommended default applied in the meantime.
+See DEV-38, DEV-39 and DEV-40.
+
+Recommended default, applied now: compute framing run value point-in-time from our own
+called-pitch data, and use the Savant leaderboard only as an out-of-sample benchmark for the
+static seasons, 2015-2025.
+
+Why. We hold every called pitch through 2026-09-21. A framing measure built from those
+pitches has a date on it, stops where the seal stops, and can be cut the way every other
+Chapter 1 and Chapter 2 quantity is cut: by catcher, by month, by count, by umpire,
+split-half for reliability. The Savant 2026 number can do none of that. It is one
+whole-season scalar per catcher, it moves every night, it cannot be asked for "through
+2026-09-21", and taking it after the boundary imports sealed games into a pre-registered
+open-set analysis.
+
+What is lost, plainly. The external benchmark for 2026 goes away, so for the season the paper
+is about there is no independent published framing number to check ours against. We inherit
+Savant's modelling choices only by imitation, because their `rv_*` columns are a proprietary
+run-value model over eight shadow zones and ours will be our own. The published-comparability
+claim weakens from "our framing numbers match the public leaderboard" to "they match it in
+2015-2025". Coverage changes: the Savant export is qualified catchers only, 58 in 2026
+against 107 in the ABS catcher view under D-35, so any 2026 number computed here is not
+comparable catcher-for-catcher even in principle. The point-in-time measure is also work that
+was not in the plan: a shadow-zone definition, a run-value weighting, and a test that it
+reproduces the 2015-2025 leaderboard within a stated band.
+
+The alternative was rejected. Keeping the live 2026 leaderboard and widening DT-26 into a
+tolerance band needs a band wide enough to accept a season still being played, and such a band
+accepts the endpoint breaking quietly too. That is the class of failure that cost one pull
+twelve identical files and 28 silent parse errors on the same night.
+
+What the owner decides: whether to accept the default, or to keep the benchmark. If the
+benchmark is kept, the honest form is to pull the 2026 leaderboard once at the end of the
+regular season, pin it then, label it in the paper as a post-seal external figure, and keep it
+out of every fitted model.
+
+- Owner sign-off, phase 03 decisions: **not given**. Recorded 2026-09-24 by the agent that
+  applied the defaults above. Each entry names what would reverse it.

@@ -68,3 +68,51 @@ the December sprint rather than on the day.
 
 Finalist, poster and conference dates are not published on that page and are not carried as
 verified anywhere in this repository.
+
+<!-- W6.3: feeds and challenges checkpoint -->
+
+## Feeds and challenges, the sprint checkpoint
+
+Owner: SOP step W6.3. Dependencies: W2.6, W2.13, W2.16. Related: D-12, D-62, R-05.
+
+The checkpoint states whether the 2026 game feeds are on disk and extracted and
+whether the challenge counts reconcile. It builds nothing. W2.6 pulls the feeds,
+W2.13 extracts them on the corrected pitch key, and W2.16 builds the challenge
+table and writes `out/tables/challenge_reconciliation.csv`.
+
+Re-run it with:
+
+    uv run --locked python ops/sprint_feed_checkpoint.py            write
+    uv run --locked python ops/sprint_feed_checkpoint.py --check    verify only
+
+The write form is the only thing allowed to move the feed and challenge slots in
+`docs/numbers.json` or the W6.3 block in `abstract/SPRINT-STATUS.md`. Do not type
+a number into either file. Both writes are byte-compared first, so a second run
+in a row changes nothing.
+
+Two generators share `docs/numbers.json`. `ops/sprint_feed_checkpoint.py` owns
+the feed and challenge slots and writes them first; `ops/sprint_join_checkpoint.py`
+owns the join slots and writes them last. Either may run first. A third generator
+that rewrites `entries` wholesale has to carry both sets forward, or both steps
+have to be re-run after it.
+
+What `--check` fails on when the warehouse and the reconciliation report are on
+disk: a feed stored after the last open day, an extraction that does not cover
+every stored feed, a record difference between the challenge table and the
+`gameData` tallies, a game that does not reconcile, a non-MJ review in the
+challenge fact, an unresolved or unmatched challenge, a challenge with no
+reconstructed original call, an overturn count that is not the sum of
+`usedSuccessful`, a modal starting allotment other than two, and either published
+artifact drifting from the data. On a clean clone with no datum on disk it gates
+the committed ledger against the committed status block instead, so the step
+still proves itself there.
+
+DT-08 and DT-15 are refreshed by this step and owned elsewhere. Run them with:
+
+    uv run --locked pytest tests/unit/test_challenges.py tests/data/test_warehouse_pack.py -q -k "dt08 or dt15"
+
+The four MLB 2026 games with no `absChallenges` block in either source are
+823669, 823745, 825093 and 825094. They hold no challenge, they are the same four
+games DT-12 and DT-13 find off the ABS zone, and they are excluded from the
+reconciled game count rather than counted as reconciling. Do not repair them by
+hand.
