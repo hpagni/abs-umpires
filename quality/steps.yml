@@ -602,6 +602,93 @@
   date: 2026-09-23
   owner: W3
 
+# W3.2, the Chapter 1 preflight. Owner W3, fleet phase 04. W3.0 and W3.1 were
+# folded into it at assembly.
+#
+# The verify command is the script itself, which is the SOP's own acceptance
+# test: it exits 0 and prints one PASS line per assertion, and it exits 1 after
+# reporting every clause that failed, not only the first. Seven clauses: R
+# >= 4.5.2, mgcv >= 1.9.4, brms == 2.23.0, CmdStan == 2.40.0, a CmdStan sample
+# that runs, free disk >= 25 GiB, and the five Chapter 1 inputs readable by
+# arrow::open_dataset(). It also records capabilities("OpenMP") and the thread
+# warning mgcv::bam raises, which are recorded and never asserted.
+#
+# The warehouse is one DuckDB file, so the five inputs reach arrow the only way
+# a DuckDB relation can: DuckDB writes a 2,000-row extract of each to Parquet in
+# a temporary directory and arrow::open_dataset() opens it and scans it. The two
+# pitch-level inputs are read through their open views, never through a fact
+# table, so the step adds no read that the W9.7 scan has to forgive.
+#
+# `needs` names the warehouse directory, because the five-input clause has
+# nothing to read on a clean clone and a step whose inputs are absent must read
+# MISSING rather than FAIL. It names the directory and not the file for two
+# reasons. The file's own path is a layout string that tests/unit/test_paths.py
+# holds to one copy in src/absump/paths.py, so writing it here would fail that
+# test. And the {duckdb} layout token does not resolve inside prove.sh:
+# write_receipt._layout resolves a token by importing absump.paths, prove.sh
+# runs on bare python3, absump is installed only in the uv virtual environment,
+# so the token is left as written and the step reads MISSING with the warehouse
+# on disk. W9.6 registers {duckdb} the same way and has the same problem; it
+# belongs to W9 to fix and is reported, not worked around here.
+
+- id: W3.2
+  title: "Chapter 1 preflight, seven clauses and the two OpenMP records"
+  verify: "Rscript R/ch1/00_preflight.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/00_preflight.R, warehouse
+
+# W3.3, the zone and kinematics module. Owner W3, fleet phase 04.
+#
+# The module is R/lib/zone.R, shared with W4 and W5, and its Python twin
+# src/absump/geometry.py. The verify command is the acceptance test itself,
+# tests/ch1/test_zone.R, which prints one line per clause and exits 1 after
+# reporting every clause that failed. 36 assertions, 1.5 s.
+#
+# It owns UT-11 (the smaller positive root in closed form: the round trip, the
+# t range at both planes, t_mid > t_front, dz < 0 where the ball is still
+# falling, and the closed form against a brute-force bisection), UT-12 (the
+# twin raises ValueError on release_pos_*), UT-13 (sz_top*12/0.535 ==
+# sz_bot*12/0.27), the D-14 edge convention against four hand-computed points,
+# the 2026 plane clauses against the Stats API, mean dz on a day per season
+# 2022-2025, the 500-pitch golden file and the 100,000-row cross-check between
+# the R module and the twin.
+#
+# Two clauses are deferred in the test's own output, with their reasons, rather
+# than passed: the 2025 and AAA-2024 plane identifications need the Stats API
+# side for those seasons, and data/interim/feed_pitch holds season=2026 only
+# while data/interim/statcast_pitch holds level=mlb only (DEV-25, DEV-27).
+#
+# `needs` names the module, the twin, the golden file and data/interim. The
+# data directory never enters git, so on a clean clone the step reads MISSING
+# rather than FAIL, which is the same treatment W3.2 gives the warehouse.
+
+- id: W3.3
+  title: "The zone and kinematics module, UT-11 UT-12 UT-13 and the golden file"
+  verify: "Rscript tests/ch1/test_zone.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/lib/zone.R, src/absump/geometry.py, tests/golden/reproject_golden.csv, data/interim
+
+# W4.0, the Chapter 2 environment additions. Owner W4, fleet phase 04.
+#
+# The three packages the SOP installs are lme4, tidybayes and marginaleffects.
+# They go into the renv project library, which is what R_LIBS_USER already points
+# at on this machine, and renv.lock is the record. The gate does not re-run the
+# install. It loads the three packages and compares each installed version with
+# the version renv.lock records, then compares brms, cmdstanr and mgcv the same
+# way without loading them, because this step must leave the brms + cmdstanr
+# backend and the mgcv pin exactly as it found them. packageVersion prints 2.0.6
+# where the lockfile writes 2.0-6, so the lockfile value has its dashes turned
+# into dots before the comparison.
+
+- id: W4.0
+  title: "Chapter 2 environment additions, lme4 tidybayes marginaleffects in renv"
+  verify: 'ok=1; for p in lme4 tidybayes marginaleffects; do i=$(Rscript -e "suppressPackageStartupMessages(library(commandArgs(TRUE)[1], character.only=TRUE)); cat(as.character(packageVersion(commandArgs(TRUE)[1])))" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n "$i" ] && [ "$i" = "$l" ] || ok=0; done; for p in brms cmdstanr mgcv; do i=$(Rscript -e "cat(as.character(packageVersion(commandArgs(TRUE)[1])))" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n "$i" ] && [ "$i" = "$l" ] || ok=0; done; [ $ok -eq 1 ]'
+  expect_exit: 0
+  owner: W4
+  needs: renv.lock
+
 # W4.2, the Savant per-team ABS challenge drawer. Owner W4, fleet phase 02.
 #
 # The verify command has two halves and both must run. The pytest half is the

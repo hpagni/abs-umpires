@@ -1,0 +1,35 @@
+# W3.2, the Chapter 1 preflight. Owner W3, fleet phase 04. W3.0 and W3.1 were
+# folded into it at assembly.
+#
+# The verify command is the script itself, which is the SOP's own acceptance
+# test: it exits 0 and prints one PASS line per assertion, and it exits 1 after
+# reporting every clause that failed, not only the first. Seven clauses: R
+# >= 4.5.2, mgcv >= 1.9.4, brms == 2.23.0, CmdStan == 2.40.0, a CmdStan sample
+# that runs, free disk >= 25 GiB, and the five Chapter 1 inputs readable by
+# arrow::open_dataset(). It also records capabilities("OpenMP") and the thread
+# warning mgcv::bam raises, which are recorded and never asserted.
+#
+# The warehouse is one DuckDB file, so the five inputs reach arrow the only way
+# a DuckDB relation can: DuckDB writes a 2,000-row extract of each to Parquet in
+# a temporary directory and arrow::open_dataset() opens it and scans it. The two
+# pitch-level inputs are read through their open views, never through a fact
+# table, so the step adds no read that the W9.7 scan has to forgive.
+#
+# `needs` names the warehouse directory, because the five-input clause has
+# nothing to read on a clean clone and a step whose inputs are absent must read
+# MISSING rather than FAIL. It names the directory and not the file for two
+# reasons. The file's own path is a layout string that tests/unit/test_paths.py
+# holds to one copy in src/absump/paths.py, so writing it here would fail that
+# test. And the {duckdb} layout token does not resolve inside prove.sh:
+# write_receipt._layout resolves a token by importing absump.paths, prove.sh
+# runs on bare python3, absump is installed only in the uv virtual environment,
+# so the token is left as written and the step reads MISSING with the warehouse
+# on disk. W9.6 registers {duckdb} the same way and has the same problem; it
+# belongs to W9 to fix and is reported, not worked around here.
+
+- id: W3.2
+  title: "Chapter 1 preflight, seven clauses and the two OpenMP records"
+  verify: "Rscript R/ch1/00_preflight.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/00_preflight.R, warehouse

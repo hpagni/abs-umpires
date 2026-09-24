@@ -1,0 +1,56 @@
+duckdb is storing downloaded extensions and secrets under ~/.duckdb:
+ℹ /Users/hudsonpagni/.duckdb
+This persists across sessions and is shared with the DuckDB CLI and other clients.
+ℹ Run duckdb(shared_home = FALSE) to use a temporary directory instead.
+ℹ See ?duckdb_storage for details and alternatives.
+PASS   UT-12 twin accepts the two plate planes        exit 0 on reproject(front -> mid)
+PASS   UT-12 twin refuses release_pos_y as y_from     exit 1, ValueError raised
+PASS   UT-12 twin refuses release_pos_y as y_to       exit 1, ValueError raised
+PASS   UT-12 twin refuses the API reference plane y0  y0 = 50.0022 ft is not a plate plane, exit 1
+RECORD UT-12 size of the substitution error           release_pos_y 52.51 .. 55.79 ft against the reference plane 50.0: the release point read as (x0, y0, z0) misses the published crossing by up to 1.005 ft over 4559 pitches, and says nothing while it does it
+PASS   UT-12 R module refuses vy0 >= 0                stopifnot(all(vy0 < 0)) fires
+PASS   UT-12 R module refuses ay <= 0                 stopifnot(all(ay > 0)) fires
+PASS   UT-11 closed form == brute force at front      max |delta| 8.882e-16 s < 1e-12, n = 2000
+PASS   UT-11 closed form == brute force at mid        max |delta| 8.882e-16 s < 1e-12, n = 2000
+RECORD UT-11 the root not taken                       larger root min 7.0596 s, max 13.3592 s; the closed form returns max 0.4860 s
+PASS   UT-11 t in (0.30, 0.60) s, >= 70 mph, 2 planes 0 of 39149 pitches at or above 70 mph outside, range 0.3332 .. 0.5126 s, 9 days
+RECORD UT-11 the population the band excludes         123 of 39272 pitches (0.313%) are under 70 mph and are outside the clause's population, asserted on by no band; slowest 69.9 mph, largest t 1.1312 s, still far under the smaller of the two far roots
+PASS   UT-11 t_mid > t_front pitch by pitch, every speed 0 of 39272 pitches violate it, no speed filter
+PASS   UT-11 dz < 0 where vz at the plate is negative 0 of 39271 such pitches violate it, no speed filter
+PASS   UT-11 round trip front -> mid -> front         max |delta| 8.882e-16 ft < 1e-12, n = 4559
+PASS   2026 CSV mid -> front matches API pX/pZ        max 0.001071379 ft < 0.0011 over 11250 called pitches, 5 days
+RECORD 2026 the same over every pitch                 max 0.001126631 ft over 22604 pitches; 2 at or above 0.0011 ft: 824584 ab 21 p 4 hit_into_play 0.001104168 ft; 824002 ab 28 p 2 foul 0.001126631 ft
+PASS   2026 CSV reproduces at y = 8.5/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 22604 pitches
+RECORD 2026 API pX/pZ at y = 17/12 (direct integration) max abs err 0.001107982 ft, the residual of y0 = 50.0022 against the reference plane 50.0
+DEFER  2025 CSV reproduces at y = 17/12               the Stats API side for MLB 2025 is not on this machine: data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27). The clause needs x0/y0/z0 from the feed; the CSV alone cannot identify its own plane
+DEFER  AAA 2024 CSV reproduces at y = 8.5/12          there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step
+PASS   2022 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 4468
+PASS   2023 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 3514
+PASS   2024 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 4559
+PASS   2025 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 4127
+PASS   2022 mean dz in [-1.10, -0.90] in              -0.9997 in on 2022-07-05
+PASS   2023 mean dz in [-1.10, -0.90] in              -0.9716 in on 2023-06-29
+PASS   2024 mean dz in [-1.10, -0.90] in              -0.9592 in on 2024-06-26
+PASS   2025 mean dz in [-1.10, -0.90] in              -0.9713 in on 2025-06-25
+PASS   UT-13 sz_top*12/0.535 == sz_bot*12/0.27        max 0.000000032399 in < 1e-6, n = 4506 on 2026-06-23
+RECORD UT-13 the pre-2026 contrast                    2025 max 23.4037 in, mean 6.1485 in: the published zone is operator-set before ABS, so the clause is a 2026 assertion and is not vacuous
+PASS   abs_top_ft and abs_bot_ft invert the fractions 0.535*H/12 and 0.27*H/12 return the published sz_top and sz_bot
+PASS   D-14 signed_edge_in, A on the side edge        0.0000000000 in, hand-computed 0.0 in
+PASS   D-14 signed_edge_in, B the centre              -8.5000000000 in, hand-computed -8.5 in
+PASS   D-14 signed_edge_in, C a corner                5.0000000000 in, hand-computed 5.0 in
+PASS   D-14 signed_edge_in, D below the bottom        4.0000000000 in, hand-computed 4.0 in
+PASS   D-14 the zone-truth predicate                  edge - 1.45 in < 0 flips between 1.44 in and 1.46 in outside the side edge
+PASS   nearest_edge names the edge that is nearest    side, top, bot on three points built one inch outside each edge
+PASS   z_norm rescales by height                      3.0 ft over a 72 in batter is 0.5
+PASS   golden file is 500 pitches                     500 rows, 26 columns
+PASS   golden file, 11 numeric columns to 1e-9        max |delta| 1.492e-13, worst column edge_in_mid, 500 rows
+PASS   golden file, nearest_edge to the letter        500 of 500 rows agree
+PASS   cross-check sample is 100,000 rows             100000 rows from MLB 2024-06
+PASS   Python twin agrees on 100,000 rows             max |delta| 0.000e+00 ft < 1e-12 over 100000 rows
+
+36 PASS, 0 FAIL, 2 DEFER, <elapsed> s
+deferred, each with its reason:
+ - 2025 CSV reproduces at y = 17/12 -- the Stats API side for MLB 2025 is not on this machine: data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27). The clause needs x0/y0/z0 from the feed; the CSV alone cannot identify its own plane
+ - AAA 2024 CSV reproduces at y = 8.5/12 -- there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

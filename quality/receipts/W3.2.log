@@ -1,0 +1,21 @@
+PASS    R 4.5.2 (floor 4.5.2)
+PASS    mgcv 1.9.4 (floor 1.9.4)
+PASS    brms 2.23.0 (pin 2.23.0)
+CmdStan path set to: /Users/hudsonpagni/.cmdstan/cmdstan-2.40.0
+PASS    CmdStan 2.40.0 (pin 2.40.0)
+PASS    CmdStan sample: 2 chains x 1000 draws = 2000, rhat 1.00331, elapsed <elapsed> s
+PASS    <free> GiB free on /System/Volumes/Data (floor 25 GiB)
+record  warehouse: /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS    v_called_pitch_open (called pitches): 1836071 rows, 66 columns, arrow scanned 2000
+PASS    v_challenge_open (challenges): 12300 rows, 35 columns, arrow scanned 2000
+PASS    dim_umpire_game (umpire games): 18754 rows, 8 columns, arrow scanned 2000
+PASS    dim_batter_season (batter heights): 3335 rows, 13 columns, arrow scanned 2000
+PASS    dim_aaa_format (AAA format): 6755 rows, 13 columns, arrow scanned 2000
+record  capabilities("OpenMP") is length 0: this R build does not list OpenMP among its capabilities at all. The names it does list are: jpeg png tiff tcltk X11 aqua http/ftp sockets libxml fifo cledit iconv NLS Rprof profmem cairo ICU long.double libcurl
+record  R CMD config SHLIB_OPENMP_CFLAGS exits 1 and says: ERROR: no information for variable 'SHLIB_OPENMP_CFLAGS'. No OpenMP flags are configured.
+record  bam(nthreads = 2) warning: openMP not available: single threaded computation only
+record  bam(nthreads=) is a no-op on this build. Chapter 1 runtime estimates assume parallelism across R processes, capped at 8 concurrent on 18 GB.
+W3.2 preflight: 11 PASS, 0 FAIL, elapsed <elapsed> s
+PREFLIGHT W3.2 OK
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing, RN-05 freespace
