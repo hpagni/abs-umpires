@@ -71,6 +71,6 @@ swept views on disk: 0 of 28, pull date unknown
   PASS W4.3.9 every page on disk parsed and is an enumerated view: 0 parsed, 0 refused, 0 outside the enumeration
   PASS W4.3.8 no view on disk; the leg has not run here
 
-  PASS W4.3.13 offline: manifest unchanged at 7 rows
+  PASS W4.3.13 offline: manifest unchanged at 62 rows
 
 W4.3: 54 checks, 54 passed, 0 failed

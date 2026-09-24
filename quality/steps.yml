@@ -123,6 +123,46 @@
   expect_exit: 0
   owner: W1
 
+# W1.10 is the warehouse target. MotherDuck Lite is the prod output, the local
+# DuckDB file is the dev output, and both run the same engine.
+#
+# The verify command has two halves. The first half is static and always runs:
+# the prod output in dbt/profiles.yml.example points at md:absump and takes its
+# token from the environment, .env.example names MOTHERDUCK_TOKEN with no value,
+# and docs/warehouse.md records the target. The second half is the pair of live
+# tests from the SOP, dbt debug --target prod and the duckdb attach of md:absump.
+# Both are skipped with a printed message when MOTHERDUCK_TOKEN is unset, which
+# is a pass: the dev target needs no token, and the service token is an owner
+# item. While dbt/dbt_project.yml is absent, the prod dbt debug is skipped too
+# and is proved by the SOP W1.11 gate, which owns that file.
+- id: W1.10
+  title: "Warehouse target, MotherDuck Lite"
+  verify: "echo 'W1.10 warehouse target: MotherDuck Lite, prod output md:absump.' && grep -q \"path: 'md:absump'\" dbt/profiles.yml.example && grep -q \"env_var('MOTHERDUCK_TOKEN'\" dbt/profiles.yml.example && grep -q '^MOTHERDUCK_TOKEN=' .env.example && grep -q 'md:absump' docs/warehouse.md && if [ -z \"${MOTHERDUCK_TOKEN:-}\" ]; then echo 'W1.10 prod target: MOTHERDUCK_TOKEN is unset, so dbt debug --target prod and the duckdb attach of md:absump are skipped. A skip is a pass. The dev target needs no token.'; else { if [ -f dbt/dbt_project.yml ]; then uv run --locked dbt debug --project-dir dbt --target prod 2>&1 | tee /dev/stderr | grep 'Connection test: OK' >/dev/null; else echo 'W1.10 prod target: dbt/dbt_project.yml is absent, so the prod dbt debug is skipped here and runs under the SOP W1.11 gate.'; fi; } && duckdb -c \"ATTACH 'md:absump'; SHOW DATABASES;\" 2>&1 | tee /dev/stderr | grep absump >/dev/null; fi"
+  expect_exit: 0
+  owner: W1
+  needs: dbt/profiles.yml.example, .env.example, docs/warehouse.md
+
+# W1.11 is the dbt skeleton: the project file, the four-target profile, the ten
+# lake sources, three skeleton models and the 200-row synthetic seed, so the DAG
+# is real before W2 has data.
+#
+# The verify command is the gate's own sequence. deps and parse run quietly,
+# then the ci build over the synthetic seed, filtered to its one summary line so
+# the receipt log is byte-identical between two runs. After the build it checks
+# the four things a passing build does not prove on its own: the seed is 200
+# rows, the sealed-leak hook is on-run-start and named, the lake source carries
+# ten tables, and GD-04 is clean over dbt/ and over ops/dbt.sh.
+#
+# ci, not dev, because the lake is empty until W2.14 writes interim/statcast_pitch
+# and W2.16 writes interim/feed_challenge. `make dbt` runs the dev build as soon
+# as both datasets are on disk and falls back to ci until then.
+- id: W1.11
+  title: "dbt skeleton, ci build over the synthetic seed"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && out=$(uv run --locked dbt --no-use-colors build --project-dir dbt --target ci --select tag:smoke 2>&1) && printf '%s\n' \"$out\" | sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' | grep -E '^Done. PASS=18 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=18$' && test \"$(wc -l < dbt/seeds/seed_synthetic_pitches.csv)\" -eq 201 && echo 'W1.11 synthetic seed: 200 rows over MLB 2022-2026 and AAA 2023-2025.' && grep -q 'on-run-start:' dbt/dbt_project.yml && grep -q 'W1.11 seal guard' dbt/dbt_project.yml && echo 'W1.11 sealed-leak hook: on-run-start, dev target only, aborts the run.' && test \"$(sed -n '/^    tables:/,/^models:/p' dbt/models/sources.yml | grep -c '^      - name: ')\" -eq 10 && echo 'W1.11 lake source: 10 tables through external_location.' && uv run --locked python tests/guard/gd04_scan.py --path dbt && uv run --locked python tests/guard/gd04_scan.py --path ops/dbt.sh"
+  expect_exit: 0
+  owner: W1
+  needs: dbt/dbt_project.yml, dbt/profiles.yml.example, dbt/models/sources.yml, dbt/models/staging/stg_statcast_pitches.sql, dbt/models/staging/stg_abs_challenges.sql, dbt/models/marts/mart_called_pitches.sql, dbt/seeds/seed_synthetic_pitches.csv, ops/dbt.sh
+
 - id: W1.12
   title: "Secrets, gitleaks clean over full history"
   verify: "gitleaks detect --redact --no-banner"
@@ -143,6 +183,19 @@
   expect_exit: 0
   owner: W1
   needs: Makefile, tests/unit/test_makefile.py
+
+# W1.15 is the smoke test. The verify command is the script itself, because the
+# script is the check: twelve numbered checks, two of them skippable, and a
+# final line that states the count. A skip is a pass, so the registered exit
+# code is 0 whether or not B2 and MotherDuck credentials are present on the
+# machine that runs it. `needs` names every helper, so a half-built step reads
+# MISSING rather than PASS.
+- id: W1.15
+  title: "Smoke test, 12 checks, no call to any MLB or Savant host"
+  verify: "bash ops/smoke.sh"
+  expect_exit: 0
+  owner: W1
+  needs: ops/smoke.sh, ops/smoke_pins.py, ops/smoke_parquet.py, ops/smoke_joinkey.py, ops/smoke_plateplane.py, ops/smoke_r.R
 
 - id: W1.16
   title: "GitHub Actions, ci.yml and seal-guard.yml"
@@ -218,6 +271,17 @@
   owner: W2
   needs: src/absump/ingest/feeds.py, tests/data/test_feeds_mlb2026.py, ops/night_statsapi.sh, data/raw/statsapi/feed/sport=1/season=2026
 
+# W2.7 owns the batter-height dimension. The three tiers are recorded per
+# batter-season in height_source so W3 can run the pre-registered multiverse.
+# The dimension is data, so it sits in needs: a clean clone with no 2026 datum
+# on disk reports MISSING rather than FAIL.
+- id: W2.7
+  title: "Batter heights, three tiers, one height_source per batter-season"
+  verify: "uv run --locked python -m absump.heights --check && uv run --locked pytest tests/data/test_heights.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/heights.py, tests/data/test_heights.py, data/interim/dim_batter_season
+
 # W2.9 owns the Statcast Search day endpoint, its traps and its assertions.
 # W6.0 owns the runner that drives it across 920 days.
 #
@@ -258,6 +322,265 @@
   verify: "uv run --locked python -m absump.ingest.savant_leaderboard --check"
   expect_exit: 0
   owner: W2
+
+# W2.13 -- feed extraction and the corrected pitch key. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command runs UT-01, UT-02 and UT-03: the corrected counter, which
+# increments on isPitch true or type no_pitch and ignores action, pickoff and
+# stepoff; the assertion that the naive pitchNumber key false-matches, so the bug
+# cannot be reintroduced silently; and the intentional walk, four no_pitch events
+# against four Statcast rows. The tests read tests/fixtures/generated/mlb_feed.json
+# and tests/fixtures/expected/pitch_keys.json, both committed, so the command runs
+# from a clean clone with no 2026 datum on disk.
+#
+# Extraction itself is checked by running it: `uv run python -m
+# absump.ingest.extract_feed --level mlb --season 2026 --procs 8` wrote 712 parts
+# from 2,342 games in 6.0 s, and a second run wrote nothing. Reference values from
+# 824466 reproduce exactly: 281 pitch rows, call codes B 104, C 51, S 38, F 37,
+# X 31, D 8, *B 4, E 3, H 2, T 2, W 1, all 281 of 281 pitchData fields populated,
+# attendance 25341, gameDurationMinutes 148, first pitch 2026-09-15T22:41:00Z.
+- id: W2.13
+  title: "Feed extraction and the corrected pitch key"
+  verify: "uv run --locked pytest tests/unit/test_joinkey.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/joinkey.py, src/absump/ingest/extract_feed.py, tests/unit/test_joinkey.py
+
+# W2.14 -- Statcast normalisation. One typed Parquet part per raw day under
+# data/interim/statcast_pitch/, carrying both plate planes, the harmonised zone
+# and the edge distance. Owned by W2, merged in by quality/merge_steps.py.
+#
+# The verify command is offline and has two halves. The first re-reads every
+# part already on disk and asserts the five clauses that are zero on a correct
+# build: no row blanks one tracking column without the others, no tracked row
+# lost its geometry while its kinematics were valid, no row has vy0 >= 0 or
+# ay <= 0, no row's game_date disagrees with its partition date, and no pitch
+# crosses the plate at or after 2.0 s, which is the clause that catches the
+# larger quadratic root at 9.1839 s. It also asserts the 135-column output
+# schema and that the plane recorded for each season is the one section 2.5
+# states. On a machine with no data/ it reports 0 parts and passes.
+#
+# The second half is tests/data/test_normalize.py, which owns DT-04, DT-11,
+# DT-12, DT-13 and DT-17. Its synthetic tests run in a clean clone; its sweeps
+# skip when data/interim/statcast_pitch is empty.
+#
+# Measured on this machine: 799 days, 3,108,070 rows, 17 s at --threads 8,
+# 599 MB on disk. A second run rewrote no part.
+- id: W2.14
+  title: "Statcast normalisation, both planes emitted"
+  verify: "uv run --locked python -m absump.ingest.normalize_sc --check --level mlb --season 2015..2026 && uv run --locked pytest tests/data/test_normalize.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/normalize_sc.py, tests/data/test_normalize.py, ops/normalize_statcast.sh
+
+# W2.15 -- the join. feed_pitch and statcast_pitch keyed on
+# (game_pk, at_bat_number, pitch_slot), written to data/interim/pitch_joined/
+# with out/tables/join_report.csv, out/tables/join_unmatched.csv,
+# out/tables/join_failures.csv and out/audit/no_pitch_atbats.csv. Owned by W2.
+#
+# The verify command has two halves. The first re-runs the join over MLB 2026
+# and exits non-zero on any W2.15 count condition: n_api != n_csv,
+# n_matched != n_api, or an unmatched row on either side. It is idempotent, so
+# the gate re-running it rewrites the same bytes.
+#
+# The second half is tests/data/test_join.py, which owns DT-05, DT-18, DT-23
+# and DT-28 and refreshes UT-02 on the real corpus. Its synthetic tests run in
+# a clean clone; its sweeps skip when data/interim/pitch_joined is empty, and
+# the two drawer clauses skip until W4.2 has pulled the drawer.
+#
+# Measured on this machine: 178 days, 2,342 games, 691,287 of 691,287 rows
+# matched, 100.000%, 0 unmatched on either side, 4.2 s. One row of 688,686
+# breaches the 1e-6 ft coordinate assertion and is reported, not hidden:
+# game 825000, at-bat 31, pitch 3 on 2026-05-30.
+- id: W2.15
+  title: "The join, full season, with an explicit unmatched report"
+  verify: "uv run --locked python -m absump.ingest.join --level mlb --season 2026 && uv run --locked pytest tests/data/test_join.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/join.py, tests/data/test_join.py
+
+# W2.16 -- the challenge table and its reconciliation. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# feed_challenge is built from the union of three JSON locations, each filtered
+# to reviewType MJ and each record counted once: allPlays[].playEvents[].
+# reviewDetails, allPlays[].reviewDetails and reviewDetails.additionalReviews[].
+# MLB 2026: 7,608 pitch level, 2,559 play level, 1 additional, 10,168 in total
+# against 10,168 gameData tallies, 0 games not reconciling across 2,342 games,
+# 4 games excluded for carrying no absChallenges block (823669, 823745, 825093,
+# 825094). AAA 2024, read from the staging cache because the raw lake holds no
+# AAA feed yet: 1,524 pitch level, 526 play level, 82 additional, 2,132 against
+# 2,132, 0 games not reconciling across 356 games with the block.
+#
+# The verify command has three halves. The first rebuilds MLB 2026, which is
+# idempotent and exits non-zero on any game that does not reconcile. The second
+# re-reads both built corpora and asserts the six W2.16 clauses: no game not
+# reconciling, no non-MJ row, no unresolved play-level record, no play-level
+# call code outside {C, B, *B}, the overturn count equal to the sum of
+# usedSuccessful, and no duplicate key. The third is tests/unit/test_challenges.py,
+# which owns UT-04 through UT-10 and carries DT-08, DT-09, DT-10 and DT-15.
+#
+# The four DT ids belong in tests/data/test_challenges.py by the SOP layout.
+# W2.16 was given tests/unit/test_challenges.py and no other test path, so they
+# run there under their own ids. Reported for DEVIATIONS.md.
+#
+# Measured on this machine: MLB 2026, 178 parts, 10,168 rows, 4.0 s at
+# --procs 8; a second run rewrote no part. AAA 2024, 24 parts, 2,132 rows, 5.0 s.
+# call_original is checked against a fact the feed states separately: only the
+# batting team may challenge a called strike, so the standing implied by
+# call_original names one team, and that team is challengeTeamId on 10,168 of
+# 10,168 MLB 2026 records. The same rule read on call_final names the wrong team
+# on 5,490 of them, which is the overturn count exactly.
+- id: W2.16
+  title: "The challenge table and its reconciliation"
+  verify: "uv run --locked python -m absump.challenges --level mlb --season 2026 && uv run --locked python -m absump.challenges --check --level mlb --season 2026 && uv run --locked python -m absump.challenges --check --level aaa --season 2024 && uv run --locked pytest tests/unit/test_challenges.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/challenges.py, tests/unit/test_challenges.py
+
+# W2.17 -- the warehouse, the staging layer and the intermediate layer. Owned by
+# W2, fleet phase 03. Written to quality/steps.d/ and merged by
+# quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# Ten staging models, one per source in dbt/models/sources.yml, renames and
+# casts only. Six intermediate models, the ones SOP W2.17 names: int_pitch,
+# int_called_pitch, int_regime, int_challenge_resolved,
+# int_challenge_opportunity and int_re288_state. Measured on this machine:
+# 3,108,070 pitches, 1,610,220 called pitches, 12,300 challenges, 716,922
+# opportunity rows, 288 run-expectancy cells, 18,817 games, 81 nodes in 13 s.
+#
+# The verify command is the gate command of the step plus two assertions the
+# exit code alone does not make: that 16 models built, and that DT-03 ran and
+# passed under its own name. It ends with the GD-04 scan over dbt/, because
+# every file this step wrote is on the analysis surface.
+#
+# It is runnable on a clean clone with no datum on disk. dbt/macros/lake_scan.sql
+# probes each lake table before reading it and returns a zero-row select when
+# the Parquet glob is empty, so the layer builds green and empty rather than
+# failing on a file that is absent by design. Verified by building with
+# ABS_DATA_ROOT pointed at an empty directory: 81 nodes, 0 errors.
+
+- id: W2.17
+  title: "Warehouse, staging and intermediate models"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 --select staging intermediate >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && grep -qE '16 view models' \"$log\" && grep -q 'PASS dt_03_umpire_non_empty_count_is_zero' \"$log\" && rm -f \"$log\" && echo 'W2.17 warehouse: 10 staging models and 6 intermediate models on the dev target, DT-03 green.' && uv run --locked python tests/guard/gd04_scan.py --path dbt"
+  expect_exit: 0
+  owner: W2
+  needs: dbt/macros/lake_scan.sql, dbt/models/staging/stg_statcast_pitches.sql, dbt/models/intermediate/int_pitch.sql, dbt/models/intermediate/schema.yml
+
+# W2.18 -- the warehouse marts. Owned by W2, fleet phase 03. Written to
+# quality/steps.d/ and merged by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# Twelve marts, the tables SOP section 2.6 names, plus the four v_*_open views
+# that model code is allowed to read, plus the two-model ledger DT-20 needs.
+# Measured on this machine: 3,108,070 pitches, 1,610,220 called pitches, 12,300
+# reviews, 716,922 opportunity rows, 18,817 games, 18,754 umpire games, 3,189
+# batter-seasons, 6,755 AAA games, 4,684 team-games, 288 run-expectancy cells,
+# 83,762 win-probability cells. 152 nodes in 25 s.
+#
+# The verify command is the gate command of the step plus five assertions the
+# exit code alone does not make: that 13 table models built, and that the four
+# tests this step owns ran and passed under their own names, DT-19 on all three
+# referential edges and DT-20 on the row-count ledger. It ends with the GD-04
+# scan over dbt/, because every file this step wrote is on the analysis surface.
+#
+# DT-20 compares this build's closed-season counts against the previous build's,
+# so the first build after a full refresh has one snapshot and no comparison to
+# make. It passes with no rows, which is correct, and the second build is the
+# one that tests anything. The verify command runs a build, so a receipt written
+# after any earlier build is a real comparison.
+
+- id: W2.18
+  title: "Warehouse marts, the section 2.6 contract"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && grep -qE '13 table models' \"$log\" && grep -q 'PASS dt_19_fct_pitch_game_pk_resolves_to_dim_game' \"$log\" && grep -q 'PASS dt_19_fct_pitch_umpire_resolves_to_dim_umpire_game' \"$log\" && grep -q 'PASS dt_19_fct_challenge_pitch_uid_resolves_to_fct_pitch' \"$log\" && grep -q 'PASS dt_20_closed_season_row_counts_have_no_drift' \"$log\" && grep -q 'PASS dt_18_fct_pitch_pitch_uid_is_unique' \"$log\" && rm -f \"$log\" && echo 'W2.18 marts: 12 marts and 4 open views on the dev target, DT-18, DT-19 and DT-20 green.' && uv run --locked python tests/guard/gd04_scan.py --path dbt"
+  expect_exit: 0
+  owner: W2
+  needs: dbt/models/marts/schema.yml, dbt/models/marts/fct_pitch.sql, dbt/models/marts/fct_called_pitch.sql, dbt/models/marts/fct_challenge.sql, dbt/models/marts/fct_challenge_opportunity.sql, dbt/models/marts/dim_game.sql, dbt/models/marts/v_pitch_open.sql, dbt/models/marts/agg_closed_season_rowcount.sql
+
+# W2.19 -- the data tests, the dbt generic and singular layer. Owned by W2, fleet
+# phase 03. Written to dbt/models/**/schema.yml, dbt/tests/*.sql and
+# dbt/packages.yml, and to nothing else.
+#
+# Two packages arrive with this step, the pins SOP section 2.4 prints:
+# dbt-labs/dbt_utils 1.4.1 for the multi-column key test, and
+# metaplane/dbt_expectations 0.10.10 for the per-season null-rate and
+# distinct-count expectations. dbt deps writes dbt/package-lock.yml, and
+# ops/dbt.sh and the W2.17 and W2.18 verify commands already ran deps before
+# parse, so no caller changes.
+#
+# Nine singular tests, the names SOP W2.19 lists, plus accepted_values on every
+# vocabulary the step names and dbt_utils.unique_combination_of_columns on the
+# declared three-column pitch key. The ids refreshed here are DT-01, DT-04,
+# DT-08, DT-09, DT-10, DT-11, DT-12, DT-15, DT-17, DT-18 and DT-19; the pytest
+# side of the same ids is W9.6's tests/data/test_warehouse_pack.py and is not
+# re-run here.
+#
+# The verify command asserts the build is clean and then names seventeen tests
+# that must read PASS, so a rename or a silent removal fails the gate rather
+# than passing it with a smaller TOTAL.
+
+- id: W2.19
+  title: "Data tests, the dbt generic and singular layer"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && for t in assert_challenge_reconciliation_zero assert_drawer_bridge_complete assert_join_complete assert_no_duplicate_pitch_keys assert_null_rate_thresholds assert_original_call_reconstructed assert_row_count_by_day assert_seal_not_crossed assert_token_start dt_10_fct_challenge_holds_only_mj_reviews dt_11_stg_pitch_joined_plane_is_mid_or_front dt_12_mlb_2026_zone_ratio_distinct_count_is_bounded dt_12_mlb_2022_2025_zone_ratio_distinct_count_exceeds_1000 dt_17_fct_called_pitch_fielder_2_is_never_null_in_2026 dt_18_fct_pitch_declared_pitch_key_is_unique dt_18_int_pitch_declared_pitch_key_is_unique dt_19_fct_team_game_tokens_game_pk_resolves_to_dim_game; do grep -q \"PASS $t\" \"$log\" || { echo \"W2.19: $t is not PASS in the dbt build log\" >&2; exit 1; }; done && rm -f \"$log\" && echo 'W2.19 data tests: 9 singular tests and the generic layer green on the dev target.' && uv run --locked python tests/guard/gd04_scan.py --path dbt"
+  expect_exit: 0
+  owner: W2
+  needs: dbt/packages.yml, dbt/models/staging/schema.yml, dbt/models/intermediate/schema.yml, dbt/models/marts/schema.yml, dbt/tests/assert_challenge_reconciliation_zero.sql, dbt/tests/assert_drawer_bridge_complete.sql, dbt/tests/assert_join_complete.sql, dbt/tests/assert_no_duplicate_pitch_keys.sql, dbt/tests/assert_null_rate_thresholds.sql, dbt/tests/assert_original_call_reconstructed.sql, dbt/tests/assert_row_count_by_day.sql, dbt/tests/assert_seal_not_crossed.sql, dbt/tests/assert_token_start.sql
+
+# W2.21, the export gate and ATTRIBUTION.md. SOP section 2, step W2.21. The rule the
+# test file makes mechanical: no file under out/ may carry a game_pk column beside a
+# pitch_number or pitch_slot column, and no export may exceed 50,000 rows. The same
+# module asserts the six items SOP W2.21 requires in ATTRIBUTION.md. `needs` names the
+# test and the attribution file, so a step with neither reads MISSING, not PASS.
+- id: W2.21
+  title: "Exports and attribution, the out/ grain and size gate"
+  verify: "uv run --locked pytest tests/unit/test_exports.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: tests/unit/test_exports.py, ATTRIBUTION.md
+
+# W2.22, in-season mode and the launchd nightly. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command has two halves and needs both.
+#
+# The pytest module is the logic half. tests/data/test_resume.py already carried
+# W6.0's 44 synthetic tests for the Statcast runner; W2.22 adds 13 more below
+# them, and they stub one layer lower. W6.0 replaces absump.http.get, which is
+# the right stub for a test about the queue. W2.22 cannot use it, because the
+# thing this step has to prove lives inside the function that stub replaces: the
+# client keeps an append-only manifest, and a URL in it whose file is still on
+# disk is served from the cache with no connection opened. So the W2.22 block
+# installs a mock transport on the client and a temporary cache directory, and
+# every layer above that transport is the real code.
+#
+# What those 13 assert: a backfill killed after 2 of 4 files resumes and asks
+# only for the 2 it missed; the re-run spends no budget on addresses already in
+# the manifest; a third run over a full lake opens no connection; a manifested
+# URL comes back with from_cache true and never reaches the transport; two lakes
+# filled the same days, one in a single run and one killed and resumed, hold
+# byte-identical Parquet; the three ops scripts are built rather than W1.14
+# stubs; `ops/backfill.sh --plan-only` run through the shell sends nothing and
+# subtracts the lake from its queue; all three scripts refuse ABS_SEAL_UNLOCK;
+# every date from seal_start_date to the postseason estimate routes to the
+# sealed side; the nightly commits exactly out/tables/data_quality.md and
+# docs/prereg/SEAL.md through `git commit --only`; and the launchd agent is a
+# 03:30 StartCalendarInterval with RunAtLoad false, not an interval agent.
+#
+# `launchctl print` is the machine-bound half. A plist committed to the
+# repository is not a nightly. The command exits non-zero unless the agent is
+# actually bootstrapped into this user's gui domain, so the gate fails if the
+# file was written and never installed. Its output goes to /dev/null: the
+# receipt records the exit code, and the print is 200 lines of launchd state.
+#
+# `needs` names the four files the step writes plus the test module, so a step
+# with a missing script or a W1.14 placeholder reads MISSING, not PASS.
+- id: W2.22
+  title: "In-season mode, the resumable backfill and the 03:30 launchd nightly"
+  verify: "uv run --locked pytest tests/data/test_resume.py -q && launchctl print gui/$(id -u)/com.absump.nightly >/dev/null"
+  expect_exit: 0
+  owner: W2
+  needs: ops/backfill.sh, ops/inseason.sh, ops/nightly.sh, ops/com.absump.nightly.plist, tests/data/test_resume.py
 
 # Bookkeeping only. These three ids exist in the canonical id map of SOP section 2.7 but
 # carry no body text in SOP-final, because the assembly folded them into their successors.
@@ -424,6 +747,107 @@
   owner: W6
   needs: src/absump/ingest/umpires.py, src/absump/ingest/schedule.py, out/tables/umpire_season_counts.csv
 
+# W6.3, the SSAC sprint checkpoint on the feeds and the challenges. Owned by W6,
+# merged into quality/steps.yml by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# The dependency line is `W6.3  feeds + challenges  -> W2.6, W2.13, W2.16`. Those
+# three steps pull the MLB 2026 GUMBO feeds, extract them on the corrected pitch
+# key, and build and reconcile the challenge table. W6.3 rebuilds none of that and
+# restates none of their acceptance tests. It settles the one question the sprint
+# needs answered: are the 2026 feeds on disk and extracted, do the challenge counts
+# reconcile, and what are the feed and challenge slots the abstract reads from
+# docs/numbers.json. SOP section 4 names the reconciled 2026 challenge counts as
+# the first of the three floor items.
+#
+# The verify command has two halves and needs both.
+#
+# ops/sprint_feed_checkpoint.py --check is the data-bound half. With the warehouse
+# and out/tables/challenge_reconciliation.csv on disk it recomputes every number
+# the checkpoint states and fails on any of eighteen conditions: no stored feed,
+# an extraction that does not cover every stored feed, no extracted pitch row, a
+# raw lake holding fewer payloads than the feed table, a feed game or pitch row
+# after the last open day 2026-09-21, a record difference between the challenge
+# table and the gameData tallies, a game that does not reconcile or a non-zero
+# absolute delta, the three JSON locations not summing to the table, the challenge
+# fact disagreeing with the report, a non-MJ review in the fact, an unmatched
+# challenge, an unresolved challenge, a challenge with no call_original, an
+# overturn count that is not the sum of usedSuccessful, no overturn at all, a
+# modal starting allotment other than 2, an allotment histogram that does not sum,
+# an exception count that does not match the histogram, and an empty challenge
+# slot. It then re-renders the feed and challenge slots of docs/numbers.json and
+# the W6.3 block of abstract/SPRINT-STATUS.md and fails on a byte of drift. With
+# no datum on disk it still gates the committed ledger against the committed
+# block, so a clean clone proves the step.
+#
+# The ledger is shared with W6.4. W6.3 writes its slots ahead of every other
+# entry and W6.4 writes the join slots after every other entry, which is the only
+# ordering both generators agree on. Either may run first and neither moves the
+# other's bytes. Both --check commands were run against the merged file.
+#
+# The pytest half is the DT-08 and DT-15 refresh. Both ids are owned by
+# tests/unit/test_challenges.py and refreshed on the warehouse by
+# tests/data/test_warehouse_pack.py. Six tests run under -k "dt08 or dt15".
+#
+# Measured on this machine on 2026-09-24: 2,342 MLB 2026 game feeds stored and
+# 2,342 extracted, 691,502 pitch-slot rows, last open day 2026-09-21. Challenges
+# 10,168 records, 7,608 pitch level, 2,559 play level, 1 additional, against
+# 10,168 gameData tallies over 2,338 games, 0 not reconciling, 4 games excluded
+# for carrying no absChallenges block. DT-15 5,490 overturns reconstructed
+# against 5,490 usedSuccessful, 0 challenges without an original call. DT-08
+# 4,684 team-games, 4,640 at the modal 2, 36 above it, 8 with no allotment
+# evidence, 44 exceptions in all.
+- id: W6.3
+  title: "SSAC sprint checkpoint on the feeds and the reconciled challenge counts"
+  verify: "uv run --locked python ops/sprint_feed_checkpoint.py --check && uv run --locked pytest tests/unit/test_challenges.py tests/data/test_warehouse_pack.py -q -k \"dt08 or dt15\""
+  expect_exit: 0
+  owner: W6
+  needs: ops/sprint_feed_checkpoint.py, docs/numbers.json, abstract/SPRINT-STATUS.md
+
+# W6.4, the SSAC sprint checkpoint on the corrected join. Owned by W6, merged
+# into quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml
+# by hand.
+#
+# The dependency line is `W6.4  corrected join      -> W2.15`. W2.15 builds the
+# join and owns its gate. W6.4 does not rebuild it and does not restate its
+# acceptance test. It answers the one question the sprint needs settled before
+# the abstract is drafted: is the corrected join standing, and what are the two
+# Methods slots the abstract reads from docs/numbers.json.
+#
+# The verify command has two halves and needs both.
+#
+# ops/sprint_join_checkpoint.py --check is the data-bound half. With the
+# warehouse on disk it recomputes every number the checkpoint states and fails
+# on any of ten conditions: n_api != n_csv in the join report, matched rows not
+# equal to the feed side, any unmatched row, a challenged pitch with no
+# call_original, an overturn that was not flipped, an upheld call that was
+# flipped, no overturn reconstructed at all, a challenged pitch with no bridge
+# key, the D-62 feed fallback not ingested, and an empty Methods slot. It then
+# re-renders docs/numbers.json and the W6.4 block of abstract/SPRINT-STATUS.md
+# and fails on a byte of drift, so the published numbers cannot fall behind the
+# data. With no datum on disk it still gates the committed ledger against the
+# committed block, so a clean clone proves the step.
+#
+# The pytest half is the DT-28 refresh. DT-28 is owned by tests/data/test_join.py
+# and refreshed on the warehouse by tests/data/test_warehouse_pack.py. Two of its
+# four clauses run here, the bridge over real 2026 coordinates and the synthetic
+# within-game near tie; the two that need a drawer row skip until W4.2 pulls the
+# Savant ABS drawer, and say so.
+#
+# Measured on this machine on 2026-09-24: join 2,342 MLB 2026 games, 691,287 of
+# 691,287 pitches matched on both sides, 0 unmatched either side. Correction
+# 10,168 challenged called pitches, 5,490 overturned and flipped, 0 without an
+# original call, 0 disagreeing with the rule in either direction. DT-28 refresh
+# 10,168 challenged pitches, 0 without a bridge key, 18 sharing it with another
+# called pitch in the same game, 28 with any pitch. Slots N_CALLED 1,353,830 and
+# N_GAMES 10,559 over 2022-04-07 to 2026-09-21.
+- id: W6.4
+  title: "SSAC sprint checkpoint on the corrected join and the two Methods slots"
+  verify: "uv run --locked python ops/sprint_join_checkpoint.py --check && uv run --locked pytest tests/data/test_join.py tests/data/test_warehouse_pack.py -q -k dt28"
+  expect_exit: 0
+  owner: W6
+  needs: ops/sprint_join_checkpoint.py, docs/numbers.json, abstract/SPRINT-STATUS.md
+
 - id: W7.11
   title: "Retired, folded into W7.10 at assembly"
   retired: true
@@ -465,6 +889,86 @@
   expect_exit: 0
   owner: W9
   needs: tests/fixtures/synth_feed.py, tests/fixtures/test_synth_traps.py, quality/fixtures_attest.json, tests/fixtures/expected/challenges.json
+
+# W9.4 -- the warehouse contract. Owned by W9, fleet phase 03. Written to
+# quality/steps.d/ and merged by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# SOP section 2.6 states one set of table names, one grain and one key per
+# table, and the required columns of each. quality/warehouse_contract.yml is
+# that statement, machine readable. quality/verify_contract.py checks the built
+# warehouse against it and carries no table name of its own, so a table renamed
+# in the contract is a table renamed in the check.
+#
+# Eight checks. Twelve tables present as tables in the marts schema; every
+# required column present or listed as deferred with its owning step; DT-18,
+# each declared key unique with 0 duplicate groups; DT-19, eight referential
+# edges with 0 orphans, three of them the edges section 6.3 names; the four
+# open views restricted to their base table by row count and by stored
+# definition; the layer materialisations of section 2.6; the rule that model
+# code reads only the open views; and the one declared vocabulary.
+#
+# The verify command is `make verify-contract` plus the eight assertions the
+# exit code alone does not make. The counts in those assertions are the
+# contract: a table added to section 2.6 changes 12/12 here too.
+#
+# Six columns of the section 2.6 lists are declared and not built, and the
+# checker reports them as DEFERRED rather than as a pass: count_class and
+# pitch_group, owned by W3.7; sz_challenge_prob and sz_challenge_runs, owned by
+# W4.2; m_star_in and g_wp, owned by W5.2 to W5.6. A column missing and not on
+# that list is a failure. Proved by the tampered-contract runs in the W9.4
+# return: a required column removed from the deferred block fails.
+#
+# Measured 2026-09-24 against the W2.18 dev build: 3,108,070 pitches,
+# 1,610,220 called pitches, 12,300 reviews, 716,922 opportunity rows, 18,817
+# games. 9 pass, 0 fail, 1 deferred line, 0 skipped, in about 4 s.
+#
+# With no warehouse file on disk the checker reports SKIP for the checks that
+# read it, runs the two that read only the repository, and exits 0. The `needs`
+# list below is what tells `make prove` the step is built.
+
+- id: W9.4
+  title: "Warehouse contract, SOP section 2.6, checked table by table"
+  verify: "log=$(mktemp) && make verify-contract >\"$log\" 2>&1 && grep -qE \"^C1 tables +PASS +12/12 contracted tables\" \"$log\" && grep -qE \"^C2 columns +PASS\" \"$log\" && grep -qE \"^C3 keys DT-18 +PASS +12/12 declared keys unique, 0 dupes\" \"$log\" && grep -qE \"^C4 refs DT-19 +PASS +8 edges, 0 orphans\" \"$log\" && grep -qE \"^C5 open views +PASS +4/4\" \"$log\" && grep -qE \"^C6 layers +PASS\" \"$log\" && grep -qE \"^C7 read rule +PASS\" \"$log\" && grep -qE \"^C8 vocabularies +PASS\" \"$log\" && ! grep -qE \"FAIL\" \"$log\" && tail -1 \"$log\" && rm -f \"$log\""
+  expect_exit: 0
+  owner: W9
+  needs: quality/verify_contract.py, quality/warehouse_contract.yml, ops/verify_contract.sh, docs/warehouse.md
+
+# W9.5, the unit test pack. Written to quality/steps.d/ and merged by
+# quality/merge_steps.py. Do not edit the merged copy in quality/steps.yml.
+#
+# The verify command is `make test-unit`, which runs `pytest tests/unit -q`, so
+# the whole directory is the gate and a module added to it is run without a
+# further registry change. SOP section 6.2 is the specification: UT-01 to UT-17
+# and UT-20 in the files the ingest and seal steps own, UT-11 and UT-12 on the
+# Python twin, the coverage contract over the five named modules, and the two
+# hypothesis properties.
+#
+# `needs` names the three files this step wrote. It does not name
+# src/absump/geometry.py: that module is written by the Chapter 1 zone step, and
+# until it lands the twin tests skip with that reason rather than reporting the
+# whole pack as not built.
+- id: W9.5
+  title: "Unit test pack, UT-01 to UT-24 and the coverage contract"
+  verify: "make test-unit"
+  expect_exit: 0
+  owner: W9
+  needs: tests/unit/test_coverage_contract.py, tests/unit/test_properties.py, tests/unit/test_geometry_reproject.py
+
+# W9.6, the data test pack on the real warehouse. SOP section 0.1 registers this
+# step with the verify command `make test-data`, which is what the gate runs.
+# The pack is the whole of tests/data: the fixture and sweep suites the ingest
+# steps own, plus tests/data/test_warehouse_pack.py, which re-runs sixteen DT
+# assertions against the warehouse file and writes the row counts and null
+# rates SOP section 9.1 asks for into out/tables/data_quality.csv and .md.
+# `needs` names the warehouse because a pack that skipped every warehouse clause
+# should read MISSING, not PASS.
+- id: W9.6
+  title: "Data test pack green on the full warehouse"
+  verify: "make test-data"
+  expect_exit: 0
+  owner: W9
+  needs: tests/data/test_warehouse_pack.py, {duckdb}
 
 - id: W9.7
   title: "The sealed guard, four layers"

@@ -1,4 +1,4 @@
 lint-prose selftest: OK, 3 rules, 2 fixtures
-lint-prose: 10 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
+lint-prose: 12 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
 check_numbers selftest: OK, 3 fixtures
-check_numbers: 1 file(s), 56 traceable value(s), 0 untraced literal(s)
+check_numbers: 2 file(s), 76 traceable value(s), 0 untraced literal(s)

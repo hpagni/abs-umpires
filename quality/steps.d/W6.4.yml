@@ -1,0 +1,43 @@
+# W6.4, the SSAC sprint checkpoint on the corrected join. Owned by W6, merged
+# into quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml
+# by hand.
+#
+# The dependency line is `W6.4  corrected join      -> W2.15`. W2.15 builds the
+# join and owns its gate. W6.4 does not rebuild it and does not restate its
+# acceptance test. It answers the one question the sprint needs settled before
+# the abstract is drafted: is the corrected join standing, and what are the two
+# Methods slots the abstract reads from docs/numbers.json.
+#
+# The verify command has two halves and needs both.
+#
+# ops/sprint_join_checkpoint.py --check is the data-bound half. With the
+# warehouse on disk it recomputes every number the checkpoint states and fails
+# on any of ten conditions: n_api != n_csv in the join report, matched rows not
+# equal to the feed side, any unmatched row, a challenged pitch with no
+# call_original, an overturn that was not flipped, an upheld call that was
+# flipped, no overturn reconstructed at all, a challenged pitch with no bridge
+# key, the D-62 feed fallback not ingested, and an empty Methods slot. It then
+# re-renders docs/numbers.json and the W6.4 block of abstract/SPRINT-STATUS.md
+# and fails on a byte of drift, so the published numbers cannot fall behind the
+# data. With no datum on disk it still gates the committed ledger against the
+# committed block, so a clean clone proves the step.
+#
+# The pytest half is the DT-28 refresh. DT-28 is owned by tests/data/test_join.py
+# and refreshed on the warehouse by tests/data/test_warehouse_pack.py. Two of its
+# four clauses run here, the bridge over real 2026 coordinates and the synthetic
+# within-game near tie; the two that need a drawer row skip until W4.2 pulls the
+# Savant ABS drawer, and say so.
+#
+# Measured on this machine on 2026-09-24: join 2,342 MLB 2026 games, 691,287 of
+# 691,287 pitches matched on both sides, 0 unmatched either side. Correction
+# 10,168 challenged called pitches, 5,490 overturned and flipped, 0 without an
+# original call, 0 disagreeing with the rule in either direction. DT-28 refresh
+# 10,168 challenged pitches, 0 without a bridge key, 18 sharing it with another
+# called pitch in the same game, 28 with any pitch. Slots N_CALLED 1,353,830 and
+# N_GAMES 10,559 over 2022-04-07 to 2026-09-21.
+- id: W6.4
+  title: "SSAC sprint checkpoint on the corrected join and the two Methods slots"
+  verify: "uv run --locked python ops/sprint_join_checkpoint.py --check && uv run --locked pytest tests/data/test_join.py tests/data/test_warehouse_pack.py -q -k dt28"
+  expect_exit: 0
+  owner: W6
+  needs: ops/sprint_join_checkpoint.py, docs/numbers.json, abstract/SPRINT-STATUS.md

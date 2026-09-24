@@ -1,10 +1,22 @@
 b2_sync: source data/raw
 b2_sync: destination b2://abs-umpires-raw/raw
 b2_sync: never-mirror check OK (0 held-out plain paths, 0 duckdb files)
-b2_sync: plan 3161 file(s), 817071641 byte(s)
+b2_sync: plan 3198 file(s), 833117805 byte(s)
   upload data/raw/_budget.json
   upload data/raw/_manifest.csv
+  upload data/raw/baseballsavant.mlb.com/04/041e3c2fba99359a8d04020ce7e1121d26cfa4f28fc919e40aacd1446a84c335.zst
+  upload data/raw/baseballsavant.mlb.com/08/0882b3ef014c252075183a6d90b0957994aa5901c92fa566ef10725506ad5e7c.zst
+  upload data/raw/baseballsavant.mlb.com/0f/0f9c7ed273537d3f9221e02c72e020cee793cf93ff0e5b689cfc8b2016e8a2bf.zst
+  upload data/raw/baseballsavant.mlb.com/1e/1e7e3e16e8a8e1571a98dc096561b05ff33df9ca856ddd1fb8650ce3b69d9718.zst
+  upload data/raw/baseballsavant.mlb.com/29/29ffac7a32ffebc91022076c39a7da1c23e1187131666a5254c7fb0cc0e28ff7.zst
+  upload data/raw/baseballsavant.mlb.com/6b/6b2311a9419f2503452d2961df113a15fc562914383aca3b3b5c8ddaedbc16bb.zst
+  upload data/raw/baseballsavant.mlb.com/73/73c883cad87b8f1da63ed870480f9a4d5ff203cc110fb35d29fe24d17f5fe382.zst
+  upload data/raw/baseballsavant.mlb.com/79/79986a4709793c54d1ab9ce0f66373dd9b9a2e07a12e8d9b03ab7706dd9f5d7a.zst
+  upload data/raw/baseballsavant.mlb.com/7c/7cb4afef1258c6fa27525dfc0ff71d6adbd8a49f207bb49e018705dc7ea73eec.zst
+  upload data/raw/baseballsavant.mlb.com/86/869ed3e15f729455623a4ba2a2322f95201f003f63aa3cd1c1081ae46fb10b11.zst
+  upload data/raw/baseballsavant.mlb.com/9a/9a2dedbf2b9c64cd199539d7fe060901fde9e3dfdda7736677c79d1ca33f2f67.zst
   upload data/raw/baseballsavant.mlb.com/c3/c38cd617404a5713c286fd7b4cb86fa1ac03e0553619582527d491fe984cc25f.zst
+  upload data/raw/baseballsavant.mlb.com/e0/e06709358ceb1a8471dbe05511e51b9ce0397d5c4a7f51a7515a0ff0a5396e0b.zst
   upload data/raw/statcast/level=mlb/season=2022/date=2022-04-07/pitches.csv.zst
   upload data/raw/statcast/level=mlb/season=2022/date=2022-04-08/pitches.csv.zst
   upload data/raw/statcast/level=mlb/season=2022/date=2022-04-09/pitches.csv.zst
@@ -40,22 +52,10 @@ b2_sync: plan 3161 file(s), 817071641 byte(s)
   upload data/raw/statcast/level=mlb/season=2022/date=2022-05-09/pitches.csv.zst
   upload data/raw/statcast/level=mlb/season=2022/date=2022-05-10/pitches.csv.zst
   upload data/raw/statcast/level=mlb/season=2022/date=2022-05-11/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-12/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-13/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-14/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-15/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-16/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-17/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-18/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-19/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-20/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-21/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-22/pitches.csv.zst
-  upload data/raw/statcast/level=mlb/season=2022/date=2022-05-23/pitches.csv.zst
-  ... and 3111 more
+  ... and 3148 more
 command: uv run b2 sync --delete --threads 4 data/raw b2://abs-umpires-raw/raw
 DEFERRED: B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY are unset.
 DEFERRED: the b2 side of the dry run needs an account: b2 authorizes before it plans.
 DEFERRED: the owner sets both in .env, which is gitignored. No key is ever written into the repository.
-CANARY SELF-TEST OK (6/6), key _canary/20260923T092401Z.txt, 1024 bytes
+CANARY SELF-TEST OK (6/6), key _canary/20260924T011622Z.txt, 1024 bytes
 ....................sss                                                  [100%]

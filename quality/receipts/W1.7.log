@@ -1,2 +1,25 @@
-........................................................................ [ 94%]
+..............................F......................................... [ 94%]
 ....                                                                     [100%]
+=================================== FAILURES ===================================
+___________________ test_lint_http_passes_on_this_repository ___________________
+
+    def test_lint_http_passes_on_this_repository() -> None:
+        result = run_lint("-q")
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: LINT HTTP FAIL: request idiom outside the two allowed call sites.
+E           [PY-DYNIMPORT] tests/unit/test_coverage_contract.py:118:        return importlib.import_module(module)
+E           [SH-CURL] dbt/dbt_packages/dbt_utils/.github/workflows/create-table-of-contents.yml:24:          curl https://raw.githubusercontent.com/ekalinin/github-markdown-toc/master/gh-md-toc -o gh-md-toc
+E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:132:              probe() { curl -sf http://localhost:8123/ping >/dev/null; }
+E           [SH-CURL] dbt/dbt_packages/dbt_date/.github/workflows/ci-multiple-dbt-versions.yml:141:              probe() { curl -sf http://localhost:8080/v1/info | grep -q '"starting":false'; }
+E           [SH-PYTHON-C] quality/steps.yml:77:  verify: 'uv sync --locked --all-groups && uv run --locked python -c "import sys, duckdb, polars, pyarrow; print(\"%d.%d.%d\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)" | grep -qx "3.12.14 1.5.5 1.44.2 25.0.1"'
+E           [SH-PYTHON-C] quality/steps.yml:202:  verify: 'uv run --locked python -c "import yaml; [yaml.safe_load(open(p)) for p in (\".github/workflows/ci.yml\", \".github/workflows/seal-guard.yml\")]"'
+E           [SH-PYTHON-C] quality/steps.yml:244:# already carries two `python -c` verify commands, which the linter reads as a
+E         Allowed: src/absump/http.py and R/lib/http.R. Route the call through absump.http.get()
+E         or absump_http_get(), so it is throttled, budgeted and written to the manifest.
+E
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/hudsonpagni/sports-project/ops/lint_http.sh', '-q'], returncode=1, stdout='', stderr='L...the call through absump.http.get()\nor absump_http_get(), so it is throttled, budgeted and written to the manifest.\n').returncode
+
+tests/unit/test_http_etiquette.py:495: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_http_etiquette.py::test_lint_http_passes_on_this_repository

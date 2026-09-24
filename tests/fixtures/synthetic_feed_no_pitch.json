@@ -1,0 +1,260 @@
+{
+  "gameData": {
+    "game": {
+      "pk": 7460002
+    }
+  },
+  "liveData": {
+    "plays": {
+      "allPlays": [
+        {
+          "about": {
+            "atBatIndex": 0
+          },
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                }
+              },
+              "index": 0,
+              "isPitch": true,
+              "pitchNumber": 1,
+              "type": "pitch"
+            },
+            {
+              "index": 1,
+              "isPitch": false,
+              "type": "pickoff"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                }
+              },
+              "index": 2,
+              "isPitch": true,
+              "pitchNumber": 2,
+              "type": "pitch"
+            },
+            {
+              "index": 3,
+              "isPitch": false,
+              "type": "stepoff"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "X",
+                  "description": "In play, out(s)"
+                }
+              },
+              "index": 4,
+              "isPitch": true,
+              "pitchNumber": 3,
+              "type": "pitch"
+            }
+          ]
+        },
+        {
+          "about": {
+            "atBatIndex": 1
+          },
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "C",
+                  "description": "Called Strike"
+                }
+              },
+              "index": 0,
+              "isPitch": true,
+              "pitchNumber": 1,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "B",
+                  "description": "Ball"
+                }
+              },
+              "index": 1,
+              "isPitch": true,
+              "pitchNumber": 2,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "S",
+                  "description": "Swinging Strike"
+                }
+              },
+              "index": 2,
+              "isPitch": true,
+              "pitchNumber": 3,
+              "type": "pitch"
+            },
+            {
+              "index": 3,
+              "isPitch": false,
+              "type": "action"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "F",
+                  "description": "Foul"
+                }
+              },
+              "index": 4,
+              "isPitch": true,
+              "pitchNumber": 4,
+              "type": "pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VP",
+                  "description": "Automatic Ball - Pitcher Pitch Timer Violation"
+                }
+              },
+              "index": 5,
+              "isPitch": false,
+              "pitchNumber": 4,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "E",
+                  "description": "In play, run(s)"
+                }
+              },
+              "index": 6,
+              "isPitch": true,
+              "pitchNumber": 5,
+              "type": "pitch"
+            }
+          ]
+        },
+        {
+          "about": {
+            "atBatIndex": 76
+          },
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 0,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 1,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 2,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 3,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            }
+          ]
+        },
+        {
+          "about": {
+            "atBatIndex": 80
+          },
+          "playEvents": [
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 0,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 1,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 2,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            },
+            {
+              "details": {
+                "call": {
+                  "code": "VB",
+                  "description": "Automatic Ball - Intentional"
+                }
+              },
+              "index": 3,
+              "isPitch": false,
+              "pitchNumber": 0,
+              "type": "no_pitch"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

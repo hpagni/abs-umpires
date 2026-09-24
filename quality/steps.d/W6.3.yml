@@ -1,0 +1,56 @@
+# W6.3, the SSAC sprint checkpoint on the feeds and the challenges. Owned by W6,
+# merged into quality/steps.yml by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# The dependency line is `W6.3  feeds + challenges  -> W2.6, W2.13, W2.16`. Those
+# three steps pull the MLB 2026 GUMBO feeds, extract them on the corrected pitch
+# key, and build and reconcile the challenge table. W6.3 rebuilds none of that and
+# restates none of their acceptance tests. It settles the one question the sprint
+# needs answered: are the 2026 feeds on disk and extracted, do the challenge counts
+# reconcile, and what are the feed and challenge slots the abstract reads from
+# docs/numbers.json. SOP section 4 names the reconciled 2026 challenge counts as
+# the first of the three floor items.
+#
+# The verify command has two halves and needs both.
+#
+# ops/sprint_feed_checkpoint.py --check is the data-bound half. With the warehouse
+# and out/tables/challenge_reconciliation.csv on disk it recomputes every number
+# the checkpoint states and fails on any of eighteen conditions: no stored feed,
+# an extraction that does not cover every stored feed, no extracted pitch row, a
+# raw lake holding fewer payloads than the feed table, a feed game or pitch row
+# after the last open day 2026-09-21, a record difference between the challenge
+# table and the gameData tallies, a game that does not reconcile or a non-zero
+# absolute delta, the three JSON locations not summing to the table, the challenge
+# fact disagreeing with the report, a non-MJ review in the fact, an unmatched
+# challenge, an unresolved challenge, a challenge with no call_original, an
+# overturn count that is not the sum of usedSuccessful, no overturn at all, a
+# modal starting allotment other than 2, an allotment histogram that does not sum,
+# an exception count that does not match the histogram, and an empty challenge
+# slot. It then re-renders the feed and challenge slots of docs/numbers.json and
+# the W6.3 block of abstract/SPRINT-STATUS.md and fails on a byte of drift. With
+# no datum on disk it still gates the committed ledger against the committed
+# block, so a clean clone proves the step.
+#
+# The ledger is shared with W6.4. W6.3 writes its slots ahead of every other
+# entry and W6.4 writes the join slots after every other entry, which is the only
+# ordering both generators agree on. Either may run first and neither moves the
+# other's bytes. Both --check commands were run against the merged file.
+#
+# The pytest half is the DT-08 and DT-15 refresh. Both ids are owned by
+# tests/unit/test_challenges.py and refreshed on the warehouse by
+# tests/data/test_warehouse_pack.py. Six tests run under -k "dt08 or dt15".
+#
+# Measured on this machine on 2026-09-24: 2,342 MLB 2026 game feeds stored and
+# 2,342 extracted, 691,502 pitch-slot rows, last open day 2026-09-21. Challenges
+# 10,168 records, 7,608 pitch level, 2,559 play level, 1 additional, against
+# 10,168 gameData tallies over 2,338 games, 0 not reconciling, 4 games excluded
+# for carrying no absChallenges block. DT-15 5,490 overturns reconstructed
+# against 5,490 usedSuccessful, 0 challenges without an original call. DT-08
+# 4,684 team-games, 4,640 at the modal 2, 36 above it, 8 with no allotment
+# evidence, 44 exceptions in all.
+- id: W6.3
+  title: "SSAC sprint checkpoint on the feeds and the reconciled challenge counts"
+  verify: "uv run --locked python ops/sprint_feed_checkpoint.py --check && uv run --locked pytest tests/unit/test_challenges.py tests/data/test_warehouse_pack.py -q -k \"dt08 or dt15\""
+  expect_exit: 0
+  owner: W6
+  needs: ops/sprint_feed_checkpoint.py, docs/numbers.json, abstract/SPRINT-STATUS.md
