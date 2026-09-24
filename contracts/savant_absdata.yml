@@ -77,10 +77,12 @@ parse:
     - n_challenges
     - n_total_sample
     - player_name
-  # Fixtures pinning the 2026-09-24 shape, with a unit test per clause.
+  # Fixtures pinning the one-element-array shape, with a unit test per clause.
+  # They are SYNTHETIC: structure byte-faithful, every value invented, because a
+  # live capture taken after 2026-09-21 carries sealed-window aggregates.
   fixtures:
-    - tests/data/fixtures/savant_abs_batter_2026-09-24.html
-    - tests/data/fixtures/savant_abs_catcher_2026-09-24.html
+    - tests/data/fixtures/savant_abs_batter_synthetic.html
+    - tests/data/fixtures/savant_abs_catcher_synthetic.html
   fixture_tests: tests/data/test_leaderboard_parse.py
 
 pull:

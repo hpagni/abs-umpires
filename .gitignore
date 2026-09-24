@@ -50,3 +50,6 @@ dbt/logs/
 
 # macOS
 .DS_Store
+
+# Quality runner lock. A lock file names a running process, not a result.
+quality/steps.d/.merge.lock
