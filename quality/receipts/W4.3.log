@@ -67,10 +67,63 @@ mutated sweep, each corruption must be caught by its clause
   PASS W4.3.9 a page that does not parse, caught ['W4.3.9']
 
 the sweep on disk
-swept views on disk: 0 of 28, pull date unknown
-  PASS W4.3.9 every page on disk parsed and is an enumerated view: 0 parsed, 0 refused, 0 outside the enumeration
-  PASS W4.3.8 no view on disk; the leg has not run here
+swept views on disk: 28 of 28, pull date 2026-09-24
+  PASS W4.3.9 every page on disk parsed and is an enumerated view: 28 parsed, 0 refused, 0 outside the enumeration
+  PASS W4.3.8 swept 28 of 28 views; DT-24 scope 3 of 3, absent []
+  PASS W4.3.10 14 swept views marked sealed-set inputs; taken after 2026-09-21 and left unmarked: []
+  PASS W4.3.7 aaa-2025-batter n_overturns + n_fails == n_challenges: 667 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2025-batting-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2025-catcher n_overturns + n_fails == n_challenges: 170 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2025-catching-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2025-league n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 1 without the three keys
+  PASS W4.3.7 aaa-2025-pitcher n_overturns + n_fails == n_challenges: 5 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2025-team-summary n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 30 without the three keys
+  PASS W4.3.7 aaa-2026-batter n_overturns + n_fails == n_challenges: 679 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2026-batting-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2026-catcher n_overturns + n_fails == n_challenges: 175 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2026-catching-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2026-league n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 1 without the three keys
+  PASS W4.3.7 aaa-2026-pitcher n_overturns + n_fails == n_challenges: 202 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 aaa-2026-team-summary n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 30 without the three keys
+  PASS W4.3.7 mlb-2025-batter n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-batting-team n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-catcher n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-catching-team n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-league n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-pitcher n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2025-team-summary n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-batter n_overturns + n_fails == n_challenges: 526 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-batting-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-catcher n_overturns + n_fails == n_challenges: 107 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-catching-team n_overturns + n_fails == n_challenges: 30 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-league n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 1 without the three keys
+  PASS W4.3.7 mlb-2026-pitcher n_overturns + n_fails == n_challenges: 104 records checked, 0 broken, 0 without the three keys
+  PASS W4.3.7 mlb-2026-team-summary n_overturns + n_fails == n_challenges: 0 records checked, 0 broken, 30 without the three keys
+  PASS DT-24.1 batter records 526, contract 524, floor +6.0 percent
+  PASS DT-24.2 batter keys [86], contract [86]
+  PASS DT-24.3 batter records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 batter required keys absent from at least one record: []
+  PASS DT-24.4 batter sum n_challenges 4635 contract 4612, sum n_overturns 2269 contract 2259, floor +6.0 percent
+  PASS DT-24.5 batter overturn rate 48.9536 percent, contract 48.98, limit 2.9388 points
+  PASS DT-24.6 batter >=10 chal 177 contract 176, >=20 chal 62 contract 61, max 48 contract not measured, floor +6.0 percent
+  PASS DT-24.1 catcher records 107, contract 107, floor +6.0 percent
+  PASS DT-24.2 catcher keys [87], contract [87]
+  PASS DT-24.3 catcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 catcher required keys absent from at least one record: []
+  PASS DT-24.4 catcher sum n_challenges 5429 contract 5382, sum n_overturns 3187 contract 3163, floor +6.0 percent
+  PASS DT-24.5 catcher overturn rate 58.7033 percent, contract 58.77, limit 3.5262 points
+  PASS DT-24.6 catcher >=10 chal 91 contract 91, >=20 chal 77 contract 77, max 175 contract 172, floor +6.0 percent
+  PASS DT-24.1 pitcher records 104, contract 104, floor +6.0 percent
+  PASS DT-24.2 pitcher keys [87], contract [87]
+  PASS DT-24.3 pitcher records where n_overturns + n_fails != n_challenges: 0
+  PASS DT-24.7 pitcher required keys absent from at least one record: []
+  PASS DT-24.4 pitcher sum n_challenges 174 contract 173, sum n_overturns 69 contract 68, floor +6.0 percent
+  PASS DT-24.5 pitcher overturn rate 39.6552 percent, contract 39.31, limit 2.3586 points
+  PASS DT-24.6 pitcher >=10 chal 0 contract 0, >=20 chal 0 contract 0, max 8 contract 8, floor +6.0 percent
+  PASS DT-24.8 batting views ['batter'] sum n_challenges 4635, page leagueData [4635], contract 4612
+  PASS DT-24.8 fielding views ['catcher', 'pitcher'] sum n_challenges 5603, page leagueData [5603], contract 5555
+  PASS DT-24.9 league totals challenges 10238 contract 10167, overturns 5525 contract 5490, fails 4713 contract 4677, rate 53.9656 percent contract 53.99, limit 3.2394 points
 
-  PASS W4.3.13 offline: manifest unchanged at 62 rows
+  PASS W4.3.13 offline: manifest unchanged at 244 rows
 
-W4.3: 54 checks, 54 passed, 0 failed
+W4.3: 107 checks, 107 passed, 0 failed

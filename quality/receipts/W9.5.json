@@ -1,17 +1,17 @@
 {
   "cmd": "make test-unit",
-  "duration_s": 34,
-  "exit": 2,
+  "duration_s": 32,
+  "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.5.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
-  "status": "FAIL",
+  "status": "PASS",
   "step": "W9.5",
-  "timestamp_madrid": "2026-09-24 01:43:25 CEST",
+  "timestamp_madrid": "2026-09-24 05:36:28 CEST",
   "title": "Unit test pack, UT-01 to UT-24 and the coverage contract"
 }

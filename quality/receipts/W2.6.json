@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.6.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.6",
-  "timestamp_madrid": "2026-09-24 03:18:07 CEST",
+  "timestamp_madrid": "2026-09-24 05:31:50 CEST",
   "title": "MLB 2026 feeds, 2,512 games, one overnight statsapi batch"
 }

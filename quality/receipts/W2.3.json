@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/unit/test_http_delegation.py tests/unit/test_lint_http_bypasses.py -q && bash ops/lint_http.sh",
-  "duration_s": 15,
-  "exit": 1,
+  "duration_s": 16,
+  "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.3.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
-  "status": "FAIL",
+  "status": "PASS",
   "step": "W2.3",
-  "timestamp_madrid": "2026-09-24 03:17:27 CEST",
+  "timestamp_madrid": "2026-09-24 05:31:10 CEST",
   "title": "HTTP, delegated to W1.7"
 }

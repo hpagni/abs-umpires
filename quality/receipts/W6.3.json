@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python ops/sprint_feed_checkpoint.py --check && uv run --locked pytest tests/unit/test_challenges.py tests/data/test_warehouse_pack.py -q -k \"dt08 or dt15\"",
-  "duration_s": 2,
+  "duration_s": 1,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W6.3.log",
   "owner": "W6",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W6.3",
-  "timestamp_madrid": "2026-09-24 02:30:32 CEST",
+  "timestamp_madrid": "2026-09-24 05:35:43 CEST",
   "title": "SSAC sprint checkpoint on the feeds and the reconciled challenge counts"
 }

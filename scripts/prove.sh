@@ -150,7 +150,36 @@ take_lock() {
 #                         the tail position of a comma-separated status line, which is how
 #                         the R smoke fit reports its sampler: ", 0.6 s" -> ", <elapsed> s"
 #
-#      If a step's own command grows a fourth kind of run-local token, the rule
+#        RN-05 freespace  the free-space quantity a disk check prints, which moves with
+#                         whatever else the machine is doing: "34.9 GiB free" ->
+#                         "<free> GiB free". Only the quantity before "GiB free" is
+#                         replaced; the floor it is compared against, the volume name and
+#                         the ok/fail verdict all survive byte for byte
+#        RN-06 checktime  the per-check seconds column in ops/smoke.sh output, whose lines
+#                         carry none of RN-04's words: " 2/12  pins  OK  1 s" ->
+#                         " 2/12  pins  OK  <elapsed> s". Anchored on the "<n>/<n> <name>
+#                         <verdict>" prefix, so only that one column is touched and any
+#                         parenthesised detail after it is kept
+#        RN-07 objaddr    a CPython object address in a default repr, which is the id() of
+#                         a fresh object and so differs every run: "<_duckdb.DuckDBPy
+#                         Connection object at 0x109dbcab0>" -> "... at 0x<addr>>". Only
+#                         the hex digits after the literal " object at " are replaced, so
+#                         the class name and the rest of the line survive
+#
+#        RN-08 dfcolumn   the moving columns of a `df` data row, which the disk check
+#                         prints under "free space" as context for the floor it already
+#                         asserted on the line above: "460Gi 389Gi 36Gi 92% 3.0M 373M 1%"
+#                         -> "<df> ..." per column. The device and the mount point are
+#                         kept, and the floor verdict itself is RN-05's line, untouched
+#        RN-09 dirsize    a `du -sh` size for a directory the run itself writes into, so
+#                         two sweeps differ by whatever the first sweep built:
+#                         "2.6G\t/path/warehouse" -> "<size>\t/path/warehouse". Only the
+#                         size token is replaced; every path stays
+#        RN-10 canarykey  the object key of the B2 canary, which is stamped with the UTC
+#                         second it was written: "_canary/20260924T033010Z.txt" ->
+#                         "_canary/<stamp>.txt". The 6/6 result and the byte count stay
+#
+#      If a step's own command grows a further kind of run-local token, the rule
 #      for it belongs here, with an id, not in a one-off sed in that step.
 #
 #      STATED LIMIT, by construction. The normaliser is a line-wise text filter.
@@ -205,6 +234,43 @@ RULES = (
         "RN-04 timing",
         re.compile(r"(?m),\s\d+(?:\.\d+)?\s(ms|s)$"),
         r", <elapsed> \1",
+    ),
+    (
+        "RN-05 freespace",
+        re.compile(r"\b\d+(?:\.\d+)?(?= GiB free\b)"),
+        "<free>",
+    ),
+    (
+        "RN-06 checktime",
+        re.compile(
+            r"(?m)^(\s*\d+/\d+\s+\S+\s+(?:OK|FAIL|SKIP)\s+)\d+(?:\.\d+)?(\s+s\b)"
+        ),
+        r"\1<elapsed>\2",
+    ),
+    (
+        "RN-06 checktime",
+        re.compile(r"(?m)^(smoke: )\d+(?:\.\d+)?( s)$"),
+        r"\1<elapsed>\2",
+    ),
+    (
+        "RN-07 objaddr",
+        re.compile(r"(?<= object at )0x[0-9a-fA-F]+"),
+        "0x<addr>",
+    ),
+    (
+        "RN-08 dfcolumn",
+        re.compile(r"(?m)^(\s*/dev/\S+)((?:\s+\S+){7})(\s+/\S*)$"),
+        lambda m: m.group(1) + re.sub(r"\S+", "<df>", m.group(2)) + m.group(3),
+    ),
+    (
+        "RN-09 dirsize",
+        re.compile(r"(?m)^(\s*)\d+(?:\.\d+)?[BKMGTP](?=\t/)"),
+        r"\1<size>",
+    ),
+    (
+        "RN-10 canarykey",
+        re.compile(r"(?<=_canary/)\d{8}T\d{6}Z(?=\.txt)"),
+        "<stamp>",
     ),
 )
 fired = []

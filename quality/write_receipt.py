@@ -278,6 +278,19 @@ def check(records=None):
         else:
             if not str(rec.get("verify", "")).strip():
                 problems.append(f"{step}: no verify command")
+        # A verify command is one line by construction: the registry is read
+        # line-wise and `--registry` emits one record per line, so an embedded
+        # newline silently splits the record in two and the orphaned tail is
+        # reported as a step with an empty verify command. That is how a YAML
+        # double-quoted "\n" inside a printf once broke W1.11 and W9.1 at the
+        # same time, with the count disagreeing 55 against 54. It is an error
+        # here, named, rather than a puzzle downstream.
+        if "\n" in str(rec.get("verify", "")):
+            problems.append(
+                f"{step}: the verify command contains a newline. It must be a single "
+                "line: escape it (\\\\n), or use a single-quoted scalar, so the "
+                "registry reader and the shell both see one command."
+            )
             if rec.get("expect_exit") != 0:
                 problems.append(
                     "{}: expect_exit is {!r}, not 0".format(step, rec.get("expect_exit"))

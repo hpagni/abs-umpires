@@ -1,19 +1,19 @@
 level mlb seasons 2022-2026 cutoff 2026-09-21
   game-days in scope         908
-  already in the lake        841
+  already in the lake        909
   recorded ok in staging     799
-  queue, newest first        68  2022-08-24 .. 2022-06-15
-  outstanding by season      2022:68
-  baseballsavant.mlb.com cap        42/800 used, 758 left
-  tonight                    68
+  queue, newest first        0  - .. -
+  outstanding by season      none
+  baseballsavant.mlb.com cap        224/800 used, 576 left
+  tonight                    0
   after the next cap reset   0
-  whole nights at the cap    1
+  whole nights at the cap    0
 K-01 scope 908 game-days, seasons 2022-2026, none sealed
-K-02 newest-first holds; queue head 2022-08-24
-K-03 841 day(s) in the lake and 799 recorded ok in staging are all subtracted
-K-04 baseballsavant.mlb.com 42/800 used, tonight 68, later 0
+K-02 newest-first holds; queue head -
+K-03 909 day(s) in the lake and 799 recorded ok in staging are all subtracted
+K-04 baseballsavant.mlb.com 224/800 used, tonight 0, later 0
 K-05 from an empty lake: night one 800 day(s), seasons 2022-2026, night two 108 day(s) of 2022
-K-06 DT-01 and DT-02 over 841 stored day(s): 1 header digest, max 5412 rows on 2023-08-19, cap 25000
-K-07 marker round-trips; a stop after 3 day(s) resumes at 2022-08-21
+K-06 DT-01 and DT-02 over 909 stored day(s): 1 header digest, max 5412 rows on 2023-08-19, cap 25000
+K-07 marker round-trips; a stop after 0 day(s) resumes at -
 check: 7 assertion group(s) reported, 0 failure(s)
 ........................................................s                [100%]

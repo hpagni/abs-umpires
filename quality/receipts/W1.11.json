@@ -1,17 +1,17 @@
 {
-  "cmd": "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && out=$(uv run --locked dbt --no-use-colors build --project-dir dbt --target ci --select tag:smoke 2>&1) && printf '%s",
-  "duration_s": 0,
-  "exit": 1,
+  "cmd": "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && out=$(uv run --locked dbt --no-use-colors build --project-dir dbt --target ci --select tag:smoke 2>&1) && printf '%s\\n' \"$out\" | sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' | grep -E '^Done. PASS=22 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=22$' && test \"$(wc -l < dbt/seeds/seed_synthetic_pitches.csv)\" -eq 201 && echo 'W1.11 synthetic seed: 200 rows over MLB 2022-2026 and AAA 2023-2025.' && grep -q 'on-run-start:' dbt/dbt_project.yml && grep -q 'W1.11 seal guard' dbt/dbt_project.yml && echo 'W1.11 sealed-leak hook: on-run-start, dev target only, aborts the run.' && test \"$(sed -n '/^    tables:/,/^models:/p' dbt/models/sources.yml | grep -c '^      - name: ')\" -eq 10 && echo 'W1.11 lake source: 10 tables through external_location.' && uv run --locked python tests/guard/gd04_scan.py --path dbt && uv run --locked python tests/guard/gd04_scan.py --path ops/dbt.sh",
+  "duration_s": 10,
+  "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "git_sha": "262a67a9dfab727424e20f856bb1ec30ddeb7f34",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.11.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
-  "status": "FAIL",
+  "status": "PASS",
   "step": "W1.11",
-  "timestamp_madrid": "2026-09-24 03:16:24 CEST",
+  "timestamp_madrid": "2026-09-24 05:28:48 CEST",
   "title": "dbt skeleton, ci build over the synthetic seed"
 }

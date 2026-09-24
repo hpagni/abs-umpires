@@ -8,6 +8,9 @@ SOP step W9.7, section 6.4.
            under the root that the manifest does not list, a listed file that
            is gone, or a listed file whose bytes changed. One-way: the manifest
            is written once, at the seal event, and never edited afterwards.
+           data/ is never committed, so a clone without data/sealed/ reports
+           the comparison VACUOUS with its reason rather than failing; a tree
+           that has the directory must still match in both directions.
     GD-10  data/sealed/ holds zero *.parquet and zero *.json.zst, and the seal
            log carries no UNSEALED line.
 
@@ -80,6 +83,10 @@ def sha256_of(path: Path) -> str:
         for block in iter(lambda: handle.read(1 << 20), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def sha256_of_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def files_under(root: Path) -> list[Path]:
@@ -161,9 +168,37 @@ def test_every_entry_is_well_formed() -> None:
     assert not bad, "GD-06 FAIL:\n" + "\n".join(bad)
 
 
+def vacuity_reason(root: Path) -> str | None:
+    """Why GD-06 cannot compare anything here, or None when it can.
+
+    The manifest records what is under data/sealed/, and data/ is gitignored and
+    never committed (D-03). So in a fresh clone the referents of the manifest's
+    entries cannot exist: the directory itself is absent. Reporting that as drift
+    would fail the guard for every reviewer and would say nothing about the seal,
+    which is the one thing GD-06 exists to watch. An absent directory is therefore
+    declared VACUOUS with its reason, the way GD-10 already declares its own empty
+    state, and the manifest entry is kept because the quarantined file it names is
+    real evidence. A tree that HAS data/sealed/ is a tree that can be compared, so
+    there the both-directions check is a hard assertion as before: vacuity is a
+    property of the clone, never of the seal.
+    """
+    if not root.is_dir():
+        return (
+            f"GD-06 vacuous: no {SEALED_ROOT}/ in this tree, so the manifest has "
+            "nothing to compare against. data/ is gitignored and never committed, "
+            "so a fresh clone cannot hold the sealed files the manifest records."
+        )
+    return None
+
+
 def test_the_manifest_matches_the_directory_in_both_directions() -> None:
     entries = manifest()["entries"]
-    problems = drift(REPO_ROOT / SEALED_ROOT, entries, REPO_ROOT)
+    root = REPO_ROOT / SEALED_ROOT
+    reason = vacuity_reason(root)
+    if reason is not None:
+        warnings.warn(reason, VacuousGuard, stacklevel=1)
+        return
+    problems = drift(root, entries, REPO_ROOT)
     assert not problems, "GD-06 FAIL: the seal and its manifest disagree:\n" + "\n".join(problems)
     if not entries:
         assert manifest()["game_count"] == 0, "an empty manifest claims a game count"
@@ -199,6 +234,43 @@ def test_the_drift_detector_catches_tampering(tmp_path: Path, tamper: str) -> No
 
     problems = drift(root, entries, tmp_path)
     assert problems, f"the drift detector missed {tamper}"
+
+
+def test_a_tree_that_has_the_directory_still_fails_on_a_mismatch(tmp_path: Path) -> None:
+    """The vacuity is not an escape hatch. Once data/sealed/ exists, drift is fatal.
+
+    Two trees, one manifest entry. The tree without the directory is vacuous and
+    reports its reason; the tree with the directory is compared, and a listed file
+    that is not on disk is a failure there, which is exactly the condition a fresh
+    clone is excused from and a working tree is not.
+    """
+    entries = [
+        {
+            "path": f"{SEALED_ROOT}/quarantine/823543.json",
+            "bytes": 3,
+            HASH_ALGORITHM: sha256_of_bytes(b"abc"),
+        }
+    ]
+
+    absent = tmp_path / "clone"
+    absent.mkdir()
+    reason = vacuity_reason(absent / SEALED_ROOT)
+    assert reason is not None and "vacuous" in reason
+
+    present = tmp_path / "worktree"
+    root = present / SEALED_ROOT
+    root.mkdir(parents=True)
+    assert vacuity_reason(root) is None, "a tree with the directory was excused"
+    problems = drift(root, entries, present)
+    assert any("in the manifest and not under the seal" in p for p in problems), (
+        "a tree that has data/sealed/ was not failed on a missing listed file"
+    )
+
+    (root / "quarantine").mkdir()
+    (root / "quarantine" / "823543.json").write_bytes(b"abc")
+    assert drift(root, entries, present) == [], "a truthful manifest reported drift"
+    (root / "quarantine" / "823543.json").write_bytes(b"abd")
+    assert drift(root, entries, present), "edited bytes were not caught"
 
 
 # ===================================================================== GD-10
