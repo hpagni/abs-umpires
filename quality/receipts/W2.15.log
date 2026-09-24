@@ -1,0 +1,7 @@
+W2.15 join mlb 2026: days 178, games 2342, rows 691502 written to pitch_joined
+  n_api 691287  n_csv 691287  n_matched 691287  api_only 0  csv_only 0  matched 100.000%
+  status ok 2341, coord 1, fail 0
+  max_coord_err_ft 0.06362500000000004 against the 1e-06 ft tolerance
+  published pX/pZ against the CSV, rows inside the tolerance: day-median maximum 0.0010784174767676236 ft, worst day 0.030439764888909426 ft (section 2.5 measured 0.001053 ft over 281 pitches)
+  reports: join_report.csv, join_unmatched.csv, join_failures.csv, no_pitch_atbats.csv
+.........s..s.                                                           [100%]

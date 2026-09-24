@@ -38,12 +38,50 @@ parse:
   # SOP W2.11, verbatim. The module asserts its own literal equals this string.
   absdata_regex: '(?:var|const|let)\s+absData\s*=\s*(\[.*?\]);\s*\n'
   absdata_flags: DOTALL
-  # serverParams and leagueData are objects with nested objects and arrays, so a
-  # non-greedy brace match would truncate them. They are read with a balanced
-  # JSON scan from the first brace after the assignment, not with a regex.
+  # serverParams and leagueData are nested, so a non-greedy brace match would
+  # truncate them. They are read with a balanced JSON scan from the first token
+  # after the assignment, not with a regex.
   objects:
     - serverParams
-    - leagueData
+  # leagueData is NOT an object any more.
+  #
+  # Measured 2026-09-22 (the W2.11 baseline): one object per page carrying both
+  # sides, `{"batting": {...}, "fielding": {...}}`.
+  # Measured 2026-09-24: a ONE-ELEMENT ARRAY carrying only the side the view
+  # belongs to. Same keys, same values, different container. The batter and
+  # batting-team pages carry the batting side; catcher, pitcher and
+  # catching-team carry the fielding side; team-summary and league carry a
+  # block of their own shape that reconciles against nothing. An MLB 2025 page
+  # carries `[]`, because serverParams pins validSeasons to [2026].
+  #
+  # This one sentence cost the 2026-09-24 03:13 sweep all 28 views, because the
+  # reader demanded an object and the sweep swallowed the refusal and exited 0.
+  # The reader now accepts either container and keys the array by the view's own
+  # side; the sweep exits non-zero when any view fails to parse.
+  league_data:
+    shapes_accepted: [object, array]
+    shape_measured_2026_09_22: object
+    shape_measured_2026_09_24: array
+    side_by_view:
+      batter: batting
+      batting-team: batting
+      catcher: fielding
+      pitcher: fielding
+      catching-team: fielding
+      team-summary: ""
+      league: ""
+  # The keys that identify a leaderboard record, used by the last-resort route
+  # that looks for absData in any script block. A rename that empties this set
+  # is a hard failure, not a silent empty view.
+  record_keys:
+    - n_challenges
+    - n_total_sample
+    - player_name
+  # Fixtures pinning the 2026-09-24 shape, with a unit test per clause.
+  fixtures:
+    - tests/data/fixtures/savant_abs_batter_2026-09-24.html
+    - tests/data/fixtures/savant_abs_catcher_2026-09-24.html
+  fixture_tests: tests/data/test_leaderboard_parse.py
 
 pull:
   # 7 challenge types x 2 levels x 2 seasons = 28 page fetches. SOP section 10.1

@@ -1,0 +1,23 @@
+# W2.13 -- feed extraction and the corrected pitch key. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command runs UT-01, UT-02 and UT-03: the corrected counter, which
+# increments on isPitch true or type no_pitch and ignores action, pickoff and
+# stepoff; the assertion that the naive pitchNumber key false-matches, so the bug
+# cannot be reintroduced silently; and the intentional walk, four no_pitch events
+# against four Statcast rows. The tests read tests/fixtures/generated/mlb_feed.json
+# and tests/fixtures/expected/pitch_keys.json, both committed, so the command runs
+# from a clean clone with no 2026 datum on disk.
+#
+# Extraction itself is checked by running it: `uv run python -m
+# absump.ingest.extract_feed --level mlb --season 2026 --procs 8` wrote 712 parts
+# from 2,342 games in 6.0 s, and a second run wrote nothing. Reference values from
+# 824466 reproduce exactly: 281 pitch rows, call codes B 104, C 51, S 38, F 37,
+# X 31, D 8, *B 4, E 3, H 2, T 2, W 1, all 281 of 281 pitchData fields populated,
+# attendance 25341, gameDurationMinutes 148, first pitch 2026-09-15T22:41:00Z.
+- id: W2.13
+  title: "Feed extraction and the corrected pitch key"
+  verify: "uv run --locked pytest tests/unit/test_joinkey.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/joinkey.py, src/absump/ingest/extract_feed.py, tests/unit/test_joinkey.py

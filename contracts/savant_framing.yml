@@ -1,0 +1,117 @@
+# contracts/savant_framing.yml -- the Savant catcher-framing export (SOP W4.4, DT-26).
+#
+# WHAT THIS FILE IS FOR. DT-26 as the SOP writes it pins one season, 2026, to a byte
+# count. 2026 is still being played and the endpoint serves season-to-date with no date
+# parameter, so that pin fails every day the league plays and says nothing true when it
+# does. The distinction this file makes is between a season that is finished, which can
+# be pinned exactly and forever, and a season that is not, which cannot be pinned at all.
+#
+# THE ADDRESS. `year=` is accepted and ignored (measured 2026-09-24: twelve requests,
+# 2015-2026, all one sha256, all the live 2026 table). The page's own selects are
+# `ddlSeasonStart` and `ddlSeasonEnd`, and `seasonStart=`/`seasonEnd=` select for real.
+
+schema: absump/contracts/savant_framing/1
+owner: W4.4
+assertion: DT-26
+
+url_template: >-
+  https://baseballsavant.mlb.com/leaderboard/catcher-framing?seasonStart={season}&seasonEnd={season}&team=&min={min_param}&type=catcher&sort=4&sortDir=desc&csv=true
+year_parameter_is_ignored: true
+
+# The last day of the open window. A live-season aggregate pulled after it
+# mixes sealed games in. DECISIONS.md owns this date; it is restated here.
+seal_last_open_date: "2026-09-21"
+static_seasons: [2015, 2025]
+live_seasons: [2026]
+
+# Measured once each, through absump.http, with the seasonStart/seasonEnd form.
+# A finished season cannot move, so a later difference is the endpoint changing.
+static_baselines:
+  2015:
+    bytes: 12138
+    rows: 56
+    sha256: "69de4b165be9f915ec51133e9d298cd7d0252b6afae4a38f6d29e16b92e44a9c"
+    pitches_min: 2494
+    pitches_max: 10268
+    rv_tot_min: 0.0
+    rv_tot_max: 0.0
+  2016:
+    bytes: 13696
+    rows: 63
+    sha256: "2ff62f4a42e66a22d5e3df652a4b40c5217a2162c1a90ad80e3d4294f8336a2a"
+    pitches_min: 2456
+    pitches_max: 10479
+    rv_tot_min: 0.0
+    rv_tot_max: 0.0
+  2017:
+    bytes: 13547
+    rows: 62
+    sha256: "be17258b32db3a870e80300dae17ddfbf429c91918e57259bbd767267914f25b"
+    pitches_min: 2700
+    pitches_max: 10182
+    rv_tot_min: 0.0
+    rv_tot_max: 0.0
+  2018:
+    bytes: 14323
+    rows: 60
+    sha256: "5c830ab26bdec08f5c5caf24e6d3cf5f9ba4e3ded02de2933e75304e9cf42034"
+    pitches_min: 2576
+    pitches_max: 10047
+    rv_tot_min: -17.19
+    rv_tot_max: 15.76
+  2019:
+    bytes: 15156
+    rows: 64
+    sha256: "55caa925b03f3e11b92c99275021cd8263ceac9f7c5cffa10cc8c4cc4b8d2bfc"
+    pitches_min: 2601
+    pitches_max: 10095
+    rv_tot_min: -12.02
+    rv_tot_max: 22.62
+  2020:
+    bytes: 13887
+    rows: 61
+    sha256: "8035dce2a3974728a7573075a718c328283d3345e1a54894c98341f51c143ab5"
+    pitches_min: 1039
+    pitches_max: 3634
+    rv_tot_min: -5.78
+    rv_tot_max: 7.21
+  2021:
+    bytes: 13960
+    rows: 59
+    sha256: "c6c9eccc62af85b264c8bd13aaeaa2be106e185553176b964e3fa150534edafb"
+    pitches_min: 2694
+    pitches_max: 9529
+    rv_tot_min: -14.63
+    rv_tot_max: 13.18
+  2022:
+    bytes: 14242
+    rows: 60
+    sha256: "7353094282a4480c81d5332ca928a9bbc38b561a689d9295643404273e785a1e"
+    pitches_min: 2501
+    pitches_max: 9583
+    rv_tot_min: -16.02
+    rv_tot_max: 18.79
+  2023:
+    bytes: 14992
+    rows: 63
+    sha256: "2eed4d3de88a8162ec2de21f2de9a0bf66ff89705ff4578a494143025dd8712c"
+    pitches_min: 2560
+    pitches_max: 9795
+    rv_tot_min: -15.66
+    rv_tot_max: 16.96
+  2024:
+    bytes: 13702
+    rows: 58
+    sha256: "e5fb1f2ebbb0b452b59b87c3a09f5611595e05f85137853f189033b1d0f3553f"
+    pitches_min: 2549
+    pitches_max: 9435
+    rv_tot_min: -9.56
+    rv_tot_max: 22.43
+  2025:
+    bytes: 13562
+    rows: 57
+    sha256: "af7249e1d40177522260cc454e4043abf941e3b734077e1d72b777f9f70ae153"
+    pitches_min: 2550
+    pitches_max: 9714
+    rv_tot_min: -12.9
+    rv_tot_max: 25.05

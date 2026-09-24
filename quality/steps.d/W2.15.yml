@@ -1,0 +1,25 @@
+# W2.15 -- the join. feed_pitch and statcast_pitch keyed on
+# (game_pk, at_bat_number, pitch_slot), written to data/interim/pitch_joined/
+# with out/tables/join_report.csv, out/tables/join_unmatched.csv,
+# out/tables/join_failures.csv and out/audit/no_pitch_atbats.csv. Owned by W2.
+#
+# The verify command has two halves. The first re-runs the join over MLB 2026
+# and exits non-zero on any W2.15 count condition: n_api != n_csv,
+# n_matched != n_api, or an unmatched row on either side. It is idempotent, so
+# the gate re-running it rewrites the same bytes.
+#
+# The second half is tests/data/test_join.py, which owns DT-05, DT-18, DT-23
+# and DT-28 and refreshes UT-02 on the real corpus. Its synthetic tests run in
+# a clean clone; its sweeps skip when data/interim/pitch_joined is empty, and
+# the two drawer clauses skip until W4.2 has pulled the drawer.
+#
+# Measured on this machine: 178 days, 2,342 games, 691,287 of 691,287 rows
+# matched, 100.000%, 0 unmatched on either side, 4.2 s. One row of 688,686
+# breaches the 1e-6 ft coordinate assertion and is reported, not hidden:
+# game 825000, at-bat 31, pitch 3 on 2026-05-30.
+- id: W2.15
+  title: "The join, full season, with an explicit unmatched report"
+  verify: "uv run --locked python -m absump.ingest.join --level mlb --season 2026 && uv run --locked pytest tests/data/test_join.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/join.py, tests/data/test_join.py

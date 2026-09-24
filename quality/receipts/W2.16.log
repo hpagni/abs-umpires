@@ -1,0 +1,19 @@
+mlb 2026: 2342 games across 178 dates, source lake
+  MJ rows 10168: pitch level 7608, play level 2559, additionalReviews 1
+  gameData tally 10168, games not reconciling 0, games with no absChallenges block 4
+  parts written 0, unchanged 178
+  modal starting allotment 2, audit rows 36
+  review types dropped, 1440 records: MA 505  MF 399  MI 125  NH 121  MC 82  MP 33  MV 31  NA 24
+mlb 2026: 178 parts, 10168 rows, 2342 games in the report
+  overturned 5490 against usedSuccessful 5490
+  games_not_reconciling 0  non_mj_rows 0  play_level_unresolved 0  play_level_bad_call_code 0  overturns_minus_used_successful 0  duplicate_keys 0
+  standing_disagrees 0, reported not gated
+  call codes {'C': 5585, 'B': 4583}
+  challenger roles {'catcher': 5381, 'batter': 4613, 'pitcher': 173, 'other': 1}
+aaa 2024: 24 parts, 2132 rows, 665 games in the report
+  overturned 994 against usedSuccessful 994
+  games_not_reconciling 0  non_mj_rows 0  play_level_unresolved 0  play_level_bad_call_code 0  overturns_minus_used_successful 0  duplicate_keys 0
+  standing_disagrees 81, reported not gated
+  call codes {'C': 1135, 'B': 996, 'S': 1}
+  challenger roles {'unknown': 2132}
+...........................................                              [100%]

@@ -1,0 +1,2 @@
+game_pk,level,season,official_date,reason,at_bat_number,n_api_ab,n_csv_ab,n_matched_ab,detail
+825000,mlb,2026,2026-05-30,coord,31,7,7,7,pitch_number=3 plane=mid coord_err_ft=0.06362500000000004

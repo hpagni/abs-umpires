@@ -1,0 +1,38 @@
+# W2.16 -- the challenge table and its reconciliation. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# feed_challenge is built from the union of three JSON locations, each filtered
+# to reviewType MJ and each record counted once: allPlays[].playEvents[].
+# reviewDetails, allPlays[].reviewDetails and reviewDetails.additionalReviews[].
+# MLB 2026: 7,608 pitch level, 2,559 play level, 1 additional, 10,168 in total
+# against 10,168 gameData tallies, 0 games not reconciling across 2,342 games,
+# 4 games excluded for carrying no absChallenges block (823669, 823745, 825093,
+# 825094). AAA 2024, read from the staging cache because the raw lake holds no
+# AAA feed yet: 1,524 pitch level, 526 play level, 82 additional, 2,132 against
+# 2,132, 0 games not reconciling across 356 games with the block.
+#
+# The verify command has three halves. The first rebuilds MLB 2026, which is
+# idempotent and exits non-zero on any game that does not reconcile. The second
+# re-reads both built corpora and asserts the six W2.16 clauses: no game not
+# reconciling, no non-MJ row, no unresolved play-level record, no play-level
+# call code outside {C, B, *B}, the overturn count equal to the sum of
+# usedSuccessful, and no duplicate key. The third is tests/unit/test_challenges.py,
+# which owns UT-04 through UT-10 and carries DT-08, DT-09, DT-10 and DT-15.
+#
+# The four DT ids belong in tests/data/test_challenges.py by the SOP layout.
+# W2.16 was given tests/unit/test_challenges.py and no other test path, so they
+# run there under their own ids. Reported for DEVIATIONS.md.
+#
+# Measured on this machine: MLB 2026, 178 parts, 10,168 rows, 4.0 s at
+# --procs 8; a second run rewrote no part. AAA 2024, 24 parts, 2,132 rows, 5.0 s.
+# call_original is checked against a fact the feed states separately: only the
+# batting team may challenge a called strike, so the standing implied by
+# call_original names one team, and that team is challengeTeamId on 10,168 of
+# 10,168 MLB 2026 records. The same rule read on call_final names the wrong team
+# on 5,490 of them, which is the overturn count exactly.
+- id: W2.16
+  title: "The challenge table and its reconciliation"
+  verify: "uv run --locked python -m absump.challenges --level mlb --season 2026 && uv run --locked python -m absump.challenges --check --level mlb --season 2026 && uv run --locked python -m absump.challenges --check --level aaa --season 2024 && uv run --locked pytest tests/unit/test_challenges.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/challenges.py, tests/unit/test_challenges.py
