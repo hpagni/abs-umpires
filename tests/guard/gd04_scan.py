@@ -58,6 +58,27 @@ WHAT IT FAILS ON.
      forgive a read, and a formatter that breaks `FROM` and the table name onto
      two lines does not hide one.  On the analysis surface below, a table name
      parked in a jinja or shell variable and read through it counts too.
+     TWO KINDS OF SITE ARE NOT ANALYSIS READS, and rule 3 is scoped around
+     them: WAREHOUSE CONSTRUCTION, a dbt model whose own output is a fact table
+     or a dbt test whose output is an assertion about one; and WHOLE-WAREHOUSE
+     MEASUREMENT, a pack or a ledger that counts or profiles every row by
+     design.  The scope is never a path list.  The file must DECLARE it, as
+     `GD-04-EXEMPT: <kind> -- <reason>` on a comment line of its own in its
+     header, and the scanner must independently AGREE, recomputing the site
+     property from the path and the file: a marts model must itself be a fact
+     model, a dbt test must be a dbt test, a measurement must name three or
+     more warehouse relations from a pack, a checkpoint script or an aggregate
+     ledger.  A declaration is a claim, never the grant, so a new file cannot
+     inherit the scope silently.  The marker grants nothing at all in the
+     chapters, the R code, the notebooks, the fixtures or the staging and
+     intermediate models, and a marker written there is itself a violation.
+     An ANALYSIS read stays strict everywhere: the only thing that forgives it
+     is `analysis_set = 'open'` in the same statement.
+     Also not read as a read: a `FROM` or a `JOIN` separated from the relation
+     name by a string terminator or a new mapping key.  `reconstructed from
+     call_original` in one JSON field, with a relation named in the next, is
+     prose beside a label.  `ref(`, `source(`, `read_parquet` and `.table()`
+     are unambiguous reads and keep the loose span.
   4. a literal date comparison that can select a day on or after the boundary
      day in `config/seal.yml` -- any such day, not only the boundary itself.
      Read over three spellings of the line, the same three the label rules read:
@@ -113,6 +134,20 @@ computed elsewhere, or a boundary reached by a loop); a character code built by
 arithmetic rather than written down (`chr(115 + 3)`); a datum other than a date
 copied into a fixture (a `gamePk` alone is not a spelling any rule can read);
 and anything under `data/` or `research/`, which D-03 keeps out of git entirely.
+Newly declared, because rule 3 is now scoped: the exemption marker is read at
+FILE scope, so a second unqualified fact-table read added later to a file that
+already carries one is covered by the same marker, without anyone declaring it
+again.  The marker is granted only where the site property holds, so this
+cannot spread to a chapter, a notebook or a new file, but inside an already
+declared construction or measurement file it is inherited in silence.  The
+layer that covers it is review of that file's diff, the seal itself, and
+`assert_seal_not_crossed`, which fails if any relation in the warehouse holds a
+row past the boundary at all.  Also newly declared: a `FROM` whose relation
+name is in a different string or a different mapping value is no longer read as
+a read, so a query genuinely assembled by concatenating a keyword in one string
+onto a table name in the next is now a miss; the taint pass, which follows a
+table name through a variable, is the layer that covers the spelling of it that
+this repository writes.
 A character code built by arithmetic is the honest counterpart to catching one
 written down: this file assembles its own banned tokens from ordinals so that it
 does not flag itself, and it cannot ban ordinal arithmetic without flagging
@@ -170,7 +205,11 @@ a violation at all.  Rule 4b reading a written `+` offset is therefore closed at
 the class level, not by spelling.
 
 WHAT IS ALLOWLISTED.  Exactly two paths, by exact path: `src/absump/seal.py`
-and `quality/sql/analysis_set.sql`.  GD-05's count is two.
+and `quality/sql/analysis_set.sql`.  GD-05's count is two.  The rule-3 scope
+above is not an allowlist and does not touch this count: it forgives one rule
+on files that declare themselves and that the scanner independently recognises,
+and it forgives nothing else -- not the label, not the view, not a held-out
+day, not a read of the partition by path.
 
 Every banned token here is assembled at import time, so this file carries none
 of the literals it bans and does not need to be allowlisted into silence.
@@ -248,9 +287,17 @@ WALKED_ROOTS: tuple[str, ...] = (
 # the R2 fixup; anything like it left behind is scanned like any other
 # script, and so is a chmod +x file dropped under `quality/receipts/`. A test
 # walks both directories on disk and asserts it.
+# `dbt/logs/` joins them on the same terms. dbt writes its own debug log there,
+# which echoes back every statement the build ran, including the boundary-date
+# comparison the seal requires of the models it just compiled. Scanning it
+# reported our own compiled SQL as a finding, one run behind, and no commit
+# could clear it because the next build wrote it again. It is a transcript, it
+# is in .gitignore, and the format-and-mode rule below governs it exactly as it
+# governs the other two.
 EXCLUDED_PREFIXES: tuple[str, ...] = (
     "quality/receipts/",
     "logs/",
+    "dbt/logs/",
 )
 
 # The only formats the two evidence directories may hide behind. A transcript,
@@ -293,6 +340,12 @@ SKIP_DIR_NAMES: frozenset[str] = frozenset(
         ".ipynb_checkpoints",
         ".venv",
         "node_modules",
+        # Vendored dbt packages: dbt_utils, dbt_date and dbt_expectations, as
+        # `dbt deps` downloads them. They are third-party source, gitignored,
+        # never edited or read here, and their own integration tests carry date
+        # literals that read as held-out material under rules 5 and 6. Nothing
+        # of ours is in there, and `dbt deps` would put any of it back.
+        "dbt_packages",
         "target",
         "library",
         "renv.cache",
@@ -406,6 +459,162 @@ RULE_RAW_FACT = re.compile(
     rf"[^;]{{0,120}}?\b{_FACT}[a-z0-9_]+\b",
     re.IGNORECASE | re.DOTALL,
 )
+
+# ------------------------------------------------ the rule-3 scope exemption
+#
+# Rule 3 asks every read of a fact table to name the open set in the same
+# statement. Two kinds of site read a fact table for a reason that is not
+# analysis, and the qualifier would make them wrong rather than safe:
+#
+#   CONSTRUCTION -- a dbt model whose own output is a fact table, or a dbt test
+#   whose output is an assertion about one. `fct_called_pitch` is built FROM
+#   `fct_pitch`; restricting the build to the open set would change what the
+#   warehouse contains rather than what an analysis sees.
+#   MEASUREMENT -- a pack or a ledger that counts or profiles every row by
+#   design. A row-count ledger restricted to the open set cannot see a held-out
+#   row appear in a closed season, which is the one thing it is there to see.
+#
+# The exemption is never a path list. It is granted only when BOTH hold:
+#
+#   1. the file DECLARES it, in a comment in its first EXEMPT_HEADER_LINES
+#      lines, as `GD-04-EXEMPT: <kind> -- <reason>` with a reason of at least
+#      EXEMPT_MIN_REASON characters on the marker line itself -- far enough in
+#      to clear a long module docstring, near enough to be the header; and
+#   2. the scanner RECOMPUTES the site property from the path and the file
+#      itself and agrees. A declaration is a claim, never the grant.
+#
+# So a new file cannot inherit the exemption silently: it must write the marker
+# down, and the marker buys nothing unless the file is that kind of site.
+# The marker grants nothing at all under EXEMPT_NEVER -- the chapters, the R
+# code, the notebooks, the fixtures, the staging and intermediate models -- and
+# a marker written there is itself reported, so misuse is loud rather than
+# quiet.
+EXEMPT_KINDS: tuple[str, ...] = ("construction", "measurement")
+EXEMPT_HEADER_LINES = 120
+EXEMPT_MIN_REASON = 30
+
+# The marker is a comment line of its own: everything before it on the line is
+# whitespace and one comment introducer, in the four spellings this repository
+# writes. A marker trailing live code, or sitting inside a string, is not one.
+_COMMENT_LINE = re.compile(r"^[ \t]*(?:--+|#+|//+|/\*+|\*)[ \t]*$")
+
+_EXEMPT_MARKER = re.compile(
+    r"GD-04-EXEMPT:\s*(?P<kind>construction|measurement)\s*--\s*(?P<reason>\S[^\n]*)",
+    re.IGNORECASE,
+)
+
+# Where a marker may be written at all. Necessary, never sufficient.
+EXEMPT_DIRS: tuple[str, ...] = ("dbt/models/marts/", "dbt/tests/", "tests/", "ops/")
+
+# Where it grants nothing, whatever it says. Checked first, so a prefix here
+# beats a prefix above: `tests/fixtures/` is inside `tests/` and is refused.
+EXEMPT_NEVER: tuple[str, ...] = (
+    "src/absump/ch",
+    "R/",
+    "notebooks/",
+    "app/",
+    "tools/",
+    "sql/",
+    "quality/sql/",
+    "scripts/",
+    "config/",
+    "tests/fixtures/",
+    "dbt/models/staging/",
+    "dbt/models/intermediate/",
+    "dbt/analyses/",
+    "dbt/snapshots/",
+)
+
+# A warehouse relation by name, in any layer. A measurement site profiles the
+# warehouse, so it names three or more of them; one table read under a
+# measurement banner is an analysis read wearing a hat.
+_RELATION_STEMS: tuple[str, ...] = (_FACT, "dim_", "agg_", "stg_", "int_")
+_WAREHOUSE_RELATION = re.compile(
+    r"\b(?:" + "|".join(re.escape(stem) for stem in _RELATION_STEMS) + r")[a-z0-9_]+\b",
+    re.IGNORECASE,
+)
+EXEMPT_MEASUREMENT_RELATIONS = 3
+
+# A dbt `relationships` test target: `to: ref('fct_pitch')` in a schema file
+# declares an assertion about a fact table. It is not a statement that reads
+# rows, and there is nowhere in it to write a WHERE clause.
+_RELATIONSHIP_TARGET = re.compile(r"\bto\s*:\s*ref\s*\(", re.IGNORECASE)
+
+
+def exemption_claim(relative: str, text: str) -> tuple[str, str, int] | None:
+    """What the file declares in its header: (kind, reason, line), or nothing.
+
+    The marker must be a COMMENT LINE OF ITS OWN -- the line, left-trimmed,
+    begins with a comment introducer and then the marker -- so a string in live
+    code cannot carry one and a comment trailing a statement cannot either. It
+    must also give a reason long enough to be a sentence. Neither condition
+    grants anything by itself.
+    """
+    for number, line in enumerate(text.splitlines()[:EXEMPT_HEADER_LINES], start=1):
+        match = _EXEMPT_MARKER.search(line)
+        if match is None:
+            continue
+        if not _COMMENT_LINE.match(line[: match.start()]):
+            continue
+        reason = match.group("reason").strip()
+        if len(reason) < EXEMPT_MIN_REASON:
+            continue
+        return match.group("kind").lower(), reason, number
+    return None
+
+
+def exemption_place_ok(relative: str) -> bool:
+    """True where a marker may be written down at all."""
+    if any(relative.startswith(prefix) for prefix in EXEMPT_NEVER):
+        return False
+    return any(relative.startswith(prefix) for prefix in EXEMPT_DIRS)
+
+
+def exemption_site_ok(relative: str, kind: str, text: str, line: str) -> bool:
+    """True when the site really is the kind of site the marker claims.
+
+    Recomputed from the path and the file, never read off a list of names.
+    """
+    if not exemption_place_ok(relative):
+        return False
+    stem = Path(relative).stem
+    suffix = Path(relative).suffix.lower()
+    if kind == "construction":
+        # Its own output is a fact table, or an assertion about one.
+        if relative.startswith("dbt/models/marts/") and suffix == ".sql":
+            return stem.lower().startswith(_FACT)
+        if relative.startswith("dbt/tests/") and suffix == ".sql":
+            return True
+        if relative.startswith("dbt/models/") and suffix in {".yml", ".yaml"}:
+            return bool(_RELATIONSHIP_TARGET.search(line))
+        return False
+    if kind == "measurement":
+        # It profiles the warehouse: three or more relations by name, and it is
+        # a pack, a checkpoint script, or an aggregate ledger model.
+        names = {match.group(0).lower() for match in _WAREHOUSE_RELATION.finditer(text)}
+        if len(names) < EXEMPT_MEASUREMENT_RELATIONS:
+            return False
+        if suffix == ".py" and (relative.startswith("tests/") or relative.startswith("ops/")):
+            return True
+        if relative.startswith("dbt/models/marts/") and suffix == ".sql":
+            return stem.lower().startswith("agg_")
+        return False
+    return False
+
+
+# A FROM or a JOIN is also an English word. `reconstructed from call_original`
+# in one JSON field, with a relation named in the NEXT field, is prose beside a
+# label, not a read: the string that carried the keyword ended before the name
+# began. The same holds for two YAML values and two items of a list. So for
+# those two keywords only -- `ref(`, `source(`, `read_parquet` and `.table()`
+# are unambiguous reads and keep the loose gap -- the span between the keyword
+# and the relation may not cross a string terminator or a new mapping key.
+_GAP_KEYWORDS = re.compile(r"^(?:FROM|JOIN)$", re.IGNORECASE)
+_GAP_BREAK = re.compile(
+    r"['\"]\s*[,\]\}]"
+    r"|\n[ \t]*[\"']?[A-Za-z_][A-Za-z0-9_ .-]*[\"']?\s*:",
+)
+
 
 # The only thing that forgives rule 3: an equality, or an IN, against the open
 # label. `!= 'open'` is not a restriction to the open set, so it is not here.
@@ -799,6 +1008,20 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
     surface = on_analysis_surface(relative)
     found: list[Violation] = []
 
+    # What the file claims for rule 3, and whether it may claim it here at all.
+    # A marker written where it grants nothing is reported rather than ignored:
+    # a chapter that decorates itself as warehouse construction says so loudly.
+    claim = exemption_claim(relative, text)
+    if claim is not None and not exemption_place_ok(relative):
+        found.append(
+            Violation(
+                relative,
+                claim[2],
+                "GD-04 exemption marker where it grants nothing",
+                lines[claim[2] - 1] if claim[2] <= len(lines) else "",
+            )
+        )
+
     for number, line in enumerate(lines, start=1):
         if not line.strip():
             continue
@@ -964,10 +1187,19 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
         if table is None:
             continue
         at = match.start() + table.start()
+        keyword = re.match(r"[A-Za-z_.]+", match.group(0))
+        if (
+            keyword is not None
+            and _GAP_KEYWORDS.match(keyword.group(0))
+            and _GAP_BREAK.search(match.group(0)[keyword.end() : table.start()])
+        ):
+            continue
         window = bare_text[match.end() : _statement_end(bare_text, at, line_starts)]
         if QUALIFIES_OPEN.search(window):
             continue
         number = _line_of(line_starts, at) + 1
+        if claim is not None and exemption_site_ok(relative, claim[0], text, lines[number - 1]):
+            continue
         found.append(
             Violation(relative, number, "unqualified raw fact-table read", lines[number - 1])
         )
@@ -988,6 +1220,8 @@ def scan_text(relative: str, text: str, boundary: str) -> list[Violation]:
             if QUALIFIES_OPEN.search(window):
                 continue
             number = _line_of(line_starts, at) + 1
+            if claim is not None and exemption_site_ok(relative, claim[0], text, lines[number - 1]):
+                continue
             found.append(
                 Violation(relative, number, "unqualified raw fact-table read", lines[number - 1])
             )
@@ -1046,6 +1280,23 @@ def _walk_listing(root: Path) -> set[str]:
     return out
 
 
+_ROTATED = re.compile(r"\.\d+$")
+
+
+def _is_transcript_name(name: str) -> bool:
+    """A transcript format, with a rotation number allowed after it.
+
+    dbt rotates its own debug log: dbt.log becomes dbt.log.1, then dbt.log.2.
+    The rotated files hold exactly what dbt.log holds, so reading the suffix
+    literally excluded the current log and scanned yesterday's copy of it. One
+    trailing run of digits is stripped before the format is checked, and only
+    then: dbt.log.1 is a transcript, dbt.log.sh is not, and the executable
+    check below still applies to both.
+    """
+    stem = _ROTATED.sub("", name)
+    return Path(stem).suffix.lower() in EVIDENCE_SUFFIXES
+
+
 def is_excluded(relative: str, root: Path = REPO_ROOT) -> bool:
     """A transcript under one of the two evidence directories, and nothing else.
 
@@ -1057,7 +1308,7 @@ def is_excluded(relative: str, root: Path = REPO_ROOT) -> bool:
     """
     if not any(relative.startswith(prefix) for prefix in EXCLUDED_PREFIXES):
         return False
-    if Path(relative).suffix.lower() not in EVIDENCE_SUFFIXES:
+    if not _is_transcript_name(Path(relative).name):
         return False
     path = root / relative
     try:

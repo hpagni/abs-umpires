@@ -111,6 +111,20 @@ ALLOWED='^src/absump/http\.py:|^R/lib/http\.R:'
 #   test_lint_http*.py, test_http_etiquette.py, test_http_delegation.py
 #                                 the three tests that plant call sites in a
 #                                 temporary tree to prove this linter fires
+#   tests/unit/test_coverage_contract.py
+#                                 the SOP section 6.2 coverage contract. It
+#                                 resolves the five first-party absump modules
+#                                 by name, importlib.import_module(module),
+#                                 because absump.zone and absump.geometry are
+#                                 not written yet and a static import would make
+#                                 the pack unrunnable until they land. The names
+#                                 come from SOP_MODULES, a literal tuple the
+#                                 file's own first test pins verbatim, so no
+#                                 string reaches that call that the SOP did not
+#                                 put there, and nothing in the file fetches
+#                                 anything. test_lint_http_bypasses.py keeps the
+#                                 exemption narrow by requiring that file to
+#                                 stay free of every other request idiom.
 #   ops/env-setup.sh              machine provisioning, not a data pull: it
 #                                 installs uv, R packages and CmdStan. Round 3
 #                                 found the gate RED on a clean tree because of
@@ -123,8 +137,8 @@ ALLOWED='^src/absump/http\.py:|^R/lib/http\.R:'
 #                                 logs/decisions-pending/guard.md for DECISIONS.
 # Each one would otherwise report its own alphabet. Nothing else may be added
 # here without a DECISIONS.md entry, and test_lint_http_bypasses.py pins the
-# list to exactly these seven.
-EXEMPT='^ops/lint_http\.sh:|^ops/ci-pending/|^ops/env-setup\.sh:|^tests/unit/fixtures/lint_http/|^tests/unit/test_lint_http[a-z_]*\.py:|^tests/unit/test_http_etiquette\.py:|^tests/unit/test_http_delegation\.py:'
+# list to exactly these eight.
+EXEMPT='^tests/unit/test_coverage_contract\.py:|^ops/lint_http\.sh:|^ops/ci-pending/|^ops/env-setup\.sh:|^tests/unit/fixtures/lint_http/|^tests/unit/test_lint_http[a-z_]*\.py:|^tests/unit/test_http_etiquette\.py:|^tests/unit/test_http_delegation\.py:'
 
 SCAN_DIRS=""
 for dir in ops scripts R src app dbt notebooks tests tools sql quality; do
@@ -154,8 +168,19 @@ fi
 # shebang. logs/env-setup.sh, the file that motivated it, now lives at
 # ops/env-setup.sh, which this linter scans. If that test is ever deleted, this
 # exclusion becomes a hole and must go back to a format-aware filter.
+#
+# dbt/dbt_packages/ and dbt/logs/ are excluded for the same reason, one step
+# further out: neither is ours. dbt_packages holds the three vendored dbt
+# packages `dbt deps` downloads (dbt_utils, dbt_date, dbt_expectations) and
+# dbt/logs holds dbt's own run log; both are in .gitignore and neither is ever
+# committed, reviewed or edited here. Their shipped GitHub Actions workflows
+# carry curl lines, so scanning them reported four bypasses in third-party CI
+# that no commit of ours can fix, and `dbt deps` would reopen on any clean tree.
+# dbt/logs/ is already covered by --exclude-dir=logs; dbt_packages is named
+# here. What our own dbt code does is still scanned: dbt/models, dbt/macros,
+# dbt/tests and dbt/seeds are all read.
 SKIP='--exclude-dir=receipts --exclude-dir=logs
---exclude-dir=__pycache__ --exclude-dir=.ipynb_checkpoints
+--exclude-dir=dbt_packages --exclude-dir=__pycache__ --exclude-dir=.ipynb_checkpoints
 --exclude-dir=.Rproj.user --exclude-dir=renv --exclude-dir=.git
 --exclude-dir=.venv --exclude-dir=node_modules --exclude-dir=target
 --exclude-dir=.pytest_cache --exclude-dir=.ruff_cache'
