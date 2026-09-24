@@ -7,22 +7,30 @@ PASS   UT-12 twin accepts the two plate planes        exit 0 on reproject(front 
 PASS   UT-12 twin refuses release_pos_y as y_from     exit 1, ValueError raised
 PASS   UT-12 twin refuses release_pos_y as y_to       exit 1, ValueError raised
 PASS   UT-12 twin refuses the API reference plane y0  y0 = 50.0022 ft is not a plate plane, exit 1
+PASS   UT-12 twin accepts plate_x/plate_z columns     exit 0 on pandas columns named plate_x and plate_z
+PASS   UT-12 twin refuses release_pos_x as plate_x    exit 1, ValueError raised
+PASS   UT-12 twin refuses release_pos_z as plate_z    exit 1, ValueError raised
 RECORD UT-12 size of the substitution error           release_pos_y 52.51 .. 55.79 ft against the reference plane 50.0: the release point read as (x0, y0, z0) misses the published crossing by up to 1.005 ft over 4559 pitches, and says nothing while it does it
 PASS   UT-12 R module refuses vy0 >= 0                stopifnot(all(vy0 < 0)) fires
 PASS   UT-12 R module refuses ay <= 0                 stopifnot(all(ay > 0)) fires
-PASS   UT-11 closed form == brute force at front      max |delta| 8.882e-16 s < 1e-12, n = 2000
-PASS   UT-11 closed form == brute force at mid        max |delta| 8.882e-16 s < 1e-12, n = 2000
-RECORD UT-11 the root not taken                       larger root min 7.0596 s, max 13.3592 s; the closed form returns max 0.4860 s
+PASS   UT-11 closed form == brute force at front      max |delta| 1.443e-15 s < 1e-12, n = 39272, every speed
+PASS   UT-11 closed form == brute force at mid        max |delta| 1.221e-15 s < 1e-12, n = 39272, every speed
+RECORD UT-11 the root not taken                       larger root min 6.2048 s over 39272 pitches; the closed form returns max 1.1312 s
 PASS   UT-11 t in (0.30, 0.60) s, >= 70 mph, 2 planes 0 of 39149 pitches at or above 70 mph outside, range 0.3332 .. 0.5126 s, 9 days
 RECORD UT-11 the population the band excludes         123 of 39272 pitches (0.313%) are under 70 mph and are outside the clause's population, asserted on by no band; slowest 69.9 mph, largest t 1.1312 s, still far under the smaller of the two far roots
+RECORD UT-11 the band read with no speed filter       93 of 39272 pitches (0.237%) fall outside (0.30, 0.60) s at either plane; the fastest of them is 58.7 mph and 65 are eephus (EP)
 PASS   UT-11 t_mid > t_front pitch by pitch, every speed 0 of 39272 pitches violate it, no speed filter
 PASS   UT-11 dz < 0 where vz at the plate is negative 0 of 39271 such pitches violate it, no speed filter
 PASS   UT-11 round trip front -> mid -> front         max |delta| 8.882e-16 ft < 1e-12, n = 4559
-PASS   2026 CSV mid -> front matches API pX/pZ        max 0.001071379 ft < 0.0011 over 11250 called pitches, 5 days
-RECORD 2026 the same over every pitch                 max 0.001126631 ft over 22604 pitches; 2 at or above 0.0011 ft: 824584 ab 21 p 4 hit_into_play 0.001104168 ft; 824002 ab 28 p 2 foul 0.001126631 ft
-PASS   2026 CSV reproduces at y = 8.5/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 22604 pitches
-RECORD 2026 API pX/pZ at y = 17/12 (direct integration) max abs err 0.001107982 ft, the residual of y0 = 50.0022 against the reference plane 50.0
-DEFER  2025 CSV reproduces at y = 17/12               the Stats API side for MLB 2025 is not on this machine: data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27). The clause needs x0/y0/z0 from the feed; the CSV alone cannot identify its own plane
+PASS   2026 CSV mid -> front matches API pX/pZ, called, ABS games 72 of 357644 at or above 0.0011 ft, the 72 recorded artefacts and no other (identical set); every other pitch max 0.001099301 ft; 178 open days
+RECORD the 0.0011 ft clause, its named artefacts      72 in 60 games on 53 days; min 0.001103965, q25 0.001123766, median 0.001156996, q75 0.001250275, q90 0.001336087, max 0.063473343 ft. CSV side 1: 825000/31/3, whose plate_x/plate_z miss the CSV's own trajectory by 0.063625 ft (W2.15). API side 71, max 0.001536825 ft: pX/pZ off the API's own trajectory, which the cross-source miss matches within 3.1e-05 ft. All: 825000/31/3 0.063473; 823400/84/3 0.001537; 823736/67/1 0.001520; 824652/63/3 0.001411; 824652/63/2 0.001371; 824637/81/2 0.001362; 822899/71/1 0.001347; 824410/77/1 0.001337; 823795/72/1 0.001332; 823900/71/3 0.001319; 824089/83/1 0.001314; 823795/73/2 0.001307; 824652/65/1 0.001303; 824652/66/3 0.001290; 824582/79/1 0.001272; 823663/71/4 0.001267; 823795/72/3 0.001266; 823099/79/2 0.001254; 823749/86/1 0.001249; 822961/61/4 0.001249; 824635/80/2 0.001240; 824979/72/3 0.001222; 824086/87/1 0.001221; 823835/75/2 0.001221; 823749/87/1 0.001215; 823546/23/1 0.001196; 824901/74/5 0.001192; 824907/32/1 0.001178; 823872/34/2 0.001175; 825105/77/1 0.001175; 823535/71/1 0.001172; 823477/71/2 0.001166; 823348/65/1 0.001165; 823795/74/1 0.001162; 823842/25/1 0.001158; 824903/81/1 0.001157; 825099/77/1 0.001157; 823976/40/1 0.001151; 824659/29/2 0.001151; 823654/43/1 0.001150; 823516/48/2 0.001143; 823035/66/1 0.001142; 823852/15/1 0.001142; 823976/21/1 0.001141; 823749/76/3 0.001141; 823264/76/2 0.001138; 823297/68/2 0.001137; 822683/31/3 0.001137; 823651/21/1 0.001131; 823010/47/3 0.001130; 823898/46/4 0.001130; 823153/27/5 0.001126; 823784/24/5 0.001125; 823388/77/1 0.001124; 823880/12/1 0.001123; 824126/50/3 0.001122; 822784/16/1 0.001120; 824243/71/1 0.001119; 822753/12/1 0.001119; 823749/73/1 0.001118; 823642/51/2 0.001117; 825031/28/4 0.001116; 824452/10/3 0.001115; 824042/32/4 0.001110; 823825/18/1 0.001109; 823392/7/3 0.001109; 825099/77/3 0.001108; 824056/15/1 0.001106; 824089/86/1 0.001105; 824746/29/2 0.001105; 823059/24/4 0.001104; 824607/12/1 0.001104
+RECORD the 0.0011 ft clause, the precision bar        at 1e-10 ft, the bar two sources published to 10 or more decimals support, 357644 of 357644 called pitches in ABS games miss; min 4.491e-08 ft, median 1.877e-04 ft. The disagreement is not rounding
+RECORD the 0.0011 ft clause, outside its population   every pitch in ABS games: 114 of 687448 at or above 0.0011 ft, max 0.063473343 ft. Called pitches in the four non-ABS games (D-P2-01): 494 of 621, max 0.030439765 ft
+PASS   2026 CSV reproduces at y = 8.5/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 22604 pitches on the five fixed days
+RECORD the same over every open 2026 day              1 of 688686 pitches at or above 5e-7 ft, a stated limit of the clause: 825000/31/3 0.063625 ft
+RECORD 2026 API pX/pZ at y = 17/12 (direct integration) called pitches in ABS games: max 0.001508439 ft, median 0.000184316 ft. The API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual, not rounding, is what the cross-source clause measures
+PASS   2025 CSV reproduces at y = 17/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 322 pitches of game 776311 on 2025-09-15
+RECORD 2025 the join and the other plane              322 of 322 CSV pitches joined 1:1 on the six kinematic columns, max |delta| 0.000000 between the two sources; the same integration to y = 8.5/12 misses by 0.1375 ft, so the clause identifies the plane
 DEFER  AAA 2024 CSV reproduces at y = 8.5/12          there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step
 PASS   2022 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 4468
 PASS   2023 integrator agrees with reproject          max |delta| 1.776e-15 ft < 1e-12, n = 3514
@@ -32,25 +40,28 @@ PASS   2022 mean dz in [-1.10, -0.90] in              -0.9997 in on 2022-07-05
 PASS   2023 mean dz in [-1.10, -0.90] in              -0.9716 in on 2023-06-29
 PASS   2024 mean dz in [-1.10, -0.90] in              -0.9592 in on 2024-06-26
 PASS   2025 mean dz in [-1.10, -0.90] in              -0.9713 in on 2025-06-25
-PASS   UT-13 sz_top*12/0.535 == sz_bot*12/0.27        max 0.000000032399 in < 1e-6, n = 4506 on 2026-06-23
+PASS   UT-13 population: the markerless games are D-P2-01's 4 of 2342 open 2026 games carry no ABS marker: 823669, 823745, 825093, 825094; 688686 of 688686 pitches with sz_top joined to their game
+PASS   UT-13 sz_top*12/0.535 == sz_bot*12/0.27, ABS games max 0.000000032399 in < 1e-6 over 687448 pitches in 2338 ABS games, every open 2026 day (178)
+RECORD UT-13 games outside the population             4 games (D-P2-01, no ABS hardware), 1144 of their 1238 pitches at or above 1e-6 in, max 0.2409 in: 823669 max 0.2409 in over 305; 823745 max 0.2285 in over 318; 825093 max 0.0295 in over 293; 825094 max 0.0295 in over 322
 RECORD UT-13 the pre-2026 contrast                    2025 max 23.4037 in, mean 6.1485 in: the published zone is operator-set before ABS, so the clause is a 2026 assertion and is not vacuous
-PASS   abs_top_ft and abs_bot_ft invert the fractions 0.535*H/12 and 0.27*H/12 return the published sz_top and sz_bot
-PASS   D-14 signed_edge_in, A on the side edge        0.0000000000 in, hand-computed 0.0 in
+PASS   abs_top_ft and abs_bot_ft invert the fractions 0.535*H/12 and 0.27*H/12 return the published sz_top and sz_bot, 687448 pitches in ABS games
+PASS   D-14 signed_edge_in, A on the side edge        0 in, identical to 0: TRUE
 PASS   D-14 signed_edge_in, B the centre              -8.5000000000 in, hand-computed -8.5 in
 PASS   D-14 signed_edge_in, C a corner                5.0000000000 in, hand-computed 5.0 in
 PASS   D-14 signed_edge_in, D below the bottom        4.0000000000 in, hand-computed 4.0 in
 PASS   D-14 the zone-truth predicate                  edge - 1.45 in < 0 flips between 1.44 in and 1.46 in outside the side edge
 PASS   nearest_edge names the edge that is nearest    side, top, bot on three points built one inch outside each edge
 PASS   z_norm rescales by height                      3.0 ft over a 72 in batter is 0.5
-PASS   golden file is 500 pitches                     500 rows, 26 columns
-PASS   golden file, 11 numeric columns to 1e-9        max |delta| 1.492e-13, worst column edge_in_mid, 500 rows
+PASS   golden file carries exactly its 26 columns     26 columns; missing: none; extra: none
+PASS   golden file is 500 pitches                     500 rows, the fixture stores 500
+PASS   golden file columns are non-empty and typed    26 of 26 columns numeric and finite (nearest_edge_mid: side, top or bot) in every row; failing: none
+PASS   golden file, 11 numeric columns to 1e-9        max |delta| 1.492e-13, worst column edge_in_mid, 11 of 11 columns compared over 500 rows
 PASS   golden file, nearest_edge to the letter        500 of 500 rows agree
 PASS   cross-check sample is 100,000 rows             100000 rows from MLB 2024-06
 PASS   Python twin agrees on 100,000 rows             max |delta| 0.000e+00 ft < 1e-12 over 100000 rows
 
-36 PASS, 0 FAIL, 2 DEFER, <elapsed> s
+43 PASS, 0 FAIL, 1 DEFER, <elapsed> s
 deferred, each with its reason:
- - 2025 CSV reproduces at y = 17/12 -- the Stats API side for MLB 2025 is not on this machine: data/interim/feed_pitch holds season=2026 only (DEV-25, DEV-27). The clause needs x0/y0/z0 from the feed; the CSV alone cannot identify its own plane
  - AAA 2024 CSV reproduces at y = 8.5/12 -- there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step
 
 -- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
