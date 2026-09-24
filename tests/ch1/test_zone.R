@@ -37,7 +37,7 @@
 # four games D-P2-01 names are outside it: 494 of their 621 called pitches miss
 # by up to 0.030 ft, and a RECORD line counts them.
 #   Publication precision, measured on the raw text of all 688,686 open pitches
-# (logs/decisions-pending/plane-clause.md). In ABS games the CSV's plate_x and
+# (DECISIONS.md D-P4-03, logs/evidence/W3.3-fix2.log). In ABS games the CSV's plate_x and
 # plate_z, and the API's pX and pZ, are printed as full binary64: at least 10
 # decimals, 11 to 17 significant digits, median 16 decimals. Two quantities
 # carried to k decimals cannot be expected to agree closer than about 10^-k, so
