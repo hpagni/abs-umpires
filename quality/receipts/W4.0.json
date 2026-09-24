@@ -1,0 +1,17 @@
+{
+  "cmd": "ok=1; for p in lme4 tidybayes marginaleffects; do i=$(Rscript -e \"suppressPackageStartupMessages(library(commandArgs(TRUE)[1], character.only=TRUE)); cat(as.character(packageVersion(commandArgs(TRUE)[1])))\" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n \"$i\" ] && [ \"$i\" = \"$l\" ] || ok=0; done; for p in brms cmdstanr mgcv; do i=$(Rscript -e \"cat(as.character(packageVersion(commandArgs(TRUE)[1])))\" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n \"$i\" ] && [ \"$i\" = \"$l\" ] || ok=0; done; [ $ok -eq 1 ]",
+  "duration_s": 7,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "0c5e49684c201c718dbc9e0e50f2f725985dd2f3",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W4.0.log",
+  "owner": "W4",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W4.0",
+  "timestamp_madrid": "2026-09-24 23:26:16 CEST",
+  "title": "Chapter 2 environment additions, lme4 tidybayes marginaleffects in renv"
+}

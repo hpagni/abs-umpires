@@ -1,0 +1,18 @@
+# W4.0, the Chapter 2 environment additions. Owner W4, fleet phase 04.
+#
+# The three packages the SOP installs are lme4, tidybayes and marginaleffects.
+# They go into the renv project library, which is what R_LIBS_USER already points
+# at on this machine, and renv.lock is the record. The gate does not re-run the
+# install. It loads the three packages and compares each installed version with
+# the version renv.lock records, then compares brms, cmdstanr and mgcv the same
+# way without loading them, because this step must leave the brms + cmdstanr
+# backend and the mgcv pin exactly as it found them. packageVersion prints 2.0.6
+# where the lockfile writes 2.0-6, so the lockfile value has its dashes turned
+# into dots before the comparison.
+
+- id: W4.0
+  title: "Chapter 2 environment additions, lme4 tidybayes marginaleffects in renv"
+  verify: 'ok=1; for p in lme4 tidybayes marginaleffects; do i=$(Rscript -e "suppressPackageStartupMessages(library(commandArgs(TRUE)[1], character.only=TRUE)); cat(as.character(packageVersion(commandArgs(TRUE)[1])))" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n "$i" ] && [ "$i" = "$l" ] || ok=0; done; for p in brms cmdstanr mgcv; do i=$(Rscript -e "cat(as.character(packageVersion(commandArgs(TRUE)[1])))" $p); l=$(jq -r .Packages.$p.Version renv.lock | sed s/-/./g); echo $p installed=$i lock=$l; [ -n "$i" ] && [ "$i" = "$l" ] || ok=0; done; [ $ok -eq 1 ]'
+  expect_exit: 0
+  owner: W4
+  needs: renv.lock
