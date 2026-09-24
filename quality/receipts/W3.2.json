@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/00_preflight.R",
-  "duration_s": 2,
+  "duration_s": 3,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "7e0795a427e04c2db2536c92ea64042b809a9df7",
+  "git_sha": "0c5e49684c201c718dbc9e0e50f2f725985dd2f3",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.2.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.2",
-  "timestamp_madrid": "2026-09-24 08:01:25 CEST",
+  "timestamp_madrid": "2026-09-24 23:27:07 CEST",
   "title": "Chapter 1 preflight, seven clauses and the two OpenMP records"
 }
