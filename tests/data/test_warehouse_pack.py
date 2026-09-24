@@ -22,11 +22,14 @@ at the strength the data supports, stated here, and recorded in
 
 1. DT-04's "0 leaks" is a clause about `fct_called_pitch`. No `automatic_ball`
    row reaches it: the mart's description filter removes all of them, 0 rows on
-   1,610,220. Untracked rows are a different matter. The mart keeps 591 called
+   1,836,071. Untracked rows are a different matter. The mart keeps 762 called
    pitches whose four tracking columns are blank, each carrying `tracked =
-   false`, and 21 more whose raw coordinate exists but whose `vy0` and `ay` do
-   not, so the mid-plane re-projection is null. 612 rows in all, 0.038% of the
-   mart. They are flagged, not dropped, and the `tracked` filter that removes
+   false`, and 22 more whose raw coordinate exists but whose `vy0` and `ay` do
+   not, so the mid-plane re-projection is null. 784 rows in all, 0.043% of the
+   mart. Re-measured 2026-09-24 after the 110-day MLB 2022 backfill; the counts
+   below it were taken on 2026-09-23 over a mart 226,000 rows smaller and the
+   rate barely moved, 0.038% to 0.043%. They are flagged, not dropped, and
+   the `tracked` filter that removes
    them belongs to W3.7's analysis table. The count is asserted as a bound and
    published in the data-quality table.
 2. DT-08's "MLB 2026 == 2 for 100%" holds on 4,640 of 4,684 team-games. 36 read
@@ -137,8 +140,15 @@ DT17_MART_COLUMNS = (
 )
 DT17_STAGING_COLUMNS = ("zone",)
 
-#: DT-04's bound. 591 untracked plus 21 without kinematics, on 2026-09-23.
-BLANK_MID_IN_MART_MAX = 700
+#: DT-04's bound. 762 untracked plus 22 without kinematics, on 2026-09-24, over
+#: 1,836,071 mart rows. The bound is a regression tripwire on a count that grows
+#: with the corpus, not the assertion: what proves nothing leaked is the clause
+#: immediately above it, ``blank == untracked + no_kinematics``, which holds
+#: exactly. It was 700 against 612 rows on 2026-09-23, before the 110-day MLB
+#: 2022 backfill; the rate is unchanged, so the bound is re-cut at the same
+#: ~15% headroom rather than the assertion relaxed. See
+#: logs/decisions-pending/dt04-blank-bound.md.
+BLANK_MID_IN_MART_MAX = 900
 
 #: DT-28's bound on the bare bridge key, challenged MLB 2026 pitches.
 BRIDGE_AMBIGUOUS_MAX = 40
