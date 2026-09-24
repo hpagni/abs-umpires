@@ -29,9 +29,13 @@ the front. Mixing them injects a systematic -0.99 in shift in `plate_z`.
 
 UT-12. `release_pos_x/y/z` are the release point, not the reference plane:
 `release_pos_y == 54.18` against `y0 == 50.0022`, and substituting them breaks
-the projection by up to 1.04 ft. A plane argument outside the plate region is
-refused with `ValueError` rather than projected, because the failure is silent
-otherwise.
+the projection by up to 1.04 ft. `reproject` refuses them with `ValueError` in
+two ways, because the failure is silent otherwise. A plane argument outside the
+plate region is refused, which catches `release_pos_y` handed over as a plane.
+And any argument that carries a column name, a pandas or Polars Series, is
+refused when that name starts with `release_pos_`, which catches
+`release_pos_x` or `release_pos_z` handed over in place of `plate_x`/`plate_z`.
+A bare NumPy array carries no name, so only the plane check applies to it.
 
 Scalars and array-likes are both accepted. When any argument is an array-like
 the whole call is evaluated with NumPy and the two components come back as
@@ -63,10 +67,25 @@ BALL_R_IN = 1.45
 RELEASE_POS_Y_FT = 54.18
 API_Y0_FT = 50.0022
 PLANE_MAX_FT = 5.0
+RELEASE_PREFIX = "release_pos_"
 
 
 def _is_scalar(value: Any) -> bool:
     return isinstance(value, int | float) and not isinstance(value, bool)
+
+
+def _check_columns(**arguments: Any) -> None:
+    """UT-12. An argument named for a release column is an error."""
+    for argument, value in arguments.items():
+        column = getattr(value, "name", None)
+        if isinstance(column, str) and column.lower().startswith(RELEASE_PREFIX):
+            raise ValueError(
+                f"{argument} was handed the column {column!r}. release_pos_x/y/z are "
+                f"the release point, not the plate crossing and not x0/y0/z0: "
+                f"release_pos_y is {RELEASE_POS_Y_FT} ft against the Stats API "
+                f"y0 of {API_Y0_FT} ft, and substituting them breaks the projection "
+                f"by up to 1.04 ft. SOP section 2.5, UT-12."
+            )
 
 
 def _check_plane(name: str, y: Any) -> float:
@@ -131,8 +150,21 @@ def reproject(
 
     Raises `ValueError` when a plane argument is not a plate plane, which is
     what a caller handing over `release_pos_y` (54.18 ft) or the API's `y0`
-    (50.0022 ft) does, and when `vy0 >= 0` or `ay <= 0`.
+    (50.0022 ft) does; when any argument is a Series named `release_pos_*`;
+    and when `vy0 >= 0` or `ay <= 0`.
     """
+    _check_columns(
+        plate_x=plate_x,
+        plate_z=plate_z,
+        vx0=vx0,
+        vy0=vy0,
+        vz0=vz0,
+        ax=ax,
+        ay=ay,
+        az=az,
+        y_from=y_from,
+        y_to=y_to,
+    )
     y_from = _check_plane("y_from", y_from)
     y_to = _check_plane("y_to", y_to)
     scalar = all(_is_scalar(v) for v in (plate_x, plate_z, vx0, vy0, vz0, ax, ay, az))
