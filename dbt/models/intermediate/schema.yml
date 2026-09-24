@@ -1,0 +1,261 @@
+version: 2
+
+# dbt/models/intermediate/schema.yml -- SOP step W2.17.
+#
+# The six intermediate models of SOP W2.17 and their tests. DT-03 lives here,
+# on int_pitch.umpire_raw, because that is where the Statcast umpire column
+# reaches the analysis and because the two staging models W1.11 wrote keep
+# their properties in dbt/models/sources.yml.
+#
+# W2.19 EXTENDS THIS FILE with the generic layer at the intermediate grain: the
+# declared three-column pitch key through dbt_utils, and accepted_values on the
+# vocabularies that are built here rather than at the mart. DT-10's MJ rule is
+# asserted on int_challenge_resolved as well as on fct_challenge, because that
+# is the model where a non-MJ review would first appear.
+
+models:
+  - name: int_regime
+    description: >
+      One row per scheduled game with the regime label and the analysis-set
+      label. The AAA split comes from has_abs_challenges, never from the
+      weekday.
+    columns:
+      - name: game_pk
+        data_tests: [not_null, unique]
+      - name: official_date
+        data_tests: [not_null]
+      - name: regime
+        description: >
+          pre_buffer 2022-2024, buffer_2025, abs_2026, aaa_full_abs,
+          aaa_challenge. Null when the format of an AAA game is not on disk.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+      - name: analysis_set
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["open", "excluded"]
+      - name: regime_source
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["has_abs_challenges", "unknown_no_feed_game_row", "season", "unknown_season_outside_the_map"]
+    data_tests:
+      - no_rows_where:
+          name: int_regime_carries_no_2026_postseason_game
+          arguments:
+            condition: "season = 2026 and game_type in ('F', 'D', 'L', 'W')"
+  - name: int_pitch
+    description: >
+      One row per Statcast pitch on or before the last open day, carrying the
+      fct_pitch columns plus regime, level, season, official_date and
+      analysis_set.
+    columns:
+      - name: pitch_uid
+        data_tests: [not_null, unique]
+      - name: game_pk
+        data_tests: [not_null]
+      - name: official_date
+        data_tests: [not_null]
+      - name: analysis_set
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["open", "excluded"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: int_pitch_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: height_source
+        data_tests:
+          - accepted_values:
+              name: int_pitch_height_source_is_in_the_vocabulary
+              arguments:
+                values: ["abs_measured", "people_offset"]
+      - name: plane_source
+        data_tests:
+          - accepted_values:
+              name: int_pitch_plane_source_is_mid_or_front
+              arguments:
+                values: ["mid", "front"]
+      - name: umpire_raw
+        description: >
+          DT-03. The Statcast CSV's deprecated umpire column, which is empty in
+          every export from 2015 on. The umpire of this study comes from
+          stg_game_official. A non-empty value here means the export changed
+          and every umpire-season number would have two possible sources.
+        data_tests:
+          - umpire_column_is_blank:
+              name: dt_03_umpire_non_empty_count_is_zero
+              config:
+                meta:
+                  assertion_id: DT-03
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: dt_18_int_pitch_declared_pitch_key_is_unique
+          arguments:
+            combination_of_columns: ["game_pk", "at_bat_number", "pitch_number"]
+      - no_rows_where:
+          name: int_pitch_holds_no_row_past_the_last_open_day
+          arguments:
+            condition: "official_date > date '{{ var('last_open_date') }}'"
+      - no_rows_where:
+          name: int_pitch_every_row_carries_a_regime
+          arguments:
+            condition: "regime is null"
+
+  - name: int_called_pitch
+    description: >
+      int_pitch filtered to description in ('called_strike', 'ball',
+      'blocked_ball'), with cs, the signed edge distance and the home-plate
+      umpire.
+    columns:
+      - name: pitch_uid
+        data_tests: [not_null, unique]
+      - name: cs
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+      - name: call_final
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["ball", "strike"]
+      - name: call_original
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["ball", "strike"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: int_called_pitch_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: height_source
+        data_tests:
+          - accepted_values:
+              name: int_called_pitch_height_source_is_in_the_vocabulary
+              arguments:
+                values: ["abs_measured", "people_offset"]
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              name: int_called_pitch_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+
+  - name: int_challenge_resolved
+    description: >
+      One row per ABS challenge, resolved onto the Statcast pitch key and onto
+      the team that spent the token.
+    columns:
+      - name: challenge_uid
+        data_tests: [not_null, unique]
+      - name: review_level
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["event", "play", "additional"]
+      - name: is_overturned
+        data_tests: [not_null]
+      - name: review_type
+        description: >
+          DT-10. Manager judgment only. MF, MA and NH reviews are replay of a
+          different kind and are excluded upstream with a log line, so a value
+          here other than MJ is a leak into the challenge population.
+        data_tests:
+          - not_null:
+              name: dt_10_int_challenge_resolved_review_type_is_not_null
+          - accepted_values:
+              name: dt_10_int_challenge_resolved_holds_only_mj_reviews
+              arguments:
+                values: ["MJ"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: int_challenge_resolved_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: resolved_by
+        data_tests:
+          - accepted_values:
+              name: dt_09_int_challenge_resolved_resolution_path_is_known
+              arguments:
+                values: ["event", "last_isPitch"]
+      - name: call_original
+        data_tests:
+          - accepted_values:
+              name: int_challenge_resolved_call_original_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+      - name: call_final
+        data_tests:
+          - accepted_values:
+              name: int_challenge_resolved_call_final_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+    data_tests:
+      - no_rows_where:
+          name: int_challenge_resolved_mlb_2026_resolves_to_a_pitch
+          arguments:
+            condition: "level = 'mlb' and season = 2026 and pitch_uid is null"
+      - no_rows_where:
+          name: int_challenge_resolved_names_the_challenging_team
+          arguments:
+            condition: "level = 'mlb' and season = 2026 and challenge_team_id is null"
+
+  - name: int_challenge_opportunity
+    description: >
+      Two rows per called pitch in a challenge-system game, one per side, with
+      the token ledger and whether the call went against that side.
+    columns:
+      - name: acting_side
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["bat", "fld"]
+      - name: role
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["batter", "defense"]
+    data_tests:
+      - no_rows_where:
+          name: int_challenge_opportunity_names_the_acting_team
+          arguments:
+            condition: "acting_team_id is null or opponent_team_id is null"
+      - no_rows_where:
+          name: int_challenge_opportunity_charges_no_challenge_to_an_ineligible_side
+          arguments:
+            condition: "challenged and not call_went_against"
+  - name: int_re288_state
+    description: >
+      Run expectancy by base-out-count state over MLB regular-season open rows,
+      the input to fct_re288.
+    columns:
+      - name: "cast(outs as varchar) || base_state || cast(balls as varchar) || cast(strikes as varchar)"
+        data_tests:
+          - unique:
+              name: int_re288_state_holds_one_row_per_state
+      - name: re
+        data_tests: [not_null]
+      - name: n
+        data_tests: [not_null]
+    data_tests:
+      - no_rows_where:
+          name: int_re288_state_holds_no_empty_cell
+          arguments:
+            condition: "n <= 0"

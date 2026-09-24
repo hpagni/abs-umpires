@@ -1,0 +1,19 @@
+# dbt/packages.yml -- SOP step W2.19.
+#
+# The two package pins SOP section 2.4 prints, and nothing else. dbt_utils
+# carries the multi-column uniqueness test the section 2.6 keys need, and
+# dbt_expectations carries the null-rate and distinct-count expectations the
+# W2.19 paragraph asks for per season.
+#
+# metaplane/dbt_expectations 0.10.10, not calogica/dbt_expectations 0.10.4:
+# calogica's copy is stale and does not parse under dbt 1.12.
+#
+# dbt deps writes dbt/package-lock.yml beside this file and that lock is
+# committed. ops/dbt.sh, quality/steps.yml W2.17 and quality/steps.yml W2.18
+# already run dbt deps before parse, so no caller changes.
+
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.4.1
+  - package: metaplane/dbt_expectations
+    version: 0.10.10

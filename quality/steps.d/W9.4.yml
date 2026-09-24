@@ -1,0 +1,43 @@
+# W9.4 -- the warehouse contract. Owned by W9, fleet phase 03. Written to
+# quality/steps.d/ and merged by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# SOP section 2.6 states one set of table names, one grain and one key per
+# table, and the required columns of each. quality/warehouse_contract.yml is
+# that statement, machine readable. quality/verify_contract.py checks the built
+# warehouse against it and carries no table name of its own, so a table renamed
+# in the contract is a table renamed in the check.
+#
+# Eight checks. Twelve tables present as tables in the marts schema; every
+# required column present or listed as deferred with its owning step; DT-18,
+# each declared key unique with 0 duplicate groups; DT-19, eight referential
+# edges with 0 orphans, three of them the edges section 6.3 names; the four
+# open views restricted to their base table by row count and by stored
+# definition; the layer materialisations of section 2.6; the rule that model
+# code reads only the open views; and the one declared vocabulary.
+#
+# The verify command is `make verify-contract` plus the eight assertions the
+# exit code alone does not make. The counts in those assertions are the
+# contract: a table added to section 2.6 changes 12/12 here too.
+#
+# Six columns of the section 2.6 lists are declared and not built, and the
+# checker reports them as DEFERRED rather than as a pass: count_class and
+# pitch_group, owned by W3.7; sz_challenge_prob and sz_challenge_runs, owned by
+# W4.2; m_star_in and g_wp, owned by W5.2 to W5.6. A column missing and not on
+# that list is a failure. Proved by the tampered-contract runs in the W9.4
+# return: a required column removed from the deferred block fails.
+#
+# Measured 2026-09-24 against the W2.18 dev build: 3,108,070 pitches,
+# 1,610,220 called pitches, 12,300 reviews, 716,922 opportunity rows, 18,817
+# games. 9 pass, 0 fail, 1 deferred line, 0 skipped, in about 4 s.
+#
+# With no warehouse file on disk the checker reports SKIP for the checks that
+# read it, runs the two that read only the repository, and exits 0. The `needs`
+# list below is what tells `make prove` the step is built.
+
+- id: W9.4
+  title: "Warehouse contract, SOP section 2.6, checked table by table"
+  verify: "log=$(mktemp) && make verify-contract >\"$log\" 2>&1 && grep -qE \"^C1 tables +PASS +12/12 contracted tables\" \"$log\" && grep -qE \"^C2 columns +PASS\" \"$log\" && grep -qE \"^C3 keys DT-18 +PASS +12/12 declared keys unique, 0 dupes\" \"$log\" && grep -qE \"^C4 refs DT-19 +PASS +8 edges, 0 orphans\" \"$log\" && grep -qE \"^C5 open views +PASS +4/4\" \"$log\" && grep -qE \"^C6 layers +PASS\" \"$log\" && grep -qE \"^C7 read rule +PASS\" \"$log\" && grep -qE \"^C8 vocabularies +PASS\" \"$log\" && ! grep -qE \"FAIL\" \"$log\" && tail -1 \"$log\" && rm -f \"$log\""
+  expect_exit: 0
+  owner: W9
+  needs: quality/verify_contract.py, quality/warehouse_contract.yml, ops/verify_contract.sh, docs/warehouse.md

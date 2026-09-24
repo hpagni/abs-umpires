@@ -1,0 +1,88 @@
+# dbt/dbt_project.yml -- SOP step W1.11, the dbt skeleton.
+#
+# Layers and materialisations are SOP section 2.6: staging is views and does
+# renames and casts only, intermediate is views, marts are tables. The profile
+# is absump and its four targets live in dbt/profiles.yml.example.
+#
+# THE BOUNDARY VARIABLE. SOP W1.11 prints `seal_start_date: "2026-09-22"` here.
+# That literal cannot be written in this directory. GD-04 rule 5 fails on a
+# held-out day written anywhere on the analysis surface, dbt/ is on that
+# surface, and the only file exempt from rule 5 is config/seal.yml, which is
+# where the day is already defined. So this file names the variable and not the
+# day, two ways:
+#
+#   seal_start_date  read from ABS_SEAL_START_DATE, which ops/dbt.sh exports
+#                    out of config/seal.yml before every dbt command. Empty when
+#                    dbt is invoked directly, which is why no model depends on it.
+#   last_open_date   the same boundary written as the last open day. It is not a
+#                    held-out day, so it passes the guard, and it equals
+#                    absump.paths.LAST_OPEN_DATE, which this repository already
+#                    carries. Models filter with `official_date <= last_open_date`,
+#                    which selects exactly the rows `< seal_start_date` selects.
+#
+# Reported to the reconciler: the deviation is forced by GD-04 and is recorded
+# in the W1.11 return.
+
+name: absump
+version: 0.1.0
+config-version: 2
+profile: absump
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+target-path: "target"
+
+models:
+  absump:
+    staging: {+materialized: view, +schema: staging}
+    intermediate: {+materialized: view, +schema: intermediate}
+    marts: {+materialized: table, +schema: marts}
+
+seeds:
+  absump:
+    +schema: staging
+    +tags: ["smoke"]
+
+vars:
+  seal_start_date: "{{ env_var('ABS_SEAL_START_DATE', '') }}"
+  last_open_date: "2026-09-21"
+  seasons_mlb: [2022, 2023, 2024, 2025, 2026]
+  seasons_aaa: [2023, 2024, 2025]
+
+# THE SEALED-LEAK CHECK, SOP W1.11: an on-run-start hook on the dev target that
+# aborts the run on failure, so a stale mart cannot carry held-out rows into a
+# figure. It runs on dev only. The ci target has no warehouse file and the
+# sealed target is the post-unseal build the owner runs by hand after the W9.7
+# ceremony, where those rows are the point.
+#
+# The check reads the warehouse catalogue, takes every table that carries an
+# official_date column, and counts the rows past the boundary. It counts them by
+# subtraction, total rows minus rows on or before the last open day, so the only
+# comparison it ever issues is one that cannot select a held-out row. That keeps
+# GD-04 green on the dbt log this hook writes, which the scan reads like any
+# other file under dbt/. A non-zero count raises and the run stops before any
+# model is built.
+on-run-start:
+  - >-
+    {%- if execute and target.name == 'dev' -%}
+      {%- set boundary = var('last_open_date') -%}
+      {%- set carriers = run_query(
+            "select schema_name, table_name from duckdb_columns()"
+            " where lower(column_name) = 'official_date' and internal = false"
+            " group by 1, 2 order by 1, 2") -%}
+      {%- set leaks = [] -%}
+      {%- for row in carriers.rows -%}
+        {%- set counted = run_query(
+              "select count(*) - count(*) filter (where try_cast(official_date as date) <= date '"
+              ~ boundary ~ "') from " ~ adapter.quote(row[0]) ~ "." ~ adapter.quote(row[1])) -%}
+        {%- if counted.rows[0][0] | int > 0 -%}
+          {%- do leaks.append(row[0] ~ "." ~ row[1] ~ " " ~ counted.rows[0][0] ~ " row(s)") -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {%- if leaks | length > 0 -%}
+        {{ exceptions.raise_compiler_error(
+             "W1.11 seal guard: the warehouse carries rows past " ~ boundary
+             ~ " in " ~ (leaks | join("; ")) ~ ". Rebuild after ops/clean_warehouse.sh.") }}
+      {%- endif -%}
+    {%- endif -%}
+    select 1 as absump_seal_guard

@@ -1,0 +1,80 @@
+version: 2
+
+# dbt/models/sources.yml -- SOP step W1.11.
+#
+# The ten lake tables the SOP names, read straight out of the Parquet lake
+# through dbt-duckdb's external_location. No source is copied into the
+# warehouse first: DuckDB reads the Hive-partitioned files in place.
+#
+# ABS_DATA_ROOT has no value on this machine, and src/absump/paths.py already
+# defines the lake root as ABS_DATA_ROOT when set and the repository's data/
+# directory otherwise. The default below is that same rule, so dbt parse works
+# in a clean clone with nothing exported. The SOP prints env_var with no
+# default; without one, dbt parse fails before it reads a single model.
+#
+# Nothing under interim/ exists until W2. These sources are declared now so the
+# DAG is real, and the ci target builds over the synthetic seed instead.
+
+sources:
+  - name: lake
+    meta:
+      external_location: >
+        read_parquet('{{ env_var("ABS_DATA_ROOT", "data") }}/interim/{name}/**/*.parquet',
+                     hive_partitioning=true, union_by_name=true)
+    tables:
+      - name: feed_pitch
+      - name: feed_play
+      - name: feed_game
+      - name: feed_player
+      - name: feed_challenge
+      - name: statcast_pitch
+      - name: pitch_joined
+      - name: schedule_game
+      - name: game_official
+      - name: abs_leaderboard
+
+# The three skeleton models. Properties live here rather than in a separate
+# schema.yml because W1.11 owns this file and the three .sql files, and one
+# properties file for three models is enough.
+models:
+  - name: stg_statcast_pitches
+    description: "One row per tracked pitch. Renames and casts only, SOP section 2.6."
+    columns:
+      - name: pitch_uid
+        description: "game_pk, at_bat_number and pitch_number joined with a colon."
+        data_tests: [not_null, unique]
+      - name: game_pk
+        data_tests: [not_null]
+      - name: official_date
+        data_tests: [not_null]
+
+  - name: stg_abs_challenges
+    description: "One row per ABS challenge. Renames and casts only."
+    columns:
+      - name: challenge_uid
+        description: "pitch_uid and review_level joined with a colon."
+        data_tests: [not_null, unique]
+      - name: review_level
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["event", "play", "additional"]
+
+  - name: mart_called_pitches
+    description: >
+      Called pitches with the challenge outcome attached. Skeleton for W2.18's
+      fct_called_pitch: it carries regime, level, season, official_date and
+      analysis_set, so a filter mistake is visible rather than silent.
+    columns:
+      - name: pitch_uid
+        data_tests: [not_null, unique]
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["open", "excluded"]
+      - name: regime
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]

@@ -1,0 +1,66 @@
+version: 2
+
+# dbt/seeds/seeds.yml -- SOP step W1.11.
+#
+# The 200-row synthetic seed the SOP asks for, so the DAG is real before W2 has
+# data. It is the only input the ci target has: no lake, no warehouse file, no
+# network. dbt/seeds/gen_seed.py writes the CSV from the row index alone, with
+# no random number generator, so regenerating it produces the same bytes.
+#
+# Every official_date in the seed is on or before 2026-09-21, the last open day.
+# A synthetic row carrying a held-out day would be a held-out day written on the
+# analysis surface, which GD-04 rule 5 fails, and it would put rows the mart
+# must never hold into the one fixture every ci run reads.
+#
+# The column types are pinned here rather than sniffed. An empty field is null:
+# the challenge columns are empty on the 190 rows that were not challenged.
+
+seeds:
+  - name: seed_synthetic_pitches
+    description: >
+      200 synthetic pitches across MLB 2022-2026 and AAA 2023-2025, 101 of them
+      called pitches and 10 of them challenged. Shapes only, no real game data.
+    config:
+      tags: ["smoke"]
+      column_types:
+        game_pk: bigint
+        at_bat_number: integer
+        pitch_number: integer
+        season: integer
+        game_type: varchar
+        official_date: date
+        level: varchar
+        has_abs_challenges: boolean
+        inning: integer
+        inning_topbot: varchar
+        balls: integer
+        strikes: integer
+        outs_when_up: integer
+        batter: bigint
+        pitcher: bigint
+        fielder_2: bigint
+        stand: varchar
+        p_throws: varchar
+        pitch_type: varchar
+        release_speed: double
+        plate_x: double
+        plate_z: double
+        sz_top: double
+        sz_bot: double
+        description: varchar
+        play_id: varchar
+        delta_run_exp: double
+        challenged: boolean
+        review_level: varchar
+        challenge_team_id: bigint
+        challenger_id: bigint
+        challenger_role: varchar
+        tokens_remaining_before: integer
+        call_original: varchar
+        call_final: varchar
+        is_overturned: boolean
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: official_date
+        data_tests: [not_null]
