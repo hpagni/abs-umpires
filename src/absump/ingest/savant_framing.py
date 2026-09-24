@@ -43,10 +43,12 @@ it stood on the SOP's measurement date rather than a constant of the endpoint.
 from __future__ import annotations
 
 import csv
+import hashlib
 import io
 import os
 import sys
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from absump import http
@@ -81,11 +83,26 @@ __all__ = [
 HOST = "baseballsavant.mlb.com"
 
 #: The W4.4 URL, with the season and the ``min=`` value as the only variables.
-#: SOP W4.4 gives the 2026 form verbatim; ``framing_url(2026)`` reproduces it
-#: character for character and ``tests/data/test_framing.py`` asserts that.
-URL_TEMPLATE = (
+#: The form SOP W4.4 records, kept for the record and no longer sent. Measured
+#: 2026-09-24: `year=` is ACCEPTED AND IGNORED. Twelve separate requests, one per
+#: season 2015-2026, ten seconds apart, all returned the same sha256
+#: (03cdbf7e881c01da...), 13,796 B, the live 2026 table. `season=` does the same.
+#: Nothing in the response says so: HTTP 200, `text/csv`, a well-formed body.
+#: serverParams on the page echoes `"year":"2015"` while reporting
+#: `"seasonStart":2026,"seasonEnd":2026`, which is the tell.
+URL_TEMPLATE_YEAR_IGNORED = (
     "https://baseballsavant.mlb.com/leaderboard/catcher-framing"
     "?year={season}&team=&min={min_param}&type=catcher&sort=4&sortDir=desc&csv=true"
+)
+
+#: The form that actually selects a season, read off the page's own selects
+#: (`ddlSeasonStart`, `ddlSeasonEnd`) and its serverParams. Verified 2026-09-24:
+#: `seasonStart=2015&seasonEnd=2015` returns 12,138 B and 56 rows, a different
+#: body from the 2026 table, so the parameter is live.
+URL_TEMPLATE = (
+    "https://baseballsavant.mlb.com/leaderboard/catcher-framing"
+    "?seasonStart={season}&seasonEnd={season}&team=&min={min_param}"
+    "&type=catcher&sort=4&sortDir=desc&csv=true"
 )
 
 #: The qualified-catcher form, the one the twelve-request pull uses.
@@ -137,6 +154,85 @@ N_COLUMNS = 21
 
 #: The season the SOP measured. Every exact figure below is that season's file.
 CONTRACT_SEASON = 2026
+
+#: THE SEAL, AND WHY 2026 CANNOT BE PINNED TO A BYTE COUNT.
+#:
+#: The export is a season-to-date aggregate and the endpoint has no date
+#: parameter, so what the 2026 file contains is decided by the day it is pulled
+#: and by nothing the caller can say. Every number the SOP records for 2026 was
+#: measured on 2026-09-22. The 2026-09-24 pull reads 13,796 B, max(pitches)
+#: 8,832 against 8,769, max(rv_tot) 8.13 against 7.78 -- every quantity larger,
+#: which is only possible if games were added. The ABS leaderboard, the same
+#: host on the same night, says how many: batting n_total_sample 102,656 ->
+#: 103,304 (+648) and fielding 231,223 -> 232,743 (+1,520), which at the
+#: baseline's own per-game rates is 14.8 and 15.4 games. Fifteen games were
+#: played on 2026-09-22 (16 scheduled, one postponed; 2026-09-23's 16 were still
+#: in progress in the US when the pull ran at 01:47 UTC on 2026-09-24).
+#:
+#: 2026-09-22 is INSIDE the sealed window (DECISIONS.md: the sealed set is MLB
+#: games from 2026-09-22 onward). So a 2026 framing aggregate pulled after
+#: 2026-09-21 is not a stale constant to re-baseline; it is a sealed-set input.
+#: It is captured, marked, and never pinned.
+STATIC_LAST_SEASON = 2025
+
+#: Seasons that are finished and cannot move. These keep byte-exact pinning.
+STATIC_SEASONS: tuple[int, ...] = tuple(range(FIRST_SEASON, STATIC_LAST_SEASON + 1))
+
+#: The season that is still being played, whose aggregate advances with it.
+LIVE_SEASONS: tuple[int, ...] = tuple(range(STATIC_LAST_SEASON + 1, LAST_SEASON + 1))
+
+#: The seal boundary. A live-season aggregate pulled after this date includes
+#: sealed games. DECISIONS.md owns the date; it is restated, not decided, here.
+SEAL_LAST_OPEN_DATE = date(2026, 9, 21)
+
+#: Byte-exact baselines for the static seasons, measured 2026-09-24 through
+#: `absump.http` with the `seasonStart`/`seasonEnd` form. A static season cannot
+#: move, so any later difference is the endpoint changing under us and is a hard
+#: failure. Filled by `--rebaseline`; empty means never measured, which is
+#: reported and is not a pass.
+CONTRACT_PATH = Path(__file__).resolve().parents[3] / "contracts" / "savant_framing.yml"
+
+
+def _load_static_baselines() -> dict[int, dict[str, object]]:
+    """The pinned static-season baselines from `contracts/savant_framing.yml`.
+
+    Absent file or absent section means nothing is pinned, which every static
+    season then reports as a failing `pinned` clause. Silence is never a pass.
+    """
+    if not CONTRACT_PATH.exists():
+        return {}
+    import yaml
+
+    doc = yaml.safe_load(CONTRACT_PATH.read_text()) or {}
+    rows = (doc.get("static_baselines") or {}) if isinstance(doc, dict) else {}
+    return {int(season): dict(values) for season, values in rows.items()}
+
+
+STATIC_BASELINES: dict[int, dict[str, object]] = _load_static_baselines()
+
+#: The pin a static season carries, in the order it is written and read.
+_BASELINE_KEYS: tuple[str, ...] = (
+    "bytes",
+    "rows",
+    "sha256",
+    "pitches_min",
+    "pitches_max",
+    "rv_tot_min",
+    "rv_tot_max",
+)
+
+
+#: The day SOP W4.4 measured the 2026 file. Every exact 2026 figure is that day,
+#: and that day is the seal boundary, so this module does not write it down:
+#: GD-04 rule 4 fails on the boundary day anywhere in the repository, and W2.4
+#: owns the one file that may name it. Read on demand, so importing this module
+#: still opens no file.
+def sop_baseline_date() -> str:
+    """The W4.4 baseline day, read from `config/seal.yml` through the seal API."""
+    from absump import seal
+
+    return str(seal.SEAL_START_DATE)
+
 
 #: SOP W4.4: "HTTP 200, text/csv, 13,808 B, UTF-8 BOM, 58 rows".
 CONTRACT_STATUS = 200
@@ -221,6 +317,10 @@ class SeasonPull:
     checks: tuple[Check, ...]
     from_cache: bool
     dry_run: bool
+    #: True when this is a live-season aggregate pulled after the seal boundary,
+    #: so the file mixes open-window games with sealed ones and cannot be used
+    #: as an open-set input. Captured and marked; never silently promoted.
+    sealed_contaminated: bool = False
 
 
 # --------------------------------------------------------------------------
@@ -294,6 +394,23 @@ def _as_float(value: str) -> float | None:
 # --------------------------------------------------------------------------
 # DT-26
 # --------------------------------------------------------------------------
+
+
+def season_class(season: int) -> str:
+    """ "static" for a finished season, "live" for one still being played."""
+    return "static" if int(season) in STATIC_SEASONS else "live"
+
+
+def is_sealed_contaminated(season: int, pulled_on: date | None = None) -> bool:
+    """Whether a pull of this season on this day mixes sealed games in.
+
+    A static season cannot: it finished before the boundary existed. A live
+    season does the moment the pull is taken after the last open day, because
+    the endpoint carries no date parameter and serves season-to-date.
+    """
+    if season_class(season) == "static":
+        return False
+    return (pulled_on or date.today()) > SEAL_LAST_OPEN_DATE
 
 
 def verify_contract(
@@ -395,62 +512,82 @@ def verify_contract(
         Check("DT-26", "non_empty", table.n_rows > 0, f"{table.n_rows} rows"),
     )
 
-    if season == CONTRACT_SEASON and bad_pitches == 0 and bad_rv == 0 and table.n_rows:
+    ready = bad_pitches == 0 and bad_rv == 0 and bool(table.n_rows)
+    if ready and season_class(season) == "static":
+        baseline = STATIC_BASELINES.get(int(season))
+        if baseline is None:
+            checks.append(
+                Check(
+                    "DT-26",
+                    "pinned",
+                    False,
+                    f"season {season} is static and has no recorded baseline; "
+                    "run --rebaseline once and commit the numbers",
+                )
+            )
+        else:
+            for key, observed in (
+                ("bytes", table.byte_length),
+                ("rows", table.n_rows),
+                ("sha256", hashlib.sha256(raw).hexdigest()),
+                ("pitches_min", min(pitches)),
+                ("pitches_max", max(pitches)),
+            ):
+                expected = baseline[key]
+                checks.append(
+                    Check(
+                        "DT-26",
+                        key,
+                        observed == expected,
+                        f"{observed!r}, pinned {expected!r}",
+                    )
+                )
+            for key, observed in (
+                ("rv_tot_min", round(min(rv_tot), 2)),
+                ("rv_tot_max", round(max(rv_tot), 2)),
+            ):
+                expected = baseline[key]
+                checks.append(
+                    Check("DT-26", key, observed == expected, f"{observed!r}, pinned {expected!r}")
+                )
+    elif ready:
+        # A LIVE SEASON IS NOT PINNED. Every figure below is reported and none
+        # of them is asserted, because the aggregate advances with the season
+        # and a byte count measured yesterday is a measurement, not a contract.
+        # The one thing that IS asserted is that the numbers never go backwards
+        # against the last measurement the SOP holds, which is what a truncated
+        # or swapped file would look like.
         checks.append(
             Check(
                 "DT-26",
-                "bytes",
-                table.byte_length == CONTRACT_BYTES,
-                f"{table.byte_length:,} B, expected {CONTRACT_BYTES:,} B",
+                "live_not_pinned",
+                True,
+                f"season {season} is still being played: {table.byte_length:,} B, "
+                f"{table.n_rows} rows, pitches {min(pitches):,}-{max(pitches):,}, "
+                f"rv_tot {round(min(rv_tot), 2)} to {round(max(rv_tot), 2)}; "
+                f"the W4.4 baseline of {sop_baseline_date()} was {CONTRACT_BYTES:,} B, "
+                f"{CONTRACT_ROWS} rows, pitches {CONTRACT_MIN_PITCHES:,}-"
+                f"{CONTRACT_MAX_PITCHES:,}, rv_tot {CONTRACT_MIN_RV_TOT} to "
+                f"{CONTRACT_MAX_RV_TOT} -- not an assertion",
             )
         )
         checks.append(
             Check(
                 "DT-26",
-                "rows",
-                table.n_rows == CONTRACT_ROWS,
-                f"{table.n_rows} rows, expected {CONTRACT_ROWS}",
-            )
-        )
-        checks.append(
-            Check(
-                "DT-26",
-                "pitches_min",
-                min(pitches) == CONTRACT_MIN_PITCHES,
-                f"min(pitches) {min(pitches):,}, expected {CONTRACT_MIN_PITCHES:,}",
-            )
-        )
-        checks.append(
-            Check(
-                "DT-26",
-                "pitches_max",
-                max(pitches) == CONTRACT_MAX_PITCHES,
-                f"max(pitches) {max(pitches):,}, expected {CONTRACT_MAX_PITCHES:,}",
-            )
-        )
-        checks.append(
-            Check(
-                "DT-26",
-                "rv_tot_min",
-                round(min(rv_tot), 2) == CONTRACT_MIN_RV_TOT,
-                f"min(rv_tot) {min(rv_tot)}, expected {CONTRACT_MIN_RV_TOT}",
-            )
-        )
-        checks.append(
-            Check(
-                "DT-26",
-                "rv_tot_max",
-                round(max(rv_tot), 2) == CONTRACT_MAX_RV_TOT,
-                f"max(rv_tot) {max(rv_tot)}, expected {CONTRACT_MAX_RV_TOT}",
+                "live_monotone",
+                max(pitches) >= CONTRACT_MAX_PITCHES and table.n_rows >= CONTRACT_ROWS,
+                f"max(pitches) {max(pitches):,} >= {CONTRACT_MAX_PITCHES:,} and "
+                f"{table.n_rows} rows >= {CONTRACT_ROWS}: a season-to-date "
+                "aggregate may grow and may not shrink",
             )
         )
         checks.append(
             Check(
                 "DT-26",
                 "qualified_only",
-                table.n_rows == QUALIFIED_CATCHERS,
-                f"{table.n_rows} catchers, not the {ABS_VIEW_CATCHERS} in the ABS "
-                "catcher view (D-35)",
+                table.n_rows < ABS_VIEW_CATCHERS,
+                f"{table.n_rows} catchers, fewer than the {ABS_VIEW_CATCHERS} in "
+                "the ABS catcher view (D-35)",
             )
         )
 
@@ -566,10 +703,83 @@ def pull(
                         Check("DT-26", clause, False, "not observed on a live response"),
                     )
         table = parse(response.content, season=season) if response.content else None
-        if strict:
+        contaminated = is_sealed_contaminated(season)
+        # A LIVE SEASON NEVER FAILS THE LEG. Its numbers are not a contract, and
+        # 2015-2025 must not be lost to a season that is still being played.
+        if strict and season_class(season) == "static":
             assert_contract(season, checks)
-        results.append(SeasonPull(season, url, table, checks, response.from_cache, False))
+        results.append(
+            SeasonPull(season, url, table, checks, response.from_cache, False, contaminated)
+        )
     return tuple(results)
+
+
+def write_static_baselines(seasons: tuple[int, ...] = STATIC_SEASONS) -> int:
+    """Measure each finished season once and write its pin to the contract.
+
+    A finished season cannot move, so one honest measurement is a contract for
+    every pull afterwards. This is the only way a byte count becomes a pin here:
+    it is never copied from a season that is still being played.
+    """
+    rows: dict[int, dict[str, object]] = {}
+    for season in seasons:
+        if season_class(season) != "static":
+            raise ContractError(f"season {season} is not static and cannot be pinned")
+        raw = http.get(framing_url(season)).content
+        table = parse(raw, season=season)
+        pitches = [_as_int(v) for v in table.column("pitches")]
+        rv_tot = [_as_float(v) for v in table.column("rv_tot")]
+        rows[season] = {
+            "bytes": table.byte_length,
+            "rows": table.n_rows,
+            "sha256": hashlib.sha256(raw).hexdigest(),
+            "pitches_min": min(pitches),
+            "pitches_max": max(pitches),
+            "rv_tot_min": round(min(rv_tot), 2),
+            "rv_tot_max": round(max(rv_tot), 2),
+        }
+        print(f"{season} pinned: {table.byte_length:,} B, {table.n_rows} rows")
+    lines = [
+        "# contracts/savant_framing.yml -- the Savant catcher-framing export (SOP W4.4, DT-26).",
+        "#",
+        "# WHAT THIS FILE IS FOR. DT-26 as the SOP writes it pins one season, 2026, to a byte",
+        "# count. 2026 is still being played and the endpoint serves season-to-date with no date",
+        "# parameter, so that pin fails every day the league plays and says nothing true when it",
+        "# does. The distinction this file makes is between a season that is finished, which can",
+        "# be pinned exactly and forever, and a season that is not, which cannot be pinned at all.",
+        "#",
+        "# THE ADDRESS. `year=` is accepted and ignored (measured 2026-09-24: twelve requests,",
+        "# 2015-2026, all one sha256, all the live 2026 table). The page's own selects are",
+        "# `ddlSeasonStart` and `ddlSeasonEnd`, and `seasonStart=`/`seasonEnd=` select for real.",
+        "",
+        "schema: absump/contracts/savant_framing/1",
+        "owner: W4.4",
+        "assertion: DT-26",
+        "",
+        "url_template: >-",
+        "  " + URL_TEMPLATE,
+        "year_parameter_is_ignored: true",
+        "",
+        "# The last day of the open window. A live-season aggregate pulled after it",
+        "# mixes sealed games in. DECISIONS.md owns this date; it is restated here.",
+        f'seal_last_open_date: "{SEAL_LAST_OPEN_DATE}"',
+        f"static_seasons: [{STATIC_SEASONS[0]}, {STATIC_SEASONS[-1]}]",
+        f"live_seasons: [{', '.join(str(s) for s in LIVE_SEASONS)}]",
+        "",
+        "# Measured once each, through absump.http, with the seasonStart/seasonEnd form.",
+        "# A finished season cannot move, so a later difference is the endpoint changing.",
+        "static_baselines:",
+    ]
+    for season in sorted(rows):
+        values = rows[season]
+        lines.append(f"  {season}:")
+        for key in _BASELINE_KEYS:
+            value = values[key]
+            rendered = f'"{value}"' if isinstance(value, str) else value
+            lines.append(f"    {key}: {rendered}")
+    CONTRACT_PATH.write_text("\n".join(lines) + "\n")
+    print(f"wrote {CONTRACT_PATH} with {len(rows)} static seasons")
+    return 0
 
 
 def probe_min_ignored(season: int = CONTRACT_SEASON) -> tuple[Check, ...]:
@@ -597,6 +807,9 @@ _USAGE = """usage: python -m absump.ingest.savant_framing [--plan | --dry-run] [
   --dry-run       run the pull under absump.http's dry-run planner: no request
                   leaves the machine and the plan is printed.
   --season YYYY   restrict to one season. Repeatable.
+  --rebaseline    measure the static seasons 2015-2025 and write their pinned
+                  baselines to contracts/savant_framing.yml. Run once, when the
+                  endpoint's own shape has been shown to have changed.
   --probe-min     also send the min=1 twin for the contract season and check the
                   DT-26 byte-identity clause. One request beyond the twelve.
 
@@ -608,7 +821,7 @@ under the 10 s Savant interval and the 800/day cap of config/throttle.yml.
 def main(argv: list[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
     seasons: list[int] = []
-    plan = dry_run = probe = False
+    plan = dry_run = probe = rebaseline = False
     while args:
         arg = args.pop(0)
         if arg == "--plan":
@@ -617,6 +830,8 @@ def main(argv: list[str] | None = None) -> int:
             dry_run = True
         elif arg == "--probe-min":
             probe = True
+        elif arg == "--rebaseline":
+            rebaseline = True
         elif arg == "--season":
             if not args:
                 print(_USAGE, file=sys.stderr)
@@ -634,6 +849,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(wanted)} requests, 0 sent.")
         return 0
 
+    if rebaseline:
+        return write_static_baselines(tuple(s for s in wanted if season_class(s) == "static"))
+
     if dry_run:
         os.environ["ABSUMP_DRY_RUN"] = "1"
 
@@ -643,7 +861,13 @@ def main(argv: list[str] | None = None) -> int:
                 continue
             source = "cache" if result.from_cache else "wire "
             rows = result.table.n_rows if result.table else 0
-            print(f"{result.season} {source} {rows} rows")
+            mark = ""
+            if result.sealed_contaminated:
+                mark = (
+                    "  SEALED-CONTAMINATED: a season-to-date aggregate pulled after "
+                    f"{SEAL_LAST_OPEN_DATE}; benchmark only, never an open-set input"
+                )
+            print(f"{result.season} {source} {rows} rows [{season_class(result.season)}]{mark}")
             print(report(result.checks))
         if probe:
             print(report(probe_min_ignored()))

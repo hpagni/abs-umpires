@@ -545,12 +545,29 @@ def report(stream: Any, *, rows: Sequence[View] | None = None) -> list[Finding]:
 
 
 # --------------------------------------------------------------------- the pull
+class SweepPages(dict):
+    """The pages a sweep captured, carrying the views it could not capture.
+
+    A plain dict of view id to page, so every existing reader is unchanged, plus
+    `refused`, the list of views that were refused or did not parse. The 03:13
+    run of 2026-09-24 lost all 28 views to a `leagueData` shape change and still
+    exited 0, because the refusals were printed and then dropped on the floor.
+    They are carried now, and `main` exits non-zero when the list is not empty.
+    """
+
+    refused: list[str]
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.refused = []
+
+
 def sweep(
     rows: Sequence[View] | None = None,
     *,
     max_views: int | None = None,
     stream: Any = sys.stdout,
-) -> dict[str, board.ParsedPage]:
+) -> SweepPages:
     """Run the leg. The launcher calls this; a builder does not.
 
     One view at a time, in leg order, each through `absump.http.get`, which owns
@@ -565,8 +582,8 @@ def sweep(
     """
     rows = list(rows if rows is not None else views())
     sealed = sealed_set_seasons()
-    pages: dict[str, board.ParsedPage] = {}
-    refused: list[str] = []
+    pages = SweepPages()
+    refused: list[str] = pages.refused
     sent = 0
     planned = 0
     for row in rows:
@@ -961,6 +978,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     findings = refresh_dt24(pages, pull_date=sweep_pull_date(pages))
     for finding in findings:
         print("  " + finding.line())
+    refused = list(getattr(pages, "refused", []))
+    expected = len(views())
+    if refused:
+        print(
+            f"{len(refused)} of {expected} views did not come back: " + "; ".join(refused),
+            file=sys.stderr,
+        )
+        return 1
+    if not pages:
+        print("the sweep captured no view at all", file=sys.stderr)
+        return 1
     return 1 if any(not finding.passed for finding in findings) else 0
 
 

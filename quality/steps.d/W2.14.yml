@@ -1,0 +1,26 @@
+# W2.14 -- Statcast normalisation. One typed Parquet part per raw day under
+# data/interim/statcast_pitch/, carrying both plate planes, the harmonised zone
+# and the edge distance. Owned by W2, merged in by quality/merge_steps.py.
+#
+# The verify command is offline and has two halves. The first re-reads every
+# part already on disk and asserts the five clauses that are zero on a correct
+# build: no row blanks one tracking column without the others, no tracked row
+# lost its geometry while its kinematics were valid, no row has vy0 >= 0 or
+# ay <= 0, no row's game_date disagrees with its partition date, and no pitch
+# crosses the plate at or after 2.0 s, which is the clause that catches the
+# larger quadratic root at 9.1839 s. It also asserts the 135-column output
+# schema and that the plane recorded for each season is the one section 2.5
+# states. On a machine with no data/ it reports 0 parts and passes.
+#
+# The second half is tests/data/test_normalize.py, which owns DT-04, DT-11,
+# DT-12, DT-13 and DT-17. Its synthetic tests run in a clean clone; its sweeps
+# skip when data/interim/statcast_pitch is empty.
+#
+# Measured on this machine: 799 days, 3,108,070 rows, 17 s at --threads 8,
+# 599 MB on disk. A second run rewrote no part.
+- id: W2.14
+  title: "Statcast normalisation, both planes emitted"
+  verify: "uv run --locked python -m absump.ingest.normalize_sc --check --level mlb --season 2015..2026 && uv run --locked pytest tests/data/test_normalize.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/normalize_sc.py, tests/data/test_normalize.py, ops/normalize_statcast.sh

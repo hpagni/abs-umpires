@@ -1,0 +1,42 @@
+# W2.22, in-season mode and the launchd nightly. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# The verify command has two halves and needs both.
+#
+# The pytest module is the logic half. tests/data/test_resume.py already carried
+# W6.0's 44 synthetic tests for the Statcast runner; W2.22 adds 13 more below
+# them, and they stub one layer lower. W6.0 replaces absump.http.get, which is
+# the right stub for a test about the queue. W2.22 cannot use it, because the
+# thing this step has to prove lives inside the function that stub replaces: the
+# client keeps an append-only manifest, and a URL in it whose file is still on
+# disk is served from the cache with no connection opened. So the W2.22 block
+# installs a mock transport on the client and a temporary cache directory, and
+# every layer above that transport is the real code.
+#
+# What those 13 assert: a backfill killed after 2 of 4 files resumes and asks
+# only for the 2 it missed; the re-run spends no budget on addresses already in
+# the manifest; a third run over a full lake opens no connection; a manifested
+# URL comes back with from_cache true and never reaches the transport; two lakes
+# filled the same days, one in a single run and one killed and resumed, hold
+# byte-identical Parquet; the three ops scripts are built rather than W1.14
+# stubs; `ops/backfill.sh --plan-only` run through the shell sends nothing and
+# subtracts the lake from its queue; all three scripts refuse ABS_SEAL_UNLOCK;
+# every date from seal_start_date to the postseason estimate routes to the
+# sealed side; the nightly commits exactly out/tables/data_quality.md and
+# docs/prereg/SEAL.md through `git commit --only`; and the launchd agent is a
+# 03:30 StartCalendarInterval with RunAtLoad false, not an interval agent.
+#
+# `launchctl print` is the machine-bound half. A plist committed to the
+# repository is not a nightly. The command exits non-zero unless the agent is
+# actually bootstrapped into this user's gui domain, so the gate fails if the
+# file was written and never installed. Its output goes to /dev/null: the
+# receipt records the exit code, and the print is 200 lines of launchd state.
+#
+# `needs` names the four files the step writes plus the test module, so a step
+# with a missing script or a W1.14 placeholder reads MISSING, not PASS.
+- id: W2.22
+  title: "In-season mode, the resumable backfill and the 03:30 launchd nightly"
+  verify: "uv run --locked pytest tests/data/test_resume.py -q && launchctl print gui/$(id -u)/com.absump.nightly >/dev/null"
+  expect_exit: 0
+  owner: W2
+  needs: ops/backfill.sh, ops/inseason.sh, ops/nightly.sh, ops/com.absump.nightly.plist, tests/data/test_resume.py

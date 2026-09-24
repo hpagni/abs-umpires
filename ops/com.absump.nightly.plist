@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  SOP step W2.22. The local nightly.
+
+  StartCalendarInterval Hour 3 Minute 30 fires once a day at 03:30 on the
+  machine clock. That clock is Europe/Madrid on this laptop, which is the time
+  the SOP names. launchd has no timezone key, so the machine clock is the only
+  way to say it. ops/nightly.sh stamps every log line with
+  `TZ=Europe/Madrid date`, so a log read later is right whatever the clock was.
+
+  The nightly is local, not Actions. SOP decision D-08: MLB's terms bar
+  automated scripts and non-bulk use, and shared runners cannot honour the
+  section 2.3 throttle across concurrent jobs. Actions runs ci.yml and
+  seal-guard.yml only.
+
+  RunAtLoad is false. A nightly that fired on every login would pull the same
+  two days several times a day, and the point of 03:30 is that yesterday is
+  complete by then. Kickstart it by hand to run it early.
+
+  No path here names a user. The job runs a login shell, so $HOME and the
+  toolchain on PATH come from the account that loads it.
+
+  Install, as the owner, on this machine:
+
+    cp ops/com.absump.nightly.plist ~/Library/LaunchAgents/
+    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.absump.nightly.plist
+
+  Check, run early, and remove:
+
+    launchctl print gui/$(id -u)/com.absump.nightly
+    launchctl kickstart -p gui/$(id -u)/com.absump.nightly
+    launchctl bootout gui/$(id -u)/com.absump.nightly
+
+  The agent keeps its schedule whatever the script returns. A failed night is
+  read in logs/nightly/, not recovered by a retry: a retry inside the same
+  night would issue a second request stream against one host.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.absump.nightly</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/zsh</string>
+    <string>-lc</string>
+    <string>cd "$HOME/sports-project" &amp;&amp; mkdir -p logs/nightly &amp;&amp; exec bash ops/nightly.sh &gt;&gt; logs/nightly/launchd.log 2&gt;&amp;1</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+
+  <key>LowPriorityIO</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/dev/null</string>
+
+  <key>StandardErrorPath</key>
+  <string>/dev/null</string>
+</dict>
+</plist>

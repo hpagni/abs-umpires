@@ -1,0 +1,11 @@
+# W2.21, the export gate and ATTRIBUTION.md. SOP section 2, step W2.21. The rule the
+# test file makes mechanical: no file under out/ may carry a game_pk column beside a
+# pitch_number or pitch_slot column, and no export may exceed 50,000 rows. The same
+# module asserts the six items SOP W2.21 requires in ATTRIBUTION.md. `needs` names the
+# test and the attribution file, so a step with neither reads MISSING, not PASS.
+- id: W2.21
+  title: "Exports and attribution, the out/ grain and size gate"
+  verify: "uv run --locked pytest tests/unit/test_exports.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: tests/unit/test_exports.py, ATTRIBUTION.md

@@ -72,6 +72,8 @@ from absump import paths as lake
 __all__ = [
     "ABSDATA_RE",
     "CONTRACT_PATH",
+    "LEAGUE_SIDE_BY_VIEW",
+    "RECORD_KEYS",
     "Finding",
     "ParsedPage",
     "check_dt24",
@@ -180,14 +182,22 @@ class ParsedPage:
     server_params: dict[str, Any]
     league_data: dict[str, Any]
     pull_date: date | None = None
+    #: "dict" when the page served the W2.11 side-keyed object, "list" when it
+    #: served the current one-element array. Recorded, not asserted.
+    league_shape: str = "dict"
+    #: Which of the three routes in `parse_page` found absData.
+    absdata_route: str = "w2.11-regex"
 
 
-def _json_object_after(html: str, name: str) -> dict[str, Any]:
-    """Read one named JS object with a balanced scan from its first brace.
+def _json_value_after(html: str, name: str) -> Any:
+    """Read one named JS assignment with a balanced scan from its first token.
 
     A non-greedy brace regex truncates `serverParams` at its first nested `}`,
     so the value is decoded with the JSON decoder itself, which knows where the
-    object ends.
+    value ends. The scan accepts an object OR an array, because the page has
+    served `leagueData` in both shapes: an object keyed by side up to the W2.11
+    baseline of 2026-09-22, a one-element array of the view's own side since.
+    Only the shape moved; every key inside it is the same.
     """
     match = re.search(_OBJECT_RE % re.escape(name), html)
     if match is None:
@@ -195,37 +205,165 @@ def _json_object_after(html: str, name: str) -> dict[str, Any]:
     start = match.end()
     while start < len(html) and html[start] in " \t\r\n":
         start += 1
-    if start >= len(html) or html[start] != "{":
-        raise ParseError(f"{name} is not assigned an object")
+    if start >= len(html) or html[start] not in "{[":
+        raise ParseError(f"{name} is not assigned an object or an array")
     try:
         value, _ = _DECODER.raw_decode(html, start)
     except ValueError as exc:
         raise ParseError(f"{name} is not valid JSON: {exc}") from exc
+    return value
+
+
+def _json_object_after(html: str, name: str) -> dict[str, Any]:
+    """The named assignment, which must be an object. `serverParams` still is."""
+    value = _json_value_after(html, name)
     if not isinstance(value, dict):
         raise ParseError(f"{name} did not decode to an object")
     return value
 
 
+#: Which side of `leagueData` a view reconciles against. The page serves one
+#: side per view now, so the side is read off the view rather than off a key.
+#: `team-summary` and `league` carry a block of their own shape and neither is
+#: a DT-24 view, so they reconcile against nothing and are mapped to "".
+LEAGUE_SIDE_BY_VIEW: dict[str, str] = {
+    "batter": "batting",
+    "batting-team": "batting",
+    "catcher": "fielding",
+    "pitcher": "fielding",
+    "catching-team": "fielding",
+    "team-summary": "",
+    "league": "",
+}
+
+#: The keys a block must carry before this module will believe it is a
+#: leaderboard record. A rename that empties one of these is a loud failure.
+RECORD_KEYS: tuple[str, ...] = ("n_challenges", "n_total_sample", "player_name")
+
+
+def _looks_like_records(value: Any) -> bool:
+    """A non-empty array of objects carrying the leaderboard's own keys."""
+    if not isinstance(value, list) or not value:
+        return False
+    if not all(isinstance(row, dict) for row in value):
+        return False
+    return any(key in value[0] for key in RECORD_KEYS)
+
+
+def _absdata_from_script_blocks(html: str) -> list[dict[str, Any]] | None:
+    """Last resort: any script block whose JSON is an array of our records.
+
+    Reached only when neither the W2.11 regex nor the balanced scan finds an
+    `absData` assignment, which is what a move to `__NEXT_DATA__` or to a
+    `script[type=application/json]` block would look like.
+    """
+    for match in re.finditer(
+        r"<script[^>]*type=[\"']application/(?:ld\+)?json[\"'][^>]*>(.*?)</script>",
+        html,
+        re.S | re.I,
+    ):
+        try:
+            blob = json.loads(match.group(1))
+        except ValueError:
+            continue
+        found = _search_json_for_records(blob)
+        if found is not None:
+            return found
+    for name in ("__NEXT_DATA__", "absData", "leaderboardData", "data"):
+        try:
+            value = _json_value_after(html, name)
+        except ParseError:
+            continue
+        found = _search_json_for_records(value)
+        if found is not None:
+            return found
+    return None
+
+
+def _search_json_for_records(value: Any, depth: int = 0) -> list[dict[str, Any]] | None:
+    if depth > 8:
+        return None
+    if _looks_like_records(value):
+        return list(value)
+    if isinstance(value, dict):
+        for item in value.values():
+            found = _search_json_for_records(item, depth + 1)
+            if found is not None:
+                return found
+    return None
+
+
+def _normalise_league_data(value: Any, view: str) -> dict[str, Any]:
+    """Return `leagueData` in the side-keyed shape the DT-24 checks read.
+
+    An object is already side-keyed and is returned untouched. A one-element
+    array is the current shape: the page serves only the side its view belongs
+    to, so it is keyed by that side. An empty array is an empty view (MLB 2025:
+    `serverParams.validSeasons` is `[2026]`) and keys nothing.
+    """
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, list):
+        if not value:
+            return {}
+        if not isinstance(value[0], dict):
+            raise ParseError("leagueData is an array of something other than objects")
+        side = LEAGUE_SIDE_BY_VIEW.get(view, "")
+        if not side:
+            return {"view": value[0]}
+        return {side: value[0]}
+    raise ParseError("leagueData is neither an object nor an array")
+
+
 def parse_page(html: str, *, view: str = "", pull_date: date | None = None) -> ParsedPage:
     """Split one leaderboard page into absData, serverParams and leagueData.
 
-    absData is read with the regex SOP W2.11 states, verbatim, then json.loads.
+    absData is looked for three ways, loudest first: the regex SOP W2.11 states
+    verbatim; then a balanced JSON scan from an `absData` assignment the regex
+    cannot span (the page now writes `const absData` with no trailing newline
+    before the `;`, and a record containing `];` would defeat the non-greedy
+    form anyway); then any script block whose JSON holds an array of objects
+    carrying `RECORD_KEYS`. Which route found it is recorded on the page, so a
+    rename shows up in the sweep's output instead of passing silently.
     """
+    rows: list[dict[str, Any]] | None = None
+    route = "w2.11-regex"
     match = ABSDATA_RE.search(html)
-    if match is None:
-        raise ParseError("the page carries no absData array")
-    try:
-        rows = json.loads(match.group(1))
-    except ValueError as exc:
-        raise ParseError(f"absData is not valid JSON: {exc}") from exc
-    if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
-        raise ParseError("absData is not an array of objects")
+    if match is not None:
+        try:
+            candidate = json.loads(match.group(1))
+        except ValueError as exc:
+            raise ParseError(f"absData is not valid JSON: {exc}") from exc
+        if not isinstance(candidate, list) or not all(isinstance(r, dict) for r in candidate):
+            raise ParseError("absData is not an array of objects")
+        rows = candidate
+    if rows is None:
+        route = "balanced-scan"
+        try:
+            value = _json_value_after(html, "absData")
+        except ParseError:
+            value = None
+        if isinstance(value, list) and all(isinstance(r, dict) for r in value):
+            rows = value
+    if rows is None:
+        route = "script-block"
+        rows = _absdata_from_script_blocks(html)
+    if rows is None:
+        raise ParseError(
+            "no absData array on this page: not by the W2.11 regex, not by a "
+            "balanced scan of an absData assignment, and no script block holds "
+            f"an array of objects carrying any of {RECORD_KEYS}"
+        )
+    league_raw = _json_value_after(html, "leagueData")
+    view = view or str(_json_object_after(html, "serverParams").get("challengeType", ""))
     return ParsedPage(
-        view=view or str(_json_object_after(html, "serverParams").get("challengeType", "")),
+        view=view,
         abs_data=rows,
         server_params=_json_object_after(html, "serverParams"),
-        league_data=_json_object_after(html, "leagueData"),
+        league_data=_normalise_league_data(league_raw, view),
         pull_date=pull_date,
+        league_shape=type(league_raw).__name__,
+        absdata_route=route,
     )
 
 
@@ -491,10 +629,13 @@ def _check_league(
 ) -> list[Finding]:
     """DT-24.8: the view sums reconcile to leagueData and to the league totals.
 
-    Every view's page carries the same leagueData, so every copy is read and all
-    of them must agree. Reading one page's copy and trusting it would let a
-    single disagreeing page through, which is exactly the shape of a pull that
-    straddled a game going final.
+    Up to the W2.11 baseline every page carried both sides of leagueData. The
+    page now serves the one side its view belongs to, so a side is read from the
+    views that belong to it and every one of those copies must still agree.
+    Reading one page's copy and trusting it would let a single disagreeing page
+    through, which is exactly the shape of a pull that straddled a game going
+    final. A batter page no longer carrying the fielding block is the page's new
+    shape, not a missing block, so it is not counted against it.
     """
     dt24 = _dt24(spec)
     views = dt24["views"]
@@ -506,24 +647,27 @@ def _check_league(
         return [Finding("DT-24.8", False, "no view in this pull, so leagueData was never read")]
 
     for side in sorted(league):
+        members = sorted(view for view in views if views[view]["league_side"] == side)
+        carriers = sorted(
+            view for view in pages if LEAGUE_SIDE_BY_VIEW.get(pages[view].view or view, "") == side
+        ) or sorted(view for view in members if view in pages)
         seen: dict[str, int] = {}
         absent: list[str] = []
-        for view in sorted(pages):
+        for view in carriers:
             block = _league_side(pages[view].league_data, side)
             if block is None or "n_challenges" not in block:
                 absent.append(view)
             else:
                 seen[view] = int(block["n_challenges"])
-        if absent:
+        if absent or not seen:
             findings.append(
                 Finding(
                     "DT-24.8",
                     False,
-                    f"{side}: views {absent} carry no leagueData {side} n_challenges",
+                    f"{side}: views {absent or carriers} carry no leagueData {side} n_challenges",
                 )
             )
             continue
-        members = sorted(view for view in views if views[view]["league_side"] == side)
         present = [view for view in members if view in pages]
         challenges = sum(_sum(pages[view].abs_data, "n_challenges") for view in present)
         stated = sorted(set(seen.values()))
