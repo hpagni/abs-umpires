@@ -1540,3 +1540,83 @@ he accepted that.
 
 This closes the R0 owner-review item that phase 04 raised as a condition of the M1 ceremony.
 No further owner read is outstanding before the tag.
+
+## Applied under the R0 delegation, 2026-09-24 (Madrid), phase 04 gate items
+
+The phase-04 W3.3 gate raised two threshold questions and asked for an owner line. Neither
+question was put to the owner. Both are applied defaults under the delegation that D-R0-03
+records. There the owner chose to push the prereg-v1 tag on green gates without a prior read.
+He accepted that any later change becomes a logged deviation. The execution posture of
+2026-09-22 says recommended defaults are applied and recorded rather than asked. Neither item
+touches an estimand, an acceptance criterion or the sealed set. Both are sanity checks on the
+plate-crossing kinematics.
+
+**Neither entry below is an owner answer in his own words.** Each is applied under D-R0-03.
+The owner may override either one, and an override becomes a DEVIATIONS entry.
+
+### D-P4-01 APPLIED UNDER D-R0-03, DEV-42 confirmed: the UT-11 and DT-11 `t` band keeps its 70 mph population
+
+Applied by the phase-04 decisions agent, 2026-09-24 (Europe/Madrid). Status: **applied
+default under D-R0-03's delegation, not an owner answer.** Hudson Pagni did not answer this
+question himself.
+
+The question. DEV-42 states the band `t in (0.30, 0.60)` s at both plate planes over pitches
+with `release_speed >= 70` mph. An agent closed DEV-42, not the owner. The W3.3 gate therefore
+failed the band as the SOP first stated it, and asked whether the population stands.
+
+The measurement of record. Gate run 2 read the band with no speed filter at 23:17 CEST. 93 of
+39,272 pitches, 0.237%, fall outside it at either plane. All 93 are 58.7 mph or slower, 65 of
+them are eephus, and the largest `t` is 1.1312 s. The source is `quality/receipts/W3.3.log`.
+
+The earlier figure. DEV-42 quoted 123 of 39,272, 0.313%. That count is the pitches under
+70 mph, the population the floor removes from the clause. The 93 are the subset of those 123
+that actually leave the band. The later gate figure, 93, is the one of record for pitches
+outside the band. The 123 stays correct as the size of the excluded population.
+
+The default applied: **confirm the population of pitches at 70 mph or more.** Three reasons.
+
+1. A lob that takes more than 0.60 s to reach the plate is correct physics, not a defect.
+   The band exists to catch the larger quadratic root, risk R-43. That root's smallest value
+   in this sample is 6.2048 s.
+2. The four clauses that carry no speed filter hold at every speed. The round trip agrees to
+   8.882e-16 ft. The closed form matches the brute-force root to 1.443e-15 s over all 39,272.
+   `t_mid > t_front` fails for 0 of 39,272, and `dz < 0` fails for 0 of 39,271.
+3. The test reports the excluded population on every run rather than hiding it. One RECORD
+   line prints the count under 70 mph. A second prints the band read with no filter.
+
+The band is not widened. DT-11 in SOP section 6.3 carries the same population and is
+confirmed with it. No SOP or test text changes: both already state this population.
+DEV-42's status line now points here.
+
+What would reopen it: a pitch at 70 mph or more outside the band, or the owner's override.
+
+### D-P4-02 APPLIED UNDER D-R0-03: the 0.0011 ft plane clause is asserted over called pitches, and its bar is not widened
+
+Applied by the phase-04 decisions agent, 2026-09-24 (Europe/Madrid). Status: **applied
+default under D-R0-03's delegation, not an owner answer.** Hudson Pagni did not answer this
+question himself. The deviation it creates is DEV-43.
+
+The question. UT-11's cross-source clause says the 2026 CSV, re-projected from the middle of
+the plate to the front, matches the API's `pX/pZ` to under 0.0011 ft. The SOP set that bar
+on the 281 pitches of one game and named no population. The test asserts it over called
+pitches, and the gate asked whether that population stands.
+
+The measurement. Over 11,726 called pitches on five 2026 days the maximum is 0.001071379 ft.
+Over all 22,604 pitches on the same days, two exceed the bar. Both are batted-ball curveballs:
+
+- game 824584, at-bat 21, pitch 4, `hit_into_play`, 81.6 mph, 0.001104168 ft;
+- game 824002, at-bat 28, pitch 2, `foul`, 72.1 mph, 0.001126631 ft.
+
+The larger excess is 0.000027 ft, about 0.0003 in.
+
+The default applied: **the clause's population is called pitches**, meaning `called_strike`,
+`ball` and `blocked_ball` as in `fct_called_pitch`. Called pitches are the analysis
+population of every chapter. The study never uses a batted ball's plate crossing. The two
+exceedances are named here, in DEV-43 and in the test's RECORD line. The 0.0011 ft bar is not
+widened.
+
+What changed. The clause text in `sop/SOP-final.md` section 3 (W3.3), and its copy in
+`sop/SOP-final-part1.md`, now states the population. DEV-43 records it.
+
+What would reopen it: a called pitch at or above 0.0011 ft, or a chapter that starts to use
+a batted ball's plate crossing.

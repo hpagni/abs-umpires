@@ -837,7 +837,10 @@ this a defect of our read rather than of the service.
 ## DEV-42 -- UT-11 and DT-11: the `t` band is stated over pitches at 70 mph or more, and the population below that floor is counted rather than dropped
 
 Raised 2026-09-24 (Europe/Madrid) by the W3.3 fix agent. Status: CLOSED by this entry.
-Merged from `logs/decisions-pending/ut11-band.md`.
+Merged from `logs/decisions-pending/ut11-band.md`. **Confirmed 2026-09-24 under DECISIONS.md
+D-P4-01**, an applied default under D-R0-03's delegation and not an owner answer. The gate's
+unfiltered count of record is 93 of 39,272 outside the band; the 123 below counts the
+pitches under 70 mph.
 
 What the SOP said. SOP-final section 5A.A1, section 3 (W3.3) and section 6.2 stated UT-11's
 clause as `t in (0.30, 0.60)` s at both `y = 17/12` and `y = 8.5/12`, with no speed
@@ -892,3 +895,39 @@ make the floor a wrong cut rather than a population statement.
 
 Evidence: `logs/evidence/W3.3.log`, the gate transcript that raised it, and
 `logs/evidence/W3.3-fix.log`, this fix.
+
+## DEV-43 -- UT-11: the 0.0011 ft plane clause is stated over called pitches, and two batted balls above it are named
+
+Raised 2026-09-24 (Europe/Madrid) by the W3.3 gate, run 2. Status: CLOSED by this entry,
+under DECISIONS.md D-P4-02. That entry is an applied default under D-R0-03's delegation, not
+an owner answer.
+
+What the SOP said. SOP-final section 3 (W3.3) stated the clause as "2026 CSV re-projected
+mid->front matches API `pX/pZ` to `< 0.0011 ft`", with no population. The bar was set on the
+281 pitches of one game.
+
+What the data does. Over 11,726 called pitches on five 2026 days the maximum is 0.001071379
+ft, under the bar. Over all 22,604 pitches on those days two exceed it. Both are batted-ball
+curveballs:
+
+- game 824584, at-bat 21, pitch 4, `hit_into_play`, 81.6 mph, 0.001104168 ft;
+- game 824002, at-bat 28, pitch 2, `foul`, 72.1 mph, 0.001126631 ft.
+
+The larger excess is 0.000027 ft, about 0.0003 in.
+
+What was changed.
+
+1. The clause text in `sop/SOP-final.md` section 3 (W3.3), and its copy in
+   `sop/SOP-final-part1.md`, now states the population: called pitches, meaning
+   `called_strike`, `ball` and `blocked_ball` as in `fct_called_pitch`. It says the bar is
+   not widened, and that pitches outside the population are named when they exceed it.
+2. `tests/ch1/test_zone.R` asserts the clause over called pitches. A RECORD line reads every
+   pitch on every run and names each pitch at or above 0.0011 ft.
+
+The bar was **not** widened. Called pitches are the analysis population of every chapter,
+and the study never uses a batted ball's plate crossing.
+
+What would reopen it: a called pitch at or above 0.0011 ft, or a chapter that starts to use
+a batted ball's plate crossing.
+
+Evidence: `quality/receipts/W3.3.log` and `logs/evidence/W3.3.log`, the gate transcript.
