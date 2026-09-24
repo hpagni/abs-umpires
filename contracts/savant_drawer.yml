@@ -164,6 +164,19 @@ facts:
     max_abs_error_in: 0.0
     tolerance_in: 0.000001          # SOP section 9.1: reproduces to 1e-6 on 100% of rows
     rows_checked: 1276
+    # Measured 2026-09-24 over all 60 cached team-seasons: 38,934 of 38,938
+    # rows reproduce below 1e-6 in. Four rows, two distinct AAA 2025 plays each
+    # carried in both the for and the against drawer, do not. Their own
+    # plateX/plateZ/strikeZoneTop/strikeZoneBottom do not reproduce the
+    # edge_dist_calc the service publishes beside them, and the residual is not
+    # constant (0.0639 ft and 0.0441 ft of implied plate_z), so it is neither a
+    # rounding matter nor a wrong column: it is the service disagreeing with
+    # itself on two plays. Same posture as DEV-35 on game 825000. The tolerance
+    # is NOT widened; these two play_ids are named and every other row is held
+    # to 1e-6 in. See logs/decisions-pending/dt25.md.
+    known_exceptions:
+      7e6ad46d-704e-30b6-a93f-a7b74089b912: 0.766860   # AAA 2025-07-31, game 780811
+      5497557e-5a19-3187-9798-7f0535121b2e: 0.529350   # AAA 2025-08-02, game 780817
   # 3. Overturn is deterministic on 1,276/1,276, including 953/953 outside a
   #    +/- 0.5 in band.
   overturn:
