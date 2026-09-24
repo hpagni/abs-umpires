@@ -1,0 +1,147 @@
+version: 2
+
+# dbt/models/staging/schema.yml -- SOP step W2.17.
+#
+# Properties for the eight staging models this step added. The two models W1.11
+# wrote, stg_statcast_pitches and stg_abs_challenges, keep their properties in
+# dbt/models/sources.yml, where W1.11 put them: dbt accepts one properties block
+# per resource, so declaring them again here would fail the parse.
+#
+# Staging renames and casts, so the tests here are about the grain and the
+# vocabularies, not about measures. A measure is tested where it is derived.
+#
+# W2.19 EXTENDS THIS FILE with the rest of the vocabulary layer: level on every
+# staging model that carries it, and the declared three-column pitch key on
+# stg_pitch_joined through dbt_utils.
+#
+# stg_statcast_pitches and stg_abs_challenges are not reachable from here.
+# Their properties live in dbt/models/sources.yml, dbt accepts one properties
+# block per resource, and W2.19's path list does not include that file. The
+# tests they would carry, review_type = MJ and the ball/strike vocabulary on
+# call_original and call_final, are asserted one layer downstream on
+# int_challenge_resolved instead, and DT-01 is asserted on
+# stg_statcast_pitches by dbt/tests/assert_row_count_by_day.sql, which needs no
+# properties block. Reported to the reconciler.
+
+models:
+  - name: stg_feed_game
+    description: >
+      One row per game from the feed's gameData block, carrying
+      has_abs_challenges and the end-of-game token block.
+    columns:
+      - name: game_pk
+        data_tests: [not_null, unique]
+      - name: level
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["mlb", "aaa"]
+
+  - name: stg_schedule_game
+    description: >
+      One row per scheduled game, partitioned on officialDate and never on the
+      UTC gameDate.
+    columns:
+      - name: game_pk
+        data_tests: [not_null, unique]
+      - name: official_date
+        data_tests: [not_null]
+      - name: level
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["mlb", "aaa"]
+
+  - name: stg_game_official
+    description: "One row per official per game. The home-plate row is the umpire."
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: stg_game_official_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: official_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["Home Plate", "First Base", "Second Base", "Third Base"]
+
+  - name: stg_feed_pitch
+    description: "One row per feed pitch slot, grain (game_pk, at_bat_number, pitch_slot)."
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: pitch_slot
+        data_tests: [not_null]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: stg_feed_pitch_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: dt_18_stg_feed_pitch_slot_key_is_unique
+          arguments:
+            combination_of_columns: ["game_pk", "at_bat_number", "pitch_slot"]
+
+  - name: stg_feed_play
+    description: "One row per plate appearance, grain (game_pk, at_bat_index)."
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: at_bat_index
+        data_tests: [not_null]
+
+  - name: stg_feed_player
+    description: "One row per player per game, with the roster height."
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: player_id
+        data_tests: [not_null]
+
+  - name: stg_pitch_joined
+    description: >
+      W2.15's corrected join: the bridge from a feed pitch slot to a Statcast
+      pitch number, and the only source of play_id for a Statcast pitch.
+    columns:
+      - name: game_pk
+        data_tests: [not_null]
+      - name: match_side
+        data_tests:
+          - not_null:
+              name: stg_pitch_joined_match_side_is_not_null
+          - accepted_values:
+              arguments:
+                values: ["both", "api_only", "csv_only", "api_unnumbered"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: stg_pitch_joined_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: plane
+        description: >
+          DT-11. The plane the feed coordinate was taken at. 2026 reads the mid
+          plane at y = 8.5/12 and 2025 the front plane at y = 17/12, and a
+          third value would mean a season re-projected against a plane the
+          round trip was never checked at.
+        data_tests:
+          - accepted_values:
+              name: dt_11_stg_pitch_joined_plane_is_mid_or_front
+              arguments:
+                values: ["mid", "front"]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: dt_18_stg_pitch_joined_slot_key_is_unique
+          arguments:
+            combination_of_columns: ["game_pk", "at_bat_number", "pitch_slot"]
+
+  - name: stg_abs_leaderboard
+    description: >
+      The Savant ABS leaderboard. W4.3 owns the pull; the table holds no bytes
+      yet, so this model builds empty and carries no tests.

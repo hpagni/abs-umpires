@@ -35,9 +35,16 @@ absump:
         preserve_insertion_order: false
 
     prod:
-      # MotherDuck Lite. MOTHERDUCK_TOKEN is unset in this file on purpose; an
-      # empty token makes dbt debug --target prod fail with an auth error, which
-      # is the signal ops/smoke.sh turns into a skip.
+      # MotherDuck Lite, SOP W1.10. Verified 2026-09-22: $0 per organization per
+      # month, 10 GB storage, 10 Pulse compute hours per month, 3 internal active
+      # users, 2 service accounts. One service account is CI, one is the spare,
+      # and humans sign in with the personal login. Details in docs/warehouse.md.
+      #
+      # MOTHERDUCK_TOKEN is unset in this file on purpose. The token is read from
+      # the environment at run time and is never written here. An empty token
+      # makes dbt debug --target prod fail with an auth error, so the W1.10 check
+      # registered in quality/steps.yml reads the variable first and skips both
+      # prod tests when it is unset. A skip is a pass.
       type: duckdb
       path: 'md:absump'
       threads: 8

@@ -1,0 +1,28 @@
+# W2.17 -- the warehouse, the staging layer and the intermediate layer. Owned by
+# W2, fleet phase 03. Written to quality/steps.d/ and merged by
+# quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+#
+# Ten staging models, one per source in dbt/models/sources.yml, renames and
+# casts only. Six intermediate models, the ones SOP W2.17 names: int_pitch,
+# int_called_pitch, int_regime, int_challenge_resolved,
+# int_challenge_opportunity and int_re288_state. Measured on this machine:
+# 3,108,070 pitches, 1,610,220 called pitches, 12,300 challenges, 716,922
+# opportunity rows, 288 run-expectancy cells, 18,817 games, 81 nodes in 13 s.
+#
+# The verify command is the gate command of the step plus two assertions the
+# exit code alone does not make: that 16 models built, and that DT-03 ran and
+# passed under its own name. It ends with the GD-04 scan over dbt/, because
+# every file this step wrote is on the analysis surface.
+#
+# It is runnable on a clean clone with no datum on disk. dbt/macros/lake_scan.sql
+# probes each lake table before reading it and returns a zero-row select when
+# the Parquet glob is empty, so the layer builds green and empty rather than
+# failing on a file that is absent by design. Verified by building with
+# ABS_DATA_ROOT pointed at an empty directory: 81 nodes, 0 errors.
+
+- id: W2.17
+  title: "Warehouse, staging and intermediate models"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 --select staging intermediate >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && grep -qE '16 view models' \"$log\" && grep -q 'PASS dt_03_umpire_non_empty_count_is_zero' \"$log\" && rm -f \"$log\" && echo 'W2.17 warehouse: 10 staging models and 6 intermediate models on the dev target, DT-03 green.' && uv run --locked python tests/guard/gd04_scan.py --path dbt"
+  expect_exit: 0
+  owner: W2
+  needs: dbt/macros/lake_scan.sql, dbt/models/staging/stg_statcast_pitches.sql, dbt/models/intermediate/int_pitch.sql, dbt/models/intermediate/schema.yml

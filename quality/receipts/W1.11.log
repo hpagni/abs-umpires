@@ -1,0 +1,2 @@
+scripts/prove.sh: eval: line 284: unexpected EOF while looking for matching `''
+scripts/prove.sh: eval: line 285: syntax error: unexpected end of file

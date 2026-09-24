@@ -1,0 +1,2 @@
+W1.10 warehouse target: MotherDuck Lite, prod output md:absump.
+W1.10 prod target: MOTHERDUCK_TOKEN is unset, so dbt debug --target prod and the duckdb attach of md:absump are skipped. A skip is a pass. The dev target needs no token.

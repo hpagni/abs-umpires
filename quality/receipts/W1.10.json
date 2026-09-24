@@ -1,0 +1,17 @@
+{
+  "cmd": "echo 'W1.10 warehouse target: MotherDuck Lite, prod output md:absump.' && grep -q \"path: 'md:absump'\" dbt/profiles.yml.example && grep -q \"env_var('MOTHERDUCK_TOKEN'\" dbt/profiles.yml.example && grep -q '^MOTHERDUCK_TOKEN=' .env.example && grep -q 'md:absump' docs/warehouse.md && if [ -z \"${MOTHERDUCK_TOKEN:-}\" ]; then echo 'W1.10 prod target: MOTHERDUCK_TOKEN is unset, so dbt debug --target prod and the duckdb attach of md:absump are skipped. A skip is a pass. The dev target needs no token.'; else { if [ -f dbt/dbt_project.yml ]; then uv run --locked dbt debug --project-dir dbt --target prod 2>&1 | tee /dev/stderr | grep 'Connection test: OK' >/dev/null; else echo 'W1.10 prod target: dbt/dbt_project.yml is absent, so the prod dbt debug is skipped here and runs under the SOP W1.11 gate.'; fi; } && duckdb -c \"ATTACH 'md:absump'; SHOW DATABASES;\" 2>&1 | tee /dev/stderr | grep absump >/dev/null; fi",
+  "duration_s": 0,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W1.10.log",
+  "owner": "W1",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W1.10",
+  "timestamp_madrid": "2026-09-23 22:17:13 CEST",
+  "title": "Warehouse target, MotherDuck Lite"
+}

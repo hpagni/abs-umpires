@@ -1,0 +1,29 @@
+# W2.18 -- the warehouse marts. Owned by W2, fleet phase 03. Written to
+# quality/steps.d/ and merged by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand.
+#
+# Twelve marts, the tables SOP section 2.6 names, plus the four v_*_open views
+# that model code is allowed to read, plus the two-model ledger DT-20 needs.
+# Measured on this machine: 3,108,070 pitches, 1,610,220 called pitches, 12,300
+# reviews, 716,922 opportunity rows, 18,817 games, 18,754 umpire games, 3,189
+# batter-seasons, 6,755 AAA games, 4,684 team-games, 288 run-expectancy cells,
+# 83,762 win-probability cells. 152 nodes in 25 s.
+#
+# The verify command is the gate command of the step plus five assertions the
+# exit code alone does not make: that 13 table models built, and that the four
+# tests this step owns ran and passed under their own names, DT-19 on all three
+# referential edges and DT-20 on the row-count ledger. It ends with the GD-04
+# scan over dbt/, because every file this step wrote is on the analysis surface.
+#
+# DT-20 compares this build's closed-season counts against the previous build's,
+# so the first build after a full refresh has one snapshot and no comparison to
+# make. It passes with no rows, which is correct, and the second build is the
+# one that tests anything. The verify command runs a build, so a receipt written
+# after any earlier build is a real comparison.
+
+- id: W2.18
+  title: "Warehouse marts, the section 2.6 contract"
+  verify: "uv run --locked dbt --no-use-colors deps --project-dir dbt >/dev/null 2>&1 && uv run --locked dbt --no-use-colors parse --project-dir dbt >/dev/null 2>&1 && log=$(mktemp) && uv run --locked dbt --no-use-colors build --project-dir dbt --target dev --threads 8 >\"$log\" 2>&1 && sed -E 's/^[0-9]{2}:[0-9]{2}:[0-9]{2} +//' \"$log\" | grep -qE '^Done. PASS=[0-9]+ WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=[0-9]+$' && grep -qE '13 table models' \"$log\" && grep -q 'PASS dt_19_fct_pitch_game_pk_resolves_to_dim_game' \"$log\" && grep -q 'PASS dt_19_fct_pitch_umpire_resolves_to_dim_umpire_game' \"$log\" && grep -q 'PASS dt_19_fct_challenge_pitch_uid_resolves_to_fct_pitch' \"$log\" && grep -q 'PASS dt_20_closed_season_row_counts_have_no_drift' \"$log\" && grep -q 'PASS dt_18_fct_pitch_pitch_uid_is_unique' \"$log\" && rm -f \"$log\" && echo 'W2.18 marts: 12 marts and 4 open views on the dev target, DT-18, DT-19 and DT-20 green.' && uv run --locked python tests/guard/gd04_scan.py --path dbt"
+  expect_exit: 0
+  owner: W2
+  needs: dbt/models/marts/schema.yml, dbt/models/marts/fct_pitch.sql, dbt/models/marts/fct_called_pitch.sql, dbt/models/marts/fct_challenge.sql, dbt/models/marts/fct_challenge_opportunity.sql, dbt/models/marts/dim_game.sql, dbt/models/marts/v_pitch_open.sql, dbt/models/marts/agg_closed_season_rowcount.sql

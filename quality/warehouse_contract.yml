@@ -1,0 +1,317 @@
+# quality/warehouse_contract.yml -- the warehouse contract, SOP step W9.4.
+#
+# SOP section 2.6 states one set of table names, one grain and one key per table,
+# and the required columns of each. This file is that table, transcribed, plus
+# the four facts a checker needs that prose cannot carry: which dbt model writes
+# each table, which declared columns are not written yet and by which step, where
+# a declared key is unique only over part of the table and why, and which
+# referential edges must hold.
+#
+# quality/verify_contract.py reads this file and nothing else. It never carries a
+# table name of its own, so a table renamed here is a table renamed in the check.
+#
+# LAYERS. staging is views and does renames and casts only, intermediate is
+# views, marts are tables. The four v_*_open views are the exception the SOP
+# itself makes: they are marts-layer views, and model code reads only them.
+#
+# THE agg_* ROW. Section 2.6 lists `agg_*` with the grain "various" and the
+# required columns "the published aggregates listed per chapter". No chapter has
+# published an aggregate yet, so no agg_ table is gated here. The checker lists
+# the agg_ tables it finds and gates none of them.
+#
+# MEASURED 2026-09-24 against the dev target built by
+# W2.18: 3,108,070 pitches, 1,610,220 called pitches, 12,300 reviews, 716,922
+# opportunity rows, 18,817 games, 18,754 umpire games, 1,482 players, 3,189
+# batter-seasons, 6,755 AAA games, 4,684 team-games, 288 run-expectancy cells,
+# 83,762 win-probability cells.
+
+version: 1
+
+target:
+  # The warehouse file is named by src/absump/paths.py, the one place the
+  # repository layout is written down. `{duckdb}` is that template; the checker
+  # resolves it, and --database still overrides it with a literal path.
+  dev_database: "{duckdb}"
+  schemas:
+    staging: main_staging
+    intermediate: main_intermediate
+    marts: main_marts
+
+# The materialisation each dbt layer must have, SOP section 2.6.
+layers:
+  staging: view
+  intermediate: view
+  marts: table
+
+# The section 2.6 table, one entry per row. `columns` is the required-columns
+# cell, verbatim and in the order the SOP writes it. `inherits` is how the SOP
+# writes fct_called_pitch: the columns of fct_pitch, filtered, plus its own.
+tables:
+
+  dim_game:
+    grain: game
+    key: [game_pk]
+    model: dbt/models/marts/dim_game.sql
+    columns:
+      [season, game_type, official_date, game_date_utc, level, abs_regime,
+       has_abs_challenges, double_header, game_number, venue_id, home_team_id,
+       away_team_id, home_score, away_score, home_win, status_abstract,
+       analysis_set]
+
+  dim_umpire_game:
+    grain: game
+    key: [game_pk]
+    model: dbt/models/marts/dim_umpire_game.sql
+    columns: [hp_umpire_id, hp_umpire_name]
+
+  dim_player:
+    grain: player
+    key: [player_id]
+    model: dbt/models/marts/dim_player.sql
+    columns: [full_name, primary_position, key_mlbam, key_retro, key_bbref]
+
+  dim_batter_season:
+    grain: batter-season
+    key: [batter, season]
+    model: dbt/models/marts/dim_batter_season.sql
+    columns:
+      [height_in, height_source, h_abs_in, h_roster_in, roster_offset_in]
+
+  dim_aaa_format:
+    grain: game
+    key: [game_pk]
+    model: dbt/models/marts/dim_aaa_format.sql
+    columns:
+      [official_date, weekday, has_abs_challenges, n_mj, agree_rate,
+       format_class]
+
+  fct_pitch:
+    grain: pitch
+    key: [game_pk, at_bat_number, pitch_number]
+    model: dbt/models/marts/fct_pitch.sql
+    columns:
+      [plate_x_mid, plate_z_mid, plate_x_front, plate_z_front, plane_source,
+       sz_top, sz_bot, sz_top_h, sz_bot_h, batter_height_in, height_source,
+       tracked, balls, strikes, outs_when_up, inning, inning_topbot, stand,
+       p_throws, fielder_2, batter, pitcher, pitch_type, release_speed, vx0,
+       vy0, vz0, ax, ay, az, description, call_final, call_original, play_id,
+       delta_run_exp, delta_home_win_exp, home_win_exp, bat_win_exp,
+       home_score_diff, bat_score_diff, on_1b, on_2b, on_3b, analysis_set]
+
+  fct_called_pitch:
+    grain: pitch
+    key: [game_pk, at_bat_number, pitch_number]
+    model: dbt/models/marts/fct_called_pitch.sql
+    inherits: fct_pitch
+    row_filter: "description in ('called_strike', 'ball', 'blocked_ball')"
+    columns:
+      [d_signed_in, nearest_edge, z_norm, cs, count_class, pitch_group, regime,
+       umpire_hp_id, umpire_season, challenged, is_overturned]
+
+  fct_challenge:
+    grain: challenge
+    key: [game_pk, at_bat_number, pitch_number, review_level]
+    model: dbt/models/marts/fct_challenge.sql
+    columns:
+      [review_level, is_overturned, in_progress, review_type, challenge_team_id,
+       challenger_id, challenger_role, challenger_identified, opponent_id,
+       call_original, call_final, tokens_remaining_before, m_signed_in,
+       edge_dist_calc, sz_challenge_prob, sz_challenge_runs, analysis_set]
+    accepted_values:
+      review_level: [event, play, additional]
+
+  fct_challenge_opportunity:
+    grain: pitch
+    key: [game_pk, at_bat_number, pitch_number, acting_side]
+    model: dbt/models/marts/fct_challenge_opportunity.sql
+    columns:
+      [acting_team_id, role, eligible, tokens_own, tokens_opp, m_star_in, g_wp,
+       challenged, analysis_set]
+
+  fct_team_game_tokens:
+    grain: team-game
+    key: [game_pk, team_id]
+    model: dbt/models/marts/fct_team_game_tokens.sql
+    columns: [used_successful, used_failed, remaining, tokens_start]
+
+  fct_re288:
+    grain: state
+    key: [outs, base_state, balls, strikes]
+    model: dbt/models/marts/fct_re288.sql
+    columns: [re, n]
+
+  fct_wp_state:
+    grain: state
+    key: [half_inning, score_diff, outs, base_state, count]
+    model: dbt/models/marts/fct_wp_state.sql
+    columns: [wp, n]
+
+# The four views of section 2.6. Each selects its base table restricted to the
+# open rows. The checker compares the view's row count against the same
+# restriction applied to the base table, so a view that widened its filter is a
+# failure and not a comment.
+views:
+  v_pitch_open:
+    base: fct_pitch
+    model: dbt/models/marts/v_pitch_open.sql
+  v_called_pitch_open:
+    base: fct_called_pitch
+    model: dbt/models/marts/v_called_pitch_open.sql
+  v_challenge_open:
+    base: fct_challenge
+    model: dbt/models/marts/v_challenge_open.sql
+  v_opportunity_open:
+    base: fct_challenge_opportunity
+    model: dbt/models/marts/v_opportunity_open.sql
+
+open_label_column: analysis_set
+open_label: open
+
+# ---------------------------------------------------------------- deferred columns
+#
+# Six columns of the section 2.6 lists are not written by the step that builds
+# the table. Each is a derived quantity whose definition the SOP fixes in a
+# later step, and inventing a definition here would fix a pre-registered
+# quantity that no step has agreed. W2.18 records all six in its model headers and
+# in its return; this file is the machine-readable copy.
+#
+# The checker reports a deferred column as DEFERRED, not as a pass. A deferred
+# column that appears is reported as arrived, and this block is then stale and
+# should be trimmed. A column missing and NOT listed here is a failure.
+deferred:
+  fct_called_pitch:
+    count_class:
+      owner: W3.7
+      reason: "The SOP fixes the count bins in W3.7, where the Chapter 1 analysis table derives them."
+    pitch_group:
+      owner: W3.7
+      reason: "The SOP fixes the pitch-group bins in W3.7, with count_class."
+  fct_challenge:
+    sz_challenge_prob:
+      owner: W4.2
+      reason: "A Savant drawer field. No feed record carries it. W4.2 pulls the drawer into data/interim/ch2/."
+    sz_challenge_runs:
+      owner: W4.2
+      reason: "A Savant drawer field, and the D-32 Tier 1 value metric. Pulled with sz_challenge_prob."
+  fct_challenge_opportunity:
+    m_star_in:
+      owner: W5.2..W5.6
+      reason: "The perception threshold. It comes from the W4 overturn model, which is not in the warehouse."
+    g_wp:
+      owner: W5.2..W5.6
+      reason: "The win-probability gain from an overturn. It comes from the W5 win-probability surface."
+
+# ---------------------------------------------------------------- key exceptions
+#
+# One declared key is unique over part of its table. The exception is allowed
+# only where a key column is null, which is a key that was never set rather than
+# a key pointing at two rows, and only with a surrogate that is unique over
+# every row. The checker enforces both clauses. It does not take the scope on
+# trust: it fails if a duplicate group inside the scope exists, if a duplicate
+# group outside the scope has every key column populated, or if the surrogate
+# repeats anywhere.
+key_exceptions:
+  fct_challenge:
+    scope: "pitch_number is not null"
+    surrogate: [challenge_uid]
+    reason: >-
+      2,132 AAA 2024 reviews carry a null pitch_number because no AAA 2024
+      Statcast day is on disk to match against. Two reviews in the same at-bat
+      then collide on the declared four-column key. Measured 2026-09-24: 53
+      groups, 54 rows above one, every one of them AAA 2024 with a null
+      pitch_number. Inside the scope the declared key is unique on every row.
+
+# ---------------------------------------------------------------- referential edges
+#
+# DT-19 names three edges. `sop` marks those three. The rest are edges the same
+# grain implies, measured at 0 orphans on 2026-09-24 and gated from here on.
+#
+# null_child_keys: allow means a null key on the child side is not an orphan. An
+# orphan is a key that points at a row that is not there, not a key that was
+# never set. Where the SOP's spelling of a column differs from the built column,
+# `sop_spelling` records the SOP's.
+references:
+  - name: fct_challenge_to_fct_pitch
+    test: DT-19
+    sop: true
+    child: {table: fct_challenge, columns: [pitch_uid]}
+    parent: {table: fct_pitch, columns: [pitch_uid]}
+    null_child_keys: allow
+    note: >-
+      2,132 AAA 2024 reviews carry a null pitch_uid for the reason above.
+      int_regime asserts separately that every MLB challenge resolves to a pitch.
+
+  - name: fct_pitch_to_dim_game
+    test: DT-19
+    sop: true
+    child: {table: fct_pitch, columns: [game_pk]}
+    parent: {table: dim_game, columns: [game_pk]}
+    null_child_keys: deny
+
+  - name: fct_pitch_umpire_to_dim_umpire_game
+    test: DT-19
+    sop: true
+    child: {table: fct_pitch, columns: [game_pk, umpire_hp_id]}
+    parent: {table: dim_umpire_game, columns: [game_pk, hp_umpire_id]}
+    null_child_keys: allow
+    sop_spelling: fct_pitch.umpire_id
+    note: >-
+      The SOP writes the child column as umpire_id. The column section 2.6
+      declares on fct_called_pitch, and the one the build writes, is
+      umpire_hp_id. The edge is checked on the pair, so the umpire named on a
+      pitch must be the home-plate umpire of that same game.
+
+  - name: fct_called_pitch_to_fct_pitch
+    test: DT-19
+    sop: false
+    child: {table: fct_called_pitch, columns: [pitch_uid]}
+    parent: {table: fct_pitch, columns: [pitch_uid]}
+    null_child_keys: deny
+
+  - name: fct_challenge_opportunity_to_fct_pitch
+    test: DT-19
+    sop: false
+    child: {table: fct_challenge_opportunity, columns: [pitch_uid]}
+    parent: {table: fct_pitch, columns: [pitch_uid]}
+    null_child_keys: deny
+
+  - name: fct_team_game_tokens_to_dim_game
+    test: DT-19
+    sop: false
+    child: {table: fct_team_game_tokens, columns: [game_pk]}
+    parent: {table: dim_game, columns: [game_pk]}
+    null_child_keys: deny
+
+  - name: dim_umpire_game_to_dim_game
+    test: DT-19
+    sop: false
+    child: {table: dim_umpire_game, columns: [game_pk]}
+    parent: {table: dim_game, columns: [game_pk]}
+    null_child_keys: deny
+
+  - name: dim_aaa_format_to_dim_game
+    test: DT-19
+    sop: false
+    child: {table: dim_aaa_format, columns: [game_pk]}
+    parent: {table: dim_game, columns: [game_pk]}
+    null_child_keys: deny
+
+# ---------------------------------------------------------------- the read rule
+#
+# "Model code reads only the v_*_open views." The checker reads the files under
+# these paths and fails on a read of a contracted fact table by name, unless the
+# same statement restricts the read to the open label. The paths are the
+# analysis surface that runs a model: the R chapters, the SQL the app and the
+# notebooks run, and the three Python chapter packages. dbt/ is not here,
+# because dbt is what builds the tables.
+open_view_only:
+  paths:
+    - R
+    - sql
+    - notebooks
+    - app
+    - src/absump/ch1
+    - src/absump/ch2
+    - src/absump/ch3
+  suffixes: [".R", ".r", ".sql", ".py", ".ipynb", ".qmd", ".Rmd"]
+  allow: []

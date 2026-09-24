@@ -1,12 +1,23 @@
 #!/bin/sh
-# ops/verify_contract.sh -- PLACEHOLDER written by SOP step W1.14 (the Makefile).
+# ops/verify_contract.sh -- the recipe body behind `make verify-contract`.
 #
-# Owner: SOP step W9.4, a later fleet phase. That step replaces this file wholesale
-# and never edits the Makefile: the target `make verify-contract` already
-# delegates here.
+# Owner: SOP step W9.4. The Makefile target already delegates here, so this step
+# replaces this file and edits no Makefile. It runs the warehouse contract
+# checker over SOP section 2.6, table by table, and exits with the checker's own
+# exit code.
 #
-# ABSUMP_PLACEHOLDER. The existence of this file is not evidence that
-# W9.4 has run. It prints one line and exits 0 so that
-# `make -n verify-contract` and `make verify-contract` both work today.
-echo "verify-contract: not built yet in this phase (owner: SOP W9.4, a later fleet phase)."
-exit 0
+#   0  no check failed
+#   1  at least one check failed
+#   2  the contract file or the warehouse could not be read
+#
+# Arguments pass straight through, so `sh ops/verify_contract.sh --json` prints
+# the machine-readable report and `--database PATH` points at another build.
+#
+# On a machine with no warehouse file the checker reports SKIP for the checks
+# that read it, still runs the two that read only the repository, and exits 0.
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$ROOT"
+
+exec uv run --locked python quality/verify_contract.py "$@"

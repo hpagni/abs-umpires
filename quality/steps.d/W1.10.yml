@@ -1,0 +1,18 @@
+# W1.10 is the warehouse target. MotherDuck Lite is the prod output, the local
+# DuckDB file is the dev output, and both run the same engine.
+#
+# The verify command has two halves. The first half is static and always runs:
+# the prod output in dbt/profiles.yml.example points at md:absump and takes its
+# token from the environment, .env.example names MOTHERDUCK_TOKEN with no value,
+# and docs/warehouse.md records the target. The second half is the pair of live
+# tests from the SOP, dbt debug --target prod and the duckdb attach of md:absump.
+# Both are skipped with a printed message when MOTHERDUCK_TOKEN is unset, which
+# is a pass: the dev target needs no token, and the service token is an owner
+# item. While dbt/dbt_project.yml is absent, the prod dbt debug is skipped too
+# and is proved by the SOP W1.11 gate, which owns that file.
+- id: W1.10
+  title: "Warehouse target, MotherDuck Lite"
+  verify: "echo 'W1.10 warehouse target: MotherDuck Lite, prod output md:absump.' && grep -q \"path: 'md:absump'\" dbt/profiles.yml.example && grep -q \"env_var('MOTHERDUCK_TOKEN'\" dbt/profiles.yml.example && grep -q '^MOTHERDUCK_TOKEN=' .env.example && grep -q 'md:absump' docs/warehouse.md && if [ -z \"${MOTHERDUCK_TOKEN:-}\" ]; then echo 'W1.10 prod target: MOTHERDUCK_TOKEN is unset, so dbt debug --target prod and the duckdb attach of md:absump are skipped. A skip is a pass. The dev target needs no token.'; else { if [ -f dbt/dbt_project.yml ]; then uv run --locked dbt debug --project-dir dbt --target prod 2>&1 | tee /dev/stderr | grep 'Connection test: OK' >/dev/null; else echo 'W1.10 prod target: dbt/dbt_project.yml is absent, so the prod dbt debug is skipped here and runs under the SOP W1.11 gate.'; fi; } && duckdb -c \"ATTACH 'md:absump'; SHOW DATABASES;\" 2>&1 | tee /dev/stderr | grep absump >/dev/null; fi"
+  expect_exit: 0
+  owner: W1
+  needs: dbt/profiles.yml.example, .env.example, docs/warehouse.md

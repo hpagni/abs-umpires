@@ -1,0 +1,597 @@
+version: 2
+
+# dbt/models/marts/schema.yml -- SOP step W2.18.
+#
+# GD-04-EXEMPT: construction -- the only fact-table read in this file is a
+# `relationships` test target, `to: ref(...)`, which declares an assertion about a
+# fact table rather than reading rows. There is nowhere in a test declaration to
+# write a WHERE clause, and the scanner grants this only on such a line.
+#
+# The marts of SOP section 2.6 and their tests. Three test ids live here.
+#
+# DT-18, uniqueness of each declared key, 0 dupes. One unique test per mart, on
+# the key section 2.6 declares for it. Where the declared key is more than one
+# column the model writes it out as a single string column, named <table>_key,
+# because dbt ships no multi-column uniqueness test and this project installs no
+# test package. fct_challenge carries both: challenge_uid, which is unique on
+# every row, and challenge_key, the declared four-column key, which is unique
+# wherever pitch_number is known. W2.15 owns DT-18 on the join; this file is the
+# refresh of the same id on the warehouse.
+#
+# DT-19, referential integrity, 0 orphans. The three edges the SOP names:
+# fct_challenge to fct_pitch, fct_pitch to dim_game, and fct_pitch's umpire to
+# dim_umpire_game. dbt's relationships test drops null keys on the child side,
+# which is the right reading here: the 2,132 AAA 2024 reviews carry a null
+# pitch_uid because no AAA 2024 Statcast day is on disk to match against, and
+# int_regime's own test already asserts that every MLB challenge resolves to a
+# pitch. An orphan is a key that points at a row that is not there, not a key
+# that was never set.
+#
+# DT-20, closed-season row counts 2022-2025 identical to the previous nightly,
+# 0 drift. agg_closed_season_rowcount is the ledger and agg_closed_season_drift
+# is the comparison; the test is one condition on the second.
+#
+# W2.19 EXTENDS THIS FILE. The generic layer SOP W2.19 asks for is added in
+# place rather than in a second properties file, because dbt accepts one
+# properties block per resource. What W2.19 adds here:
+#
+#   the declared three-column pitch key, (game_pk, at_bat_number,
+#   pitch_number), through dbt_utils.unique_combination_of_columns, which is
+#   the multi-column uniqueness test W2.18 had to write out as a string column
+#   because no test package was installed then;
+#
+#   accepted_values on every vocabulary the SOP names: review_type, regime,
+#   level, call_original and call_final, height_source, review_level and
+#   analysis_set. A vocabulary column with a value outside its set is how a
+#   silent schema change reaches a figure;
+#
+#   dbt_expectations null-rate and distinct-count expectations per season.
+#
+# DT-12's "exactly 1 ratio for 2026" is asserted as a bound rather than as the
+# literal 1. 56 distinct sz_top/sz_bot ratios appear in MLB 2026, and 55 of
+# them sit inside the four games 823669, 823745, 825093 and 825094, where no
+# absChallenges block exists in either source and the ABS zone was not drawn.
+# tests/data/test_warehouse_pack.py enumerates those games and measures the
+# 357,696 rows that do carry the one ratio. The bound here catches a regime
+# change and does not fail on four games that are already documented.
+
+models:
+  - name: dim_game
+    description: >
+      One row per game on or before the last open day, with the regime label
+      under both names section 2.6 uses, the schedule facts and the final score.
+    columns:
+      - name: game_pk
+        data_tests:
+          - unique:
+              name: dt_18_dim_game_game_pk_is_unique
+          - not_null:
+              name: dt_18_dim_game_game_pk_is_not_null
+      - name: official_date
+        data_tests:
+          - not_null:
+              name: dim_game_official_date_is_not_null
+      - name: analysis_set
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["open", "excluded"]
+      - name: abs_regime
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+      - name: regime
+        data_tests:
+          - accepted_values:
+              name: dim_game_regime_is_in_the_vocabulary
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+      - name: level
+        data_tests:
+          - not_null:
+              name: dim_game_level_is_not_null
+          - accepted_values:
+              name: dim_game_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+
+  - name: dim_umpire_game
+    description: "One row per game naming the home-plate umpire. The only umpire source in the warehouse."
+    columns:
+      - name: game_pk
+        data_tests:
+          - unique:
+              name: dt_18_dim_umpire_game_game_pk_is_unique
+          - not_null:
+              name: dt_18_dim_umpire_game_game_pk_is_not_null
+      - name: hp_umpire_id
+        data_tests:
+          - not_null:
+              name: dim_umpire_game_hp_umpire_id_is_not_null
+      - name: official_date
+        data_tests:
+          - not_null:
+              name: dim_umpire_game_official_date_is_not_null
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: dim_umpire_game_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              name: dim_umpire_game_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+
+  - name: dim_player
+    description: "One row per player from the feed rosters. The Chadwick register columns are null until that pull lands."
+    columns:
+      - name: player_id
+        data_tests:
+          - unique:
+              name: dt_18_dim_player_player_id_is_unique
+          - not_null:
+              name: dt_18_dim_player_player_id_is_not_null
+
+  - name: dim_batter_season
+    description: "One row per batter-season with the height the ABS zone is drawn from."
+    columns:
+      - name: batter_season_key
+        data_tests:
+          - unique:
+              name: dt_18_dim_batter_season_key_is_unique
+          - not_null:
+              name: dt_18_dim_batter_season_key_is_not_null
+      - name: height_source
+        description: >
+          Which height the ABS zone was drawn from. abs_measured is the height
+          the ABS system measured, people_offset is the roster height with the
+          measured offset applied. A third value would mean a height entered
+          the zone from a source the D-13 fork never saw.
+        data_tests:
+          - not_null:
+              name: dim_batter_season_height_source_is_not_null
+          - accepted_values:
+              name: dim_batter_season_height_source_is_in_the_vocabulary
+              arguments:
+                values: ["abs_measured", "people_offset"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: dim_batter_season_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+
+  - name: dim_aaa_format
+    description: "One row per AAA game with the format taken from has_abs_challenges, never from the weekday."
+    columns:
+      - name: game_pk
+        data_tests:
+          - unique:
+              name: dt_18_dim_aaa_format_game_pk_is_unique
+          - not_null:
+              name: dt_18_dim_aaa_format_game_pk_is_not_null
+      - name: format_class
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["full_abs", "challenge", "unknown"]
+
+  - name: fct_pitch
+    description: >
+      One row per Statcast pitch on or before the last open day, the published
+      shape of int_pitch cut to the section 2.6 contract.
+    columns:
+      - name: pitch_uid
+        data_tests:
+          - unique:
+              name: dt_18_fct_pitch_pitch_uid_is_unique
+          - not_null:
+              name: dt_18_fct_pitch_pitch_uid_is_not_null
+      - name: game_pk
+        data_tests:
+          - relationships:
+              name: dt_19_fct_pitch_game_pk_resolves_to_dim_game
+              arguments:
+                to: ref('dim_game')
+                field: game_pk
+      - name: umpire_hp_id
+        data_tests:
+          - relationships:
+              name: dt_19_fct_pitch_umpire_resolves_to_dim_umpire_game
+              arguments:
+                to: ref('dim_umpire_game')
+                field: hp_umpire_id
+      - name: official_date
+        data_tests:
+          - not_null:
+              name: fct_pitch_official_date_is_not_null
+      - name: analysis_set
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["open", "excluded"]
+      - name: game_pk
+        data_tests:
+          - not_null:
+              name: dt_18_fct_pitch_game_pk_is_not_null
+      - name: level
+        data_tests:
+          - not_null:
+              name: fct_pitch_level_is_not_null
+          - accepted_values:
+              name: fct_pitch_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: regime
+        data_tests:
+          - accepted_values:
+              name: fct_pitch_regime_is_in_the_vocabulary
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+          - dbt_expectations.expect_column_distinct_count_to_equal:
+              name: fct_pitch_holds_one_regime_per_level_season
+              arguments:
+                value: 1
+                group_by: ["level", "season"]
+      - name: height_source
+        data_tests:
+          - accepted_values:
+              name: fct_pitch_height_source_is_in_the_vocabulary
+              arguments:
+                values: ["abs_measured", "people_offset"]
+      - name: plane_source
+        data_tests:
+          - accepted_values:
+              name: fct_pitch_plane_source_is_mid_or_front
+              arguments:
+                values: ["mid", "front"]
+      - name: call_original
+        description: >
+          The call the umpire made, reconstructed. Statcast publishes the call
+          the game recorded, so on an overturned pitch the two differ. Null on
+          a pitch that was not called.
+        data_tests:
+          - accepted_values:
+              name: fct_pitch_call_original_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+      - name: call_final
+        data_tests:
+          - accepted_values:
+              name: fct_pitch_call_final_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: dt_18_fct_pitch_declared_pitch_key_is_unique
+          arguments:
+            combination_of_columns: ["game_pk", "at_bat_number", "pitch_number"]
+
+  - name: fct_called_pitch
+    description: >
+      fct_pitch filtered to the called-pitch population, plus d_signed_in,
+      nearest_edge, z_norm, cs and umpire_season.
+    columns:
+      - name: pitch_uid
+        data_tests:
+          - unique:
+              name: dt_18_fct_called_pitch_pitch_uid_is_unique
+          - not_null:
+              name: dt_18_fct_called_pitch_pitch_uid_is_not_null
+      - name: nearest_edge
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["side", "top", "bot"]
+      - name: description
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["called_strike", "ball", "blocked_ball"]
+      - name: game_pk
+        data_tests:
+          - not_null:
+              name: dt_18_fct_called_pitch_game_pk_is_not_null
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: fct_called_pitch_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: regime
+        data_tests:
+          - accepted_values:
+              name: fct_called_pitch_regime_is_in_the_vocabulary
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+      - name: analysis_set
+        data_tests:
+          - not_null:
+              name: fct_called_pitch_analysis_set_is_not_null
+          - accepted_values:
+              name: fct_called_pitch_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+      - name: height_source
+        data_tests:
+          - accepted_values:
+              name: fct_called_pitch_height_source_is_in_the_vocabulary
+              arguments:
+                values: ["abs_measured", "people_offset"]
+      - name: call_original
+        data_tests:
+          - not_null:
+              name: fct_called_pitch_call_original_is_not_null
+          - accepted_values:
+              name: fct_called_pitch_call_original_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+      - name: call_final
+        data_tests:
+          - not_null:
+              name: fct_called_pitch_call_final_is_not_null
+          - accepted_values:
+              name: fct_called_pitch_call_final_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+      - name: fielder_2
+        description: >
+          DT-17, per season. The catcher. It is the identity every framing
+          number is grouped on, and a season that lost it would sit inside a
+          corpus-wide null rate and never show.
+        data_tests:
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              name: dt_17_fct_called_pitch_fielder_2_is_never_null_in_2022
+              arguments:
+                row_condition: "season = 2022"
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              name: dt_17_fct_called_pitch_fielder_2_is_never_null_in_2023
+              arguments:
+                row_condition: "season = 2023"
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              name: dt_17_fct_called_pitch_fielder_2_is_never_null_in_2024
+              arguments:
+                row_condition: "season = 2024"
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              name: dt_17_fct_called_pitch_fielder_2_is_never_null_in_2025
+              arguments:
+                row_condition: "season = 2025"
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              name: dt_17_fct_called_pitch_fielder_2_is_never_null_in_2026
+              arguments:
+                row_condition: "season = 2026"
+      - name: "round(sz_top / sz_bot, 8)"
+        description: >
+          DT-12. The zone ratio. Under ABS the top and the bottom of the zone
+          are both drawn from one height, so every pitch of a season carries
+          one ratio. Under a human zone the two come from the operator and the
+          ratios run into the hundreds of thousands.
+        data_tests:
+          - dbt_expectations.expect_column_distinct_count_to_be_less_than:
+              name: dt_12_mlb_2026_zone_ratio_distinct_count_is_bounded
+              arguments:
+                value: 100
+                row_condition: "level = 'mlb' and season = 2026"
+          - dbt_expectations.expect_column_distinct_count_to_be_greater_than:
+              name: dt_12_mlb_2022_2025_zone_ratio_distinct_count_exceeds_1000
+              arguments:
+                value: 1000
+                group_by: ["season"]
+                row_condition: "level = 'mlb' and season between 2022 and 2025"
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          name: dt_18_fct_called_pitch_declared_key_is_unique
+          arguments:
+            combination_of_columns: ["game_pk", "at_bat_number", "pitch_number"]
+
+  - name: fct_challenge
+    description: "One row per ABS review at the three review levels."
+    columns:
+      - name: challenge_uid
+        data_tests:
+          - unique:
+              name: dt_18_fct_challenge_challenge_uid_is_unique
+          - not_null:
+              name: dt_18_fct_challenge_challenge_uid_is_not_null
+      - name: challenge_key
+        data_tests:
+          - unique:
+              name: dt_18_fct_challenge_declared_key_is_unique
+              config:
+                where: "pitch_number is not null"
+      - name: pitch_uid
+        data_tests:
+          - relationships:
+              name: dt_19_fct_challenge_pitch_uid_resolves_to_fct_pitch
+              arguments:
+                to: ref('fct_pitch')
+                field: pitch_uid
+      - name: review_level
+        data_tests:
+          - not_null:
+              name: fct_challenge_review_level_is_not_null
+          - accepted_values:
+              arguments:
+                values: ["event", "play", "additional"]
+      - name: game_pk
+        data_tests:
+          - not_null:
+              name: dt_18_fct_challenge_game_pk_is_not_null
+          - relationships:
+              name: dt_19_fct_challenge_game_pk_resolves_to_dim_game
+              arguments:
+                to: ref('dim_game')
+                field: game_pk
+      - name: review_type
+        description: >
+          DT-10. Every row in this table is a manager-judgment review, MJ. The
+          feed also carries MF, MA and NH reviews, which are replay of a
+          different kind and are excluded upstream with a log line. A value
+          here other than MJ means a non-MJ review leaked into the challenge
+          population, and every overturn rate in the study would then be
+          measured over the wrong denominator.
+        data_tests:
+          - not_null:
+              name: dt_10_fct_challenge_review_type_is_not_null
+          - accepted_values:
+              name: dt_10_fct_challenge_holds_only_mj_reviews
+              arguments:
+                values: ["MJ"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: regime
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_regime_is_in_the_vocabulary
+              arguments:
+                values: ["pre_buffer", "buffer_2025", "abs_2026", "aaa_full_abs", "aaa_challenge"]
+      - name: analysis_set
+        data_tests:
+          - not_null:
+              name: fct_challenge_analysis_set_is_not_null
+          - accepted_values:
+              name: fct_challenge_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+      - name: challenger_role
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_challenger_role_is_in_the_vocabulary
+              arguments:
+                values: ["batter", "catcher", "pitcher", "other", "unknown"]
+      - name: call_original
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_call_original_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+      - name: call_final
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_call_final_is_ball_or_strike
+              arguments:
+                values: ["ball", "strike"]
+
+  - name: fct_challenge_opportunity
+    description: "One row per called pitch per acting side that could have challenged it."
+    columns:
+      - name: opportunity_key
+        data_tests:
+          - unique:
+              name: dt_18_fct_challenge_opportunity_key_is_unique
+          - not_null:
+              name: dt_18_fct_challenge_opportunity_key_is_not_null
+      - name: acting_side
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["bat", "fld"]
+      - name: game_pk
+        data_tests:
+          - not_null:
+              name: dt_18_fct_challenge_opportunity_game_pk_is_not_null
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              name: fct_challenge_opportunity_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+
+  - name: fct_team_game_tokens
+    description: "One row per team per game with the challenge tokens used and left."
+    columns:
+      - name: team_game_key
+        data_tests:
+          - unique:
+              name: dt_18_fct_team_game_tokens_key_is_unique
+          - not_null:
+              name: dt_18_fct_team_game_tokens_key_is_not_null
+      - name: tokens_start_source
+        data_tests:
+          - not_null:
+              name: dt_08_fct_team_game_tokens_start_source_is_not_null
+          - accepted_values:
+              arguments:
+                values: ["play_by_play_max", "end_of_game_block"]
+      - name: game_pk
+        data_tests:
+          - not_null:
+              name: dt_18_fct_team_game_tokens_game_pk_is_not_null
+          - relationships:
+              name: dt_19_fct_team_game_tokens_game_pk_resolves_to_dim_game
+              arguments:
+                to: ref('dim_game')
+                field: game_pk
+      - name: side
+        data_tests:
+          - accepted_values:
+              name: fct_team_game_tokens_side_is_home_or_away
+              arguments:
+                values: ["home", "away"]
+      - name: level
+        data_tests:
+          - accepted_values:
+              name: fct_team_game_tokens_level_is_mlb_or_aaa
+              arguments:
+                values: ["mlb", "aaa"]
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              name: fct_team_game_tokens_analysis_set_is_in_the_vocabulary
+              arguments:
+                values: ["open", "excluded"]
+
+  - name: fct_re288
+    description: "Run expectancy by base-out-count state, 288 cells."
+    columns:
+      - name: re288_key
+        data_tests:
+          - unique:
+              name: dt_18_fct_re288_key_is_unique
+          - not_null:
+              name: dt_18_fct_re288_key_is_not_null
+
+  - name: fct_wp_state
+    description: "Win probability by game state, the empirical count-composed cube."
+    columns:
+      - name: wp_state_key
+        data_tests:
+          - unique:
+              name: dt_18_fct_wp_state_key_is_unique
+          - not_null:
+              name: dt_18_fct_wp_state_key_is_not_null
+
+  - name: agg_closed_season_rowcount
+    description: "Append-only ledger of closed-season row counts, one snapshot per build."
+    columns:
+      - name: n_rows
+        data_tests:
+          - not_null:
+              name: agg_closed_season_rowcount_n_rows_is_not_null
+
+  - name: agg_closed_season_drift
+    description: "This build's closed-season counts against the previous build's."
+    data_tests:
+      - no_rows_where:
+          name: dt_20_closed_season_row_counts_have_no_drift
+          arguments:
+            condition: "drift <> 0"
+
+  - name: v_pitch_open
+    description: "fct_pitch where analysis_set = 'open'. Model code reads only the v_*_open views."
+  - name: v_called_pitch_open
+    description: "fct_called_pitch where analysis_set = 'open'."
+  - name: v_challenge_open
+    description: "fct_challenge where analysis_set = 'open'."
+  - name: v_opportunity_open
+    description: "fct_challenge_opportunity where analysis_set = 'open'."
