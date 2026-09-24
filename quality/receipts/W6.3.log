@@ -1,0 +1,7 @@
+W6.3 feeds: 2,342 MLB 2026 game feeds stored, 2,342 extracted, 691,502 pitch rows, last open day 2026-09-21
+W6.3 challenges: 10,168 records, 7,608 pitch level, 2,559 play level, 1 additional
+W6.3 reconciliation: 10,168 records against 10,168 tallies over 2,338 games, 0 not reconciling, 4 excluded with no absChallenges block
+W6.3 DT-15 refresh: 5,490 overturns reconstructed, 5,490 usedSuccessful, 0 challenges without an original call
+W6.3 DT-08 refresh: 4,684 team-games, 4,640 at the modal 2, 36 above it, 8 with no allotment evidence
+W6.3 OK: the feeds are extracted, the challenges reconcile, both artifacts are current
+......                                                                   [100%]

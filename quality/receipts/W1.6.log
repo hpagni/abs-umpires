@@ -1,1 +1,37 @@
-................................................                         [100%]
+......................................F.........                         [100%]
+=================================== FAILURES ===================================
+______________ test_layout_strings_live_only_in_paths_py[duckdb] _______________
+
+key = 'duckdb'
+
+    @pytest.mark.parametrize("key", [k for k in paths.templates() if k not in UNSCANNED_TEMPLATES])
+    def test_layout_strings_live_only_in_paths_py(key):
+        """The one copy rule: these strings appear in paths.py and nowhere else."""
+        template = paths.templates()[key]
+        owner = "src/absump/paths.py"
+        allowed = {owner} | EXTRA_ALLOWED.get(key, set())
+        found = set()
+        for path in _source_files():
+            try:
+                text = path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError):
+                continue
+            if template in text:
+                found.add(path.relative_to(REPO_ROOT).as_posix())
+        assert owner in found, f"{key} is not written in {owner}"
+>       assert found <= allowed, f"{key} also appears in {sorted(found - allowed)}"
+E       AssertionError: duckdb also appears in ['ops/sprint_feed_checkpoint.py', 'ops/sprint_join_checkpoint.py', 'quality/steps.d/W9.4.yml', 'quality/steps.d/W9.6.yml', 'quality/steps.yml', 'quality/verify_contract.py', 'quality/warehouse_contract.yml']
+E       assert {'dbt/profile...eps.yml', ...} <= {'dbt/profile...ump/paths.py'}
+E
+E         Extra items in the left set:
+E         'quality/verify_contract.py'
+E         'quality/steps.d/W9.4.yml'
+E         'ops/sprint_feed_checkpoint.py'
+E         'ops/sprint_join_checkpoint.py'
+E         'quality/warehouse_contract.yml'
+E         'quality/steps.yml'
+E         'quality/steps.d/W9.6.yml'
+
+tests/unit/test_paths.py:300: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_paths.py::test_layout_strings_live_only_in_paths_py[duckdb]

@@ -122,8 +122,18 @@ def conforming() -> bytes:
 # ------------------------------------------------------------ the request plan
 
 
-def test_url_reproduces_the_sop_line_character_for_character():
-    assert framing.framing_url(2026) == SOP_URL_2026
+def test_the_sop_year_form_is_kept_on_record_and_no_longer_sent():
+    """Measured 2026-09-24: `year=` is accepted and ignored. Twelve requests,
+    one per season 2015-2026, ten seconds apart, returned one sha256 and one
+    body -- the live 2026 table. The page's own serverParams gives it away:
+    it echoes `"year":"2015"` while reporting `seasonStart`/`seasonEnd` 2026.
+    The SOP string is kept so the change is legible; it is not the URL sent."""
+    kept = framing.URL_TEMPLATE_YEAR_IGNORED.format(season=2026, min_param="q")
+    assert kept == SOP_URL_2026
+    sent = framing.framing_url(2026)
+    assert sent != SOP_URL_2026
+    assert "seasonStart=2026&seasonEnd=2026" in sent
+    assert "year=" not in sent
 
 
 def test_the_framing_endpoint_is_not_the_abs_challenges_endpoint():
@@ -146,7 +156,7 @@ def test_twelve_urls_one_per_season_all_on_savant():
     assert len(set(urls)) == 12
     assert all(url.startswith(f"https://{framing.HOST}/") for url in urls)
     for season, url in zip(framing.SEASONS, urls, strict=True):
-        assert f"year={season}&" in url
+        assert f"seasonStart={season}&seasonEnd={season}&" in url
         assert "min=q&" in url
 
 
@@ -217,9 +227,12 @@ def test_dt26_passes_on_an_export_built_to_the_measurement(conforming):
     assert failed_clauses(checks) == set(), framing.report(checks)
 
 
-def test_dt26_checks_every_clause_the_sop_states(conforming):
+def test_dt26_checks_every_clause_the_sop_states(conforming, monkeypatch):
+    """The exact clauses now belong to a STATIC season. The SOP measured them on
+    2026, but 2026 is still being played, so the pin lives where it can hold."""
+    monkeypatch.setitem(framing.STATIC_BASELINES, 2025, _baseline_for(2025))
     checks = framing.verify_contract(
-        2026,
+        2025,
         conforming,
         status_code=200,
         content_type="text/csv",
@@ -232,12 +245,12 @@ def test_dt26_checks_every_clause_the_sop_states(conforming):
         "bom",
         "columns",
         "bytes",
+        "sha256",
         "rows",
         "pitches_min",
         "pitches_max",
         "rv_tot_min",
         "rv_tot_max",
-        "qualified_only",
         "min_ignored",
     } <= clauses
 
@@ -268,9 +281,10 @@ def test_the_fixture_is_the_measured_shape(conforming):
         ("rv_tot_max", {"max_rv": 7.79}),
     ],
 )
-def test_dt26_fails_the_clause_the_mutation_breaks(clause, kwargs):
+def test_dt26_fails_the_clause_the_mutation_breaks(clause, kwargs, monkeypatch):
+    monkeypatch.setitem(framing.STATIC_BASELINES, 2025, _baseline_for(2025))
     raw = build_export(**kwargs)
-    checks = framing.verify_contract(2026, raw, status_code=200, content_type="text/csv")
+    checks = framing.verify_contract(2025, raw, status_code=200, content_type="text/csv")
     assert clause in failed_clauses(checks), framing.report(checks)
 
 
@@ -336,12 +350,63 @@ def test_the_min_clause_is_not_checked_when_the_twin_is_absent(conforming):
 # ------------------------------------------------- the other eleven seasons
 
 
-def test_the_exact_2026_figures_are_not_imposed_on_an_earlier_season():
-    """W4.4 measured 2026. 2015 has its own row count and its own byte count."""
+def test_the_exact_2026_figures_are_not_imposed_on_an_earlier_season(monkeypatch):
+    """W4.4 measured 2026. 2015 has its own row count and its own byte count,
+    and is pinned to those, not to 2026's."""
+    monkeypatch.setitem(framing.STATIC_BASELINES, 2015, _baseline_for(2015))
     raw = build_export(n_rows=91, byte_target=None, min_pitches=1200, max_pitches=9900)
     checks = framing.verify_contract(2015, raw, status_code=200, content_type="text/csv")
+    assert failed_clauses(checks) == {"bytes", "rows", "sha256", "pitches_min", "pitches_max"}
+    assert framing.CONTRACT_ROWS != 91
+
+
+def _baseline_for(season: int) -> dict:
+    """The pin a static season would carry for `build_export()`'s own bytes."""
+    import hashlib
+
+    raw = build_export()
+    return {
+        "bytes": len(raw),
+        "rows": framing.CONTRACT_ROWS,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "pitches_min": framing.CONTRACT_MIN_PITCHES,
+        "pitches_max": framing.CONTRACT_MAX_PITCHES,
+        "rv_tot_min": framing.CONTRACT_MIN_RV_TOT,
+        "rv_tot_max": framing.CONTRACT_MAX_RV_TOT,
+    }
+
+
+def test_a_live_season_is_never_pinned_to_a_byte_count(conforming):
+    """2026 is still being played and the endpoint serves season-to-date with no
+    date parameter, so a byte count is a measurement, not a contract."""
+    checks = framing.verify_contract(2026, conforming, status_code=200, content_type="text/csv")
+    clauses = {check.clause for check in checks}
+    assert "bytes" not in clauses and "sha256" not in clauses
+    assert "live_not_pinned" in clauses
     assert failed_clauses(checks) == set(), framing.report(checks)
-    assert {"bytes", "rows", "pitches_min"} & {check.clause for check in checks} == set()
+
+
+def test_a_live_season_pulled_after_the_boundary_is_sealed_contaminated():
+    from datetime import date
+
+    assert framing.is_sealed_contaminated(2026, date(2026, 9, 24)) is True
+    assert framing.is_sealed_contaminated(2026, date(2026, 9, 21)) is False
+    assert framing.is_sealed_contaminated(2025, date(2026, 9, 24)) is False
+
+
+def test_a_static_season_with_no_pin_fails_rather_than_passes(monkeypatch):
+    """Silence is not a pass: an unmeasured static season is a failing clause."""
+    monkeypatch.delitem(framing.STATIC_BASELINES, 2015, raising=False)
+    raw = build_export(n_rows=40, byte_target=None)
+    checks = framing.verify_contract(2015, raw, status_code=200, content_type="text/csv")
+    assert "pinned" in failed_clauses(checks)
+
+
+def test_a_shrinking_live_aggregate_fails(conforming):
+    """A season-to-date aggregate may grow and may not shrink."""
+    raw = build_export(n_rows=40, byte_target=None, max_pitches=5000)
+    checks = framing.verify_contract(2026, raw, status_code=200, content_type="text/csv")
+    assert "live_monotone" in failed_clauses(checks)
 
 
 def test_the_column_list_is_required_in_every_season():
@@ -382,12 +447,14 @@ def test_pull_sends_twelve_requests_one_per_season(monkeypatch):
 
     def fake_get(url, *, host_budget=True):
         sent.append(url)
-        season = int(url.split("year=")[1].split("&")[0])
+        season = int(url.split("seasonStart=")[1].split("&")[0])
         body = build_export() if season == 2026 else build_export(n_rows=91, byte_target=None)
         return _response(url, body)
 
     monkeypatch.setattr(http, "get", fake_get)
-    results = framing.pull()
+    # strict=False: the synthetic bodies are not the pinned static ones. This
+    # test is about the request plan, not about the contract.
+    results = framing.pull(strict=False)
     assert len(sent) == 12
     assert sent == list(framing.season_urls())
     assert [result.season for result in results] == list(range(2015, 2027))
@@ -399,9 +466,23 @@ def test_pull_raises_when_a_season_breaks_its_contract(monkeypatch):
         return _response(url, build_export(n_rows=57))
 
     monkeypatch.setattr(http, "get", fake_get)
+    monkeypatch.setitem(framing.STATIC_BASELINES, 2025, _baseline_for(2025))
     with pytest.raises(framing.ContractError) as excinfo:
-        framing.pull(seasons=(2026,))
+        framing.pull(seasons=(2025,))
     assert "rows" in str(excinfo.value)
+
+
+def test_pull_does_not_fail_the_leg_on_the_live_season(monkeypatch):
+    """A season that is still being played must not cost the eleven that are
+    finished. 2026 is captured and marked, not asserted."""
+
+    def fake_get(url, *, host_budget=True):
+        return _response(url, build_export(n_rows=57))
+
+    monkeypatch.setattr(http, "get", fake_get)
+    results = framing.pull(seasons=(2026,))
+    assert len(results) == 1
+    assert results[0].sealed_contaminated is True
 
 
 def test_pull_refuses_a_live_response_that_carries_no_content_type(monkeypatch):
@@ -423,8 +504,9 @@ def test_pull_refuses_a_live_response_that_carries_no_content_type(monkeypatch):
         )
 
     monkeypatch.setattr(http, "get", fake_get)
+    monkeypatch.setitem(framing.STATIC_BASELINES, 2025, _baseline_for(2025))
     with pytest.raises(framing.ContractError) as excinfo:
-        framing.pull(seasons=(2026,))
+        framing.pull(seasons=(2025,))
     assert "content_type" in str(excinfo.value)
 
 
@@ -460,6 +542,27 @@ def test_the_cached_export_meets_dt26_when_the_pull_has_run():
         pytest.skip("no 2026 framing export in data/raw yet; the W4.4 pull has not run")
     checks = framing.verify_contract(framing.CONTRACT_SEASON, body)
     assert failed_clauses(checks) == set(), framing.report(checks)
+
+
+def test_every_static_season_on_disk_matches_its_pin():
+    """The eleven finished seasons, against contracts/savant_framing.yml."""
+    if not framing.STATIC_BASELINES:
+        pytest.skip("no static baselines recorded yet; run --rebaseline")
+    for season in framing.STATIC_SEASONS:
+        body = framing.cached_body(framing.framing_url(season))
+        if body is None:
+            continue
+        checks = framing.verify_contract(season, body)
+        assert failed_clauses(checks) == set(), f"{season}: {framing.report(checks)}"
+
+
+def test_the_static_seasons_are_twelve_distinct_bodies():
+    """The regression this contract exists to catch: `year=` was ignored and all
+    twelve seasons came back as one body. Distinct pins prove they do not."""
+    if not framing.STATIC_BASELINES:
+        pytest.skip("no static baselines recorded yet; run --rebaseline")
+    digests = {row["sha256"] for row in framing.STATIC_BASELINES.values()}
+    assert len(digests) == len(framing.STATIC_BASELINES)
 
 
 def test_cached_body_is_none_for_a_url_the_manifest_never_recorded():

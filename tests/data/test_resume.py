@@ -22,20 +22,25 @@ day comes near the 25,000-row cap, and no real night stops at a cap of five.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import io
 import itertools
 import json
+import os
+import plistlib
 import re
+import subprocess
 from pathlib import Path
 
+import httpx
 import pytest
 import yaml
 import zstandard
 
 from absump import http as client
 from absump import paths
+from absump.ingest import normalize_sc, schedule
 from absump.ingest import pull_statcast as runner
-from absump.ingest import schedule
 from absump.ingest import statcast_day as sc
 
 DAY_IN_URL = re.compile(r"game_date_gt=(\d{4}-\d{2}-\d{2})")
@@ -858,3 +863,355 @@ def test_the_cli_starts_no_pull_on_check_or_plan(lake, stub):
     fake = stub(800)
     assert runner.main(["--plan"]) == 0
     assert fake.days == [], "--plan sent a request"
+
+
+# ===========================================================================
+# W2.22. The `make backfill` resume, end to end and offline.
+#
+# SOP W2.22 names one test for this step: kill `make backfill` after N files,
+# re-run, assert zero requests for already-manifested URLs and byte-identical
+# Parquet. The block above is W6.0's, and it stubs `absump.http.get` to count
+# what the runner asked for. That is the right stub for W6.0, whose subject is
+# the queue, but it is the wrong stub here, because the thing W2.22 has to
+# prove lives INSIDE the function that stub replaces: absump.http keeps an
+# append-only manifest at `<cache_dir>/_manifest.csv`, and a URL in it whose
+# file is still on disk is served from the cache with no connection opened.
+#
+# So this block stubs one layer lower, at the httpx transport. Everything above
+# it is the real code: the real client, the real manifest, the real cache, the
+# real day queue, the real Parquet writer. Nothing opens a connection, because
+# the transport is a MockTransport and `_sleep` is a no-op, so the section 2.3
+# spacing is honoured in logic and costs no wall clock.
+# ===========================================================================
+
+W222_DAYS = tuple(dt.date(2026, 9, 18) + dt.timedelta(days=offset) for offset in range(4))
+
+
+class RecordingTransport(httpx.MockTransport):
+    """A transport that records every URL it is actually asked for.
+
+    The count is the load-bearing number. A request the client served from its
+    manifest never reaches here, which is exactly what "zero requests for
+    already-manifested URLs" means.
+    """
+
+    def __init__(self) -> None:
+        self.urls: list[str] = []
+        super().__init__(self._respond)
+
+    def _respond(self, request: httpx.Request) -> httpx.Response:
+        url = str(request.url)
+        self.urls.append(url)
+        match = DAY_IN_URL.search(url)
+        assert match, f"the day URL carries no game_date_gt: {url}"
+        day = dt.date.fromisoformat(match.group(1))
+        return httpx.Response(200, content=one_good_day(day), headers={"content-type": "text/csv"})
+
+    @property
+    def days(self) -> list[dt.date]:
+        return [dt.date.fromisoformat(DAY_IN_URL.search(url).group(1)) for url in self.urls]
+
+
+@pytest.fixture
+def wire(tmp_path, monkeypatch):
+    """The real client over a recording transport, with a temporary cache.
+
+    The cache directory is the manifest's home, so pointing it at tmp_path is
+    what keeps a test from reading or writing `data/raw/_manifest.csv`. The
+    teardown puts the module back to its configured state; leaving a test cache
+    installed would make every later test in the session read an empty manifest.
+    """
+    transport = RecordingTransport()
+    client._reset_state(cache_dir=tmp_path / "cache", transport=transport)
+    monkeypatch.setattr(client, "_sleep", lambda seconds: None)
+    yield transport
+    client._reset_state()
+
+
+def store_w222_schedule(days=W222_DAYS) -> None:
+    """One 2026 payload holding `days`, every one of them open and Final."""
+    store_schedule(2026, [{"date": day.isoformat()} for day in days])
+
+
+def backfill_statcast(*, max_requests=None, marker: Path) -> None:
+    """The statcast stage of `make backfill`, the way ops/backfill.sh runs it."""
+    runner.run(
+        seasons=[2026],
+        max_requests=max_requests,
+        import_staging=False,
+        marker_path=marker,
+    )
+
+
+def parquet_digests(lake: Path) -> dict[str, str]:
+    """sha256 of every Parquet part in the open lake, keyed by relative path."""
+    return {
+        str(part.relative_to(lake)): hashlib.sha256(part.read_bytes()).hexdigest()
+        for part in sorted((lake / "interim").rglob("*.parquet"))
+    }
+
+
+def normalize_2026() -> None:
+    assert normalize_sc.main(["--level", "mlb", "--season", "2026", "--threads", "1"]) == 0
+
+
+# ---------------------------------------------------------------------------
+# Kill after N files, re-run
+# ---------------------------------------------------------------------------
+
+
+def test_w222_a_killed_backfill_resumes_and_asks_only_for_what_it_missed(lake, wire):
+    """SOP W2.22, the first half. Two files, then the kill, then the rest."""
+    store_w222_schedule()
+    marker = marker_path(lake)
+
+    backfill_statcast(max_requests=2, marker=marker)
+    first = list(wire.urls)
+    assert len(first) == 2, "the kill after N files did not stop at N"
+
+    backfill_statcast(marker=marker)
+    second = wire.urls[len(first) :]
+
+    assert len(second) == 2, "the re-run did not pick up the two days it missed"
+    assert not set(first) & set(second), "the re-run asked again for a day it already had"
+    assert sorted(wire.days) == sorted(W222_DAYS), "the two runs together did not cover the scope"
+
+
+def test_w222_a_resumed_backfill_makes_zero_requests_for_manifested_urls(lake, wire):
+    """SOP W2.22, stated as the SOP states it: zero, not few."""
+    store_w222_schedule()
+    marker = marker_path(lake)
+
+    backfill_statcast(max_requests=2, marker=marker)
+    manifested = set(client._manifest_index())
+    assert len(manifested) == 2, "the interrupted run did not record what it fetched"
+
+    before = len(wire.urls)
+    backfill_statcast(marker=marker)
+    after_kill = wire.urls[before:]
+
+    repeated = [url for url in after_kill if url in manifested]
+    assert repeated == [], f"the re-run spent {len(repeated)} requests on manifested URLs"
+
+
+def test_w222_a_third_run_over_a_full_lake_opens_no_connection(lake, wire):
+    """Safe to re-run. A finished backfill, run again, costs nothing."""
+    store_w222_schedule()
+    marker = marker_path(lake)
+    backfill_statcast(marker=marker)
+    assert len(wire.urls) == len(W222_DAYS)
+
+    backfill_statcast(marker=marker)
+    assert len(wire.urls) == len(W222_DAYS), "a re-run over a full lake issued a request"
+
+
+def test_w222_a_manifested_url_comes_back_from_the_cache_not_the_wire(lake, wire):
+    """The mechanism itself, in one assertion, not through the runner."""
+    store_w222_schedule()
+    url = sc.day_url(W222_DAYS[-1])
+
+    first = client.get(url)
+    assert first.from_cache is False
+    assert wire.urls == [url]
+
+    again = client.get(url)
+    assert again.from_cache is True, "a manifested URL was not served from the cache"
+    assert wire.urls == [url], "a manifested URL reached the transport"
+    assert again.content == first.content
+
+
+# ---------------------------------------------------------------------------
+# Byte-identical Parquet
+# ---------------------------------------------------------------------------
+
+
+def test_w222_an_interrupted_backfill_normalizes_to_byte_identical_parquet(tmp_path, monkeypatch):
+    """SOP W2.22, the second half.
+
+    Two lakes, same days. One is filled by a single run, the other by a run that
+    was killed after two files and then resumed. Every Parquet part has to match
+    byte for byte, because a resume that produced different bytes would mean the
+    interruption is visible in the analysis surface.
+    """
+
+    def build(root: Path, kill_at: int | None) -> dict[str, str]:
+        monkeypatch.setenv("ABS_DATA_ROOT", str(root))
+        transport = RecordingTransport()
+        client._reset_state(cache_dir=root / "cache", transport=transport)
+        monkeypatch.setattr(client, "_sleep", lambda seconds: None)
+        store_w222_schedule()
+        marker = root / "night" / "resume.json"
+        if kill_at is not None:
+            backfill_statcast(max_requests=kill_at, marker=marker)
+        backfill_statcast(marker=marker)
+        assert len(transport.urls) == len(W222_DAYS)
+        normalize_2026()
+        return parquet_digests(root)
+
+    clean = build(tmp_path / "clean", None)
+    resumed = build(tmp_path / "resumed", 2)
+    client._reset_state()
+
+    assert clean, "the clean run wrote no Parquet, so there is nothing to compare"
+    assert set(clean) == set(resumed), "the two lakes hold different Parquet parts"
+    differing = [name for name in clean if clean[name] != resumed[name]]
+    assert differing == [], f"the resume changed the bytes of {differing}"
+
+
+# ---------------------------------------------------------------------------
+# The entry points W2.22 owns: the two scripts, the routing and the agent
+# ---------------------------------------------------------------------------
+
+OPS = paths.REPO_ROOT / "ops"
+BACKFILL = OPS / "backfill.sh"
+INSEASON = OPS / "inseason.sh"
+NIGHTLY = OPS / "nightly.sh"
+PLIST = OPS / "com.absump.nightly.plist"
+
+#: What SOP W2.22 says the nightly commits, and the whole of it.
+W222_COMMITTED = ("out/tables/data_quality.md", "docs/prereg/SEAL.md")
+
+
+def run_script(*args: str, env_extra: dict[str, str] | None = None) -> subprocess.CompletedProcess:
+    env = dict(os.environ)
+    env.pop("ABS_SEAL_UNLOCK", None)
+    env.update(env_extra or {})
+    return subprocess.run(
+        ["bash", *args],
+        cwd=paths.REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=300,
+    )
+
+
+def test_w222_the_three_scripts_are_built_and_not_placeholders():
+    """W1.14 parked a stub in each of these. A stub must not read as built."""
+    for script in (BACKFILL, INSEASON, NIGHTLY):
+        assert script.exists(), f"{script} is missing"
+        body = script.read_text(encoding="utf-8")
+        assert "ABSUMP_PLACEHOLDER" not in body, f"{script} is still the W1.14 placeholder"
+
+
+def test_w222_backfill_lists_its_stages_and_refuses_an_unknown_one():
+    listed = run_script(str(BACKFILL), "--list")
+    assert listed.returncode == 0, listed.stderr
+    stages = listed.stdout.split()
+    for required in ("schedule", "feeds", "statcast", "normalize", "dbt", "tests"):
+        assert required in stages, f"the backfill has no {required} stage"
+
+    refused = run_script(str(BACKFILL), "--stage", "not-a-stage")
+    assert refused.returncode == 2
+    assert "unknown stage" in refused.stderr
+
+
+def test_w222_both_scripts_refuse_to_run_under_an_unlocked_seal():
+    """The seal is absolute. Neither entry point works with it open."""
+    for script in (BACKFILL, INSEASON, NIGHTLY):
+        refused = run_script(str(script), env_extra={"ABS_SEAL_UNLOCK": "1"})
+        assert refused.returncode == 2, f"{script} ran under ABS_SEAL_UNLOCK"
+        assert "ABS_SEAL_UNLOCK" in refused.stderr
+
+
+def test_w222_backfill_plan_only_sends_nothing_and_subtracts_the_lake(lake, wire):
+    """`make backfill --plan-only`, through the shell, against a temporary lake.
+
+    The plan is derived from disk, so putting days in the lake has to shrink the
+    queue by exactly that many. A plan that did not subtract the lake would put
+    an already-manifested URL back in the queue, which is the whole of what this
+    step exists to prevent. Nothing here pulls: the days are written straight to
+    disk, so the only thing that could open a connection is the script.
+    """
+    by_season = store_full_schedule()
+
+    def queue_size() -> int:
+        done = run_script(
+            str(BACKFILL),
+            "--plan-only",
+            "--stage",
+            "statcast",
+            env_extra={"ABS_DATA_ROOT": str(lake)},
+        )
+        assert done.returncode == 0, done.stdout + done.stderr
+        match = re.search(r"queue, newest first\s+(\d+)", done.stdout)
+        assert match, f"the plan printed no queue size:\n{done.stdout}"
+        return int(match.group(1))
+
+    scope = sum(len(days) for days in by_season.values())
+    assert queue_size() == scope
+    assert wire.urls == [], "a plan-only run opened a connection"
+
+    stored = [by_season[2026][-1], by_season[2025][-1], by_season[2022][-1]]
+    for day in stored:
+        path = paths.raw_statcast("mlb", day.year, day)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(zstandard.ZstdCompressor(level=10).compress(one_good_day(day)))
+
+    assert queue_size() == scope - len(stored)
+    assert wire.urls == [], "the second plan-only run opened a connection"
+
+
+def test_w222_every_remaining_2026_date_routes_to_the_sealed_side():
+    """In-season there is no open day left, so there is no open branch to take.
+
+    `config/seal.yml` fixes the boundary and `absump.paths` is the only module
+    that reads it. This asserts the two agree and that the routing follows.
+    """
+    config = yaml.safe_load((paths.REPO_ROOT / "config" / "seal.yml").read_text(encoding="utf-8"))
+    seal_start = dt.date.fromisoformat(str(config["seal_start_date"]))
+    assert seal_start == paths.LAST_OPEN_DATE + dt.timedelta(days=1)
+
+    last = dt.date.fromisoformat(str(config["postseason_end_estimate"]))
+    day = seal_start
+    while day <= last:
+        assert paths.is_sealed(day), f"{day.isoformat()} is past the seal but reads open"
+        routed = paths.lake_path("statcast_pitch", "mlb", day.year, day, 0)
+        assert paths._is_under(routed, paths.sealed_root()), (
+            f"{day.isoformat()} is sealed but routed to {routed}"
+        )
+        day += dt.timedelta(days=7)
+
+    assert not paths.is_sealed(paths.LAST_OPEN_DATE)
+    open_part = paths.lake_path("statcast_pitch", "mlb", 2026, paths.LAST_OPEN_DATE, 0)
+    assert not paths._is_under(open_part, paths.sealed_root())
+
+
+def test_w222_the_nightly_commits_only_the_two_files_the_sop_names():
+    body = NIGHTLY.read_text(encoding="utf-8")
+    match = re.search(r"^COMMITTED=\(([^)]*)\)", body, re.MULTILINE)
+    assert match, "ops/nightly.sh does not declare a COMMITTED list"
+    committed = tuple(match.group(1).split())
+    assert committed == W222_COMMITTED, f"the nightly commits {committed}"
+
+    # One commit, and it names the list. A bare `git commit -a`, or a `git add`
+    # with no path, would put whatever else is in the worktree into history.
+    assert "commit --quiet --only -m" in body
+    assert "commit -a" not in body
+    for forbidden in ('git -C "$ROOT" add .', "git add ."):
+        assert forbidden not in body
+
+
+def test_w222_the_launchd_agent_fires_at_0330_and_not_at_load():
+    """SOP W2.22: locally under launchd at 03:30 Europe/Madrid, not in Actions."""
+    agent = plistlib.loads(PLIST.read_bytes())
+    assert agent["Label"] == "com.absump.nightly"
+    assert agent["StartCalendarInterval"] == {"Hour": 3, "Minute": 30}
+    assert agent.get("RunAtLoad") is False, "a nightly that fires on login is not nightly"
+    assert "StartInterval" not in agent, "an interval agent is not a 03:30 agent"
+
+    command = " ".join(agent["ProgramArguments"])
+    assert "ops/nightly.sh" in command, "the agent does not run the nightly"
+    # No path in the agent names a user, so the same file works on any account.
+    assert "/Users/" not in command
+
+
+def test_w222_the_nightly_is_local_and_no_workflow_runs_it():
+    """SOP decision D-08. Actions runs ci.yml and seal-guard.yml only."""
+    workflows = paths.REPO_ROOT / ".github" / "workflows"
+    if not workflows.is_dir():
+        pytest.skip("no workflows on disk yet; W1.16 owns them")
+    for flow in workflows.glob("*.yml"):
+        body = flow.read_text(encoding="utf-8")
+        for target in ("make inseason", "make backfill", "make nightly"):
+            assert target not in body, f"{flow.name} runs {target}; the nightly is local"

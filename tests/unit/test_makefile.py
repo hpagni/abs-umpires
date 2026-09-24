@@ -45,6 +45,12 @@ SOP_TARGETS = [
 # `unseal` is SOP W2.4's target. It is not in the W1.14 list but the Makefile
 # carries it for the same reason: W2.4 writes ops/unseal.sh, not this file.
 EXTRA_TARGETS = ["unseal"]
+# `normalize-statcast` is SOP W2.14's target, added for the same reason: W2.14
+# writes ops/normalize_statcast.sh, not this file.
+EXTRA_TARGETS += ["normalize-statcast"]
+# `sprint-status` is SOP W6.4's target, added for the same reason: W6.4
+# writes ops/sprint_join_checkpoint.py, not this file.
+EXTRA_TARGETS += ["sprint-status"]
 ALL_TARGETS = SOP_TARGETS + EXTRA_TARGETS
 
 # Targets that are cheap, offline and free of side effects, so the gate may run

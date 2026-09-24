@@ -109,6 +109,25 @@ def _split(text, lineno):
     return key, _scalar(value, lineno)
 
 
+def _layout(rel):
+    """Resolve a `{key}` layout token against src/absump/paths.py.
+
+    tests/unit/test_paths.py holds every layout string to one copy, in
+    src/absump/paths.py, so a registry record that needs the warehouse file
+    writes `{duckdb}` rather than the path. Anything else is returned unchanged.
+    An unresolvable token is left as written, so the step reads MISSING rather
+    than passing on a path nobody checked.
+    """
+    if not (rel.startswith("{") and rel.endswith("}")):
+        return rel
+    try:
+        from absump.paths import templates
+
+        return templates()[rel[1:-1]]
+    except (ImportError, KeyError):
+        return rel
+
+
 def load_registry(path=STEPS):
     """Read quality/steps.yml into a list of dicts. Strict: it raises, it never guesses."""
     if not os.path.exists(path):
@@ -135,7 +154,9 @@ def load_registry(path=STEPS):
                     f"line {lineno}: indentation is outside the YAML subset: {line!r}"
                 )
     for rec in records:
-        rec["needs"] = [p.strip() for p in str(rec.get("needs", "")).split(",") if p.strip()]
+        rec["needs"] = [
+            _layout(p.strip()) for p in str(rec.get("needs", "")).split(",") if p.strip()
+        ]
         rec["retired"] = bool(rec.get("retired", False))
     return records
 

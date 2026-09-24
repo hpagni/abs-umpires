@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/unit/test_http_etiquette.py tests/unit/test_throttle_budget.py -q",
-  "duration_s": 4,
-  "exit": 0,
+  "duration_s": 5,
+  "exit": 1,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "a8355cbaad847b07150387f1cd0a7ee9cf50eadc",
+  "git_sha": "63ee19071ad6f0a9b9ee3216c67d8de9da469fce",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.7.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
-  "status": "PASS",
+  "status": "FAIL",
   "step": "W1.7",
-  "timestamp_madrid": "2026-09-23 11:23:57 CEST",
+  "timestamp_madrid": "2026-09-24 03:15:46 CEST",
   "title": "HTTP client, the one chokepoint"
 }

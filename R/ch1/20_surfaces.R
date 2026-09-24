@@ -2,8 +2,13 @@
 # R/ch1/20_surfaces.R - Chapter 1 called-strike probability surfaces.
 #
 # ABSUMP_PLACEHOLDER. This is a stub. The owning W3 step writes the real
-# script: mgcv::bam with s(plate_x, plate_z) by count and handedness, fit on
-# the open window only, written to out/ch1/model/ with a provenance.json.
+# script: mgcv::bam with s(plate_x_mid, plate_z_mid) by count and handedness,
+# fit on the open window only, written to out/ch1/model/ with a provenance.json.
+# The smooth is on the re-projected mid-plane pair, never on the raw plate_x and
+# plate_z: Statcast reports those at the front of the plate through 2025 and at
+# the middle from 2026, so a surface fit on the raw pair would read the plane
+# change as a strike-zone change. plate_x_mid and plate_z_mid are on one plane
+# for every season, and plane_source says how each row got there.
 #
 # The stub exists in phase 01 for one reason. GD-09, the red team, plants a
 # held-out read in this file and requires tests/guard/test_no_sealed_reads.py

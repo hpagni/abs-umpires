@@ -23,10 +23,12 @@ SHELL := /bin/sh
 .PHONY: help preflight bootstrap py r lint fmt test test-unit test-data \
         test-model test-model-fast test-guard prove prove-guard-redteam \
         determinism verify-env verify-contract smoke r-smoke dbt warehouse \
+        normalize-statcast \
         b2-push b2-pull disk disk-check seal-check preregister unseal \
         backfill inseason pull-today nightly canary lint-prose \
         ch1 test-ch1 ch2 test-ch2 ch3 test-ch3 ch3-extract \
         p8 p8-test p8-odds-fetch p8-sealed \
+        sprint-status \
         app app-deploy abstract all clean clean-out clean-warehouse
 
 # ---------------------------------------------------------------- environment
@@ -124,6 +126,10 @@ verify-contract: ## the warehouse contract, table by table
 # owner: SOP W1.11, fleet phase 01 -- writes ops/dbt.sh
 dbt: ## dbt deps, parse and build against the local target
 	bash ops/dbt.sh
+
+# owner: SOP W2.14, fleet phase 03 -- writes ops/normalize_statcast.sh
+normalize-statcast: ## W2.14 typed Statcast days, both plate planes, 799 days in 17 s
+	bash ops/normalize_statcast.sh
 
 # owner: SOP W2.14, fleet phase 03 -- writes ops/warehouse.sh
 warehouse: ## build the DuckDB warehouse from Parquet
@@ -240,6 +246,10 @@ app-deploy: ## deploy the Shiny app
 # owner: SOP W6.x, fleet phase 06 -- writes scripts/abstract.sh
 abstract: ## build the SSAC abstract from its slots
 	bash scripts/abstract.sh
+
+# owner: SOP W6.4, fleet phase 03 -- writes ops/sprint_join_checkpoint.py
+sprint-status: ## W6.4 refresh the SSAC sprint status and the join slots
+	uv run --locked python ops/sprint_join_checkpoint.py
 
 # owner: SOP W9.9, a later fleet phase -- writes scripts/all.sh
 all: ## the whole pipeline, the unit determinism is checked on
