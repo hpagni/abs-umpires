@@ -2,12 +2,168 @@
   "_what": "The generated number ledger read by the numeric-literal gate at quality/check_numbers.py.",
   "_generator": "tools/comms/export_numbers.R, which writes this file from app/data/*.rds and out/tables/*.csv.",
   "_rule": "Every entry is a number a model produced, carried here by the generator with the file it came from. Nothing in this file is typed in by hand; a hand-written entry defeats the gate it feeds.",
-  "_state": "Empty. The chapter-one run has not happened, so app/data and out/tables hold no output and no generated number exists to trace. It fills on the first export run.",
+  "_state": "The join slots are filled. W6.4 carried them from the join and the warehouse. The chapter-one model slots are still empty and fill on the first export run.",
   "_entry_shape": {
     "value": "the number, as the model produced it",
     "units": "pp, inches, counts, or null",
     "source": "the repository file the generator read it from",
     "produced_by": "the SOP step that wrote that file"
   },
-  "entries": []
+  "entries": [
+    {
+      "slot": "N_FEED_GAMES_2026",
+      "value": 2342,
+      "units": "counts",
+      "what": "MLB 2026 regular-season game feeds pulled and stored, open set",
+      "source": "warehouse/abs.duckdb main_staging.stg_feed_game",
+      "produced_by": "W2.6",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_FEED_PITCHES_2026",
+      "value": 691502,
+      "units": "counts",
+      "what": "pitch-slot rows extracted from those feeds on the corrected pitch key",
+      "source": "warehouse/abs.duckdb main_staging.stg_feed_pitch",
+      "produced_by": "W2.13",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_CHALLENGE_GAMES_2026",
+      "value": 2338,
+      "units": "counts",
+      "what": "MLB 2026 games carrying an absChallenges block, which are the games that reconcile",
+      "source": "out/tables/challenge_reconciliation.csv",
+      "produced_by": "W2.16",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_CHALLENGES_2026",
+      "value": 10168,
+      "units": "counts",
+      "what": "MLB 2026 challenge records, reviewType MJ, counted once across the three JSON locations",
+      "source": "out/tables/challenge_reconciliation.csv",
+      "produced_by": "W2.16",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_CHALLENGE_TALLY_2026",
+      "value": 10168,
+      "units": "counts",
+      "what": "MLB 2026 challenges tallied by the feed's own gameData absChallenges block",
+      "source": "out/tables/challenge_reconciliation.csv",
+      "produced_by": "W2.16",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_CHALLENGE_UNRECONCILED_2026",
+      "value": 0,
+      "units": "counts",
+      "what": "MLB 2026 games where the challenge records and the gameData tally disagree",
+      "source": "out/tables/challenge_reconciliation.csv",
+      "produced_by": "W2.16",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_OVERTURNED_2026",
+      "value": 5490,
+      "units": "counts",
+      "what": "MLB 2026 challenges overturned, reconstructed from call_original",
+      "source": "warehouse/abs.duckdb main_marts.fct_challenge",
+      "produced_by": "W2.16",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_ALLOTMENT_MODAL_2026",
+      "value": 2,
+      "units": "counts",
+      "what": "modal starting challenge allotment per MLB 2026 team-game",
+      "source": "warehouse/abs.duckdb main_marts.fct_team_game_tokens",
+      "produced_by": "W2.18",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_ALLOTMENT_EXCEPTIONS_2026",
+      "value": 44,
+      "units": "counts",
+      "what": "MLB 2026 team-games whose starting allotment is not the modal value, each an audit row",
+      "source": "warehouse/abs.duckdb main_marts.fct_team_game_tokens",
+      "produced_by": "W2.18",
+      "carried_by": "W6.3"
+    },
+    {
+      "slot": "N_CALLED",
+      "value": 1353830,
+      "units": "counts",
+      "what": "MLB regular-season called pitches, open set, batters with an ABS-measured height",
+      "source": "warehouse/abs.duckdb main_marts.fct_called_pitch",
+      "produced_by": "W2.17",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_GAMES",
+      "value": 10559,
+      "units": "counts",
+      "what": "distinct games behind N_CALLED",
+      "source": "warehouse/abs.duckdb main_marts.fct_called_pitch",
+      "produced_by": "W2.17",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_JOIN_GAMES_2026",
+      "value": 2342,
+      "units": "counts",
+      "what": "MLB 2026 games in the join report",
+      "source": "out/tables/join_report.csv",
+      "produced_by": "W2.15",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_JOIN_PITCHES_2026",
+      "value": 691287,
+      "units": "counts",
+      "what": "MLB 2026 pitches matched on both sides of the join",
+      "source": "out/tables/join_report.csv",
+      "produced_by": "W2.15",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_JOIN_UNMATCHED_2026",
+      "value": 0,
+      "units": "counts",
+      "what": "MLB 2026 rows unmatched on either side of the join",
+      "source": "out/tables/join_report.csv",
+      "produced_by": "W2.15",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_BRIDGE_CHALLENGED_2026",
+      "value": 10168,
+      "units": "counts",
+      "what": "challenged MLB 2026 pitches offered to the drawer bridge",
+      "source": "warehouse/abs.duckdb main_marts.fct_challenge",
+      "produced_by": "W2.16",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_BRIDGE_NO_KEY_2026",
+      "value": 0,
+      "units": "counts",
+      "what": "challenged MLB 2026 pitches with no bridge key",
+      "source": "warehouse/abs.duckdb main_staging.stg_statcast_pitches",
+      "produced_by": "W2.14",
+      "carried_by": "W6.4"
+    },
+    {
+      "slot": "N_BRIDGE_AMBIGUOUS_2026",
+      "value": 18,
+      "units": "counts",
+      "what": "challenged MLB 2026 pitches sharing a bridge key with another called pitch in the same game",
+      "source": "warehouse/abs.duckdb main_staging.stg_statcast_pitches",
+      "produced_by": "W2.14",
+      "carried_by": "W6.4"
+    }
+  ],
+  "_join_slots": "The entries carrying a `slot` key from SLOT_ORDER in ops/sprint_join_checkpoint.py are the join slots. W6.4 regenerates them in place and leaves every other entry alone. A later generator that rewrites `entries` wholesale must carry them forward or re-run W6.4.",
+  "_feed_slots": "The entries carrying a `slot` key from SLOT_ORDER in ops/sprint_feed_checkpoint.py are the feed and challenge slots. W6.3 regenerates them in place, writes them ahead of the join slots, and leaves every other entry alone. A later generator that rewrites `entries` wholesale must carry them forward or re-run W6.3."
 }

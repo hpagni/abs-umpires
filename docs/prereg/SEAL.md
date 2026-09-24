@@ -98,6 +98,52 @@ variable.
 The unseal happens once. `ops/unseal.sh` refuses a second run against the same
 tag rather than writing a duplicate line.
 
+## The in-season nightly
+
+SOP step W2.22. `make inseason` runs yesterday and today: schedule, feeds,
+Statcast, dbt build, tests. It runs locally under launchd at 03:30
+Europe/Madrid, from `ops/com.absump.nightly.plist`, label `com.absump.nightly`.
+It does not run in GitHub Actions. Decision D-08: MLB's terms bar automated
+scripts and non-bulk use, and shared runners cannot honour the section 2.3
+throttle across concurrent jobs. Actions runs `ci.yml` and `seal-guard.yml`
+only.
+
+Every remaining 2026 date is past the seal. `seal_start_date` is 2026-09-22 and
+the regular season ends 2026-09-27, so in-season there is no open day left and
+every new day routes to the sealed side. The routing is not a decision the
+nightly makes. `absump.paths.lake_path` is the one function that knows the
+sealed branch, `absump.ingest.normalize_sc` calls it for every day it converts,
+and `ops/inseason.sh` asserts afterwards that each day landed where the rule
+says it belongs. A sealed day with a Parquet part in the open lake fails the
+run.
+
+After the build the nightly re-runs the open-set tests, the GD-* guard pack and
+the DT-* data pack. Proving nothing leaked is the point of running them again
+on a night whose only new data is sealed.
+
+The nightly also asserts freshness, SOP risk R-26. The newest stored game date
+must be within 2 days of the run date. A missed night is a hole in exactly the
+pre-registered data, so a gap fails the run rather than passing quietly.
+
+The nightly commits two files and no others:
+
+    out/tables/data_quality.md
+    docs/prereg/SEAL.md
+
+It uses `git commit --only` with those two paths, so it neither reads nor writes
+the index and leaves other staged work alone. `data/` is gitignored and never
+enters git in any form.
+
+One capability is not built. Decision D-23 says sealed games are pulled during
+the sprint, into `data/sealed/`, guarded. The guard exists and the sealed write
+does not. `absump.ingest.feeds` quarantines a sealed game rather than storing it,
+and `absump.ingest.statcast_day` refuses to build a URL for a day past
+2026-09-21. Both refusals are correct for the open backfill. The sealed write
+branch belongs to SOP steps W2.6 and W2.9. Until it lands, `ops/inseason.sh`
+reports the feed and Statcast stages blocked and exits 4, and no sealed raw row
+reaches disk. No seal event below is affected, because a blocked stage writes
+nothing.
+
 ## Event log
 
 One line per event, appended, never edited. Lines written by `shasum` carry the
