@@ -675,17 +675,21 @@ this entry CLOSED as written, or rules the run failing, which reverts the senten
 
 ## DEV-36 -- season 2022 is partial against D-61's stated P0 window
 
-Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed by a 2022 backfill or by D-61.
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED 2026-09-24 (Europe/Madrid) by the 2022
+backfill. Measured this morning: 2022 now holds 179 days on disk, a full regular season, and
+367,145 called pitches in `fct_called_pitch` (D-P3-14 re-measures the same mart at 1,836,071
+rows). The slice below is what was on disk when this was raised, kept as written.
 
 D-61 defines P0 as every called pitch with `game_type == 'R'` from 2022-01-01 to 2026-09-21.
-What is on disk for 2022 is 69 days, 2022-04-07 to 2022-06-14, carrying 271,009 geometry rows.
-The season stops in mid-June, so any 2022 figure computed today is a two-month slice and not
-the season the SOP names.
+What was on disk for 2022 when this was raised is 69 days, 2022-04-07 to 2022-06-14, carrying
+271,009 geometry rows. The season stopped in mid-June, so any 2022 figure computed then was a
+two-month slice and not the season the SOP names.
 
 This matters to the pre-trend rather than to the headline. D-13's fork already turns on 2022
 coverage, and a partial season reads as low coverage for a reason that has nothing to do with
-height back-linking, so the two causes have to be kept apart. What closes it: the rest of 2022
-is pulled, or D-61 shortens the window in writing and the abstract follows.
+height back-linking, so the two causes have to be kept apart. What closed it: the rest of 2022
+was pulled. D-13's fork can now turn on 2022 coverage without a partial season confounding it,
+and the published numbers were re-measured over the whole 2022 lake in commit 8207301.
 
 ## DEV-37 -- the AAA corpus has gaps, and two W2.15 claims rest on games not on this machine
 
@@ -784,8 +788,48 @@ a truncated or swapped file still fails. The 2026 pull is marked as sealed-conta
 output and on `SeasonPull`, and a live season never raises, so it cannot cost the eleven
 seasons that are finished.
 
-The same reasoning is why the two trimmed leaderboard fixtures of 2026-09-24 are not committed.
-They carry `leagueData` and `absData` records from a season-to-date aggregate whose window
-extends past 2026-09-21, in machine-readable form, read by `parse_page`. The eight tests that
-read them are held back with them. What closes it: regenerate both fixtures from a static
-season, or from synthetic records of the same shape, since no test asserts a value from them.
+The same reasoning applied to the two trimmed leaderboard fixtures of 2026-09-24. They carried
+`leagueData` and `absData` records from a season-to-date aggregate whose window extends past
+2026-09-21, in machine-readable form, read by `parse_page`, so they were held back and the
+eight tests with them. Closed 2026-09-24 the second way this paragraph offered: both fixtures
+were regenerated from synthetic records of the same shape, keeping the structure byte-faithful
+and inventing every value, and are committed under `savant_abs_*_synthetic.html`. See D-P3-15.
+
+## DEV-41 -- DT-25.edge: two AAA 2025 plays where Savant disagrees with its own coordinates
+
+Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by this entry as an upstream artefact, of
+the same class as DEV-35. Merged from `logs/decisions-pending/dt25.md`.
+
+The gate reported `FAIL DT-25.edge ... max abs error 0.766860 in on 38938/38938 rows,
+tolerance 1e-06 in`. 0.77 inches against a 1e-6 inch tolerance is five orders of magnitude too
+large to be a floating-point matter, so it was investigated as a geometry or column question
+before anything was changed. It is neither: the formula and its columns are right.
+
+38,934 of the 38,938 cached drawer rows reproduce `edge_dist_calc` below 1e-6 in from the
+published `plateX`, `plateZ`, `strikeZoneTop`, `strikeZoneBottom` and `widthinches`.
+`widthinches` is 17.0 on every row, and the 1.45 in ball radius is confirmed -- 1.4375, 1.0 and
+0.0 all reproduce strictly worse. The 4 rows that do not are two distinct plays, each carried
+twice because a play appears in both the challenging team's `against == False` drawer and the
+opponent's `against == True` drawer. Both are AAA 2025:
+`7e6ad46d-704e-30b6-a93f-a7b74089b912`, game 780811, 2025-07-31, error 0.766860 in, and
+`5497557e-5a19-3187-9798-7f0535121b2e`, game 780817, 2025-08-02, error 0.529350 in.
+
+The residual is not a constant offset and not a plane mismatch: it implies a `plate_z` 0.0639
+ft low on the first play and 0.0441 ft low on the second. A wrong column or a wrong plane
+would move all 38,938 rows, not two. The zone values on both rows, `(2.977, 1.502)`, are a real
+per-batter AAA zone shared by 84 rows, 80 of which reproduce exactly, so the zone is not a
+placeholder either. The service publishes an `edge_dist_calc` that its own published
+coordinates do not reproduce, on two plays out of 19,469 distinct.
+
+The tolerance was **not** widened. Widening 1e-6 to 0.77 would have retired the check for every
+row in the corpus to accommodate two, which is exactly the move DEV-35 warns a later reader
+against. The two `play_id`s are named in `contracts/savant_drawer.yml` under
+`facts.edge.known_exceptions` with their measured errors, `check_edge` skips only those named
+ids and holds every other row to 1e-6 in, and the observed line still prints
+`(2 named exceptions)` so the breach stays visible in the receipt rather than disappearing into
+a relaxed number. The contract's older `facts.edge.max_abs_error_in: 0.0` / `rows_checked:
+1276` remain as written: they are a true statement about the 1,276-row sample W4.2 derived them
+from, and the full-corpus measurement is recorded beside them in a comment.
+
+What would reopen it: a re-pull of the drawer in which either play reproduces, which would make
+this a defect of our read rather than of the service.

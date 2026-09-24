@@ -1387,5 +1387,73 @@ benchmark is kept, the honest form is to pull the 2026 leaderboard once at the e
 regular season, pin it then, label it in the paper as a post-seal external figure, and keep it
 out of every fitted model.
 
+### D-P3-14 DT-04's blank mid-plane bound is re-cut with the corpus, at 900
+
+Applied 2026-09-24 (Europe/Madrid), merged from `logs/decisions-pending/dt04-blank-bound.md`.
+
+`make dbt` failed on `assert_join_complete`, one clause: `blank_mid_plane_above_bound`. 784
+mart rows carry a null `plate_x_mid` or `plate_z_mid` against a bound of 700. The bound was
+not breached by a regression. It was set on 2026-09-23 over a `fct_called_pitch` of 1,610,220
+rows, when MLB 2022 held 69 Statcast days. A background pull has since delivered 110 more 2022
+days; the mart is now 1,836,071 rows and 2022's blank count rose from roughly 86 to 223.
+
+What proves nothing leaked is the structural clause, not the count: `blank == untracked +
+no_kinematics` holds exactly, 784 = 762 + 22. Every blank row is still either flagged
+`tracked = false` or missing the `vy0`/`ay` the mid-plane re-projection needs. That clause is
+unchanged. The rate moved 0.038% to 0.043%. Per season: 2022 223/367,145, 2023 139/374,523,
+2024 144/367,017, 2025 82/368,925, 2026 196/358,461 -- 2022 sits in the same band as 2026, so
+the backfilled days are ordinary days.
+
+Applied: the bound is re-cut from 700 to 900, the same ~15% headroom it carried before, in
+both places that hold it, `{% set blank_mid_in_mart_max %}` in
+`dbt/tests/assert_join_complete.sql` and `BLANK_MID_IN_MART_MAX` in
+`tests/data/test_warehouse_pack.py`. The published figures in that file's note 1 were
+re-measured with it, 591/21/612 to 762/22/784.
+
+Owner question left open: whether a count bound over a growing corpus is meant to be re-cut
+with the corpus, or should be expressed as a rate so the next backfill does not trip it.
+
+What would reverse it: a blank row that is neither untracked nor missing kinematics, which
+breaks the structural clause and makes the count a symptom rather than a scale.
+
+### D-P3-15 SEAL FINDING, caught before it shipped: the leaderboard fixtures are synthetic
+
+Applied 2026-09-24 (Europe/Madrid). Recorded as a seal finding, not a deviation, because
+nothing sealed was committed: the finding is that it nearly was.
+
+Two untracked fixtures, `tests/data/fixtures/savant_abs_batter_2026-09-24.html` and
+`savant_abs_catcher_2026-09-24.html`, were staged for commit carrying the live 2026 ABS
+leaderboard in machine-readable form: `n_total_sample` 103,304 batting and 232,743 fielding,
+`n_challenges` 4,635 and 5,603, plus per-player records with names and ids. Those totals are
+season-to-date aggregates read on 2026-09-24, and DEV-40 measures that they grew by 648 and
+1,520 over the 2026-09-22 baseline, which is exactly the first sealed day. Committing them
+would have carried sealed-window quantities into the open tree, parseable by `parse_page`.
+
+Applied: both fixtures were rewritten. Structure is byte-faithful -- the `<script>` block
+arrangement, the `serverParams`, `leagueData` and `absData` assignments, every key name, the
+nesting, and the `leagueData` one-element-array container that DEV-38 is about. Every numeric
+and player-identifying value is invented and obviously so: round numbers, `Test Player One`
+and placeholder team codes. The filenames no longer carry a capture date inside the sealed
+window; they are `savant_abs_batter_synthetic.html` and `savant_abs_catcher_synthetic.html`,
+listed under that name in `contracts/savant_absdata.yml`. The module docstring in
+`tests/data/test_leaderboard_parse.py` states that they are synthetic, what they pin and why
+real values are not used. Two assertions that read captured values were re-aimed at structure;
+they are named in the RUNLOG line for this commit. All eight tests pass, all three absData
+routes and both `leagueData` container shapes still parse.
+
+The general rule this makes explicit: a fixture pins shape, so it never needs real values, and
+a fixture captured from a live season-to-date endpoint after 2026-09-21 is a sealed-set input
+whatever it is used for.
+
+Two carriages of the same aggregates already exist in the tracked tree and are left as they
+are, because both are prose or receipt scalars rather than a machine-readable record set, and
+one of them is the entry that documents the contamination: `docs/DEVIATIONS.md` DEV-40 states
+103,304 and 232,743 in its diagnosis, and `quality/receipts/W2.11.log` and
+`quality/receipts/W4.3.log` print 4,635 and 5,603 in DT-24 PASS lines from the 2026-09-24
+sweep. No other tracked file carries an aggregate of this kind.
+
+What would reverse it: a test that needs a real published value, which would have to take it
+from a static season, 2015-2025, and never from 2026.
+
 - Owner sign-off, phase 03 decisions: **not given**. Recorded 2026-09-24 by the agent that
   applied the defaults above. Each entry names what would reverse it.
