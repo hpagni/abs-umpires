@@ -896,11 +896,13 @@ make the floor a wrong cut rather than a population statement.
 Evidence: `logs/evidence/W3.3.log`, the gate transcript that raised it, and
 `logs/evidence/W3.3-fix.log`, this fix.
 
-## DEV-43 -- UT-11: the 0.0011 ft plane clause is stated over called pitches, and two batted balls above it are named
+## DEV-43 -- UT-11: the 0.0011 ft plane clause is stated over called pitches in ABS games, and the pitches above it are named
 
 Raised 2026-09-24 (Europe/Madrid) by the W3.3 gate, run 2. Status: CLOSED by this entry,
 under DECISIONS.md D-P4-02. That entry is an applied default under D-R0-03's delegation, not
-an owner answer.
+an owner answer. **Reopened and restated 2026-09-25 under DECISIONS.md D-P4-03**, also an
+applied default under D-R0-03. The population is now called pitches in ABS games, and the 72
+of them at or above the bar are pinned by identity.
 
 What the SOP said. SOP-final section 3 (W3.3) stated the clause as "2026 CSV re-projected
 mid->front matches API `pX/pZ` to `< 0.0011 ft`", with no population. The bar was set on the
@@ -927,7 +929,95 @@ What was changed.
 The bar was **not** widened. Called pitches are the analysis population of every chapter,
 and the study never uses a batted ball's plate crossing.
 
-What would reopen it: a called pitch at or above 0.0011 ft, or a chapter that starts to use
-a batted ball's plate crossing.
+What would have reopened it, and did: a called pitch at or above 0.0011 ft, or a chapter
+that starts to use a batted ball's plate crossing.
 
-Evidence: `quality/receipts/W3.3.log` and `logs/evidence/W3.3.log`, the gate transcript.
+Restated 2026-09-25 (Europe/Madrid), under D-P4-03. The W3.3 verifier read every open 2026
+day. 566 of 358,265 called pitches reach 0.0011 ft, up to 0.063473 ft. The five-day figures
+above stay correct for those five days.
+
+Publication precision does not explain it. In ABS games both sources publish full 64-bit
+doubles, at least 10 decimals and a median of 16. That supports agreement to about 1e-10 ft.
+All 357,644 called pitches in ABS games miss it, the smallest by 4.49e-8 ft and the median by
+1.88e-4 ft. The cause is the API's own `pX/pZ` sitting off the API's own published
+trajectory at the front plane. The cross-source miss matches that self-residual to within
+3.1e-5 ft on every pitch but one. On 825000/31/3, 2026-05-30, the W2.15 artefact, the CSV
+side is off instead, by 0.063625 ft.
+
+What changed on 2026-09-25.
+
+1. The population is called pitches in ABS games, those carrying the `absChallenges` regime
+   marker, on every open 2026 day. This removes 494 rows in D-P2-01's four games, which a
+   RECORD line counts.
+2. The bar stays at 0.0011 ft, neither widened nor re-derived, because no derivable bar
+   exists.
+3. The residual, 72 of 357,644 in 60 games on 53 days, is pinned by identity in
+   `PLANE_ARTEFACTS` in `tests/ch1/test_zone.R`. An added or a dropped row fails the clause.
+   Their median is 0.001157 ft and their max 0.063473 ft. Without 825000/31/3 the max is
+   0.001537 ft.
+4. The SOP clause text in section 3 (W3.3), and its copy in `sop/SOP-final-part1.md`,
+   carries the population, the precision derivation and the 72.
+
+What would reopen it now: any change to the set of 72, which fails the test, or a chapter
+that starts to use a batted ball's plate crossing.
+
+Evidence: `quality/receipts/W3.3.log` and `logs/evidence/W3.3.log`, the gate transcript;
+`logs/evidence/W3.3-fix2.log`, the restatement.
+
+## DEV-44 -- UT-13: the zone-fraction clause is read over ABS games on every open 2026 day, and D-P2-01's four games are counted outside it
+
+Raised 2026-09-25 (Europe/Madrid) by the W3.3 fix-2 agent. Status: CLOSED 2026-09-25 by this
+entry. Merged from `logs/decisions-pending/ut13-population.md` by the phase-04 decisions
+agent, under D-R0-03's delegation and not as an owner answer. The population is D-P2-01's.
+
+What the SOP said. SOP-final section 6.2 stated UT-13 as `sz_top*12/0.535 == sz_bot*12/0.27`
+to under 1e-6 in, with no population. The test read one day, 2026-06-23: max 3.2399e-08 in
+over 4,506 pitches.
+
+What the data does. The W3.3 verifier swept all 688,686 open MLB 2026 pitches, dated before
+2026-09-22. Over the 687,448 pitches in 2,338 ABS games the max miss is 3.24e-8 in, on the
+same pitch the one-day read found. In D-P2-01's four games, 1,144 of 1,238 pitches miss the
+0.535/0.27 fractions by 1e-6 in or more, up to 0.2409 in. They are neutral-site games at
+parks with no ABS hardware.
+
+| game | date | pitches | at or above 1e-6 in | max miss |
+|---|---|---|---|---|
+| 823669 | 2026-08-13, Field of Dreams | 305 | 305 | 0.2409 in |
+| 823745 | 2026-08-23, Williamsport | 318 | 299 | 0.2285 in |
+| 825093 | 2026-04-25, Mexico City | 293 | 247 | 0.0295 in |
+| 825094 | 2026-04-26, Mexico City | 322 | 293 | 0.0295 in |
+
+What was changed.
+
+1. `tests/ch1/test_zone.R` reads UT-13 over every open 2026 day, in ABS games only: max
+   3.24e-8 in over 687,448 pitches. A check asserts that the games without the marker are
+   exactly D-P2-01's four. Another asserts that every pitch with `sz_top` joins to its game,
+   688,686 of 688,686. A RECORD line names the four games and their max miss on every run.
+2. The `abs_top_ft`/`abs_bot_ft` inversion check reads the same population.
+3. `sop/SOP-final.md` section 6.2 states the population in the UT-13 clause.
+
+How the four games are identified. They are the games whose feed has no `absChallenges`
+block. That is D-P2-01's definition, and `test_regime_marker` asserts it. They are **not**
+identified by `has_abs_challenges = true`, although the instruction named that column. The
+column is `absChallenges.hasChallenges` and means that somebody challenged. It is false in
+26 open games. Four are D-P2-01's, where the block is absent and all six token columns are
+null. The other 22 are ABS games where neither team challenged. Filtering on the column
+would drop those 22 from the clause. They pass UT-13, so the choice changes the population
+and not the verdict.
+
+Stated limits, recorded and not fixed. Both come from the W3.3 fix-2 agent.
+
+1. The SOP closed form for `t` loses precision as `ay` tends to 0. At `ay = 0.111 ft/s^2`,
+   pitch 663165:55:2, it is 1.620e-12 ft off the exact 50-digit value. A cancellation-free
+   form is 2.2e-14 ft off. No gate checks `t` against an exact value, and the geometry is
+   not changed for it.
+2. The clause "2026 CSV reproduces at y = 8.5/12 (direct integration)" is asserted on the
+   five fixed days. Over every open 2026 day the mid-plane direct integration fails on 1 of
+   688,686 pitches. That pitch is 825000/31/3 at 0.063625 ft, the W2.15 artefact that DEV-35
+   and D-P4-03 name. A RECORD line prints that count on every run.
+
+What would reopen it: a fifth game without the marker, which fails the exact-set check, or
+a pitch in an ABS game at 1e-6 in or more.
+
+Evidence: `logs/evidence/W3.3-fix2.log`; the verifier's sweep,
+`logs/evidence/W3.3.verify-geometry.log`.

@@ -1551,8 +1551,12 @@ He accepted that any later change becomes a logged deviation. The execution post
 touches an estimand, an acceptance criterion or the sealed set. Both are sanity checks on the
 plate-crossing kinematics.
 
-**Neither entry below is an owner answer in his own words.** Each is applied under D-R0-03.
-The owner may override either one, and an override becomes a DEVIATIONS entry.
+D-P4-03 joined them on 2026-09-25, when the W3.3 verifier's full sweep reopened D-P4-02.
+It is applied under the same delegation. It too touches no estimand, acceptance criterion or
+sealed set.
+
+**No entry below is an owner answer in his own words.** Each is applied under D-R0-03.
+The owner may override any of them, and an override becomes a DEVIATIONS entry.
 
 ### D-P4-01 APPLIED UNDER D-R0-03, DEV-42 confirmed: the UT-11 and DT-11 `t` band keeps its 70 mph population
 
@@ -1594,7 +1598,9 @@ What would reopen it: a pitch at 70 mph or more outside the band, or the owner's
 
 Applied by the phase-04 decisions agent, 2026-09-24 (Europe/Madrid). Status: **applied
 default under D-R0-03's delegation, not an owner answer.** Hudson Pagni did not answer this
-question himself. The deviation it creates is DEV-43.
+question himself. The deviation it creates is DEV-43. **Reopened 2026-09-25 and restated
+under D-P4-03**, which reads the clause over called pitches in ABS games and pins 72 by
+identity.
 
 The question. UT-11's cross-source clause says the 2026 CSV, re-projected from the middle of
 the plate to the front, matches the API's `pX/pZ` to under 0.0011 ft. The SOP set that bar
@@ -1620,3 +1626,72 @@ What changed. The clause text in `sop/SOP-final.md` section 3 (W3.3), and its co
 
 What would reopen it: a called pitch at or above 0.0011 ft, or a chapter that starts to use
 a batted ball's plate crossing.
+
+Reopened 2026-09-25 (Europe/Madrid). The W3.3 verifier read every open 2026 day and met the
+first condition. 566 of 358,265 called pitches reach 0.0011 ft, up to 0.063473 ft. The
+five-day figures above stay correct for those five days. D-P4-03 supersedes this entry's
+population and its reopen condition.
+
+### D-P4-03 APPLIED UNDER D-R0-03, reopens D-P4-02: the 0.0011 ft plane clause is read over called pitches in ABS games, and its 72 misses are pinned by identity
+
+Applied by the phase-04 decisions agent, 2026-09-25 (Europe/Madrid). Status: **applied
+default under D-R0-03's delegation, not an owner answer.** Hudson Pagni did not answer this
+question himself. Merged from `logs/decisions-pending/plane-clause.md`. It restates DEV-43.
+
+The question. D-P4-02 named its reopen condition: a called pitch at or above 0.0011 ft. The
+W3.3 verifier's sweep of all 178 open 2026 days met it. 566 of 358,265 called pitches reach
+the bar, up to 0.063473 ft. 494 of them sit in D-P2-01's four games and 72 in 60 other games.
+The CSV and API kinematics, `vx0` to `az`, are identical on all 566, so the join is not at
+fault. The question is where the bar should sit.
+
+Publication precision, measured on the raw text. In ABS games the 2026 CSV's
+`plate_x/plate_z` and the API's `pX/pZ` are both full 64-bit doubles. Each value prints at
+least 10 decimals, with a median of 16. Two values carried to k decimals support agreement
+to about 10^-k, so precision supports a bar of about 1e-10 ft. All 357,644 called pitches in
+ABS games miss that bar. The smallest miss is 4.49e-8 ft and the median 1.88e-4 ft. No bar
+the data meets can be derived from publication precision.
+
+What the disagreement is. The API's own `pX/pZ` sit off the API's own published trajectory
+at the front plane, `y = 17/12`. The cross-source miss equals that API self-residual to
+within 3.1e-5 ft on every pitch but one. That pitch is 825000/31/3 on 2026-05-30, the known
+W2.15 coordinate artefact. There the CSV side is the one that is off: its `plate_x/plate_z`
+miss the CSV's own trajectory by 0.063625 ft.
+
+The three options the pending file laid out.
+
+1. Keep 0.0011 ft as an empirical ceiling on the API's self-residual, and pin the called
+   pitches that reach it.
+2. Restate the clause as two exact statements the test already makes. The CSV side
+   reproduces its own trajectory to 5e-7 ft by direct integration. The API side's
+   self-residual is recorded, not bounded.
+3. Set a new bar from the API self-residual's own distribution. That would be a chosen
+   number, and the brief rules out choosing one to empty the count.
+
+The default applied: **option 1**, in three parts.
+
+1. The bar stays at the SOP's 0.0011 ft. It is neither widened nor re-derived, because no
+   derivable bar exists. A RECORD line prints the precision bar's count on every run.
+2. The population is called pitches, `called_strike`, `ball` and `blocked_ball`, in ABS
+   games on every open 2026 day. ABS games are those carrying the `absChallenges` regime
+   marker. This removes 494 rows in D-P2-01's four games, and a RECORD line counts them.
+3. The residual is 72 of 357,644 called pitches, in 60 games on 53 days.
+   `tests/ch1/test_zone.R` pins them by identity in `PLANE_ARTEFACTS`. An added or a
+   dropped row fails the clause.
+
+The 72, in feet: min 0.001104, q25 0.001124, median 0.001157, q75 0.001250, q90 0.001336,
+max 0.063473. The max is 825000/31/3. Without it the max is 0.001537 ft, at 823400/84/3. A
+RECORD line names all 72 and splits them one on the CSV side and 71 on the API side.
+
+Why option 1. It keeps the SOP's number and adds no chosen threshold. Each miss becomes a
+named row the test must find again. Option 2 drops the bound on the API side altogether.
+Option 3 would fit a number to the data, which the brief rules out.
+
+What changed. `sop/SOP-final.md` section 3 (W3.3), and its copy in `sop/SOP-final-part1.md`,
+state the population, the precision derivation and the 72. D-P4-02's status line and DEV-43
+now point here. The two stated limits in the same pending file are recorded in DEV-44.
+
+What would reopen it: any change to the set of 72, which fails the test, or the owner's
+override.
+
+Evidence: `logs/evidence/W3.3-fix2.log`; the verifier's sweep,
+`logs/evidence/W3.3.verify-geometry.log`.
