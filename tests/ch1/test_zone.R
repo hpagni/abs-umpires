@@ -31,14 +31,46 @@
 # prints the band read with no speed filter at all, so the literal clause's own
 # count is on every run.
 #
-# THE POPULATION OF THE 0.0011 ft CLAUSE. "2026 CSV re-projected mid -> front
-# matches API pX/pZ to < 0.0011 ft" is asserted over called pitches, the
-# project's definition (called_strike, ball, blocked_ball, as in
-# fct_called_pitch). The SOP set the bar on the 281 pitches of one game. Over
-# every pitch on the five days two batted balls, both curveballs at 72 mph or
-# more, sit above it by at most 2.7e-5 ft. A RECORD line names them on every
-# run. This population is recorded in docs/DEVIATIONS.md DEV-43 and applied under
-# DECISIONS.md D-P4-02 (the R0 delegation).
+# THE 0.0011 ft PLANE CLAUSE. "2026 CSV re-projected mid -> front matches API
+# pX/pZ to < 0.0011 ft" is read over every open 2026 day, on called pitches
+# (called_strike, ball, blocked_ball, as in fct_called_pitch) in ABS games. The
+# four games D-P2-01 names are outside it: 494 of their 621 called pitches miss
+# by up to 0.030 ft, and a RECORD line counts them.
+#   Publication precision, measured on the raw text of all 688,686 open pitches
+# (logs/decisions-pending/plane-clause.md). In ABS games the CSV's plate_x and
+# plate_z, and the API's pX and pZ, are printed as full binary64: at least 10
+# decimals, 11 to 17 significant digits, median 16 decimals. Two quantities
+# carried to k decimals cannot be expected to agree closer than about 10^-k, so
+# with k >= 10 on both sides precision supports a bar of about 1e-10 ft. Every
+# one of the 357,644 called pitches misses that bar: the smallest miss is
+# 4.5e-8 ft and the median 1.9e-4 ft. So no bar the data meets can be derived
+# from precision. The disagreement is not rounding: it is the API's own pX/pZ
+# sitting off its own published trajectory at y = 17/12, which the cross-source
+# miss matches within 3.1e-5 ft on every pitch but one.
+#   The bar therefore stays the SOP's 0.0011 ft, neither widened nor re-derived.
+# 72 called pitches in ABS games reach it, in 60 games on 53 days. They are named
+# upstream artefacts, pinned by identity in PLANE_ARTEFACTS, so the clause fails
+# if one is added or one leaves. The largest is 0.063473 ft at game 825000,
+# at-bat 31, pitch 3, the W2.15 coordinate artefact, where the CSV's own
+# plate_x/plate_z miss its trajectory. The other 71 are on the API side, largest
+# 0.001537 ft. What the bar should be is a pending decision, not settled here.
+#
+# THE POPULATION OF UT-13. sz_top*12/0.535 == sz_bot*12/0.27 to 1e-6 in is read
+# over every pitch of every open 2026 day in ABS games. An ABS game carries the
+# absChallenges regime marker (D-P2-01). has_abs_challenges is not that marker:
+# it is false in 22 ABS games where nobody challenged. The four markerless games
+# are asserted to be exactly D-P2-01's set. Their published zone is not the ABS
+# zone: 1,144 of their 1,238 pitches miss by 1e-6 in or more, up to 0.2409 in.
+# A RECORD line counts and names them on every run.
+#
+# STATED LIMITS, recorded and not fixed. (1) The SOP closed form for t loses
+# precision as ay tends to 0. At ay = 0.111 ft/s^2, pitch 663165:55:2, it is
+# 1.620e-12 ft from a 50-digit value, where a cancellation-free form is 2.2e-14
+# ft off. No clause here checks t against an exact value, and the geometry is
+# not changed for it. (2) "2026 CSV reproduces at y = 8.5/12" is asserted on
+# the five fixed days. Over every open day it fails on 1 of 688,686 pitches,
+# 825000/31/3 at 0.063625 ft, the same artefact as above. A RECORD line prints
+# that count on every run.
 #
 # WHAT IS ON THIS MACHINE. MLB Statcast CSV for 2022-2026. The Stats API side
 # (x0/y0/z0) for all of MLB 2026 through feed_pitch and pitch_joined, and for
@@ -116,6 +148,29 @@ SLOW_MPH <- 70                  # the competitive-speed floor of the UT-11 t-ban
                                 # clause; see the comment above the check below
 
 stopifnot(all(as.Date(DAYS_2026) < seal_start))
+
+# Every open 2026 day, for the clauses that are read over the whole population:
+# UT-13 and the 0.0011 ft plane clause. The day list is the date partitions'
+# directory names, filtered at the seal boundary before any file is opened, and
+# each file is then named explicitly, so no sealed partition is ever read.
+OPEN_2026 <- sub("^date=", "", list.files(
+  file.path(ROOT, "data", "interim", "statcast_pitch", "level=mlb", "season=2026"),
+  pattern = "^date=[0-9]{4}-[0-9]{2}-[0-9]{2}$"))
+OPEN_2026 <- sort(OPEN_2026[as.Date(OPEN_2026) < seal_start])
+stopifnot(length(OPEN_2026) > 0, all(DAYS_2026 %in% OPEN_2026))
+OPEN_FILES <- function(table) sprintf("[%s]", paste(sprintf(
+  "'%s/data/interim/%s/level=mlb/season=2026/date=%s/part-000.parquet'",
+  ROOT, table, OPEN_2026), collapse = ", "))
+
+# THE ABS POPULATION. A 2026 game is an ABS game when its feed carries the ABS
+# regime marker, the absChallenges block (DECISIONS.md D-P2-01). In feed_game
+# that block is the six token columns: all six are null exactly when the block
+# is absent. has_abs_challenges is not the marker: it is absChallenges.hasChallenges,
+# which is also false in ABS games where neither team challenged. The four
+# games D-P2-01 names are the only markerless ones, and that set is asserted.
+NON_ABS_VENUE_GAME_PKS <- c(823669, 823745, 825093, 825094)   # D-P2-01
+ABS_MARKER_SQL <- paste("coalesce(g.away_remaining, g.home_remaining, g.away_used_failed,",
+                        "g.home_used_failed, g.away_used_successful, g.home_used_successful) is not null")
 
 con <- dbConnect(duckdb::duckdb())
 
@@ -332,55 +387,103 @@ check("UT-11 round trip front -> mid -> front", rt < 1e-12,
 ## 3. The planes: 2026 CSV against the Stats API, and direct integration
 ## ===========================================================================
 
-api_all_max <- 0; api_called_max <- 0; api_n <- 0L; api_called_n <- 0L; api_over <- 0L
-api_over_rows <- character(0)
-direct_mid <- 0; direct_front_api <- 0
-for (day in DAYS_2026) {
-  d <- q(sprintf("select c.game_pk, c.at_bat_number, c.pitch_number,
+# The 0.0011 ft clause over its population, called pitches in ABS games on every
+# open 2026 day; see the header for the precision derivation. The pitches at or
+# above the bar are named upstream artefacts, pinned here by identity, so a new
+# one, or one that leaves, fails the clause. Largest miss first.
+PLANE_BAR_FT <- 0.0011
+PRECISION_BAR_FT <- 1e-10   # both sources publish at least 10 decimals; see the header
+PLANE_ARTEFACTS <- c(
+  "825000/31/3", "823400/84/3", "823736/67/1", "824652/63/3", "824652/63/2",
+  "824637/81/2", "822899/71/1", "824410/77/1", "823795/72/1", "823900/71/3",
+  "824089/83/1", "823795/73/2", "824652/65/1", "824652/66/3", "824582/79/1",
+  "823663/71/4", "823795/72/3", "823099/79/2", "823749/86/1", "822961/61/4",
+  "824635/80/2", "824979/72/3", "824086/87/1", "823835/75/2", "823749/87/1",
+  "823546/23/1", "824901/74/5", "824907/32/1", "823872/34/2", "825105/77/1",
+  "823535/71/1", "823477/71/2", "823348/65/1", "823795/74/1", "823842/25/1",
+  "824903/81/1", "825099/77/1", "823976/40/1", "824659/29/2", "823654/43/1",
+  "823516/48/2", "823035/66/1", "823852/15/1", "823976/21/1", "823749/76/3",
+  "823264/76/2", "823297/68/2", "822683/31/3", "823651/21/1", "823010/47/3",
+  "823898/46/4", "823153/27/5", "823784/24/5", "823388/77/1", "823880/12/1",
+  "824126/50/3", "822784/16/1", "824243/71/1", "822753/12/1", "823749/73/1",
+  "823642/51/2", "825031/28/4", "824452/10/3", "824042/32/4", "823825/18/1",
+  "823392/7/3", "825099/77/3", "824056/15/1", "824089/86/1", "824746/29/2",
+  "823059/24/4", "824607/12/1")
+CALLED <- c("called_strike", "ball", "blocked_ball")
+p26 <- q(sprintf("select c.game_pk, c.at_bat_number, c.pitch_number, c.game_date::varchar as gday,
                          c.plate_x, c.plate_z, c.vx0, c.vy0, c.vz0, c.ax, c.ay, c.az,
-                         c.description, j.p_x, j.p_z, f.x0, f.y0, f.z0
-                  from read_parquet('%s') c
-                  join read_parquet('%s') j
+                         c.description, j.p_x, j.p_z, f.x0, f.y0, f.z0, %s as abs_game
+                  from read_parquet(%s) c
+                  join read_parquet(%s) j
                     on c.game_pk = j.game_pk and c.at_bat_number = j.at_bat_number
                    and c.pitch_number = j.pitch_number
-                  join read_parquet('%s') f
+                  join read_parquet(%s) f
                     on j.game_pk = f.game_pk and j.at_bat_number = f.at_bat_number
                    and j.pitch_slot = f.pitch_slot
+                  join read_parquet(%s) g on c.game_pk = g.game_pk
                   where c.plate_x is not null and j.p_x is not null and f.x0 is not null",
-                 SC(2026, day), PJ(day), FP(day)))
-  # the 2026 CSV is published at the middle plane; the API at the front
-  r <- reproject(d$plate_x, d$plate_z, d$vx0, d$vy0, d$vz0, d$ax, d$ay, d$az,
-                 Y_MID_FT, Y_FRONT_FT)
-  e <- pmax(abs(r$x - d$p_x), abs(r$z - d$p_z))
-  called <- d$description %in% c("called_strike", "ball", "blocked_ball")
-  api_all_max <- max(api_all_max, max(e)); api_called_max <- max(api_called_max, max(e[called]))
-  api_n <- api_n + length(e); api_called_n <- api_called_n + sum(called)
-  api_over <- api_over + sum(e >= 0.0011)
-  if (any(e >= 0.0011)) api_over_rows <- c(api_over_rows, sprintf("%d ab %d p %d %s %s ft",
-    d$game_pk[e >= 0.0011], d$at_bat_number[e >= 0.0011], d$pitch_number[e >= 0.0011],
-    d$description[e >= 0.0011], fmt(e[e >= 0.0011], 9)))
-  # direct integration from the API's own release-plane state (x0, y0, z0),
-  # which shares nothing with reproject's difference form
-  for (nm in c("front", "mid")) {
-    y <- if (nm == "front") Y_FRONT_FT else Y_MID_FT
-    tt <- (-d$vy0 - sqrt(d$vy0^2 - 2 * d$ay * (d$y0 - y))) / d$ay
-    xx <- d$x0 + d$vx0 * tt + 0.5 * d$ax * tt^2
-    zz <- d$z0 + d$vz0 * tt + 0.5 * d$az * tt^2
-    if (nm == "mid") direct_mid <- max(direct_mid, max(abs(xx - d$plate_x), abs(zz - d$plate_z)))
-    else direct_front_api <- max(direct_front_api, max(abs(xx - d$p_x), abs(zz - d$p_z)))
-  }
+                 ABS_MARKER_SQL, OPEN_FILES("statcast_pitch"), OPEN_FILES("pitch_joined"),
+                 OPEN_FILES("feed_pitch"), OPEN_FILES("feed_game")))
+# the 2026 CSV is published at the middle plane; the API at the front
+r <- reproject(p26$plate_x, p26$plate_z, p26$vx0, p26$vy0, p26$vz0, p26$ax, p26$ay, p26$az,
+               Y_MID_FT, Y_FRONT_FT)
+e <- pmax(abs(r$x - p26$p_x), abs(r$z - p26$p_z))
+# direct integration from the API's own release-plane state (x0, y0, z0), which
+# shares nothing with reproject's difference form: at the middle plane it
+# checks the CSV's plate_x/plate_z, at the front the API's pX/pZ
+direct <- function(y) {
+  tt <- (-p26$vy0 - sqrt(p26$vy0^2 - 2 * p26$ay * (p26$y0 - y))) / p26$ay
+  list(x = p26$x0 + p26$vx0 * tt + 0.5 * p26$ax * tt^2,
+       z = p26$z0 + p26$vz0 * tt + 0.5 * p26$az * tt^2)
 }
-check("2026 CSV mid -> front matches API pX/pZ, called", api_called_max < 0.0011,
-      sprintf("max %s ft < 0.0011 over %d called pitches (called_strike, ball, blocked_ball), %d days",
-              fmt(api_called_max), api_called_n, length(DAYS_2026)))
-record("2026 the same over every pitch",
-       sprintf("max %s ft over %d pitches; %d at or above 0.0011 ft: %s", fmt(api_all_max),
-               api_n, api_over, paste(api_over_rows, collapse = "; ")))
-check("2026 CSV reproduces at y = 8.5/12 (direct integration)", direct_mid < 5e-7,
-      sprintf("max abs err %s ft, prints as 0.000000, %d pitches", fmt(direct_mid), api_n))
+dm <- direct(Y_MID_FT); df <- direct(Y_FRONT_FT)
+csv_self <- pmax(abs(dm$x - p26$plate_x), abs(dm$z - p26$plate_z))
+api_self <- pmax(abs(df$x - p26$p_x), abs(df$z - p26$p_z))
+key26 <- sprintf("%.0f/%d/%d", p26$game_pk, p26$at_bat_number, p26$pitch_number)
+called <- p26$description %in% CALLED
+pop <- called & p26$abs_game
+over <- pop & e >= PLANE_BAR_FT
+found <- key26[over][order(-e[over])]
+check("2026 CSV mid -> front matches API pX/pZ, called, ABS games",
+      identical(sort(found), sort(PLANE_ARTEFACTS)),
+      sprintf("%d of %d at or above 0.0011 ft, the %d recorded artefacts and no other (%s); every other pitch max %s ft; %d open days",
+              length(found), sum(pop), length(PLANE_ARTEFACTS),
+              if (identical(sort(found), sort(PLANE_ARTEFACTS))) "identical set" else
+                sprintf("new: %s; gone: %s", paste(setdiff(found, PLANE_ARTEFACTS), collapse = " "),
+                        paste(setdiff(PLANE_ARTEFACTS, found), collapse = " ")),
+              fmt(max(e[pop & !over])), length(OPEN_2026)))
+art <- which(over); art <- art[order(-e[art])]
+csv_side <- art[csv_self[art] >= 5e-7]; api_side <- setdiff(art, csv_side)
+qa <- quantile(e[art], c(0.25, 0.5, 0.75, 0.9), names = FALSE)
+record("the 0.0011 ft clause, its named artefacts",
+       sprintf("%d in %d games on %d days; min %s, q25 %s, median %s, q75 %s, q90 %s, max %s ft. CSV side %d: %s, whose plate_x/plate_z miss the CSV's own trajectory by %s ft (W2.15). API side %d, max %s ft: pX/pZ off the API's own trajectory, which the cross-source miss matches within %s ft. All: %s",
+               length(art), length(unique(p26$game_pk[art])), length(unique(p26$gday[art])),
+               fmt(min(e[art])), fmt(qa[1]), fmt(qa[2]), fmt(qa[3]), fmt(qa[4]), fmt(max(e[art])),
+               length(csv_side), paste(key26[csv_side], collapse = " "),
+               fmt(max(c(0, csv_self[csv_side])), 6), length(api_side),
+               fmt(max(c(0, e[api_side]))), sprintf("%.1e", max(c(0, abs(e - api_self)[api_side]))),
+               paste(sprintf("%s %s", key26[art], fmt(e[art], 6)), collapse = "; ")))
+record("the 0.0011 ft clause, the precision bar",
+       sprintf("at %.0e ft, the bar two sources published to 10 or more decimals support, %d of %d called pitches in ABS games miss; min %.3e ft, median %.3e ft. The disagreement is not rounding",
+               PRECISION_BAR_FT, sum(pop & e >= PRECISION_BAR_FT), sum(pop), min(e[pop]),
+               stats::median(e[pop])))
+nabs <- called & !p26$abs_game
+record("the 0.0011 ft clause, outside its population",
+       sprintf("every pitch in ABS games: %d of %d at or above 0.0011 ft, max %s ft. Called pitches in the four non-ABS games (D-P2-01): %d of %d, max %s ft",
+               sum(p26$abs_game & e >= PLANE_BAR_FT), sum(p26$abs_game), fmt(max(e[p26$abs_game])),
+               sum(nabs & e >= PLANE_BAR_FT), sum(nabs), fmt(max(c(0, e[nabs])))))
+five <- p26$gday %in% DAYS_2026
+check("2026 CSV reproduces at y = 8.5/12 (direct integration)", max(csv_self[five]) < 5e-7,
+      sprintf("max abs err %s ft, prints as %s, %d pitches on the five fixed days",
+              fmt(max(csv_self[five])), fmt(max(csv_self[five]), 6), sum(five)))
+bad_mid <- which(csv_self >= 5e-7)
+record("the same over every open 2026 day",
+       sprintf("%d of %d pitches at or above 5e-7 ft, a stated limit of the clause: %s",
+               length(bad_mid), nrow(p26),
+               paste(sprintf("%s %s ft", key26[bad_mid], fmt(csv_self[bad_mid], 6)), collapse = "; ")))
 record("2026 API pX/pZ at y = 17/12 (direct integration)",
-       sprintf("max abs err %s ft: the API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual is what the 0.0011 ft bar allows for",
-               fmt(direct_front_api)))
+       sprintf("called pitches in ABS games: max %s ft, median %s ft. The API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual, not rounding, is what the cross-source clause measures",
+               fmt(max(api_self[pop])), fmt(stats::median(api_self[pop]))))
 
 # 2025. The clause needs the Stats API's own release-plane state (x0, y0, z0),
 # which the CSV does not carry. data/interim/feed_pitch holds season=2026 only
@@ -482,22 +585,51 @@ for (i in seq_along(DAYS_PRIOR)) {
 ## 4. UT-13, the ABS height fractions
 ## ===========================================================================
 
-h26 <- q(sprintf("select sz_top, sz_bot from read_parquet('%s') where sz_top is not null",
-                 SC(2026, DAYS_2026[3])))
+# THE POPULATION OF UT-13. The clause is read over every pitch of every open
+# 2026 day in ABS games. The four games D-P2-01 names were played at parks with
+# no ABS hardware, so their published zone is not the ABS zone, and they miss
+# the identity by up to 0.2409 in. They are outside the population, and a RECORD
+# line counts and names them, with their largest miss, on every run.
+games26 <- q(sprintf("select g.game_pk, %s as abs_game from read_parquet(%s) g",
+                     ABS_MARKER_SQL, OPEN_FILES("feed_game")))
+markerless <- sort(games26$game_pk[!games26$abs_game])
+h26 <- q(sprintf("select c.game_pk, c.sz_top, c.sz_bot, %s as abs_game
+                  from read_parquet(%s) c join read_parquet(%s) g on c.game_pk = g.game_pk
+                  where c.sz_top is not null",
+                 ABS_MARKER_SQL, OPEN_FILES("statcast_pitch"), OPEN_FILES("feed_game")))
+n_sz <- q(sprintf("select count(*) as n from read_parquet(%s) where sz_top is not null",
+                  OPEN_FILES("statcast_pitch")))$n
+check("UT-13 population: the markerless games are D-P2-01's",
+      identical(as.numeric(markerless), NON_ABS_VENUE_GAME_PKS) && nrow(h26) == n_sz,
+      sprintf("%d of %d open 2026 games carry no ABS marker: %s; %d of %d pitches with sz_top joined to their game",
+              length(markerless), nrow(games26), paste(markerless, collapse = ", "),
+              nrow(h26), n_sz))
 dh <- abs(h26$sz_top * 12 / ABS_TOP_FRAC - h26$sz_bot * 12 / ABS_BOT_FRAC)
-check("UT-13 sz_top*12/0.535 == sz_bot*12/0.27", max(dh) < 1e-6,
-      sprintf("max %s in < 1e-6, n = %d on %s", fmt(max(dh), 12), nrow(h26), DAYS_2026[3]))
+pop13 <- h26$abs_game
+check("UT-13 sz_top*12/0.535 == sz_bot*12/0.27, ABS games", max(dh[pop13]) < 1e-6,
+      sprintf("max %s in < 1e-6 over %d pitches in %d ABS games, every open 2026 day (%d)",
+              fmt(max(dh[pop13]), 12), sum(pop13), length(unique(h26$game_pk[pop13])),
+              length(OPEN_2026)))
+ex13 <- data.frame(game_pk = h26$game_pk[!pop13], dh = dh[!pop13])
+ex13_games <- sort(unique(ex13$game_pk))
+record("UT-13 games outside the population",
+       sprintf("%d games (D-P2-01, no ABS hardware), %d of their %d pitches at or above 1e-6 in, max %s in: %s",
+               length(ex13_games), sum(ex13$dh >= 1e-6), nrow(ex13), fmt(max(c(0, ex13$dh)), 4),
+               paste(vapply(ex13_games, function(gp) sprintf("%.0f max %s in over %d", gp,
+                     fmt(max(ex13$dh[ex13$game_pk == gp]), 4), sum(ex13$game_pk == gp)), ""),
+                     collapse = "; ")))
 h25 <- q(sprintf("select sz_top, sz_bot from read_parquet('%s') where sz_top is not null",
                  SC(2025, DAYS_PRIOR[["2025"]])))
 dh25 <- abs(h25$sz_top * 12 / ABS_TOP_FRAC - h25$sz_bot * 12 / ABS_BOT_FRAC)
 record("UT-13 the pre-2026 contrast",
        sprintf("2025 max %s in, mean %s in: the published zone is operator-set before ABS, so the clause is a 2026 assertion and is not vacuous",
                fmt(max(dh25), 4), fmt(mean(dh25), 4)))
+h_abs <- h26[pop13, ]
 check("abs_top_ft and abs_bot_ft invert the fractions",
-      max(abs(abs_top_ft(h26$sz_top * 12 / ABS_TOP_FRAC) - h26$sz_top)) < 1e-12 &&
-        max(abs(abs_bot_ft(h26$sz_top * 12 / ABS_TOP_FRAC) - h26$sz_bot)) < 1e-6,
-      "0.535*H/12 and 0.27*H/12 return the published sz_top and sz_bot")
-
+      max(abs(abs_top_ft(h_abs$sz_top * 12 / ABS_TOP_FRAC) - h_abs$sz_top)) < 1e-12 &&
+        max(abs(abs_bot_ft(h_abs$sz_top * 12 / ABS_TOP_FRAC) - h_abs$sz_bot)) < 1e-6,
+      sprintf("0.535*H/12 and 0.27*H/12 return the published sz_top and sz_bot, %d pitches in ABS games",
+              nrow(h_abs)))
 ## ===========================================================================
 ## 5. signed_edge_in against four hand-computed points (D-14)
 ## ===========================================================================
@@ -518,7 +650,12 @@ pts <- data.frame(
   z = c(2.5, 2.5, top + 4/12, bot - 4/12),
   want = c(0, -8.5, 5, 4))
 got <- signed_edge_in(pts$x, pts$z, top, bot)
-for (i in seq_len(nrow(pts))) {
+# A is asserted identical to 0, as the SOP states it ("0 exactly on the
+# boundary"): the module returns exactly 0 there, so a tolerance would only hide
+# a future drift. B, C and D keep 1e-12 against their hand-computed values.
+check(sprintf("D-14 signed_edge_in, %s", pts$label[1]), identical(got[1], 0),
+      sprintf("%s in, identical to 0: %s", format(got[1], digits = 17), identical(got[1], 0)))
+for (i in 2:nrow(pts)) {
   check(sprintf("D-14 signed_edge_in, %s", pts$label[i]), abs(got[i] - pts$want[i]) < 1e-12,
         sprintf("%s in, hand-computed %s in", fmt(got[i], 10), fmt(pts$want[i], 1)))
 }
@@ -537,35 +674,75 @@ check("z_norm rescales by height",
 ## ===========================================================================
 ## 6. The golden file, 500 pitches to 1e-9
 ## ===========================================================================
+#
+# The fixture is judged before it is compared. A comparison that looks a column
+# up by name and finds nothing compares nothing, and reports a max |delta| of 0.
+# So the exact column set, the row count and the type of every column are
+# asserted first, and the two comparison lines FAIL, saying why, when any of
+# those does not hold. They never pass on a fixture they did not read.
+GOLDEN_ROWS <- 500L
+GOLDEN_INPUTS <- c("game_pk", "at_bat_number", "pitch_number", "plate_x", "plate_z",
+                   "vx0", "vy0", "vz0", "ax", "ay", "az", "sz_top", "sz_bot",
+                   "h_in_from_sz_top")
+GOLDEN_OUTPUTS <- c("t_front", "t_mid", "x_mid", "z_mid", "x_back_front", "z_back_front",
+                    "abs_top_ft", "abs_bot_ft", "edge_in_front", "edge_in_mid", "z_norm_mid")
+GOLDEN_LABEL <- "nearest_edge_mid"
+GOLDEN_COLUMNS <- c(GOLDEN_INPUTS, GOLDEN_OUTPUTS, GOLDEN_LABEL)
 
 g <- read.csv(file.path(ROOT, "tests", "golden", "reproject_golden.csv"),
               stringsAsFactors = FALSE)
-check("golden file is 500 pitches", nrow(g) == 500L,
-      sprintf("%d rows, %d columns", nrow(g), ncol(g)))
-gm <- reproject(g$plate_x, g$plate_z, g$vx0, g$vy0, g$vz0, g$ax, g$ay, g$az,
-                Y_FRONT_FT, Y_MID_FT)
-gb <- reproject(gm$x, gm$z, g$vx0, g$vy0, g$vz0, g$ax, g$ay, g$az, Y_MID_FT, Y_FRONT_FT)
-gold <- list(
-  t_front      = t_at_y(Y_FRONT_FT, g$vy0, g$ay),
-  t_mid        = t_at_y(Y_MID_FT, g$vy0, g$ay),
-  x_mid        = gm$x, z_mid = gm$z,
-  x_back_front = gb$x, z_back_front = gb$z,
-  abs_top_ft   = abs_top_ft(g$h_in_from_sz_top),
-  abs_bot_ft   = abs_bot_ft(g$h_in_from_sz_top),
-  edge_in_front = signed_edge_in(g$plate_x, g$plate_z, g$sz_top, g$sz_bot),
-  edge_in_mid   = signed_edge_in(gm$x, gm$z, g$sz_top, g$sz_bot),
-  z_norm_mid    = z_norm(gm$z, g$h_in_from_sz_top))
-worst <- 0; worst_col <- ""
-for (nm in names(gold)) {
-  e <- max(abs(gold[[nm]] - g[[nm]]))
-  if (e > worst) { worst <- e; worst_col <- nm }
+g_missing <- setdiff(GOLDEN_COLUMNS, names(g)); g_extra <- setdiff(names(g), GOLDEN_COLUMNS)
+cols_ok <- !length(g_missing) && !length(g_extra) && !anyDuplicated(names(g))
+check("golden file carries exactly its 26 columns", cols_ok,
+      sprintf("%d columns; missing: %s; extra: %s", ncol(g),
+              if (length(g_missing)) paste(g_missing, collapse = ", ") else "none",
+              if (length(g_extra)) paste(g_extra, collapse = ", ") else "none"))
+rows_ok <- nrow(g) == GOLDEN_ROWS
+check("golden file is 500 pitches", rows_ok,
+      sprintf("%d rows, the fixture stores %d", nrow(g), GOLDEN_ROWS))
+typed <- function(nm) {
+  v <- g[[nm]]
+  if (nm == GOLDEN_LABEL) return(is.character(v) && length(v) > 0 && length(v) == nrow(g) &&
+                                   all(v %in% c("side", "top", "bot")))
+  is.numeric(v) && length(v) > 0 && length(v) == nrow(g) && all(is.finite(v))
 }
-check("golden file, 11 numeric columns to 1e-9", worst < 1e-9,
-      sprintf("max |delta| %.3e, worst column %s, %d rows", worst, worst_col, nrow(g)))
-check("golden file, nearest_edge to the letter",
-      identical(nearest_edge(gm$x, gm$z, g$sz_top, g$sz_bot), g$nearest_edge_mid),
-      sprintf("%d of %d rows agree", sum(nearest_edge(gm$x, gm$z, g$sz_top, g$sz_bot) ==
-                                           g$nearest_edge_mid), nrow(g)))
+g_untyped <- GOLDEN_COLUMNS[!vapply(GOLDEN_COLUMNS, typed, logical(1))]
+types_ok <- !length(g_untyped)
+check("golden file columns are non-empty and typed", types_ok,
+      sprintf("%d of %d columns numeric and finite (nearest_edge_mid: side, top or bot) in every row; failing: %s",
+              length(GOLDEN_COLUMNS) - length(g_untyped), length(GOLDEN_COLUMNS),
+              if (types_ok) "none" else paste(g_untyped, collapse = ", ")))
+if (cols_ok && rows_ok && types_ok) {
+  gm <- reproject(g$plate_x, g$plate_z, g$vx0, g$vy0, g$vz0, g$ax, g$ay, g$az,
+                  Y_FRONT_FT, Y_MID_FT)
+  gb <- reproject(gm$x, gm$z, g$vx0, g$vy0, g$vz0, g$ax, g$ay, g$az, Y_MID_FT, Y_FRONT_FT)
+  gold <- list(
+    t_front      = t_at_y(Y_FRONT_FT, g$vy0, g$ay),
+    t_mid        = t_at_y(Y_MID_FT, g$vy0, g$ay),
+    x_mid        = gm$x, z_mid = gm$z,
+    x_back_front = gb$x, z_back_front = gb$z,
+    abs_top_ft   = abs_top_ft(g$h_in_from_sz_top),
+    abs_bot_ft   = abs_bot_ft(g$h_in_from_sz_top),
+    edge_in_front = signed_edge_in(g$plate_x, g$plate_z, g$sz_top, g$sz_bot),
+    edge_in_mid   = signed_edge_in(gm$x, gm$z, g$sz_top, g$sz_bot),
+    z_norm_mid    = z_norm(gm$z, g$h_in_from_sz_top))
+  stopifnot(setequal(names(gold), GOLDEN_OUTPUTS))
+  deltas <- vapply(GOLDEN_OUTPUTS, function(nm) {
+    stopifnot(length(gold[[nm]]) == nrow(g))
+    max(abs(gold[[nm]] - g[[nm]]))
+  }, numeric(1))
+  worst_col <- names(deltas)[which.max(deltas)]
+  check("golden file, 11 numeric columns to 1e-9", all(deltas < 1e-9),
+        sprintf("max |delta| %.3e, worst column %s, %d of %d columns compared over %d rows",
+                max(deltas), worst_col, length(deltas), length(GOLDEN_OUTPUTS), nrow(g)))
+  ne <- nearest_edge(gm$x, gm$z, g$sz_top, g$sz_bot)
+  check("golden file, nearest_edge to the letter", identical(ne, g[[GOLDEN_LABEL]]),
+        sprintf("%d of %d rows agree", sum(ne == g[[GOLDEN_LABEL]]), nrow(g)))
+} else {
+  why <- "not compared: the fixture failed a shape check above, so no column is read by name"
+  check("golden file, 11 numeric columns to 1e-9", FALSE, why)
+  check("golden file, nearest_edge to the letter", FALSE, why)
+}
 
 ## ===========================================================================
 ## 7. The Python twin on 100,000 rows
