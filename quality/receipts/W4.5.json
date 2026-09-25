@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript R/ch2/01_challenge_frame.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch2/01_challenge_frame.R",
+  "duration_s": 7,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W4.5.log",
+  "owner": "W4",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W4.5",
+  "timestamp_madrid": "2026-09-25 16:57:50 CEST",
+  "title": "The challenge frame, data/interim/ch2/challenges.parquet"
+}

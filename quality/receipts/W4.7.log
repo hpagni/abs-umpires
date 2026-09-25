@@ -1,0 +1,45 @@
+PASS run from the repository root -- /Users/hudsonpagni/sports-project
+PASS input present -- data/interim/ch2/challenges.parquet
+PASS input present -- warehouse/abs.duckdb
+PASS frame carries the w45_m1_excluded list -- m,edge_dist_calc,edge_dist_rederived,edge_side,plate_x,plate_z,sz_top,sz_bot,reasonable_attempt,sz_challenge_prob,sz_challenge_runs,runs_at_stake_z,original_is_strike
+PASS the read holds no excluded column and not the outcome
+PASS MLB 2026 open challenges -- 10167 rows
+PASS warehouse attached read-only -- warehouse/abs.duckdb
+PASS token and umpire join is one row per challenge -- 10167 rows
+PASS tokens found for every challenge -- 0 missing
+PASS plate umpire found for every challenge -- 0 missing
+PASS no missing value in the design
+RECORD design: N 10167; levels challenger_id 652, opponent_id 589, pitcher_id 743, ump_id 91, team_id 30
+RECORD challengers with >= 20 challenges: 133
+PASS [probit] 1,000 prior draws -- 1000
+PASS [probit] one challenger effect per level -- 652 columns
+PASS [probit] brms and direct Monte Carlo agree within 0.04 -- largest difference 0.0134
+RECORD [probit] league overturn rate: median 0.4950, 95% interval [0.0772, 0.9174]
+RECORD [probit] between-challenger SD: median 0.0322, q90 0.1413 (full q90 0.2580, raw20 q90 0.1834)
+RECORD [probit] sd_challenger prior draws: mean 0.2549, q90 0.5638
+RECORD [probit] sampler: 0 divergent, 0 treedepth hits, max R-hat 1.0125, min ess_bulk 623, min ess_tail 358, <elapsed> s
+PASS [probit] gate 1, league overturn rate -- 95% interval [0.0772, 0.9174] must cover [0.10, 0.90]; median 0.4950 must be in [0.35, 0.65]
+PASS [probit] gate 2, between-challenger SD -- q90 0.1413 must be below 0.30
+PASS [probit] sampler, 0 divergent transitions -- 0
+PASS [logit] 1,000 prior draws -- 1000
+PASS [logit] one challenger effect per level -- 652 columns
+PASS [logit] brms and direct Monte Carlo agree within 0.04 -- largest difference 0.0105
+RECORD [logit] league overturn rate: median 0.4988, 95% interval [0.1204, 0.8757]
+RECORD [logit] between-challenger SD: median 0.0295, q90 0.1045 (full q90 0.2204, raw20 q90 0.1604)
+RECORD [logit] sd_challenger prior draws: mean 0.2549, q90 0.5638
+RECORD [logit] sampler: 0 divergent, 0 treedepth hits, max R-hat 1.0125, min ess_bulk 623, min ess_tail 358, <elapsed> s
+RECORD SENS-W4.7-LOGIT [logit] gate 1, not gated: does not hold -- 95% interval [0.1204, 0.8757] must cover [0.10, 0.90]; median 0.4988 must be in [0.35, 0.65]
+RECORD SENS-W4.7-LOGIT [logit] gate 2, not gated: holds -- q90 0.1045 must be below 0.30
+PASS [logit] sampler, 0 divergent transitions -- 0
+RECORD SENS-W4.7-LOGIT logit gate 1 interval: [0.1204, 0.8757], short of [0.10, 0.90] by 0.0204 at the lower tail and 0.0243 at the upper tail
+PASS prior_predictive.json present -- out/ch2/log/prior_predictive.json
+PASS the file and the rerun hold the same fields -- 6242 vs 6242
+PASS every number in the file equals the rerun to 1e-6
+PASS every string in the file equals the rerun
+PASS the file's verdict is PASS -- PASS
+PASS no provenance.json under out/ch2
+RECORD MT-01 Chapter 2 verdict: PASS
+W4.7 check: 0 FAIL, wall 33.0 s
+GD-04: 0 violation(s) in R/ch2/03_prior_predictive.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
