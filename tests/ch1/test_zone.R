@@ -53,7 +53,7 @@
 # if one is added or one leaves. The largest is 0.063473 ft at game 825000,
 # at-bat 31, pitch 3, the W2.15 coordinate artefact, where the CSV's own
 # plate_x/plate_z miss its trajectory. The other 71 are on the API side, largest
-# 0.001537 ft. What the bar should be is a pending decision, not settled here.
+# 0.001537 ft. What the bar should be is settled under DECISIONS.md D-P4-03 (bar kept at 0.0011 ft; 72 residuals pinned by identity)
 #
 # THE POPULATION OF UT-13. sz_top*12/0.535 == sz_bot*12/0.27 to 1e-6 in is read
 # over every pitch of every open 2026 day in ABS games. An ABS game carries the
