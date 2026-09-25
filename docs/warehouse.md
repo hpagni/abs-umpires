@@ -181,7 +181,7 @@ home-plate umpire of that same game.
 
 "Model code reads only the `v_*_open` views." The checker reads every file under
 `R/`, `sql/`, `notebooks/`, `app/`, `src/absump/ch1/`, `src/absump/ch2/` and
-`src/absump/ch3/`, and fails on a read that reaches a contracted fact table by
+`src/absump/ch3/`. It fails on a read that reaches a contracted fact table by
 name unless the same statement restricts it to the open label. `dbt/` is not on
 that list, because dbt is what builds the tables. Measured 2026-09-24: 4 files on
 that surface, 0 direct reads. The surface is nearly empty because the chapter

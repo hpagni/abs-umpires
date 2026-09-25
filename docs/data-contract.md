@@ -46,8 +46,8 @@ bytes from a host, it calls `absump_http_get()`; it does not call `httr2`,
 
 `ops/lint_http.sh`, written in W1.7, greps `src/`, `R/`, `tools/` and
 `notebooks/` for the request idioms of both languages
-(`requests.`, `httpx.get`, `httpx.Client`, `urllib`, `curl `, `httr2::request`)
-and exits 1 on any hit whose path is not `src/absump/http.py` or
+(`requests.`, `httpx.get`, `httpx.Client`, `urllib`, `curl `, `httr2::request`).
+It exits 1 on any hit whose path is not `src/absump/http.py` or
 `R/lib/http.R`. W2.3 wires that script into `ops/lint.sh`, which is the body of
 the `lint` target in the Makefile, so `make lint` fails on a second call site.
 The wiring is hard: if `ops/lint_http.sh` is missing, `ops/lint.sh` fails rather
@@ -65,5 +65,5 @@ monthly manual check of the CSAS 2027 conference page for its announced topic.
 That is an owner's read of a web page, not a data pull: nothing it returns
 enters `data/`, the warehouse or any model. If that check is ever automated, or
 if any other shell script needs bytes from a host, it calls the Python client
-through `uv run` rather than `curl`, or the linter's scan list grows to cover
-it. Recorded here so the gap is known rather than discovered.
+through `uv run` rather than `curl`. Otherwise the linter's scan list grows to
+cover it. Recorded here so the gap is known rather than discovered.

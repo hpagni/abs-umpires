@@ -97,13 +97,20 @@ that rewrites `entries` wholesale has to carry both sets forward, or both steps
 have to be re-run after it.
 
 What `--check` fails on when the warehouse and the reconciliation report are on
-disk: a feed stored after the last open day, an extraction that does not cover
-every stored feed, a record difference between the challenge table and the
-`gameData` tallies, a game that does not reconcile, a non-MJ review in the
-challenge fact, an unresolved or unmatched challenge, a challenge with no
-reconstructed original call, an overturn count that is not the sum of
-`usedSuccessful`, a modal starting allotment other than two, and either published
-artifact drifting from the data. On a clean clone with no datum on disk it gates
+disk:
+
+- a feed stored after the last open day;
+- an extraction that does not cover every stored feed;
+- a record difference between the challenge table and the `gameData` tallies;
+- a game that does not reconcile;
+- a non-MJ review in the challenge fact;
+- an unresolved or unmatched challenge;
+- a challenge with no reconstructed original call;
+- an overturn count that is not the sum of `usedSuccessful`;
+- a modal starting allotment other than two;
+- either published artifact drifting from the data.
+
+On a clean clone with no datum on disk it gates
 the committed ledger against the committed status block instead, so the step
 still proves itself there.
 

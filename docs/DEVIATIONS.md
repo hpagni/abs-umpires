@@ -9,7 +9,7 @@ Status values: OPEN (not closed yet), CLOSED (with the date and what closed it).
 
 ---
 
-## DEV-01 — W1.16: the CI workflow files are parked at `ops/ci-pending/`, not `.github/workflows/`
+## DEV-01 (W1.16): the CI workflow files are parked at `ops/ci-pending/`, not `.github/workflows/`
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Owner action outstanding.
 
@@ -17,8 +17,8 @@ SOP W1.16 puts `ci.yml` and `seal-guard.yml` at `.github/workflows/`. Both files
 and validated, but they live at `ops/ci-pending/` and `.github/` is absent from the tree.
 
 Reason. The GitHub token on the build machine carries `gist, read:org, repo`. GitHub rejects
-any push that adds or updates a path under `.github/workflows/` without the `workflow` scope,
-and it applies that rule to every path under the directory, not only to `.yml` files, so even
+any push that adds or updates a path under `.github/workflows/` without the `workflow` scope.
+It applies that rule to every path under the directory, not only to `.yml` files. So even
 a `.gitkeep` there blocks the first push of an otherwise ordinary commit. Granting the scope
 means `gh auth refresh`, which is interactive: a one-time device code and a browser
 confirmation only the account owner can give. This fleet runs unattended and is forbidden
@@ -41,7 +41,7 @@ nothing to do with CI. Editing the registered verify in `quality/steps.yml` to p
 parked paths was rejected too: the registration describes the step's finished state, and
 changing it would hide the deviation instead of recording it.
 
-## DEV-02 — W1.3: the `gh auth refresh` and the proof push are deferred to the owner
+## DEV-02 (W1.3): the `gh auth refresh` and the proof push are deferred to the owner
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Owner action outstanding.
 
@@ -60,7 +60,7 @@ exits 0 unedited, and `gh api repos/hpagni/abs-umpires/contents/.github/workflow
 
 Evidence: `logs/evidence/W1.3.log`.
 
-## DEV-03 — W1.16 and W1.3 receipts carry `PENDING-OWNER`, a status the receipt writer cannot emit
+## DEV-03: W1.16 and W1.3 receipts carry `PENDING-OWNER`, a status the receipt writer cannot emit
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN.
 
@@ -85,7 +85,7 @@ action in the same log.
 
 ---
 
-## DEV-04 — W1.7 / W2.3: `ops/lint_http.sh` is a 37-rule table over eleven directories
+## DEV-04 (W1.7 / W2.3): `ops/lint_http.sh` is a 37-rule table over eleven directories
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -102,9 +102,9 @@ ten is not a gate. The SOP line has been edited in place to match, pre-tag. Evid
 **Amended R3 (2026-09-23).** The table is now **37 rules**, not 29, and the eight added are
 `PY-NETIMPORT`, `PY-CMDBUILD`, `SH-RAWNET`, `R-NETPKG`, `SQL-URI` and the widened
 `PY-URLLIB`, `SH-EXECVAR` and `R-CURLPKG`. Two of the rules also changed *shape*, which
-matters more than the count: a **file-scope conjunct** lets a rule fire when its two halves
+matters more than the count. A **file-scope conjunct** lets a rule fire when its two halves
 sit on different lines of one file, closing a URL hoisted into a variable
-(`PY-FETCHLIB`, `R-FETCHLIB`, `ANY-URLREAD`, `ANY-HTTPFS`, `PY-CMDBUILD`); and a
+(`PY-FETCHLIB`, `R-FETCHLIB`, `ANY-URLREAD`, `ANY-HTTPFS`, `PY-CMDBUILD`). A
 **morpheme family** replaces an enumerated list of library names with the network morpheme
 they share, closing a sibling library absent from the list (`urllib3`, `pycurl`, `httplib2`,
 `requests_html`). The design rule that follows: a new bypass is closed at its shape, never
@@ -113,7 +113,7 @@ by adding one more name to a list. The eleven scanned directories are unchanged.
 **Amended R4 (2026-09-23).** Both this entry and `sop/SOP-final.md` said 29 while the gate
 ran 37, for one whole round. The count is now pinned:
 `tests/unit/test_lint_http_bypasses.py::test_the_documented_rule_count_matches_the_gate`
-reads the number out of the linter's own banner and fails if either document disagrees, so
+reads the number out of the linter's own banner and fails if either document disagrees. So
 a rule added without moving the prose fails in the commit that adds it.
 
 **Two residual classes, recorded so they are not re-reported as defects.** First, a command
@@ -122,14 +122,14 @@ after the variable reference. Second, the allow-list residue: the morpheme famil
 raw-transport rules close what is named here, but a transport matching no morpheme and no
 family still passes. `ops/lint_http.sh` is a list of *shapes*, not a behavioural gate. The
 behavioural gate is `src/absump/http.py`, which refuses userinfo and every `@` spelling in a
-path, a query name, a query value and a header; a URL *fragment* (`#a@b.com`) is allowed
-because a fragment is never put on the wire, and the `&#64;` vector splits at `#` for the
+path, a query name, a query value and a header. A URL *fragment* (`#a@b.com`) is allowed
+because a fragment is never put on the wire. The `&#64;` vector splits at `#` for the
 same reason. Three further classes are undecidable for any grep table and are stated in the
-`ops/lint_http.sh` header: a URL that does not exist in the source, a request made inside a
+`ops/lint_http.sh` header. They are a URL that does not exist in the source, a request made inside a
 dependency, and whether a matched line ever runs. The behavioural backstop for all three is
 `data/raw/_manifest.csv`, one row per pull through `absump.http.get()`.
 
-## DEV-05 — W9.7 GD-04: the scan excludes `quality/receipts/` and `logs/`
+## DEV-05 (W9.7 GD-04): the scan excludes `quality/receipts/` and `logs/`
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -147,7 +147,7 @@ test is ever deleted the exclusion becomes a hole again and must go back to a fo
 filter. The SOP lines have been edited in place to match. Evidence:
 `logs/evidence/verify-guard-r2.log`.
 
-## DEV-06 — W9.7 GD-05 runs on the analysis surface, not repo-wide
+## DEV-06: W9.7 GD-05 runs on the analysis surface, not repo-wide
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -159,18 +159,18 @@ and on this file. The reads that matter happen on the analysis surface, and GD-0
 to 4 still cover the whole repository. The allowlist count stays two. The SOP line has been
 edited in place to match.
 
-## DEV-07 — W2.4: `make unseal` checks six conditions, not three
+## DEV-07 (W2.4): `make unseal` checks six conditions, not three
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
 SOP W2.4 (SOP-final.md:978) lists three preconditions. `ops/unseal.sh` checks six. The three
-added are pulled forward from phase 5: the shell variable set to its documented value, the
+added are pulled forward from phase 5. They are the shell variable set to its documented value, the
 tag readable on `origin` read back from the git host, and the local tag ref equal to the
 object on `origin`. With three conditions only, the door opens on four local commands and a
 tag no other reader can see, and the public `UNSEALED` line is written anyway. A failed request
 to the git host is a failed check, never a pass. The SOP line has been edited in place.
 
-## DEV-08 — W1.3 and W1.16 read `PENDING-OWNER` until the `workflow` scope is granted
+## DEV-08: W1.3 and W1.16 read `PENDING-OWNER` until the `workflow` scope is granted
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Owner action outstanding.
 
@@ -184,7 +184,7 @@ step, does not count it as `FAIL` or `MISSING`, and reports the count separately
 the status cannot spread. Closes when the scope is granted and both workflow files move to
 `.github/workflows/`. See DEV-01, DEV-02 and DEV-03.
 
-## DEV-09 — W9.3: UT-20 exempts eleven paths the one cached real feed cannot attest
+## DEV-09 (W9.3): UT-20 exempts eleven paths the one cached real feed cannot attest
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
 
@@ -207,7 +207,7 @@ now walked in full, which is a stronger comparison. Boxscore player maps keyed `
 values, not shape, and now collapse to `ID#` on both sides. UT-20 also checks
 `aaa_feed.json` as well as `mlb_feed.json`.
 
-## DEV-10 — W1.2: `.github/workflows/` is not in the tracked-directory tree
+## DEV-10 (W1.2): `.github/workflows/` is not in the tracked-directory tree
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN, with DEV-01. Pre-tag.
 
@@ -218,7 +218,7 @@ missing directory. It is replaced by `test_ci_is_either_wired_or_parked`, which 
 `README.md`. Nothing under `.github/` was touched. W1.3 and W1.16 read `PENDING-OWNER`
 because CI is parked, not because the layout is wrong.
 
-## DEV-11 — W1.2 no longer pins `HEAD` to `refs/heads/main`
+## DEV-11: W1.2 no longer pins `HEAD` to `refs/heads/main`
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -229,7 +229,7 @@ the branch the fleet is built on. The assertions are now that a local `main` exi
 descendant of it. That is what the model promises. It still fails on a diverged branch and
 on an unpushed `main`.
 
-## DEV-12 — `logs/env-setup.sh` moved to `ops/env-setup.sh`
+## DEV-12: `logs/env-setup.sh` moved to `ops/env-setup.sh`
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
 
@@ -240,7 +240,7 @@ moved with a plain `mv`. It now sits in `ops/`, which `ops/lint_http.sh` scans. 
 allowed call sites. They install a toolchain; they do not fetch data. The deviation is that
 `make lint-http` is red at rest until the exemption is decided. Owner item O-G2.
 
-## DEV-13 — `tools/comms/export_numbers.py` was not created
+## DEV-13: `tools/comms/export_numbers.py` was not created
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
 
@@ -250,7 +250,7 @@ to be created if the SOP named it. The SOP does not name it, so nothing was crea
 `docs/numbers.json` records the R script as its generator. Moving the generator to Python
 changes W7.42's ordering as well, so it is an owner decision, not a drift.
 
-## DEV-14 — eight seeded prior-art numbers are held back
+## DEV-14: eight seeded prior-art numbers are held back
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN. Pre-tag.
 
@@ -260,13 +260,13 @@ read date. They are listed in a comment at the head of the file and are held bac
 than asserted. WR-07 flags any of them that appears in prose, which is the intended failure.
 Closes when each value has a source and a read date, or is dropped.
 
-## DEV-15 — W1.2 no longer asserts that an ignored directory exists on disk
+## DEV-15: W1.2 no longer asserts that an ignored directory exists on disk
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
-Five directories in the SOP section 2.1 tree cannot exist in a clone of `origin/main`:
-`.github/workflows` (the token carries no workflow scope, so the two workflows are parked at
-`ops/ci-pending/`, DEV-04 and DEV-10), and `warehouse`, `data/raw`, `data/interim` and
+Five directories in the SOP section 2.1 tree cannot exist in a clone of `origin/main`.
+One is `.github/workflows` (the token carries no workflow scope, so the two workflows are parked at
+`ops/ci-pending/`, DEV-04 and DEV-10). The rest are `warehouse`, `data/raw`, `data/interim` and
 `data/marts` (excluded by `.gitignore`, and the publish policy forbids anything under
 `data/` on the public remote). W1.2 as registered required both that the tree be published
 and that these directories exist, and a clone cannot satisfy both.
@@ -274,11 +274,11 @@ and that these directories exist, and a clone cannot satisfy both.
 `test_directory_exists` now covers the **tracked half** only, every entry of which carries a
 tracked `.gitkeep`; the ignored half is held by `test_ignored_directory_is_ignored`, which
 asserts the `.gitignore` rule rather than the filesystem. This is a visible narrowing of a
-registered check and is recorded as one: what is no longer asserted is existence on disk,
+registered check and is recorded as one. What is no longer asserted is existence on disk,
 and what is asserted instead is that the directory is still ignored. An ignored directory
 that stopped being ignored still fails W1.2, which is the failure that would actually matter.
 
-## DEV-16 — the W1.2 ignore checks ask through a probe path inside the directory
+## DEV-16: the W1.2 ignore checks ask through a probe path inside the directory
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -289,7 +289,7 @@ now ask `git check-ignore -q <dir>/.ignore-probe`, which matches the same rule a
 identically in a clone and on a working machine. The one-call multi-path form the SOP names
 is kept; only the paths handed to it changed.
 
-## DEV-17 — W1.2's branch assertion is anchored on `origin/main`
+## DEV-17: W1.2's branch assertion is anchored on `origin/main`
 
 Raised 2026-09-23 (Europe/Madrid). Status: CLOSED by the change itself. Pre-tag.
 
@@ -298,23 +298,23 @@ round-2 form of the check failed there for a reason that says nothing about the 
 `origin/main` is now the anchor: HEAD must be its tip or a descendant, and a local `main`,
 when one exists, must agree with it. This supersedes the narrower DEV-11.
 
-## DEV-18 — the declared limits of the GD-04 static scan, and where each is covered
+## DEV-18: the declared limits of the GD-04 static scan, and where each is covered
 
 Raised 2026-09-23 (Europe/Madrid). Status: OPEN by design (a standing limit). Pre-tag.
 
 `DECISIONS.md` previously ruled that the static scan's limits were declared limits rather
 than departures from the SOP, so no DEVIATIONS entry was owed. That was correct on the
-merits and wrong on the audience, and round 4 reverses it: `docs/DEVIATIONS.md` is the
-document a reviewer and the SSAC methods appendix read, and a limit recorded only in a
+merits and wrong on the audience, and round 4 reverses it. `docs/DEVIATIONS.md` is the
+document a reviewer and the SSAC methods appendix read. A limit recorded only in a
 decisions log is a limit a reviewer is unlikely to reach. The same list is in the
 `tests/guard/gd04_scan.py`
 header; this entry is the copy a reader will actually reach.
 
-**GD-04 is a detection layer, not the containment boundary.** Containment is the seal: the
+**GD-04 is a detection layer, not the containment boundary.** Containment is the seal. The
 held-out rows sit in an encrypted partition, a deliberate read must run `ops/unseal.sh`,
 which is irreversible and six-gated, and GD-10 pairs every `UNSEALED` line to a receipt
-`ops/unseal.sh` itself writes. The scan's bounded claim is that it catches the *accident* --
-a chapter reaching past the boundary day by habit -- and every evasion class ever
+`ops/unseal.sh` itself writes. The scan's bounded claim is that it catches the *accident*:
+a chapter reaching past the boundary day by habit. It also catches every evasion class ever
 demonstrated against it, at file and line, before the commit lands. It does not claim
 exhaustiveness against an author who already holds the key, and any wording that implied
 otherwise would be the dishonest part.
@@ -324,8 +324,8 @@ What it does not catch, each with the layer that does:
 1. **A held-out day written with no comparison, outside the analysis surface.** Rule 5 is
    surface-only *on purpose*. Off the surface the same spelling is a receipt stamp
    (`quality/steps.yml`), a tag message (`ops/preregister.sh`), a dbt target
-   (`dbt/profiles.yml.example`) or the seal module doing its job (`src/absump/paths.py`), and
-   a rule that cried wolf there would be switched off within a week. Note the asymmetry
+   (`dbt/profiles.yml.example`) or the seal module doing its job (`src/absump/paths.py`).
+   A rule that cried wolf there would be switched off within a week. Note the asymmetry
    deliberately: `scripts/` **is** on the analysis surface and `ops/` is **not**. Do not
    "fix" this by adding `ops/` and then silencing the resulting noise. What actually harms
    is the *read*, and rule 6c catches a read of the partition by path everywhere, `ops/`
@@ -340,8 +340,8 @@ What it does not catch, each with the layer that does:
    does not flag itself, and it cannot ban ordinal arithmetic without flagging itself. The
    decoder reads written ordinals and `\xNN`, `\uNNNN` and octal escapes, not expressions.
 5. **A query assembled across several lines through variables the taint pass does not
-   model**; a jinja `~` concatenation of a *fact table* name (the label and the view are
-   tracked, a table name is not); and a base64 blob abutting an identifier with no quote
+   model.** The item also covers a jinja `~` concatenation of a *fact table* name (the label and the view are
+   tracked, a table name is not). It also covers a base64 blob abutting an identifier with no quote
    between them, where `redact_blobs` eats the leading character.
 6. **A datum other than a date copied into a fixture as data** -- a bare `gamePk` is not a
    spelling any rule can read. Rule 5 reads the date; nothing reads the identifier.
@@ -349,9 +349,9 @@ What it does not catch, each with the layer that does:
    `research/`, which D-03 keeps out of git entirely. Covered by: the seal, and
    `data/raw/_manifest.csv`.
 8. **A second unqualified fact-table read added to a file that already declares the rule-3
-   scope.** The scope added in phase 03 is read at *file* scope: a dbt model whose own output
+   scope.** The scope added in phase 03 is read at *file* scope. It covers a dbt model whose own output
    is a fact table, a dbt test whose output is an assertion about one, and a pack or ledger
-   that counts every row by design declare themselves with a `GD-04-EXEMPT` marker in their
+   that counts every row by design. Each declares itself with a `GD-04-EXEMPT` marker in its
    header, and the scanner grants it only where it independently recognises the site. A new
    read added later to one of those files is covered by the marker already there, without
    anyone declaring it again. It cannot spread: the marker grants nothing in the chapters, the
@@ -361,19 +361,19 @@ What it does not catch, each with the layer that does:
    a row past the boundary at all.
 9. **A query assembled by concatenating a `FROM` in one string onto a table name in the
    next.** Rule 3 no longer reads a `FROM` or a `JOIN` as governing a relation named across a
-   string terminator or a new mapping key, because in this repository that span is prose
-   beside a provenance label -- `reconstructed from call_original` in one JSON field and the
-   relation in the next -- and four such fields were the only thing the rule found there.
+   string terminator or a new mapping key. The reason is that in this repository that span is prose
+   beside a provenance label, with `reconstructed from call_original` in one JSON field and the
+   relation in the next. Four such fields were the only thing the rule found there.
    `ref(`, `source(`, `read_parquet` and `.table()` keep the loose span. Covered by: the taint
    pass, which follows a table name through a variable, and review.
 
 **The stopping rule.** The scan is closed for a phase when four conditions hold, each one
-checkable rather than aspirational: (1) the seal layer stands under direct attack, re-proved
-each round; (2) every evasion demonstrated to date is caught with file and line *and* is
+checkable rather than aspirational. (1) The seal layer stands under direct attack, re-proved
+each round. (2) Every evasion demonstrated to date is caught with file and line *and* is
 re-planted as a permanent check in GD-09 and `tests/guard/redteam_run.sh`, so a repair cannot
-silently regress; (3) every known miss is written down here and in the scanner header, each
-named with the layer that covers it; and (4) a full, time-boxed red-team budget, run in an
-isolated clone, yields no miss in a **new class** -- a new spelling inside a class already
+silently regress. (3) Every known miss is written down here and in the scanner header, each
+named with the layer that covers it. (4) A full, time-boxed red-team budget, run in an
+isolated clone, yields no miss in a **new class**. A new spelling inside a class already
 declared does not reopen the scanner. Two consecutive no-new-class rounds close it for the
 phase. The honest finish line is "no evasion in the pinned corpus and no new class since
 round N", never "no evasion exists". Standing obligation: the red team runs again at each
@@ -400,10 +400,10 @@ does.
 
 The repair is in two halves, both needed. The trailing-whitespace hook excludes
 `^renv/activate\.R$`, because renv owns that file's formatting and will regenerate it
-whatever the hook does; and the file is committed as renv writes it, so restore is a true
+whatever the hook does. And the file is committed as renv writes it, so restore is a true
 no-op and the tree stays clean. `tests/unit/test_precommit_config.py` pins the exclude, its
 uniqueness, and the whitespace in the tracked file. The general lesson for later phases: a
-gate that repairs what it measures reports the repaired state, so a one-shot failure in a
+gate that repairs what it measures reports the repaired state. So a one-shot failure in a
 fresh clone is invisible to any number of repeat runs on a warm one. Fresh-clone proving,
 not repeat proving, is what tests determinism.
 
@@ -509,19 +509,19 @@ Raised 2026-09-24 (Europe/Madrid). Status: CLOSED by this entry.
 The SOP names six games for the reconciliation contract sample and four decisive cases
 for the original-call reconstruction. Four of the six sample games (753191, 752975,
 752300, 780583) and three of the four decisive cases (780583 twice, 753191 once) cite
-games whose feed JSON is not on this machine and cannot be pulled under the seal or the
+games whose feed JSON is not on this machine. They cannot be pulled under the seal or the
 request budget, so neither check could be run as written.
 
 Both were re-drawn from the corpus that is on disk, keeping the shape of the assertion.
 The sample is now 824466 3=2+1, 822925 2=1+1, 823334 11=6+5, 824599 12=10+2, 825008
 12=9+3, 824998 16=9+7, all MLB 2026, all delta 0 in challenge_reconciliation.csv. The
 decisive cases are now 822682 ab 56 p 7, 822688 ab 51 p 6, 822683 ab 68 p 2 and the
-retained 822925 ab 8 p 3, all four re-run against feed_challenge and all four agreeing
+retained 822925 ab 8 p 3. All four were re-run against feed_challenge, and all four agree
 with call_original = NOT call_final when is_overturned. Every replacement is dated
 before the 2026-09-22 seal.
 
 One replacement earns its place beyond the substitution. 822683 ab 68 is an overturned
-MJ challenge in the middle of an at-bat that ends field_out, and its result description
+MJ challenge in the middle of an at-bat that ends field_out. Its result description
 names no challenge at all, so it is a stronger statement of the never-text-match rule
 than the three overturned descriptions it replaces.
 
@@ -548,7 +548,7 @@ Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed by the feed pulls under 
 
 The join over mlb 2022..2025 and aaa 2023..2025 produced no game rows, because MLB
 2022-2025 have a Statcast side and no feed side and AAA has neither side. Before today
-the join printed a line and left those seasons unmentioned in the report, so a reader
+the join printed a line and left those seasons unmentioned in the report. So a reader
 could not tell a season that had been requested and had nothing to join from a season
 that was never in the request at all. The join now writes one coverage row per such level-season, with
 game_pk empty, every count zero and the reason in status: no_feed_pitch, no_statcast_pitch
@@ -616,7 +616,7 @@ position-player lob at 40 mph takes longer than 0.60 s to reach the plate and is
 tracking defect.
 
 The clause now reads as scoped to the analysis sample after W3.7 excludes position-player
-pitching, with the P0 count of 2,379 stated beside it so the gate cannot be read as zero
+pitching. The P0 count of 2,379 is stated beside it, so the gate cannot be read as zero
 over the raw corpus. What closes it: W3.7 publishes the exclusion, and the count inside the
 analysis sample is then measured and written into the DT-11 row.
 
@@ -639,8 +639,8 @@ is unchanged. What these 1,144 rows are is an owner question, recorded in DECISI
 Raised 2026-09-24 (Europe/Madrid). Status: OPEN. Closed when the 2026 question is settled.
 
 DT-13 compared `sz_top*12/0.535` against `sz_bot*12/0.27` at a tolerance of 1e-6 in with no
-season qualifier. It cannot hold that way. Through 2025 the zone is operator-set per pitch and
-the two expressions are not two readings of one height: the worst disagreement over 2022-2025
+season qualifier. It cannot hold that way. Through 2025 the zone is operator-set per pitch, and
+the two expressions are not two readings of one height. The worst disagreement over 2022-2025
 is 39.35 in, which is the rule not applying rather than a failure. The gate is now written as
 2026 and AAA 2023 onward.
 
@@ -686,7 +686,7 @@ What was on disk for 2022 when this was raised is 69 days, 2022-04-07 to 2022-06
 two-month slice and not the season the SOP names.
 
 This matters to the pre-trend rather than to the headline. D-13's fork already turns on 2022
-coverage, and a partial season reads as low coverage for a reason that has nothing to do with
+coverage. A partial season reads as low coverage for a reason that has nothing to do with
 height back-linking, so the two causes have to be kept apart. What closed it: the rest of 2022
 was pulled. D-13's fork can now turn on 2022 coverage without a partial season confounding it,
 and the published numbers were re-measured over the whole 2022 lake in commit 8207301.
@@ -723,7 +723,7 @@ half and is fixed. `sweep()` now carries its refusals, and `main()` exits non-ze
 view fails to parse or when no view is captured. Proved by forcing a `ParseError` on every
 view, which exits 1.
 
-The parser now looks for `absData` three ways, loudest first: the W2.11 regex, a balanced JSON
+The parser now looks for `absData` three ways, loudest first. They are the W2.11 regex, a balanced JSON
 scan of an `absData` assignment, then any script block whose JSON holds an array of objects
 carrying `n_challenges`, `n_total_sample` or `player_name`. It accepts `leagueData` as either
 container. The 2026-09-24 shape is pinned by two trimmed HTML fixtures and eight tests, so a
@@ -765,8 +765,8 @@ reads 13,796 bytes, 58 rows, `pitches` to 8,832 and `rv_tot` to 8.13.
 
 Diagnosed without touching sealed per-pitch data. Every quantity grew, which a season-to-date
 aggregate can only do by adding games. The ABS leaderboard, the same host on the same night
-and an independent aggregate, says how many: batting sample 102,656 to 103,304, a gain of 648,
-and fielding 231,223 to 232,743, a gain of 1,520. At the baseline's own per-game rates of 43.8
+and an independent aggregate, says how many. The batting sample went from 102,656 to 103,304, a gain of 648,
+and fielding from 231,223 to 232,743, a gain of 1,520. At the baseline's own per-game rates of 43.8
 and 98.7 over 2,343 final games, that is 14.8 and 15.4 games. Fifteen regular-season games
 were played on 2026-09-22, 16 scheduled with one postponed. The sixteen games of 2026-09-23
 were still in progress in the United States when the pull ran at 01:47 UTC on 2026-09-24. Both
@@ -779,9 +779,9 @@ aggregate pulled after 2026-09-21 is a sealed-set input.
 Implemented: seasons 2015-2025 are `static` and keep byte-exact pinning, with bytes, rows,
 sha256, `pitches` minimum and maximum and `rv_tot` minimum and maximum recorded in
 `contracts/savant_framing.yml`, measured once and never again. An unmeasured static season is
-a failing clause rather than a silent pass. Season 2026 is `live`: structure is checked, for
+a failing clause rather than a silent pass. Season 2026 is `live`. Its structure is checked, for
 the BOM, the 21 columns in order, rectangularity, numeric types, non-emptiness and
-qualified-only rows, and the exact figures are reported rather than asserted, under a
+qualified-only rows. The exact figures are reported rather than asserted, under a
 `live_not_pinned` clause that prints both measurements side by side. One thing is still
 asserted for 2026, `live_monotone`: a season-to-date aggregate may grow and may not shrink, so
 a truncated or swapped file still fails. The 2026 pull is marked as sealed-contaminated in the
@@ -824,8 +824,8 @@ coordinates do not reproduce, on two plays out of 19,469 distinct.
 The tolerance was **not** widened. Widening 1e-6 to 0.77 would have retired the check for every
 row in the corpus to accommodate two, which is exactly the move DEV-35 warns a later reader
 against. The two `play_id`s are named in `contracts/savant_drawer.yml` under
-`facts.edge.known_exceptions` with their measured errors, `check_edge` skips only those named
-ids and holds every other row to 1e-6 in, and the observed line still prints
+`facts.edge.known_exceptions` with their measured errors. `check_edge` skips only those named
+ids and holds every other row to 1e-6 in. The observed line still prints
 `(2 named exceptions)` so the breach stays visible in the receipt rather than disappearing into
 a relaxed number. The contract's older `facts.edge.max_abs_error_in: 0.0` / `rows_checked:
 1276` remain as written: they are a true statement about the 1,276-row sample W4.2 derived them
@@ -855,7 +855,7 @@ is 1.1312 s, which is outside (0.30, 0.60).
 Those 123 are real pitches, not defects: eephus pitches and position players pitching. A
 50 mph lob genuinely takes longer than 0.60 s to cover 60 feet, and the geometry is not
 wrong for them. Every other UT-11 clause holds over all 39,272 with no filter. The closed
-form matches a brute-force smallest-positive-root solve to 8.882e-16 s, `t_mid > t_front` is
+form matches a brute-force smallest-positive-root solve to 8.882e-16 s. `t_mid > t_front` is
 violated by 0 of 39,272, and `dz < 0` where the vertical velocity at the plate is negative
 is violated by 0 of 39,271. The architect had already written the same finding on DT-11:
 the physics is correct, and the threshold is what is wrong.
@@ -1015,9 +1015,240 @@ Stated limits, recorded and not fixed. Both come from the W3.3 fix-2 agent.
    five fixed days. Over every open 2026 day the mid-plane direct integration fails on 1 of
    688,686 pitches. That pitch is 825000/31/3 at 0.063625 ft, the W2.15 artefact that DEV-35
    and D-P4-03 name. A RECORD line prints that count on every run.
+   DEV-45 closes this limit: the clause now reads every open 2026 day and pins that pitch.
 
 What would reopen it: a fifth game without the marker, which fails the exact-set check, or
 a pitch in an ABS game at 1e-6 in or more.
 
 Evidence: `logs/evidence/W3.3-fix2.log`; the verifier's sweep,
 `logs/evidence/W3.3.verify-geometry.log`.
+
+## DEV-45: UT-11, the 2026 mid-plane clause is read over every open 2026 day, and 825000/31/3 is pinned by identity
+
+Raised 2026-09-25 (Europe/Madrid) by the W3.3 fix-3 agent. Status: CLOSED 2026-09-25 by this
+entry. Merged by the docs-merge lane under D-R0-03's delegation, not as an owner answer. The
+decision is D-P4-14.
+
+What the SOP said. UT-11's clause "2026 CSV reproduces at y = 8.5/12 (direct integration)"
+names a 5e-7 ft bar and no exception. The test read it on five fixed days, 22,604 pitches.
+
+What the data does. Over all 688,686 open 2026 pitches, on 178 days, exactly one reaches the
+bar: 825000/31/3 at 0.063625 ft. It is the W2.15 artefact that DEV-35 and D-P4-03 name, where
+the CSV's own `plate_x/plate_z` miss the CSV's own trajectory.
+
+What was changed. `tests/ch1/test_zone.R` reads the clause over every open 2026 day and pins
+825000/31/3 in `MID_ARTEFACTS`. A second miss fails the clause, and so does the pinned pitch
+leaving. The bar is not moved. The same fix adds a check that the D-14 module reproduces
+Savant's `edge_dist_calc` on 20,334 MLB 2026 drawer rows, max difference 5.773e-15 in. DEV-44's
+second stated limit is closed by this entry.
+
+What would reopen it: any change to the set of misses, which fails the test.
+
+Evidence: `logs/evidence/W3.3-fix3.log`; the verifier's findings R3 and R5,
+`logs/evidence/W3.3.verify-geometry.log`.
+
+## DEV-46: W4.7 and MT-01, the Chapter 2 prior-predictive verdict reads the probit arm, and the rule was narrowed after the draws
+
+Raised 2026-09-25 (Europe/Madrid) by the ch2-w47 lane. Status: CLOSED 2026-09-25 by this entry,
+with an owner override open (D-P4-15). Applied under D-R0-03's delegation, not as an owner
+answer.
+
+What the SOP said. MT-01 names the Chapter 2 gates as "the two gates in W4.7, on the probit
+scale". W4.7's gate 1 asks that the league overturn rate's 95% interval cover [0.10, 0.90], with the
+median in [0.35, 0.65].
+The lane's own rule, written before any draw, required both gates in both links.
+
+What the data does. The probit arm holds both gates: [0.0772, 0.9174], median 0.4950, gate 2
+q90 0.1413. The logit arm, the link W4.10 fits M1 on, misses gate 1: [0.12036, 0.875723], short
+by 0.02036 and 0.024277. Its median and gate 2 hold.
+
+What was changed. `R/ch2/03_prior_predictive.R` takes the verdict from the probit arm. The
+logit arm is published as sensitivity finding SENS-W4.7-LOGIT. No prior, seed, draw count or
+design changed, and the arms block of `out/ch2/log/prior_predictive.json` hashes identical. The
+rule was narrowed after the draws were seen, with no outcome read. This entry logs that.
+
+What would reopen it: the owner's override, which widens M1's Intercept prior and reruns W4.7.
+
+Evidence: `logs/evidence/W4.7.log`; `quality/receipts/W4.7.json`.
+
+## DEV-47: D-13, W3.4 and W3.5, roster height plus offset is primary in every season, and `<<N_CALLED>>` reports P0
+
+Raised 2026-09-25 (Europe/Madrid) by the docs-merge lane, from W6.5's finding F5. Status:
+CLOSED 2026-09-25 by this entry. It records the departure D-R0-02 (owner answer) makes, and
+D-P4-05 and D-P4-06 (applied defaults).
+
+What the SOP said. D-13 and W3.4 make the ABS-measured cohort the headline cohort, with roster
+height plus offset a robustness arm. If 2022 coverage is below 60% of called pitches, D-13 lets the roster arm
+become primary for the pre-trend. W3.5 names P1 the primary sample and the `<<N_CALLED>>`
+count.
+
+What was done instead. The 2022 coverage is 0.5934 of called pitches, below the trigger.
+D-R0-02 makes roster height plus offset primary in all five seasons, not only the pre-trend.
+The ABS-measured cohort is a pre-registered robustness arm. P0, which the primary cohort covers
+in full, is the primary sample, and `<<N_CALLED>>` reports it: 1,830,231 called pitches. P1 is
+1,487,927.
+
+What closes it: nothing further. The owner answered D-13 in D-R0-02, and DT-30's table triggers
+the same branch.
+
+## DEV-48: W3.4 and D-R0-02, the roster offset is calibrated separately outside the ABS-measured cohort, and a sign-agreement clause is added
+
+Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator, from the W3.4 stat verifier.
+Status: OPEN, OWNER-VISIBLE. Applied under D-R0-03's delegation, not as an owner answer. The
+decision is D-P4-04.
+
+What the SOP said. W3.4 and D-13 use one roster offset, measured in 2026 on batters who carry
+both heights. D-R0-02 set it at 0.0022 in, SD 0.2909 in, over 658 batters.
+
+What the data does. Inside the cohort, roster height is round(measured) for 658 of 658
+batters, so that calibration sees only rounding. Pre-ABS `sz_top` implies that listed heights
+outside the cohort run tall: +0.47, +0.26 and +0.28 in in 2022, 2023 and 2024, at SE 0.25, 0.27
+and 0.30. Age-adjusted, the figures are +0.39, +0.18 and +0.20 in.
+
+What is done instead. The offset is calibrated separately for the two groups. The non-cohort
+offset is pooled over 2022 to 2024 from the `sz_top` evidence, one value for every season. The
+pre-registration adds a clause: the ABS-measured-only arm must agree in sign with the primary
+on the buffer and ABS components, or the primary is reported as sensitive to the height
+cohort.
+
+What closes it: the pooled offset in `R/ch1/03_heights.R` and the clause in the
+pre-registration, both before the tag, or the owner's override.
+
+Evidence: `logs/evidence/W3.4.verify-stat.log`, sections G and I.
+
+## DEV-49: W3.5, the shadow band is read on the radius-adjusted signed edge distance, and the expected sizes are restated as measured
+
+Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator, from W6.5's finding F3. Status:
+OPEN until W3.5 rebuilds T1's band rows. Applied under D-R0-03's delegation, not as an owner
+answer. The decision is D-P4-09.
+
+What the SOP said. W3.5 expects the |d| ≤ 3 in shadow band to hold 27.7 to 28.7% of called
+pitches, with a called-strike rate of 66 to 72%. It expects about 1.20M P1 rows, and the 8 in
+band to hold 65.9 (2024), 66.9 (2025) and 64.8 (2026) percent of P0.
+
+What was done instead. The band is |d_signed_in| ≤ 3 in, the signed edge distance with the
+1.45 in radius taken off, on the harmonised zone. It holds 31.1% of 2026 called pitches (111,323
+of 358,461). Before 2026 it holds 29.48 to 30.13% of P0 rows. Its called-strike rate is 59.12,
+57.50 and 59.00 in 2022 to 2024. P1 is 1,487,927 rows. The 8 in band, still on the ball-centre
+`d`, holds 62.10, 63.35 and 65.31 percent of P0 in 2024 to 2026. The SOP text is left as the
+expectation of record, and this entry carries the measured values.
+
+What closes it: T1's band rows rebuilt on the new band by W3.5's lane.
+
+## DEV-50: DT-28 and CH1-A2, the bridge admits a bounded ambiguity of 40, the feed fallback is the route of record, and the canonical count is 10,168
+
+Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator. Status: CLOSED 2026-09-25 by
+this entry. Applied under D-R0-03's delegation, not as an owner answer. The decisions are
+D-P4-10 and D-P4-11.
+
+What the SOP said. DT-28 asks that every drawer challenge join exactly one Statcast row on
+(`game_pk`, `round(plate_X,2)`, `round(plate_Z,2)`): 100% of 10,167, 0 ambiguous, 0
+unmatched.
+
+What the data does. 10,167 of 10,167 match and 0 are unmatched, but 28 are ambiguous. The
+feed's `play_id` resolves all 28, and each pick is one of the key's candidates. The feed counts
+10,168 challenged pitches, one more than Savant: 825000:31:3.
+
+What was done instead. The key is unchanged, and the D-62 feed fallback is the route of record
+for the 28. `dbt/tests/assert_drawer_bridge_complete.sql`, `tests/data/test_join.py` and
+`tests/data/test_warehouse_pack.py` bound the ambiguity at 40, not 0. The canonical 2026 count
+is 10,168. The SOP's 10,167 stays the drawer's count, which DT-28 and CH1-A2 are about.
+
+What would reopen it: more than 40 ambiguous plays, or a fallback pick outside the key's
+candidates.
+
+Evidence: `quality/receipts/W3.6.log`; `quality/receipts/W6.4.log`.
+
+## DEV-51: CH1-A14, the balanced umpire panel counts home-plate games
+
+Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator. Status: CLOSED 2026-09-25 by
+this entry. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-12.
+
+What the SOP said. The panel is umpires with at least 15 games in all five seasons. No
+position is named.
+
+What was done instead. Games are counted at home plate: 62 umpires, 1,360,438 P0 rows. Counted
+at any position the panel would be 68 umpires and 1,459,135 rows.
+
+## DEV-52: DT-21 covers MLB 2026 challenges through 2026-09-21 until the seal opens
+
+Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator. Status: OPEN until fleet phase
+11 opens the seal. Applied under D-R0-03's delegation, not as an owner answer. The decision is
+D-P4-13.
+
+What the SOP said. DT-21 reads challenged MLB 2026 pitches, with no date limit.
+
+What was done instead. DT-21 reads the 10,168 challenged pitches from 2026-03-25 to
+2026-09-21: 10,164 agree overall (99.9607%) and 7,573 of 7,574 outside the band (99.9868%).
+Later challenges are sealed. W3.23 does not re-run DT-21, so the comment at
+`R/ch1/11_zone_gate.R` line 48 that says they join the gate there is to be struck by the lane
+that owns `R/ch1/`.
+
+What closes it: a DT-21 read over the whole season once the seal opens, or a DEVIATIONS entry
+that keeps it open-window only.
+
+## DEV-53: W3.5 and W3.7, a position player is judged by the role he held in the season he pitched
+
+Raised 2026-09-25 (Europe/Madrid) by the small-gates lane. Status: CLOSED 2026-09-25 by this
+entry. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-08.
+
+What the SOP said. W3.5 excludes pitches thrown by position players and names no rule for who
+counts as one.
+
+What was done instead. The role is the club's full-season roster for 2022 to 2025, the
+season's fielding record for 9 pitcher-seasons on no roster, and the people endpoint for 2026.
+The only change across 4,322 pitcher-seasons is Brett Phillips in 2022 and 2023. P0 falls from
+1,830,267 to 1,830,231 and P1 from 1,487,942 to 1,487,927.
+
+## DEV-54: W5.1 pins 3 of the 7 snapshot A files, and 4 are PENDING-LATER-PHASE
+
+Raised 2026-09-25 (Europe/Madrid) by the small-gates lane. Status: OPEN until snapshot B. Applied
+under D-R0-03's delegation, not as an owner answer. The decision is D-P4-20.
+
+What the SOP said. W5.1 downloads seven files of the upstream data release and pins them.
+
+What was done instead. Three are pinned, two of them equal to the SOP sha256 literals. The
+other four are upstream assets that upstream replaced on 2026-09-23, and no copy survives.
+`contracts/prior_art_snapshot_a.yml` registers them as PENDING-LATER-PHASE, and the verify
+prints one line for each.
+
+What closes it: the snapshot B re-pin in fleet phase 10, once the owner answers the seal
+question in D-P4-20.
+
+## DEV-55: W3.9 is DEFERRED-PENDING-AAA-PULL, with three measured shortfalls
+
+Raised 2026-09-25 (Europe/Madrid) by the small-gates lane. Status: OPEN until the AAA pull.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-21.
+
+What the SOP said. W3.9 classifies every AAA game by format. Its tests ask for a gap of at
+least 0.04 between the modes (S1), no challenge key on a full_abs game (S2), and a machine zone
+that does not move across seasons (S4).
+
+What was done instead. On a partial corpus (276 of 2,224 AAA 2023 games, 658 of 2,232 AAA 2024
+games, no AAA 2025), the verify passes while exactly S1, S2 and S4 fail. S1's gap is 0.0039
+against 0.04, S2 keys 3 of 351 full_abs games, and S4 spreads 35.77 sq in against 2. Any other
+failure fails the step, and a complete corpus ends the deferral. Nothing is waived.
+
+What closes it: the fleet phase 07 AAA pull, with S1, S2 and S4 passing or amended.
+
+## DEV-56: W7.8 treats the absent W7.42 script as PENDING-LATER-PHASE
+
+Raised 2026-09-25 (Europe/Madrid) by the small-gates lane. Status: OPEN until fleet phase 13.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-22.
+
+What was done instead. The W7.8 verify runs `tools/comms/check_all.sh` when it exists and
+requires "W7 ALL CHECKS PASS". While the file is absent it prints "PENDING-LATER-PHASE W7.42"
+and does not fail.
+
+What closes it: fleet phase 13 builds W7.42.
+
+## DEV-57: W7.2, WR-20's scope includes `docs/prereg/`
+
+Raised 2026-09-25 (Europe/Madrid) by the small-gates lane. Status: CLOSED 2026-09-25 by this
+entry. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-22.
+
+What the SOP said. The WR-20 path list names `PREREGISTRATION.md` only.
+
+What was done instead. Checklist rule 2 and `quality/checks/wr20.py` define the
+pre-registration as `PREREGISTRATION.md` plus `docs/prereg/`, and the W7.2 verify scans both.
+The reading is stricter than the SOP and finds 0 violations today.
