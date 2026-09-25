@@ -1,0 +1,61 @@
+RECORD  layout                                       lake /Users/hudsonpagni/sports-project/data/raw/statsapi/feed/sport=11; staging /Users/hudsonpagni/sports-project/data/staging/statsapi/feeds/sport11
+PASS    AAA schedule present                         /Users/hudsonpagni/sports-project/data/interim/schedule_game/level=aaa
+PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/ch1/tab/T5_aaa_formats.csv
+PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_regime_scan.csv
+PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_changeover.csv
+PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_format.csv
+RECORD  prereg-v1 tag                                absent: 2025 is not read for S4
+RECORD  schedule, Final regular-season games         2023: 2,224; 2024: 2,232; 2025: 2,232
+RECORD  feeds on disk                                2,229 in the lake, 665 in staging only
+PASS    every T5 game has a feed on disk             934 games in T5, 0 without a feed
+RECORD  feeds on disk that T5 does not list          1,960 (the corpus grew since the build; a build run takes them in)
+PASS    every feed on disk parses                    934 feeds
+RECORD  feeds left out, not Final regular season     0 (none)
+RECORD  coverage 2023                                276 of 2,224 Final games on disk, 2023-03-31 to 2023-07-18
+RECORD  coverage 2024                                658 of 2,232 Final games on disk, 2024-03-29 to 2024-05-30
+RECORD  coverage 2025                                0 of 2,232 Final games on disk
+RECORD  overturned MJ reviews with no pitch to flip  0
+PASS    T5_aaa_formats.csv matches a rebuild         110,823 bytes on disk
+PASS    aaa_regime_scan.csv matches a rebuild        45,227 bytes on disk
+PASS    aaa_changeover.csv matches a rebuild         657 bytes on disk
+PASS    aaa_format.csv matches a rebuild             997 bytes on disk
+RECORD  classes 2023 (no key / key)                  full_abs 50 / 0; human_called 226 / 0; unclassified 0 / 0
+RECORD  agree 2023 full_abs                          median 1.0000, 5th pct 0.9936, 95th pct 1.0000, range 0.9902 to 1.0000, 50 games
+RECORD  agree 2023 human_called                      median 0.9194, 5th pct 0.8709, 95th pct 0.9585, range 0.8125 to 0.9898, 226 games
+RECORD  pitches 2023                                 46,284 called, 46,036 with full kinematics, 46,036 scored (0 of them on the batter's machine zone because the feed zone is not a rule zone), 0 tracked and not scored
+RECORD  classes 2024 (no key / key)                  full_abs 298 / 3; human_called 10 / 347; unclassified 0 / 0
+RECORD  agree 2024 full_abs                          median 1.0000, 5th pct 0.9944, 95th pct 1.0000, range 0.9906 to 1.0000, 301 games
+RECORD  agree 2024 human_called                      median 0.9342, 5th pct 0.8930, 95th pct 0.9696, range 0.8424 to 0.9886, 357 games
+RECORD  pitches 2024                                 107,485 called, 107,483 with full kinematics, 107,483 scored (958 of them on the batter's machine zone because the feed zone is not a rule zone), 0 tracked and not scored
+RECORD  agree histogram, 0.01 bins from 0.80         0.80:0 0.81:1 0.82:2 0.83:1 0.84:1 0.85:5 0.86:5 0.87:10 0.88:22 0.89:48 0.90:43 0.91:78 0.92:84 0.93:100 0.94:82 0.95:59 0.96:18 0.97:14 0.98:10 0.99:351
+RECORD  S1 class medians                             human_called 0.9290, full_abs 1.0000, separation 0.0710
+RECORD  S1 games between human median + 0.04 and 0.99 25 (14 with the key, 11 without)
+FAIL    S1 widest empty gap between the modes >= 0.04 widest gap 0.0039, from 0.9750 to 0.9789, over 934 games
+FAIL    S2 no full_abs game carries the key          3 of 351 full_abs games carry it: 752780 (2024-05-04, agree 0.9933, 5 MJ, 0 overturned); 751719 (2024-05-18, agree 0.9906, 2 MJ, 1 overturned); 752168 (2024-05-19, agree 1.0000, 4 MJ, 0 overturned)
+PASS    S3 contract game 722770                      key FALSE (contract FALSE), MJ 0/0 (contract 0/0), class human_called, agree 0.9054, 74 scored, Friday
+PASS    S3 contract game 723056                      key FALSE (contract FALSE), MJ 0/0 (contract 0/0), class full_abs, agree 1.0000, 120 scored, Tuesday
+PENDING S3 contract game 752975                      feed not on disk
+PENDING S3 contract game 752300                      feed not on disk
+PENDING S3 contract game 753191                      feed not on disk
+PENDING S3 contract game 780583                      feed not on disk
+RECORD  S4 contour 2023                              399.95 sq in for a 6-ft batter over 50 games and 8,864 pitches; the published rule (top 51.0%) gives 399.78 sq in, residual +0.18; 1 empty cells within 2 in of the rule edge, 2 strikes outside the grid
+RECORD  edge rule on machine-day verdicts 2023       8,853 of 8,864 agree (99.8759%); outside the +/-0.5 in band 8,402 of 8,410 (99.9049%); 5 disagreements more than 2 in from the edge
+RECORD  S4 contour 2024                              435.72 sq in for a 6-ft batter over 298 games and 49,480 pitches; the published rule (top 53.5%) gives 435.60 sq in, residual +0.12; 0 empty cells within 2 in of the rule edge, 0 strikes outside the grid
+RECORD  edge rule on machine-day verdicts 2024       49,458 of 49,480 agree (99.9555%); outside the +/-0.5 in band 46,840 of 46,853 (99.9723%); 8 disagreements more than 2 in from the edge
+RECORD  S4 residual against the published rule       spread 0.05 sq in across 2023, 2024
+FAIL    S4 machine-day contour area stable to 2 sq in 2023 399.95, 2024 435.72; spread 35.77 sq in across 2023, 2024
+PENDING S4 contour, all three seasons                2 of 3 seasons evaluable
+RECORD  D-11 open                                    absChallenges key on 0 of 276 games scanned; 1,948 Final 2023 games are not on disk yet, so the season count is open
+RECORD  D-57 open                                    absChallenges key on 0 of 305 Tue/Wed/Thu games scanned (2024-04-02 to 2024-05-30); every Final Tue/Wed/Thu game through 2024-05-16 is scanned, so the changeover is later than 2024-05-16; the search of the rest of 2024 is open
+W3.9 check: 13 PASS, 3 FAIL, 5 PENDING, <elapsed> s
+FAILED CLAUSES:
+  S1 widest empty gap between the modes >= 0.04 -- widest gap 0.0039, from 0.9750 to 0.9789, over 934 games
+  S2 no full_abs game carries the key -- 3 of 351 full_abs games carry it: 752780 (2024-05-04, agree 0.9933, 5 MJ, 0 overturned); 751719 (2024-05-18, agree 0.9906, 2 MJ, 1 overturned); 752168 (2024-05-19, agree 1.0000, 4 MJ, 0 overturned)
+  S4 machine-day contour area stable to 2 sq in -- 2023 399.95, 2024 435.72; spread 35.77 sq in across 2023, 2024
+DEFERRED-PENDING-AAA-PULL S1 widest empty gap between the modes >= 0.04 widest gap 0.0039, from 0.9750 to 0.9789, over 934 games
+DEFERRED-PENDING-AAA-PULL S2 no full_abs game carries the key          3 of 351 full_abs games carry it: 752780 (2024-05-04, agree 0.9933, 5 MJ, 0 overturned); 751719 (2024-05-18, agree 0.9906, 2 MJ, 1 overturned); 752168 (2024-05-19, agree 1.0000, 4 MJ, 0 overturned)
+DEFERRED-PENDING-AAA-PULL S4 machine-day contour area stable to 2 sq in 2023 399.95, 2024 435.72; spread 35.77 sq in across 2023, 2024
+W3.9 DEFERRED-PENDING-AAA-PULL: S1, S2, S4 fail on a partial AAA corpus (2023 276 of 2,224 Final games on disk; 2024 658 of 2,232 Final games on disk; 2025 0 of 2,232 Final games on disk); every other clause passes or is PENDING; the deferral lapses once the AAA pull (fleet phase 07) completes the corpus, and does not waive S1, S2 or S4
+GD-04: 0 violation(s) in R/ch1/12_aaa_formats.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

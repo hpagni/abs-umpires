@@ -1,17 +1,17 @@
 {
-  "cmd": "Rscript tests/ch1/test_zone.R",
-  "duration_s": 5,
+  "cmd": "Rscript R/ch1/03_heights.R --check",
+  "duration_s": 48,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
   "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
   "host": "Hudsons-MacBook-Pro.local",
-  "log": "quality/receipts/W3.3.log",
+  "log": "quality/receipts/W3.4.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
-  "step": "W3.3",
-  "timestamp_madrid": "2026-09-25 12:24:35 CEST",
-  "title": "The zone and kinematics module, UT-11 UT-12 UT-13 and the golden file"
+  "step": "W3.4",
+  "timestamp_madrid": "2026-09-25 13:00:11 CEST",
+  "title": "Height harmonisation, DT-30 coverage table and the D-13 fork"
 }

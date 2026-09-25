@@ -1,0 +1,3 @@
+"decision","level","season","status","n_final_scheduled","n_scanned","n_with_key","first_key_date","last_no_key_date","result","evidence_path"
+"D-11","aaa",2023,"open",2224,276,0,,"2023-07-18","absChallenges key on 0 of 276 games scanned; 1,948 Final 2023 games are not on disk yet, so the season count is open","out/tables/aaa_regime_scan.csv"
+"D-57","aaa",2024,"open",1054,305,0,,"2024-05-30","absChallenges key on 0 of 305 Tue/Wed/Thu games scanned (2024-04-02 to 2024-05-30); every Final Tue/Wed/Thu game through 2024-05-16 is scanned, so the changeover is later than 2024-05-16; the search of the rest of 2024 is open","out/tables/aaa_regime_scan.csv"

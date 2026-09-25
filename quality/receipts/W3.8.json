@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript R/ch1/11_zone_gate.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/11_zone_gate.R",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W3.8.log",
+  "owner": "W3",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W3.8",
+  "timestamp_madrid": "2026-09-25 14:00:05 CEST",
+  "title": "The zone-truth gate, DT-21, hard go/no-go"
+}

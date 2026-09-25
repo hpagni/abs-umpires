@@ -1,0 +1,55 @@
+W3.4 height harmonisation, DT-30 and the D-13 fork (mode: check)
+warehouse /Users/hudsonpagni/sports-project/warehouse/abs.duckdb, read-only
+PASS    seasons 2022 2023 2024 2025 2026, one regime each: pre_buffer pre_buffer pre_buffer buffer_2025 abs_2026
+PASS    every called pitch joins dim_batter_season (0 unmatched in each season)
+PASS    fct height_source = abs_measured on exactly the pitches whose batter has h_abs_in
+PASS    roster offset o = 0.002208 in, one value over 1023 people_offset rows, equal to the 2026 overlap mean
+PASS    roster+offset height covers 100% of called pitches in every season
+PASS    contours fitted on 2022, 2023, 2024 only, regime pre_buffer; nothing fitted on 2025 or 2026
+PASS    all 9 point contours closed and all four metrics defined; worst draw failure share 0.0000 (limit 0.01)
+record  fit 2022 all_roster      n 366,922, edf 45.9, k' 255, k-index 0.998, area 500.85 sq in, top 41.01 in, bot 16.66 in, half-width 11.18 in
+record  fit 2022 cohort_roster   n 217,722, edf 46.5, k' 255, k-index 0.977, area 503.59 sq in, top 41.08 in, bot 16.66 in, half-width 11.23 in
+record  fit 2022 cohort_measured n 217,722, edf 46.6, k' 255, k-index 0.960, area 503.49 sq in, top 41.07 in, bot 16.66 in, half-width 11.22 in
+record  fit 2023 all_roster      n 374,384, edf 45.5, k' 255, k-index 0.991, area 490.16 sq in, top 40.84 in, bot 16.67 in, half-width 10.96 in
+record  fit 2023 cohort_roster   n 271,962, edf 47.4, k' 255, k-index 0.981, area 491.94 sq in, top 40.89 in, bot 16.67 in, half-width 10.97 in
+record  fit 2023 cohort_measured n 271,962, edf 47.4, k' 255, k-index 0.975, area 491.85 sq in, top 40.89 in, bot 16.67 in, half-width 10.97 in
+record  fit 2024 all_roster      n 366,873, edf 46.9, k' 255, k-index 0.979, area 500.29 sq in, top 41.25 in, bot 16.78 in, half-width 11.07 in
+record  fit 2024 cohort_roster   n 302,762, edf 46.6, k' 255, k-index 0.975, area 501.31 sq in, top 41.31 in, bot 16.79 in, half-width 11.10 in
+record  fit 2024 cohort_measured n 302,762, edf 46.3, k' 255, k-index 0.970, area 501.14 sq in, top 41.30 in, bot 16.79 in, half-width 11.10 in
+record  bam separation warnings, expected and counted: 9 over 9 fits
+PASS    DT-30 out/tables/height_coverage.csv matches the recomputation in all 180 cells (counts and shares exact, contour cells within 2e-04)
+
+DT-30, ABS-height coverage per season, as a share of called pitches (open view, level mlb)
+season regime          called       abs   abs_sh   ros_sh batters bat_abs   sig_sh
+2022   pre_buffer     367,145   217,859   0.5934   1.0000     693     303   0.0000
+2023   pre_buffer     374,523   272,064   0.7264   1.0000     655     371   0.0000
+2024   pre_buffer     367,017   302,888   0.8253   1.0000     650     446   0.0000
+2025   buffer_2025    368,925   341,232   0.9249   1.0000     673     533   0.0000
+2026   abs_2026       358,461   358,459   1.0000   1.0000     659     657   0.9983
+record  batter-seasons in dim_batter_season, 2022: 303 of 693 ABS-measured, 43.7%
+record  batter-seasons in dim_batter_season, 2023: 371 of 656 ABS-measured, 56.6%
+record  batter-seasons in dim_batter_season, 2024: 447 of 651 ABS-measured, 68.7%
+record  batter-seasons in dim_batter_season, 2025: 533 of 673 ABS-measured, 79.2%
+record  batter-seasons in dim_batter_season, 2026: 658 of 662 ABS-measured, 99.4%
+
+DT-30 2022: ABS-measured coverage is 0.5934 of 367,145 called pitches (217,859 pitches), below the 0.60 trigger by 0.0066.
+Seasons below the 0.60 trigger: 2022.
+
+Selection effect, 2024 (SOP W3.4, its own number): restricting to batters still active in 2026,
+with the roster+offset height held fixed, changes the 2024 50% contour for a 72-inch batter by
+  area       +1.01 sq in (95% interval -1.22 to +3.14, conservative), of 500.29 sq in
+  top        +0.056 in (-0.051 to +0.162)
+  bottom     +0.013 in (-0.065 to +0.095)
+  half-width +0.028 in (-0.033 to +0.093)
+record  2022 selection (cohort_roster - all_roster): area +2.74 sq in [+0.14, +5.30], top +0.068 in, bot +0.006 in, half-width +0.045 in
+record  2022 measurement (cohort_measured - cohort_roster): area -0.10 sq in, top -0.011 in, bot -0.005 in, half-width -0.002 in
+record  2023 selection (cohort_roster - all_roster): area +1.78 sq in [-0.33, +4.03], top +0.057 in, bot -0.003 in, half-width +0.012 in
+record  2023 measurement (cohort_measured - cohort_roster): area -0.09 sq in, top -0.007 in, bot -0.003 in, half-width -0.001 in
+record  2024 selection (cohort_roster - all_roster): area +1.01 sq in [-1.22, +3.14], top +0.056 in, bot +0.013 in, half-width +0.028 in
+record  2024 measurement (cohort_measured - cohort_roster): area -0.16 sq in, top -0.012 in, bot -0.001 in, half-width +0.000 in
+record  D-13 owner answer on file: D-R0-02 OWNER ANSWER, D-13: roster height plus offset is primary, ABS-measured is a pre-registered robustness arm
+PASS    prereg-v1 is not tagged yet; the DT-30 table is on disk ahead of the tag
+
+W3.4 check: 9 PASS, 0 FAIL, elapsed <elapsed> s
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
