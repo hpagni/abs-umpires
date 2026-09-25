@@ -1,0 +1,39 @@
+PASS   MLB 2026 drawer files                        30 team drawers, one per club, 30 expected
+PASS   AAA 2025 drawer files                        30 team drawers, one per club, 30 expected
+RECORD drawer rows at the seal                      38,938 rows read (both copies of each play); 142 MLB 2026 rows on or after the boundary dropped at parse
+PASS   rows are in their level-season               MLB rows all 2026 and before seal_start; AAA rows all 2025; 38,938 rows
+PASS   plate_X and plateX split on the named plays only the two spellings differ on 4 rows, 2 plays, all among the 2 the contract names; equal on the other 38,934 rows
+PASS   each play once as for and once as against    19,469 plays for, 19,469 against; the two copies agree on 22 fields
+PASS   role resolves, one match per row             19,469 of 19,469 rows match exactly one of player_at_bat, fielder_2, pitcher; 0 unresolved, 0 ambiguous
+PASS   challenger team is the drawer's own team     bat_team_id for a batter, fld_team_id otherwise, equals player_team on 19,469 of 19,469 rows
+PASS   role batter iff called strike                9,099 batter rows, 9,099 called strikes, 0 rows disagree
+PASS   design fact: overturned == 1{m > 0}          19,469 of 19,469 rows; 0 rows with m == 0; min m among overturned 0.000170 in, max m among upheld -0.000154 in
+PASS   edge_dist_calc re-derived by zone.R          max |diff| 5.773e-15 in on 19,469 of 19,469 rows from plate_X/plate_Z, bar 1e-06 in
+PASS   contract exceptions are the plateX spelling  on the 2 named plays plateX/plateZ miss edge_dist_calc by 0.766860 and 0.529350 in; the contract records 0.766860 and 0.529350
+RECORD count_class on 3-2                           1,858 rows at 3-2 are 2-strike by the listed order (MLB 941, AAA 917)
+PASS   runs_at_stake_z standardised per level-season aaa 2025: raw mean -0.011909, sd 0.240292; mlb 2026: raw mean 0.003225, sd 0.240639
+PASS   runs_at_stake_z is realised, listed as excluded sz_challenge_runs > 0 iff overturned on 19,469 of 19,469 rows; upheld rows take 1 distinct value(s): -0.21
+PASS   DT-25 totals, MLB 2026 open set              10,167 challenges = 4,612 batting + 5,555 fielding; contract 10,167 = 4,612 + 5,555
+RECORD roles                                        aaa batter 4,487; aaa catcher 4,810; aaa pitcher 5; mlb batter 4,612; mlb catcher 5,382; mlb pitcher 173
+PASS   MLB plays carry the W3.6 pitch key           10,167 of 10,167 MLB plays map to one open challenged pitch on the same game_pk; 9,302 AAA plays have none
+PASS   index is 1..n per challenger-season, in date order 1,366 challenger-seasons; max index 181; no gaps; game_date non-decreasing in index
+RECORD drawer-only order vs pitch order             MLB 2026: 50 of 1,761 challenger-games with 2 or more challenges would be misordered by inning, outs and count alone; AAA 2025 uses that rule
+RECORD same-day games                               24 challenger-days span 2 games; game_pk orders them
+PASS   no nulls outside the AAA pitch key           39 columns with 0 nulls; at_bat_number and pitch_number null on the 9,302 AAA rows only
+PASS   play_id unique                               19,469 rows, 19,469 distinct play_id
+RECORD drawer pull, MLB 2026                        30 manifest rows, 2026-09-24T01:32:42Z to 2026-09-24T01:37:33Z UTC
+RECORD drawer pull, AAA 2025                        30 manifest rows, 2026-09-24T01:37:43Z to 2026-09-24T01:42:33Z UTC
+PASS   artifact on disk                             /Users/hudsonpagni/sports-project/data/interim/ch2/challenges.parquet
+PASS   artifact equals a rebuild from sources       19,469 rows x 41 columns on disk; rebuilt 19,469 x 41; names, types and values identical
+PASS   artifact provenance equals a rebuild         15 w45_* metadata keys
+PASS   artifact names the columns M1 may not read   w45_m1_excluded lists 13 columns, m and edge_dist_calc among them
+RECORD artifact md5                                 37ed1ae9e7c38b60d2eabbfe72ad147c
+RECORD null counts                                  level 0; season 0; game_date 0; game_pk 0; play_id 0; at_bat_number 9,302; pitch_number 9,302; challenger_id 0; role 0; challenger_team_id 0; opponent_id 0; batter_id 0; pitcher_id 0; catcher_id 0; bat_team_id 0; fld_team_id 0; bat_side 0; inning 0; outs 0; balls 0; strikes 0; count_class 0; bat_score 0; fld_score 0; original_is_strike 0; overturned 0; m 0; edge_dist_calc 0; edge_dist_rederived 0; edge_side 0; plate_x 0; plate_z 0; sz_top 0; sz_bot 0; width_in 0; reasonable_attempt 0; sz_challenge_prob 0; sz_challenge_runs 0; runs_at_stake_z 0; challenger_season_index 0; index_order_source 0
+RECORD rows by level-season                         aaa 2025 9,302 (overturned 4,612, 49.58%); mlb 2026 10,167 (overturned 5,490, 54.00%)
+RECORD edge_side                                    aaa bottom 2,788; aaa corner 572; aaa side 4,427; aaa top 1,515; mlb bottom 3,267; mlb corner 607; mlb side 4,707; mlb top 1,586
+RECORD count_class                                  aaa 2-strike 3,033; aaa 3-ball 549; aaa other 5,720; mlb 2-strike 3,265; mlb 3-ball 560; mlb other 6,342
+RECORD MLB 2026 distinct levels                     challenger_id 652; opponent_id 589; pitcher_id 743; challenger_team_id 30
+W4.5 check: 22 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch2/01_challenge_frame.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

@@ -1,0 +1,5 @@
+lint-prose selftest: OK, 3 rules, 2 fixtures
+lint-prose: 1 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
+W4.1 OK: formulas M1, M2, m and the sealed predicate byte-identical to their sources; 12 CH2 thresholds equal SOP 9.3; CH2-H2a..H2e each carry a threshold, a test id and a failure rule; 13 excluded columns; frame 19469 rows, AAA 9302; W4.7 table matches; 8 open items; 376 numeric literals traced, 0 untraced
+wr20: 1 file(s) from the arguments, 0 sentence(s) with "buffer" and "two inches", 0 without "outside"; 0 note(s); 0 undecodable; 0 non-text file(s) skipped; absent: none
+W4.1 anchored: 19 thresholds each at its own criterion line equal SOP 9.3 (CH2-H2a, CH2-H2b, CH2-H2c, CH2-H2d open set, CH2-H2d sealed set, CH2-H2e); 4 reproduction gates in 7.6; 4 Plus items in 7.7; 11 test ids cited in section 7, all defined in SOP section 6; 6 failure rules marked SOP or annex default; power grid equals SOP W4.8 (0 0.06 0.12 0.25 0.10 0.23 5 10,167 20,000)

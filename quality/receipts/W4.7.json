@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript R/ch2/03_prior_predictive.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch2/03_prior_predictive.R",
+  "duration_s": 35,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W4.7.log",
+  "owner": "W4",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W4.7",
+  "timestamp_madrid": "2026-09-25 20:53:06 CEST",
+  "title": "Prior predictive checks for M1, MT-01 Chapter 2"
+}
