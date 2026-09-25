@@ -1,0 +1,3 @@
+wr20 selftest: 49 cases and 12 command-line checks pass; rule text and scope found in sop/SOP-final.md, 3 strings
+docs/prior-art.md:97: WR-20 note, not a failure: "buffer" with "2 in" and no "outside": Their pre-registered primary estimand, verbatim: "change in the count-bias contrast, P(strike | d = {-1, 0, +1} in, 3-ball) minus P(strike | same d, 2-strike...
+wr20: 10 file(s) from the default scope, 4 sentence(s) with "buffer" and "two inches", 0 without "outside"; 1 note(s); 0 undecodable; 0 non-text file(s) skipped; absent: PREREGISTRATION.md, docs/ch1.md

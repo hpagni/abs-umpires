@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked pytest tests/unit/test_makefile.py -q && ( t=$(mktemp -d \"${TMPDIR:-/tmp}/w75.XXXXXX\") || exit 1; F() { rm -rf \"$t\"; echo \"W7.5 FAIL: $1\"; exit 1; }; printf \"# Clean\\n\\nThe zone is 17 inches wide.\\n\" > \"$t/clean.md\"; printf \"# Dirty\\n\\nIs this rule enforced?\\n\\nThe result \\342\\200\\224 as shown \\342\\200\\224 is groundbreaking.\\n\" > \"$t/dirty.md\"; [ \"$(make -n lint-prose)\" = \"uv run --locked python quality/prose_lint.py\" ] || F \"make -n lint-prose is not the one line uv run --locked python quality/prose_lint.py\"; c=$(ABS_PROSE_FILES=\"$(printf \"%s\\n%s\" \"$t/clean.md\" \"$t/gone.md\")\" make lint-prose 2>&1) || F \"make lint-prose exited non-zero on a clean file plus a deleted path\"; printf \"%s\\n\" \"$c\" | grep -Eq \"^prose-lint: 1 file\\(s\\) from [^,]*ABS_PROSE_FILES, 0 violation\\(s\\)\" || F \"make lint-prose did not read ABS_PROSE_FILES as one path per line\"; d=$(ABS_PROSE_FILES=\"$t/dirty.md\" make lint-prose 2>&1) && F \"make lint-prose exited 0 on a file with 3 violations\"; for k in \"rule 2, WR-02\" \"rule 3, WR-01: banned word\" \"rule 4, WR-09\" \"ABS_PROSE_FILES, 3 violation(s)\" \"lint-prose] Error 1\"; do printf \"%s\\n\" \"$d\" | grep -qF \"$k\" || F \"the dirty file did not print: $k\"; done; s=$(ABS_PROSE_FILES= make lint-prose 2>&1); n=$(printf \"%s\\n\" \"$s\" | grep -E \"^prose-lint: [1-9][0-9]* file\\(s\\) from the default scope, [0-9]+ violation\\(s\\)\") || F \"make lint-prose with no ABS_PROSE_FILES did not scan the default scope\"; grep -qsF \"ABS_PROSE_FILES=\\\"\\$changed\\\" make lint-prose\" .github/workflows/ci.yml ops/ci-pending/ci.yml || F \"the CI lint job no longer runs ABS_PROSE_FILES=changed make lint-prose\"; [ ! -f sop/SOP-final.md ] || { grep -qF \"**One implementation at \\`quality/prose_lint.py\\`**\" sop/SOP-final.md && grep -qF \"\\`make lint-prose\\` on changed \\`.md\\`\" sop/SOP-final.md; } || F \"sop/SOP-final.md no longer names quality/prose_lint.py or the CI lint-prose step\"; rm -rf \"$t\"; echo \"W7.5 OK: make lint-prose runs quality/prose_lint.py; ABS_PROSE_FILES clean file exit 0, deleted path skipped; dirty file 3 violations, rules 2 3 4, make exit non-zero; CI calls make lint-prose; default scope: ${n%%. Ran*}\" )",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W7.5.log",
+  "owner": "W7",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W7.5",
+  "timestamp_madrid": "2026-09-25 19:24:27 CEST",
+  "title": "Writing standard: wiring into make lint-prose and CI"
+}

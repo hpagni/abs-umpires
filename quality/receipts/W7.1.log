@@ -1,0 +1,2 @@
+SOP transcription check: 74 entries, 9 P8 entries and 9 thresholds and strings match sop/SOP-final.md
+prose-lint selftest: OK, 53 fixture cases, 19 checks each tripped by a fixture, 0 failure(s)

@@ -1,0 +1,29 @@
+# W7.8, the pre-registration checker. Owner W7, fleet phase 04. SOP section 3
+# (W7.8 prereg checker -> W7.6, W7.7), SOP W7.42 (check_all.sh calls it second) and
+# the six preconditions of SOP section 2.4, phase 5.
+#
+# quality/check_prereg.py runs the six as separate checks and reports each one. Its
+# self-test builds throwaway git repositories with a bare local origin, plants 26
+# violations, and requires each to fail exactly the expected checks: every check fails
+# in at least one case and alone in at least one case. It also tests the D-63
+# throttle on the one request the checker sends, with a fake clock, and the command
+# line's exit codes. 37 of 37 cases pass; 24 of 24 planted faults in the checker make
+# the self-test exit 1. The command then runs the checker on this repository. Before
+# the tag and the owner's unseal the six do not hold, so that run exits 1, and the
+# command asks only that it exit 0 or 1, report six preconditions and find itself no
+# weaker than absump.seal on clauses 1, 3, 4, 5 and 6. Measured 2026-09-25: about 15 s.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# The fleet gate for W7.8 also runs `bash tools/comms/check_all.sh`. That script is
+# W7.42, which fleet phase 13 builds after W7.1..W7.41 (SOP W7.42). The verify
+# command runs the checker's self-test and its run on this repository as before,
+# then runs check_all.sh if it exists and requires `W7 ALL CHECKS PASS`. While the
+# file is absent it prints one PENDING-LATER-PHASE line naming W7.42 and does not
+# fail, as fleet phase 06 already treats the same absence.
+
+- id: W7.8
+  title: "The pre-registration checker, the six preconditions of SOP section 2.4"
+  verify: 'uv run --locked python quality/check_prereg.py --selftest && ( out=$(uv run --locked python quality/check_prereg.py 2>&1); rc=$?; printf "%s\n" "$out"; [ $rc -le 1 ] || { echo "W7.8 FAIL: the run on this repository exited $rc"; exit 1; }; [ "$(printf "%s\n" "$out" | grep -cE "^PREREG [1-6]/6 (PASS|FAIL) ")" -eq 6 ] || { echo "W7.8 FAIL: the run on this repository did not report six preconditions"; exit 1; }; printf "%s\n" "$out" | grep -q "^CROSS-CHECK absump.seal: consistent" || { echo "W7.8 FAIL: the cross-check with absump.seal did not report consistent"; exit 1; }; echo "W7.8 OK: self-test green; the run on this repository reported 6 preconditions, exit $rc, consistent with absump.seal" ) && if [ -f tools/comms/check_all.sh ]; then out=$(bash tools/comms/check_all.sh 2>&1); rc=$?; printf "%s\n" "$out"; [ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^W7 ALL CHECKS PASS" || { echo "W7.8 FAIL: tools/comms/check_all.sh exited $rc or did not print W7 ALL CHECKS PASS"; exit 1; }; else echo "PENDING-LATER-PHASE W7.42 tools/comms/check_all.sh: not built yet; fleet phase 13 builds it after W7.1..W7.41 (SOP W7.42)"; fi'
+  expect_exit: 0
+  owner: W7
+  needs: quality/check_prereg.py, config/seal.yml, config/throttle.yml, src/absump/seal.py

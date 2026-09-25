@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked python quality/check_numbers.py --selftest && { uv run --locked python quality/check_numbers.py 2>&1 || true; } | tail -n 1 | grep -Eq '^check_numbers: [0-9]+ file\\(s\\), [1-9][0-9]* traceable value\\(s\\), [0-9]+ untraced literal\\(s\\), 0 bad source line\\(s\\), [0-9]+ word-number warning\\(s\\)$' && uv run --locked python -c 'import os, sys; sys.path.insert(0, \"quality\"); import check_numbers as C; F = lambda c, m: c or sys.exit(\"W7.3 FAIL: \" + m); src = (C.LEDGER, C.PRIOR_ART, C.ALLOW); F(src == (\"docs/numbers.json\", \"docs/priorart-numbers.txt\", \"docs/numbers-allow.txt\"), \"the sources differ from SOP section 2.8: %s\" % (src,)); F(tuple(C.DEFAULT_SCOPE) == (\"abstract\", \"docs/memo\") and C.LABEL == \"WR-07\", \"the scope or the label differs from WR-07\"); S = \"sop/SOP-final.md\"; s = open(S, encoding=\"utf-8\").read() if os.path.isfile(S) else \"\"; T = [\"**One gate at `quality/check_numbers.py`**, reading `docs/numbers.json`\", \"plus `docs/priorart-numbers.txt` and `docs/numbers-allow.txt`\", \"WR-07 every numeric literal in `abstract/` and `docs/memo/` present in `docs/numbers.json`, `docs/priorart-numbers.txt` or `docs/numbers-allow.txt`\"]; F(not s or all(t in s for t in T), \"sop/SOP-final.md no longer states the gate as registered: %s\" % [t for t in T if t not in s]); v, n, p = C.ledger_values(); F(not p and not n, \"a source is missing or malformed: %s %s\" % (n, p)); print(\"W7.3 OK: quality/check_numbers.py reads the 3 SOP sources, %d traceable values, 0 bad source lines; WR-07 scope abstract/ and docs/memo/; SOP text %s\" % (len(v), \"matched\" if s else \"absent, constants checked only\"))'",
+  "duration_s": 0,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W7.3.log",
+  "owner": "W7",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W7.3",
+  "timestamp_madrid": "2026-09-25 19:03:56 CEST",
+  "title": "Writing standard: the number gate"
+}

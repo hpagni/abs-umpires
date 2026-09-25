@@ -1,0 +1,5 @@
+........................................................................ [ 30%]
+........................................................................ [ 61%]
+........................................................................ [ 92%]
+..................                                                       [100%]
+W7.5 OK: make lint-prose runs quality/prose_lint.py; ABS_PROSE_FILES clean file exit 0, deleted path skipped; dirty file 3 violations, rules 2 3 4, make exit non-zero; CI calls make lint-prose; default scope: prose-lint: 16 file(s) from the default scope, 156 violation(s), 22 warning(s)

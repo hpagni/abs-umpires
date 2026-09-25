@@ -1,0 +1,17 @@
+{
+  "cmd": "( m=quality/sealed_manifest.json; F() { echo \"W7.7 FAIL: $1\"; exit 1; }; uv run --locked pytest tests/guard/test_seal_immutability.py tests/unit/test_seal_classifier.py tests/unit/test_seal_config_agrees.py -q || F \"GD-06, UT-16 or UT-17 is red\"; n=0; for k in seal_start_date regular_season_end postseason_end_estimate sealed_game_types excluded_game_types prereg_tag; do grep -qxF \"$(jq -r --arg k $k \"\\\"\\(\\$k): \\(.[\\$k]|tojson)\\\"\" $m)\" config/seal.yml || F \"$k in the manifest differs from config/seal.yml\"; n=$((n+1)); done; [ $n -eq 6 ] || F \"checked $n of 6 constants\"; jq -e \"has(\\\"postseason_gamepks\\\") or has(\\\"postseason_appended_at\\\") or has(\\\"postseason\\\")\" $m >/dev/null && F \"a postseason block is present at M1\"; jq -e \".partition_field == \\\"gameData.datetime.officialDate\\\"\" $m >/dev/null || F \"partition_field is not officialDate\"; jq -e \".regular_gamepks | length > 0 and all(type == \\\"number\\\" and . == floor) and . == unique\" $m >/dev/null || F \"regular_gamepks is not a sorted list of distinct integers\"; jq -e \".regular_game_count == (.regular_gamepks | length)\" $m >/dev/null || F \"regular_game_count does not match the list\"; h=$(jq -r \"(.regular_gamepks + (.postseason_gamepks // [])) | sort | .[]\" $m | shasum -a 256 | cut -d\" \" -f1); [ \"$h\" = \"$(jq -r .gamepks_sha256 $m)\" ] || F \"gamepks_sha256 does not recompute\"; src=$(jq -r .regular_gamepks_source.path $m); if [ -f \"$src\" ] && [ \"$(shasum -a 256 \"$src\" | cut -d\" \" -f1)\" = \"$(jq -r .regular_gamepks_source.sha256 $m)\" ]; then s=$(jq -r .seal_start_date $m); [ \"$(jq -c --arg s $s \"[.dates[].games[] | select(.gameType == \\\"R\\\" and .season == (\\$s[0:4]) and .officialDate >= \\$s) | .gamePk] | unique\" \"$src\")\" = \"$(jq -c .regular_gamepks $m)\" ] || F \"regular_gamepks differs from the rule applied to its source\"; echo \"source recomputed: the rule gives the same $(jq .regular_game_count $m) gamePks\"; else echo \"source check vacuous: $src is absent or has other bytes in this tree\"; fi; echo \"W7.7 OK: $(jq .regular_game_count $m) regular-tail gamePks, 6 constants equal config/seal.yml, no postseason block, gamepks_sha256 recomputes\" )",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W7.7.log",
+  "owner": "W7",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W7.7",
+  "timestamp_madrid": "2026-09-25 19:32:00 CEST",
+  "title": "The sealed manifest, regular tail"
+}
