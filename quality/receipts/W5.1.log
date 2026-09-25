@@ -1,0 +1,42 @@
+dp_V_2026.npy: OK
+tier1_card_2026.csv: OK
+tier1_results_2026.json: OK
+ok    dp_V_2026.npy matches SHA256SUMS
+ok    tier1_card_2026.csv matches SHA256SUMS
+ok    tier1_results_2026.json matches SHA256SUMS
+ok    SHA256SUMS lists exactly dp_V_2026.npy, tier1_card_2026.csv, tier1_results_2026.json
+ok    dp_V_2026.npy sha256 equals the SOP literal e1f3b782e60e
+ok    tier1_results_2026.json sha256 equals the SOP literal 3c1c8ade6f87
+ok    PROVENANCE.txt opens with the snapshot A line
+ok    PROVENANCE.txt states MIT
+ok    LICENSE is the MIT text
+ok    dp_C_2026.npy not pinned, and named in PROVENANCE.txt
+ok    tier1_teams_2026.csv not pinned, and named in PROVENANCE.txt
+ok    tier1_mtv_2026.csv not pinned, and named in PROVENANCE.txt
+ok    perception_fit_2026.json not pinned, and named in PROVENANCE.txt
+note  snapshot A: 3 of 7 named files pinned
+ok    dp_V header is {'descr': '<f8', 'fortran_order': False, 'shape': (26, 13, 3)}
+ok    V[1, 6, 0:2] rounds to [0.000942, 0.016234]
+ok    V[1, 6, 2] == 0.02482455343483908
+ok    V monotone non-decreasing in t: 0 violations
+ok    concavity fails in 36 cells, h in [19, 21, 22, 23]
+ok    V(h, d, 0) == V(h, d, 1) for h in [19, 21, 23]: max gap 0.0e+00
+ok    V(1, 7, 2) = 2.4066 pp and V(1, 5, 2) = 2.3156 pp, not symmetric in d
+ok    optimal.gain == 0.025664653020004317
+ok    observed_realized.gain == 0.021194162481928715
+ok    oracle.gain == 0.0643380612995814
+ok    card.gain == 0.023793061369243137
+ok    naive50.gain == 0.011846482651462244
+ok    late50.gain == 0.0038184048326990196
+ok    observed_model.gain == 0.019090033874778346
+ok    never.gain == 0.0
+ok    capture_ratio.point == 0.8258113782176958
+ok    capture_ratio.ci95 == [0.7972195382417352, 0.8543853020992268]
+ok    capture_ratio.n_games == 2338
+ok    dp.V2_start_tie == 0.02482455343483908
+W5.1 pin check: OK, 0 failed assertion(s), snapshot A in uiloi/
+PENDING-LATER-PHASE dp_C_2026.npy: fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B; not before 2026-09-27
+PENDING-LATER-PHASE tier1_teams_2026.csv: fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B; not before 2026-09-27
+PENDING-LATER-PHASE tier1_mtv_2026.csv: fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B; not before 2026-09-27
+PENDING-LATER-PHASE perception_fit_2026.json: fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B; not before 2026-09-27
+W5.1 OK: 3 of 7 snapshot A files pinned and hash-checked against the contract and SHA256SUMS and the SOP literals and gh command (dp_V_2026.npy, tier1_results_2026.json, tier1_card_2026.csv); 4 PENDING-LATER-PHASE
