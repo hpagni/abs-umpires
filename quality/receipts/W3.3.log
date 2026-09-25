@@ -26,8 +26,8 @@ PASS   2026 CSV mid -> front matches API pX/pZ, called, ABS games 72 of 357644 a
 RECORD the 0.0011 ft clause, its named artefacts      72 in 60 games on 53 days; min 0.001103965, q25 0.001123766, median 0.001156996, q75 0.001250275, q90 0.001336087, max 0.063473343 ft. CSV side 1: 825000/31/3, whose plate_x/plate_z miss the CSV's own trajectory by 0.063625 ft (W2.15). API side 71, max 0.001536825 ft: pX/pZ off the API's own trajectory, which the cross-source miss matches within 3.1e-05 ft. All: 825000/31/3 0.063473; 823400/84/3 0.001537; 823736/67/1 0.001520; 824652/63/3 0.001411; 824652/63/2 0.001371; 824637/81/2 0.001362; 822899/71/1 0.001347; 824410/77/1 0.001337; 823795/72/1 0.001332; 823900/71/3 0.001319; 824089/83/1 0.001314; 823795/73/2 0.001307; 824652/65/1 0.001303; 824652/66/3 0.001290; 824582/79/1 0.001272; 823663/71/4 0.001267; 823795/72/3 0.001266; 823099/79/2 0.001254; 823749/86/1 0.001249; 822961/61/4 0.001249; 824635/80/2 0.001240; 824979/72/3 0.001222; 824086/87/1 0.001221; 823835/75/2 0.001221; 823749/87/1 0.001215; 823546/23/1 0.001196; 824901/74/5 0.001192; 824907/32/1 0.001178; 823872/34/2 0.001175; 825105/77/1 0.001175; 823535/71/1 0.001172; 823477/71/2 0.001166; 823348/65/1 0.001165; 823795/74/1 0.001162; 823842/25/1 0.001158; 824903/81/1 0.001157; 825099/77/1 0.001157; 823976/40/1 0.001151; 824659/29/2 0.001151; 823654/43/1 0.001150; 823516/48/2 0.001143; 823035/66/1 0.001142; 823852/15/1 0.001142; 823976/21/1 0.001141; 823749/76/3 0.001141; 823264/76/2 0.001138; 823297/68/2 0.001137; 822683/31/3 0.001137; 823651/21/1 0.001131; 823010/47/3 0.001130; 823898/46/4 0.001130; 823153/27/5 0.001126; 823784/24/5 0.001125; 823388/77/1 0.001124; 823880/12/1 0.001123; 824126/50/3 0.001122; 822784/16/1 0.001120; 824243/71/1 0.001119; 822753/12/1 0.001119; 823749/73/1 0.001118; 823642/51/2 0.001117; 825031/28/4 0.001116; 824452/10/3 0.001115; 824042/32/4 0.001110; 823825/18/1 0.001109; 823392/7/3 0.001109; 825099/77/3 0.001108; 824056/15/1 0.001106; 824089/86/1 0.001105; 824746/29/2 0.001105; 823059/24/4 0.001104; 824607/12/1 0.001104
 RECORD the 0.0011 ft clause, the precision bar        at 1e-10 ft, the bar two sources published to 10 or more decimals support, 357644 of 357644 called pitches in ABS games miss; min 4.491e-08 ft, median 1.877e-04 ft. The disagreement is not rounding
 RECORD the 0.0011 ft clause, outside its population   every pitch in ABS games: 114 of 687448 at or above 0.0011 ft, max 0.063473343 ft. Called pitches in the four non-ABS games (D-P2-01): 494 of 621, max 0.030439765 ft
-PASS   2026 CSV reproduces at y = 8.5/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 22604 pitches on the five fixed days
-RECORD the same over every open 2026 day              1 of 688686 pitches at or above 5e-7 ft, a stated limit of the clause: 825000/31/3 0.063625 ft
+PASS   2026 CSV reproduces at y = 8.5/12 (direct integration) 1 of 688686 at or above 5e-7 ft, the 1 pinned artefact and no other (identical set); every other pitch max abs err 0.000e+00 ft, prints as 0.000000; 178 open days
+RECORD the mid-plane clause, its pinned artefact      1 of 688686 pitches at or above 5e-7 ft over 178 open 2026 days; pinned 825000/31/3. Found: 825000/31/3 0.063625 ft. The CSV's own plate_x/plate_z miss its trajectory there (W2.15, D-P4-03, DEV-43)
 RECORD 2026 API pX/pZ at y = 17/12 (direct integration) called pitches in ABS games: max 0.001508439 ft, median 0.000184316 ft. The API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual, not rounding, is what the cross-source clause measures
 PASS   2025 CSV reproduces at y = 17/12 (direct integration) max abs err 0.000000000 ft, prints as 0.000000, 322 pitches of game 776311 on 2025-09-15
 RECORD 2025 the join and the other plane              322 of 322 CSV pitches joined 1:1 on the six kinematic columns, max |delta| 0.000000 between the two sources; the same integration to y = 8.5/12 misses by 0.1375 ft, so the clause identifies the plane
@@ -50,6 +50,7 @@ PASS   D-14 signed_edge_in, B the centre              -8.5000000000 in, hand-com
 PASS   D-14 signed_edge_in, C a corner                5.0000000000 in, hand-computed 5.0 in
 PASS   D-14 signed_edge_in, D below the bottom        4.0000000000 in, hand-computed 4.0 in
 PASS   D-14 the zone-truth predicate                  edge - 1.45 in < 0 flips between 1.44 in and 1.46 in outside the side edge
+PASS   D-14 module reproduces Savant edge_dist_calc   max |module - edge_dist_calc| 5.773e-15 in, bar 1e-6 in, 20334 rows (10167 plays) in 30 MLB 2026 drawers, widthinches 17 on 20334; 0 rows at or above the bar, the 0 pinned exceptions and no other
 PASS   nearest_edge names the edge that is nearest    side, top, bot on three points built one inch outside each edge
 PASS   z_norm rescales by height                      3.0 ft over a 72 in batter is 0.5
 PASS   golden file carries exactly its 26 columns     26 columns; missing: none; extra: none
@@ -60,7 +61,7 @@ PASS   golden file, nearest_edge to the letter        500 of 500 rows agree
 PASS   cross-check sample is 100,000 rows             100000 rows from MLB 2024-06
 PASS   Python twin agrees on 100,000 rows             max |delta| 0.000e+00 ft < 1e-12 over 100000 rows
 
-43 PASS, 0 FAIL, 1 DEFER, <elapsed> s
+44 PASS, 0 FAIL, 1 DEFER, <elapsed> s
 deferred, each with its reason:
  - AAA 2024 CSV reproduces at y = 8.5/12 -- there is no AAA pitch-level data on this machine: data/interim/statcast_pitch holds level=mlb only, and the AAA pull is a later step
 
