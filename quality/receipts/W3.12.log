@@ -1,0 +1,53 @@
+W3.12 check: the D-60 power curve, the CH1-A6 thresholds, SBC and recovery
+PASS    five seeds per cell, sop                           15 of 15 seed directories, draws per seed 4000
+PASS    five seeds per cell, ue_us                         15 of 15 seed directories, draws per seed 4000
+PASS    ch1_power_curve.csv present                        /Users/hudsonpagni/sports-project/out/tables/ch1_power_curve.csv
+PASS    ch1_power_curve.csv equals the rebuild from raw draws 6 rows x 32 columns
+RECORD  curve sop tau 0.10                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0000;0.0000;0.0000;0.0015;0.0057, 95% CI covers 5/5, split-half 0.690, VC 0.147
+RECORD  curve sop tau 0.20                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0285;0.8590;0.0240;0.1678;0.0770, 95% CI covers 4/5, split-half 0.768, VC 0.307
+RECORD  curve sop tau 0.30                                 fired 4 (1;0;1;1;1), P(tau>=0.20) 0.9990;0.7825;0.9940;0.9952;0.9858, 95% CI covers 5/5, split-half 0.861, VC 0.479
+RECORD  curve ue_us tau 0.10                               fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0000;0.0000;0.0000;0.0032;0.0065, 95% CI covers 5/5, split-half 0.690, VC 0.141
+RECORD  curve ue_us tau 0.20                               fired 1 (0;1;0;0;0), P(tau>=0.20) 0.2933;0.9485;0.1415;0.3598;0.2320, 95% CI covers 5/5, split-half 0.768, VC 0.376
+RECORD  curve ue_us tau 0.30                               fired 5 (1;1;1;1;1), P(tau>=0.20) 0.9998;0.9113;0.9865;0.9995;0.9702, 95% CI covers 5/5, split-half 0.861, VC 0.501
+RECORD  estimator coverage of 15                           sop 14, ue_us 15
+PASS    an admissible estimator sets CH1-A6                primary sop (admissible at >= 13 of 15)
+PASS    thresholds.json equals the re-derivation           c* 0.20 in, powered TRUE, gate attainable FALSE
+PASS    the materiality threshold is one the curve supports P(tau >= 0.20 in) >= 0.90 fires in 0 of 5 seeds at tau = 0.10 in
+PASS    docs/prereg/ch1.md carries the CH1-A6 table        14 table lines present
+PASS    PREREGISTRATION.md carries CH1-A6 as the curve implies 3 CH1-A6 lines, each cites docs/prereg/ch1.md or states P(τ ≥ 0.20 in) ≥ 0.90
+PASS    design read selects no outcome column              umpire_hp_id season game_pk game_index half edge d
+PASS    cached design equals a fresh read                  498,059 pitches, seasons 2022 2023 2024 2025 2026
+PASS    calibration cells are 2022-2024 only               840 cells, seasons 2022 2023 2024
+PASS    re-run of sop tau 0.20 seed 2 reproduces B1        1389 cells
+PASS    re-run of sop tau 0.20 seed 2 reproduces the draws max abs difference in tau draws 0, P(tau >= 0.20) 0.8590
+PASS    no fit object or provenance.json under out/dev/ch1_synth 697 files scanned
+PASS    SBC chi-square uniform at 0.05: tau_abs            p = 0.7695 over 200 replicates, 10 bins
+PASS    SBC chi-square uniform at 0.05: regime_mean_abs    p = 0.9930 over 200 replicates, 10 bins
+PASS    SBC worst BH-adjusted p > 0.01 (MT-02)             worst 0.4411 (sigma)
+PASS    SBC ECDF inside the 95% simultaneous band (MT-02)  10 quantities
+RECORD  SBC divergences                                    25 of 200 replicates with any, 58 in total
+RECORD  recovery injected so far                           n 100, bias 0.016 / -0.006 / 0.009, covers 91 / 96 / 96
+RECORD  recovery null so far                               n 50, interval excludes 0 3 / 4 / 6
+RECORD  recovery injected, 95% interval excludes zero      100 / 100 / 100 of 100 (power; the misses are 9 / 4 / 4)
+RECORD  recovery null, 90% interval covers zero (MT-04)    43 / 46 / 40 of 50
+PASS    recovery bias within 0.10 in: top_in               mean bias 0.016 in
+FAIL    recovery 95% coverage >= 93/100: top_in            91 of 100
+PASS    null false-positive rate <= 7%: top_in             3 of 50
+FAIL    null 90% interval inside +/-0.10 in (CH1-A7): top_in 45 of 50
+PASS    recovery bias within 0.10 in: bot_in               mean bias -0.006 in
+PASS    recovery 95% coverage >= 93/100: bot_in            96 of 100
+FAIL    null false-positive rate <= 7%: bot_in             4 of 50
+PASS    null 90% interval inside +/-0.10 in (CH1-A7): bot_in 50 of 50
+PASS    recovery bias within 0.10 in: half_width_in        mean bias 0.009 in
+PASS    recovery 95% coverage >= 93/100: half_width_in     96 of 100
+FAIL    null false-positive rate <= 7%: half_width_in      6 of 50
+PASS    null 90% interval inside +/-0.10 in (CH1-A7): half_width_in 50 of 50
+
+W3.12 --check: 27 PASS, 4 FAIL, 0 PENDING, <elapsed> s
+failures:
+  recovery 95% coverage >= 93/100: top_in -- 91 of 100
+  null 90% interval inside +/-0.10 in (CH1-A7): top_in -- 45 of 50
+  null false-positive rate <= 7%: bot_in -- 4 of 50
+  null false-positive rate <= 7%: half_width_in -- 6 of 50
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

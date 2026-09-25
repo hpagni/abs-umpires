@@ -1,0 +1,46 @@
+RECORD layout                                       analysis table /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   input present                                /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   T1 present                                   /Users/hudsonpagni/sports-project/out/ch1/tab/T1_sample.csv
+PASS   development guard: seasons                   2022 2023 2024
+PASS   development guard: last official date        2024-09-30
+PASS   development guard: regime and set            pre_buffer open
+RECORD development sample                           687,496 rows, |d| <= 8.0 in: 2022 226,578, 2023 233,595, 2024 227,323
+PASS   one read path                                1 open_dataset call outside comments
+PASS   frozen_spec.json present                     /Users/hudsonpagni/sports-project/out/dev/ch1_spec/frozen_spec.json
+PASS   docs/prereg/ch1.md present                   /Users/hudsonpagni/sports-project/docs/prereg/ch1.md
+PASS   development rows equal the build             226,578 / 233,595 / 227,323
+PASS   formula block in ch1.md                      one fenced r block that starts with cs ~
+PASS   ch1.md k values equal the frozen k           main 24, season 18, ccst 12, velo 10
+PASS   ch1.md formula uses the ordered by-factors   season_o, count_class_o, stand_o
+PASS   ch1.md states: 2022-2024 disclosure          "no row from 2025 or 2026"
+PASS   ch1.md states: edge tolerance                "0.15 in"
+PASS   ch1.md states: area tolerance                "3 sq in"
+PASS   ch1.md states: single-thread record          "single-threaded"
+PASS   ch1.md states: no-OpenMP warning             "openMP not available"
+start  k24-18-12-10_ord_d8                20:43:39
+start  k32-24-16-20_ord_d8                20:43:39
+done   k24-18-12-10_ord_d8                20:50:00  379.3 s wall, 2.36 GB peak
+done   k32-24-16-20_ord_d8                20:52:30  528.1 s wall, 3.79 GB peak
+PASS   refits completed                             k24-18-12-10_ord_d8 k32-24-16-20_ord_d8
+PASS   no 2025 or 2026 row: k24-18-12-10_ord_d8     seasons 2022 2023 2024, last date 2024-09-30, 687,496 rows fitted
+PASS   no 2025 or 2026 row: k32-24-16-20_ord_d8     seasons 2022 2023 2024, last date 2024-09-30, 687,496 rows fitted
+PASS   refit reproduces the build: k24-18-12-10_ord_d8 max |k-index change| 0.00e+00, max |edf change| 0.00e+00
+PASS   refit reproduces the build: k32-24-16-20_ord_d8 max |k-index change| 0.00e+00, max |edf change| 0.00e+00
+PASS   k stable at the frozen rung: main            k 24 -> 32, max |k-index change| 0.0000 < 0.01
+PASS   k stable at the frozen rung: season          k 18 -> 24, max |k-index change| 0.0011 < 0.01
+PASS   k stable at the frozen rung: ccst            k 12 -> 16, max |k-index change| 0.0004 < 0.01
+PASS   k stable at the frozen rung: velo            k 10 -> 20, max |k-index change| 0.0000 < 0.01
+PASS   ch1.md k-index: te(x_mid,zn)                 0.962
+PASS   ch1.md k-index: te(x_mid,zn):season_o2023    0.956
+PASS   ch1.md k-index: te(x_mid,zn):season_o2024    0.962
+PASS   ch1.md k-index: te(x_mid,zn):count_class_o1-strike 0.962
+PASS   ch1.md k-index: te(x_mid,zn):count_class_o2-strike 0.956
+PASS   ch1.md k-index: te(x_mid,zn):stand_oR        0.958
+PASS   ch1.md k-index: s(velo)                      0.996
+PASS   no fit object or provenance.json under out/dev /Users/hudsonpagni/sports-project/out/dev/ch1_spec
+RECORD check refit cost                             k24-18-12-10_ord_d8 379 s wall, 2.36 GB peak; k32-24-16-20_ord_d8 528 s wall, 3.79 GB peak
+
+W3.11 check: 34 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/20_spec_dev.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
