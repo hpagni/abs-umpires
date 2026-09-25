@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript R/ch1/13_plane_displacement.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/13_plane_displacement.R",
+  "duration_s": 13,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W3.10.log",
+  "owner": "W3",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W3.10",
+  "timestamp_madrid": "2026-09-25 14:23:42 CEST",
+  "title": "Pitch-level plane displacements"
+}

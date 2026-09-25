@@ -1,0 +1,45 @@
+RECORD layout                                         warehouse /Users/hudsonpagni/sports-project/warehouse/abs.duckdb; last open day 2026-09-21; analysis table /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   input present                                  /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS   input present                                  /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   T2 present for comparison                      /Users/hudsonpagni/sports-project/out/ch1/tab/T2_zone_gate.csv
+PASS   warehouse attached read-only                   /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+RECORD challenges read                                10,168 MLB 2026 reviews from the open view, 2026-03-25 to 2026-09-21
+PASS   population                                     MLB, season 2026, analysis_set open, last day 2026-09-21 <= last open day 2026-09-21
+PASS   one review per challenged pitch                10,168 reviews on 10,168 distinct pitch_uid
+PASS   every review matched to its pitch and closed   0 unmatched, 0 in progress
+RECORD review levels                                  additional 1, event 7,608, play 2,559
+RECORD review types                                   MJ 10,168
+PASS   every review joins a called pitch with mid-plate coordinates 0 without a called pitch, 0 without coordinates
+PASS   regular season only                            game_type R 10,168
+PASS   every batter carries an ABS-measured height    0 of 10,168 pitches without h_abs_in
+PASS   calls are strike or ball                       0 rows outside {strike, ball} or without is_overturned
+PASS   call_final is call_original flipped exactly when overturned 0 mismatches over 10,168 reviews
+PASS   published description carries the final call   0 mismatches; called_strike 5,585, ball 4,583, blocked_ball 0
+RECORD outcomes                                       5,490 overturned, 4,678 upheld; final strike 5,585, final ball 4,583
+PASS   published zone is 53.5%/27% of h_abs_in        max |top - sz_top| 8.88e-16 ft, max |bot - sz_bot| 7.29e-10 ft, bar 1e-09 ft
+PASS   R edge distance equals the warehouse edge_dist_calc published zone: max |e_pub - edge_dist_calc| 7.11e-15 in over 10,168 pitches, bar 1e-09 in
+PASS   gate zone and published zone give the same verdicts max |e - e_pub| 8.75e-09 in, bar 1.2e-08 in; 0 verdicts differ
+PASS   W3.7 carries the same challenged pitches       10,168 challenged 2026 rows in the analysis table, 10,168 reviews here, 0 not found
+PASS   e equals W3.7 d_abs - 1.45                     max |d_abs - 1.45 - e| 0 in; H_abs equal to h_abs_in on 10,168 rows
+PASS   W3.7 agrees on the calls                       is_overturned and cs against call_original, 10,168 rows
+RECORD roster+offset arm height                       H - h_abs_in: mean +0.0015 in, sd 0.2894 in, max |.| 0.5022 in
+PASS   per-edge rows partition the population         side 4,980 + top 1,707 + bot 3,481 = 10,168
+RECORD T2 overall                                     10,164/10,168 = 99.9607% (benchmark 99.75%)
+RECORD T2 outside_band                                7,573/7,574 = 99.9868% (benchmark 99.99%)
+RECORD T2 inside_band                                 2,591/2,594 = 99.8843%
+RECORD T2 edge_side                                   4,979/4,980 = 99.9799% (benchmark 99.70%)
+RECORD T2 edge_top                                    1,707/1,707 = 100.0000% (benchmark 99.88%)
+RECORD T2 edge_bot                                    3,478/3,481 = 99.9138% (benchmark 99.77%)
+RECORD T2 arm_roster_offset_overall                   10,043/10,168 = 98.7707%
+RECORD T2 arm_roster_offset_outside_band              7,574/7,575 = 99.9868%
+RECORD disagreement                                   823451:8:2 2026-06-16 strike -> strike, rebuilt ball, e +0.0027 in, edge bot, inside the band
+RECORD disagreement                                   823610:69:2 2026-06-26 strike -> ball, rebuilt strike, e -1.3864 in, edge side, outside the band
+RECORD disagreement                                   823701:66:4 2026-06-03 ball -> strike, rebuilt ball, e +0.0045 in, edge bot, inside the band
+RECORD disagreement                                   825000:31:3 2026-05-30 strike -> strike, rebuilt ball, e +0.0045 in, edge bot, inside the band
+PASS   T2 on disk equals the rebuild                  /Users/hudsonpagni/sports-project/out/ch1/tab/T2_zone_gate.csv, 8 rows
+PASS   DT-21 overall >= 99.75%                        10,164/10,168 = 99.9607%
+PASS   DT-21 outside the +/-0.5 in band >= 99.95%     7,573/7,574 = 99.9868%
+W3.8 check: 23 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/11_zone_gate.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

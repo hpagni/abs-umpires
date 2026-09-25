@@ -1,0 +1,34 @@
+PASS   drawer files                                 30 MLB 2026 team drawers, one per club, 30 expected
+RECORD drawer rows at the seal                      20,334 rows read before the boundary, 142 rows on or after it dropped at parse
+PASS   drawer rows are 2026 and before the boundary 20,334 rows, year 2026 on all, latest game date before seal_start
+PASS   drawer plateX equals plate_X                 the two coordinate spellings the drawer carries are the same numbers on every row
+PASS   each play twice, both copies identical       10,167 plays in 20,334 rows; every play in exactly 2 team drawers with the same 10 fields; 0 nulls
+PASS   warehouse attached read-only                 /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS   2026 raw pair is the mid-plane pair          691,287 open MLB 2026 pitches, 688,686 with coordinates, plane_source 'mid' on 688,686
+PASS   feed play_id is a key on 2026 pitches        691,287 pitches carry a feed play_id, 691,287 distinct
+PASS   called-pitch population                      1,836,071 called pitches in the open view, pitch_uid unique, all open, all before the boundary; 358,461 in 2026, 10,168 challenged
+RECORD DT-28 as written, round(.,2) key             10,167 of 10,167 drawer challenges matched, 10,139 unique, 28 ambiguous (18 with two called pitches on the key, 10 with one called pitch and one other Statcast row), 0 unmatched; bar 100%, 0 ambiguous, 0 unmatched: NOT MET, the D-62 feed fallback takes the ambiguous plays
+RECORD same key at exact coordinates                10,167 plays with 1 candidate(s)
+PASS   bridge and feed agree where both resolve     10,139 of 10,139 DT-28-unique plays pick the same pitch as the feed play_id
+PASS   feed fallback pick is a DT-28 candidate      28 of 28 ambiguous plays: the play_id pitch is one of the key's candidates
+PASS   resolved pitch matches the drawer row        10,167 plays: plate_X and plate_Z bit-equal on 10,167, pre-pitch count on 10,167, pitcher and catcher on 10,167
+PASS   resolved pitch is a called, challenged pitch 10,167 of 10,167 in the open called-pitch view, 10,167 flagged challenged, 10,167 on the drawer's game and date, 10,167 distinct pitches
+PASS   call vocabulary and the W2.16 rule           1,836,071 rows: calls outside ball/strike 0 and 0; overturned but unchanged 0; kept but moved 0; unchallenged but overturned 0; nulls 0
+PASS   DT-22 form: drawer original call             original_isStrike_ump equals the reconstructed call on 10,167 of 10,167 drawer challenges
+PASS   agrees with the warehouse W2.16 call_original 1,836,071 of 1,836,071 called pitches
+PASS   every challenged pitch has a source          1,836,071 rows for 1,836,071 called pitches; 10,168 challenged = 10,167 drawer + 1 feed only; 1,825,903 not challenged; 0 challenged before 2026
+RECORD feed-only challenges                         825000:31:3 (strike, overturned false)
+PASS   CH1-A2 original call recovered               10,167 of 10,167 drawer challenges recovered (10,139 by the DT-28 bridge, 28 by the feed fallback), 0 ambiguous, 0 unrecovered; 1 feed-only challenge(s) from the W2.16 feed reconstruction; 10,168 of 10,168 challenged pitches carry an original call
+RECORD 2026 overturns                               5,490 overturned of 358,461 called pitches (1.53%); SOP estimate about 4,716 on about 356k
+RECORD 2026 overturns in |d| <= 3 in                5,170 of 111,323 called pitches in the shadow band (4.64%); SOP estimate 6-7%
+RECORD drawer pull                                  30 manifest rows for the MLB 2026 drawer endpoint, fetched 2026-09-24T01:32:42Z to 2026-09-24T01:37:33Z UTC
+PASS   artifact on disk                             /Users/hudsonpagni/sports-project/data/interim/ch1/original_call.parquet
+PASS   artifact equals a rebuild from sources       1,836,071 rows x 16 columns on disk; rebuilt 1,836,071 x 16; names, types and values identical
+PASS   artifact provenance equals a rebuild         9 w36_* metadata keys
+RECORD artifact md5                                 3d7ef1a0322cc9d3ef494732bdd3849b
+RECORD null counts                                  pitch_uid 0; game_pk 0; at_bat_number 0; pitch_number 0; level 0; season 0; official_date 0; analysis_set 0; call_final 0; call_original 0; is_overturned 0; challenged 0; original_call_source 0; drawer_play_id 1,825,904; dt28_candidates 1,825,904; dt28_candidates_called 1,825,904
+RECORD rows by season                               2022 367,145 (challenged 0, overturned 0); 2023 374,523 (challenged 0, overturned 0); 2024 367,017 (challenged 0, overturned 0); 2025 368,925 (challenged 0, overturned 0); 2026 358,461 (challenged 10,168, overturned 5,490)
+W3.6 check: 20 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/02_original_call.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

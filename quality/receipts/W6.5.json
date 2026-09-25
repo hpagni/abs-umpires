@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript R/ch1/03_heights.R --check && Rscript R/ch1/11_zone_gate.R --check && Rscript -e \"source('R/lib/zone.R'); stopifnot(identical(c(PLATE_HALF_W_FT, Y_FRONT_FT, Y_MID_FT, ABS_TOP_FRAC, ABS_BOT_FRAC, BALL_R_IN), c(8.5/12, 17/12, 8.5/12, 0.535, 0.27, 1.45))); writeLines('W6.5 OK: R/lib/zone.R carries the D-14 constants')\" && uv run --locked python -c \"import csv, absump.geometry as g, absump.ingest.normalize_sc as n; K=('PLATE_HALF_W_FT','Y_FRONT_FT','Y_MID_FT','ABS_TOP_FRAC','ABS_BOT_FRAC','BALL_R_IN'); W=(8.5/12, 17/12, 8.5/12, 0.535, 0.27, 1.45); assert tuple(getattr(g, k) for k in K) == W == tuple(getattr(n, k) for k in K), 'W6.5: the D-14 constants differ between modules'; doc=set(open('docs/harmonized_zone.md').read().splitlines()); cr=list(csv.DictReader(open('out/tables/height_coverage.csv'))); tr=list(csv.DictReader(open('out/ch1/tab/T2_zone_gate.csv'))); cov=[f'| {r['season']} | {r['regime']} | {r['first_date']} to {r['last_date']} | {int(r['n_called']):,} | {int(r['n_called_abs_measured']):,} | {r['abs_measured_share']} | {r['roster_offset_share']} | {r['n_batters_abs_measured']} of {r['n_batters']} | {'yes' if r['abs_below_trigger'] == 'true' else 'no'} | {r['abs_height_link']} |' for r in cr]; t2=[f'| {r['row_id']} | {r['zone'].split(',')[0]} | {int(r['n']):,} | {int(r['n_agree']):,} | {int(r['n_disagree']):,} | {r['agreement_pct']} | {r['threshold_pct'] or 'not gated'} | {r['verdict']} |' for r in tr]; miss=[x for x in cov + t2 if x not in doc]; assert not miss, 'W6.5: rows missing from docs/harmonized_zone.md: ' + ' || '.join(miss); assert [r['season'] for r in cr] == ['2022', '2023', '2024', '2025', '2026'], 'W6.5: the DT-30 table does not hold 2022-2026'; assert len(tr) == 8 and all(r['verdict'] == 'PASS' for r in tr if r['row_id'] in ('overall', 'outside_band')), 'W6.5: the DT-21 gate rows are not PASS'; print(f'W6.5 OK: D-14 constants agree in R/lib/zone.R, geometry.py and normalize_sc.py; {len(cov)} DT-30 rows and {len(t2)} DT-21 rows match docs/harmonized_zone.md')\"",
+  "duration_s": 73,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W6.5.log",
+  "owner": "W6",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W6.5",
+  "timestamp_madrid": "2026-09-25 16:59:18 CEST",
+  "title": "The harmonized zone, sprint view"
+}

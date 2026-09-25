@@ -1,0 +1,52 @@
+duckdb is storing downloaded extensions and secrets under ~/.duckdb:
+ℹ /Users/hudsonpagni/.duckdb
+This persists across sessions and is shared with the DuckDB CLI and other clients.
+ℹ Run duckdb(shared_home = FALSE) to use a temporary directory instead.
+ℹ See ?duckdb_storage for details and alternatives.
+W3.5 regimes, sample and exclusions
+warehouse: open views only; last open day 2026-09-21
+PASS    season boundaries fetched: sportId=1 for 5 seasons, sportId=11 for 3, every field present
+PASS    season boundaries: every compared cell matches the SOP W3.5 table
+PASS    2026 regular-season end matches config/seal.yml regular_season_end (2026-09-27)
+PASS    season boundaries ordered: regular start < break < regular end < postseason
+PASS    AAA boundaries 2023-2025 match the SOP W3.5 line
+PASS    regime map: one label per season, pre_buffer 2022-2024, buffer_2025, abs_2026
+PASS    open regular-season pitches run from season 2022 to the last open day (2022-04-07 to 2026-09-21)
+PASS    every open game_type R pitch lies inside its season's fetched regular-season window
+-- sample
+record  called pitches with coordinates read into R: 1,835,287
+PASS    pitcher positions: every pitcher id resolved by the people endpoint (1690 pitchers in 17 requests, 0 unresolved)
+PASS    pitcher roles: every pitcher-season resolved to the role held that season (4322 pitcher-seasons: 9 from the fielding record; 3450 from the fullSeason roster; 863 from the people endpoint, current season)
+record  pitcher-seasons whose role then differs from today's primary position: 2 (Brett Phillips 2022, RF then, P today, 32 pitches; Brett Phillips 2023, CF then, P today, 4 pitches)
+record  position players: 203 pitchers, 5,056 called pitches, release speed median 58.5 mph, p90 77.4 mph, 144 at 85 mph or more
+record  two-way players kept as pitchers: Shohei Ohtani
+PASS    waterfall 2022: all pitches less the non-called rows equals the called count (367,145)
+PASS    waterfall 2022: called less blank coordinates less position players equals P0 (365,884)
+PASS    waterfall 2023: all pitches less the non-called rows equals the called count (374,523)
+PASS    waterfall 2023: called less blank coordinates less position players equals P0 (373,451)
+PASS    waterfall 2024: all pitches less the non-called rows equals the called count (367,017)
+PASS    waterfall 2024: called less blank coordinates less position players equals P0 (366,124)
+PASS    waterfall 2025: all pitches less the non-called rows equals the called count (368,925)
+PASS    waterfall 2025: called less blank coordinates less position players equals P0 (367,666)
+PASS    waterfall 2026: all pitches less the non-called rows equals the called count (358,461)
+PASS    waterfall 2026: called less blank coordinates less position players equals P0 (357,106)
+PASS    P0 recounted in SQL matches the waterfall (1,830,231)
+PASS    P1 recounted in SQL matches the waterfall (1,487,927)
+PASS    P0 holds only called_strike, ball and blocked_ball
+PASS    P0 has no blank re-projected coordinate
+PASS    P1 is P0 less the rows without an ABS-measured height (1,487,927 + 342,304 = 1,830,231)
+PASS    P0 ends on or before the last open day (2026-09-21)
+-- bands
+PASS    harmonised zone: abs_top_ft(H) and abs_bot_ft(H) reproduce sz_top_h and sz_bot_h (max 0.0e+00 ft, 0.0e+00 ft)
+record  band 2022: |d|<=8 226,561 of P0 (61.92%), |d|<=3 96,904 (26.48%)
+record  band 2023: |d|<=8 233,626 of P0 (62.56%), |d|<=3 100,359 (26.87%)
+record  band 2024: |d|<=8 227,359 of P0 (62.10%), |d|<=3 98,159 (26.81%)
+record  band 2025: |d|<=8 232,907 of P0 (63.35%), |d|<=3 100,370 (27.30%)
+record  band 2026: |d|<=8 233,233 of P0 (65.31%), |d|<=3 102,360 (28.66%)
+record  shadow-band called-strike rate, development seasons only: 2022 78.07%, 2023 76.86%, 2024 78.06%
+PASS    roster height plus offset covers every P0 row (1,830,231 of 1,830,231)
+PASS    balanced umpire panel is non-empty and smaller than P0 (62 umpires, 1,360,438 P0 rows)
+PASS    T1 row ids are unique (42 rows)
+record  out/ch1/tab/T1_sample.csv unchanged (8700 bytes)
+record  P0 1,830,231 rows, P1 1,487,927 rows (81.30% of P0)
+W3.5: 30 PASS, 0 FAIL

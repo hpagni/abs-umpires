@@ -1,0 +1,71 @@
+RECORD layout                                         warehouse /Users/hudsonpagni/sports-project/warehouse/abs.duckdb; last open day 2026-09-21; analysis table /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   input present                                  /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS   input present                                  /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   table present for comparison                   /Users/hudsonpagni/sports-project/data/interim/ch1/plane_displacement.csv
+RECORD P0 read                                        1,830,267 pitches, seasons 2022 2023 2024 2025 2026, 2022-04-07 to 2026-09-21
+PASS   P0 keys unique and complete                    1,830,267 distinct pitch_uid, last day 2026-09-21 <= last open day 2026-09-21
+PASS   P0 bins present                                velo, pitch_group, edge, d and p_throws on every row
+PASS   warehouse attached read-only                   /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS   every P0 pitch joins the open view once        1,830,267 P0 pitches, 0 not found, 0 duplicate pitch_uid in 1,835,287 open-view rows
+PASS   kinematics complete                            0 missing values over 11 columns; game_type R on every row
+PASS   velo is release_speed                          1,830,267 rows
+PASS   vy0 < 0 and ay > 0 on every pitch              max vy0 -26.649 ft/s, min ay 1.075 ft/s^2
+RECORD plane_source                                   front 1,473,161, mid 357,106
+PASS   reproject() equals the warehouse mid-plate pair max |reproject - plate_{x,z}_mid| 1.33e-15 ft over 1,830,267 pitches, bar 1e-09 ft
+PASS   reproject() equals W3.7 x_mid and z_mid        max |reproject - {x,z}_mid| 1.33e-15 ft, bar 1e-09 ft
+PASS   t_mid > t_front on every pitch                 min t_mid - t_front 0.004996 s
+PASS   dz < 0 on every pitch descending at both planes 1,830,232 descending pitches, 0 with dz >= 0; 35 pitches not descending at both planes
+PASS   mean dz on every 2022-2025 day in [-1.10, -0.90] in 730 days, 0 outside, range -1.0446 to -0.9392 in
+RECORD velo decile edges, mph                         21.7 80.8 83.6 85.8 87.8 90.0 91.9 93.3 94.6 96.1 105.1
+RECORD vbreak decile edges, in                        -23.02 -4.25 0.12 2.67 4.86 6.99 9.27 11.80 13.98 15.91 38.28
+PASS   every breakdown partitions its population      274 rows over 6 populations; shadow band 498,059 of 1,830,267 pooled pitches
+RECORD 2022-2026 all all                              n 1,830,267; dz mean -0.9878 sd 0.3120 p05 -1.5317 p95 -0.5142; dabsx mean 0.1654; velo 89.1072; vbreak 6.3839
+RECORD 2022-2026 pitch_group FF                       n 576,044; dz mean -0.7092 sd 0.1764 p05 -0.9911 p95 -0.4217; dabsx mean 0.1239; velo 94.1860; vbreak 14.3603
+RECORD 2022-2026 pitch_group SI/FC                    n 438,736; dz mean -0.9048 sd 0.1799 p05 -1.2021 p95 -0.6143; dabsx mean 0.1487; velo 92.2112; vbreak 7.3259
+RECORD 2022-2026 pitch_group BRK                      n 580,709; dz mean -1.2651 sd 0.2578 p05 -1.7127 p95 -0.8657; dabsx mean 0.2435; velo 83.0632; vbreak -1.5892
+RECORD 2022-2026 pitch_group OFFSP                    n 234,778; dz mean -1.1409 sd 0.2012 p05 -1.4512 p95 -0.8125; dabsx mean 0.1055; velo 85.7947; vbreak 4.7740
+RECORD 2022-2026 p_throws L                           n 503,333; dz mean -1.0004 sd 0.3117 p05 -1.5459 p95 -0.5304; dabsx mean 0.1550; velo 88.0231; vbreak 6.5455
+RECORD 2022-2026 p_throws R                           n 1,326,934; dz mean -0.9831 sd 0.3119 p05 -1.5263 p95 -0.5083; dabsx mean 0.1694; velo 89.5184; vbreak 6.3226
+RECORD 2022-2026 shadow_edge side                     n 275,486; dz mean -0.9312 sd 0.2161 p05 -1.3566 p95 -0.6448; dabsx mean 0.1070; velo 89.7719; vbreak 7.1301
+RECORD 2022-2026 shadow_edge top                      n 87,936; dz mean -0.8011 sd 0.2082 p05 -1.2388 p95 -0.5527; dabsx mean 0.0148; velo 89.7839; vbreak 7.0078
+RECORD 2022-2026 shadow_edge bot                      n 134,637; dz mean -1.0669 sd 0.1997 p05 -1.4682 p95 -0.8166; dabsx mean 0.0777; velo 89.4720; vbreak 6.8857
+RECORD 2022 shadow_edge side                          n 53,656; dz mean -0.9360 sd 0.2269 p05 -1.3913 p95 -0.6425; dabsx mean 0.1160; velo 89.3855; vbreak 7.4956
+RECORD 2022 shadow_edge top                           n 16,465; dz mean -0.8141 sd 0.2257 p05 -1.2927 p95 -0.5527; dabsx mean 0.0219; velo 89.1829; vbreak 7.1393
+RECORD 2022 shadow_edge bot                           n 26,789; dz mean -1.0712 sd 0.2097 p05 -1.5004 p95 -0.8117; dabsx mean 0.0820; velo 89.1127; vbreak 7.2419
+RECORD 2023 shadow_edge side                          n 55,409; dz mean -0.9318 sd 0.2168 p05 -1.3574 p95 -0.6438; dabsx mean 0.1092; velo 89.6463; vbreak 7.2665
+RECORD 2023 shadow_edge top                           n 17,349; dz mean -0.8044 sd 0.2113 p05 -1.2430 p95 -0.5519; dabsx mean 0.0148; velo 89.5179; vbreak 7.0025
+RECORD 2023 shadow_edge bot                           n 27,557; dz mean -1.0669 sd 0.2006 p05 -1.4696 p95 -0.8178; dabsx mean 0.0782; velo 89.3348; vbreak 7.0093
+RECORD 2024 shadow_edge side                          n 54,621; dz mean -0.9315 sd 0.2118 p05 -1.3431 p95 -0.6482; dabsx mean 0.1081; velo 89.6931; vbreak 7.1028
+RECORD 2024 shadow_edge top                           n 17,035; dz mean -0.7953 sd 0.2022 p05 -1.2128 p95 -0.5522; dabsx mean 0.0214; velo 89.8291; vbreak 7.1530
+RECORD 2024 shadow_edge bot                           n 26,475; dz mean -1.0665 sd 0.1970 p05 -1.4602 p95 -0.8197; dabsx mean 0.0770; velo 89.3539; vbreak 6.8487
+RECORD 2025 shadow_edge side                          n 55,455; dz mean -0.9328 sd 0.2148 p05 -1.3598 p95 -0.6489; dabsx mean 0.1049; velo 89.9654; vbreak 7.0491
+RECORD 2025 shadow_edge top                           n 17,996; dz mean -0.7990 sd 0.2048 p05 -1.2301 p95 -0.5540; dabsx mean 0.0113; velo 90.0632; vbreak 7.0435
+RECORD 2025 shadow_edge bot                           n 26,936; dz mean -1.0704 sd 0.1976 p05 -1.4691 p95 -0.8224; dabsx mean 0.0724; velo 89.6251; vbreak 6.7280
+RECORD 2026 shadow_edge side                          n 56,345; dz mean -0.9241 sd 0.2099 p05 -1.3327 p95 -0.6419; dabsx mean 0.0971; velo 90.1493; vbreak 6.7544
+RECORD 2026 shadow_edge top                           n 19,091; dz mean -0.7942 sd 0.1973 p05 -1.1994 p95 -0.5526; dabsx mean 0.0061; velo 90.2402; vbreak 6.7360
+RECORD 2026 shadow_edge bot                           n 26,880; dz mean -1.0596 sd 0.1929 p05 -1.4391 p95 -0.8126; dabsx mean 0.0791; velo 89.9335; vbreak 6.5984
+RECORD 2022-2026 shadow top minus bot                 dz -0.8011 - (-1.0669) = +0.2658 in
+RECORD 2022 shadow top minus bot                      dz -0.8141 - (-1.0712) = +0.2571 in
+RECORD 2023 shadow top minus bot                      dz -0.8044 - (-1.0669) = +0.2625 in
+RECORD 2024 shadow top minus bot                      dz -0.7953 - (-1.0665) = +0.2712 in
+RECORD 2025 shadow top minus bot                      dz -0.7990 - (-1.0704) = +0.2714 in
+RECORD 2026 shadow top minus bot                      dz -0.7942 - (-1.0596) = +0.2654 in
+RECORD 2022-2026 shadow side mix and dz               FF 36.2% dz -0.7627; SI/FC 28.4% dz -0.8855; BRK 27.9% dz -1.1686; OFFSP 7.5% dz -1.0314
+RECORD 2022-2026 shadow top mix and dz                FF 37.8% dz -0.6403; SI/FC 29.6% dz -0.7606; BRK 27.2% dz -1.0485; OFFSP 5.5% dz -0.9009
+RECORD 2022-2026 shadow bot mix and dz                FF 29.3% dz -0.8895; SI/FC 29.4% dz -1.0014; BRK 29.6% dz -1.2824; OFFSP 11.7% dz -1.1323
+RECORD 2025 shadow side mix and dz                    FF 36.1% dz -0.7626; SI/FC 28.3% dz -0.8862; BRK 28.1% dz -1.1699; OFFSP 7.5% dz -1.0375
+RECORD 2025 shadow top mix and dz                     FF 37.4% dz -0.6380; SI/FC 30.3% dz -0.7624; BRK 26.8% dz -1.0442; OFFSP 5.5% dz -0.9022
+RECORD 2025 shadow bot mix and dz                     FF 29.1% dz -0.8909; SI/FC 28.7% dz -1.0029; BRK 30.6% dz -1.2783; OFFSP 11.6% dz -1.1376
+RECORD SOP W3.10 FF 96 mph                            SOP single pitch -0.425 in; P0 2022-2025 FF in (95.5, 96.5] mph: n 56,493, mean -0.696, median -0.701 in
+RECORD SOP W3.10 FF 94 mph                            SOP single pitch -0.909 in; P0 2022-2025 FF in (93.5, 94.5] mph: n 76,933, mean -0.711, median -0.715 in
+RECORD SOP W3.10 SL 85 mph                            SOP single pitch -1.451 in; P0 2022-2025 SL in (84.5, 85.5] mph: n 28,055, mean -1.195, median -1.199 in
+RECORD SOP W3.10 CU 78 mph                            SOP single pitch -2.015 in; P0 2022-2025 CU in (77.5, 78.5] mph: n 11,307, mean -1.483, median -1.476 in
+RECORD SOP W3.10 CU 72 mph                            SOP single pitch -2.583 in; P0 2022-2025 CU in (71.5, 72.5] mph: n 2,522, mean -1.615, median -1.603 in
+RECORD SOP 2.5 day 2024-09-15                         P0 n 2,235, dz mean -0.975 sd 0.301, range -2.05 to -0.08 in
+RECORD SOP 2.5 day 2025-09-15                         P0 n 1,438, dz mean -0.997 sd 0.313, range -2.19 to -0.26 in
+RECORD SOP 2.5 reference                              2025-09-15 n 1,438 mean -0.997 sd 0.313 range -2.19 to -0.26; 2024-09-15 n 2,235 mean -0.975 sd 0.301
+PASS   table on disk equals the rebuild               /Users/hudsonpagni/sports-project/data/interim/ch1/plane_displacement.csv, 274 rows
+W3.10 check: 17 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/13_plane_displacement.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

@@ -1,0 +1,17 @@
+{
+  "cmd": "out=$(Rscript R/ch1/12_aaa_formats.R --check 2>&1); rc=$?; printf \"%s\\n\" \"$out\"; if [ $rc -ne 0 ]; then printf \"%s\\n\" \"$out\" | uv run --locked python -c 'import re, sys; t = sys.stdin.read(); F = lambda c, m: c or sys.exit(\"W3.9 FAIL: \" + m); fl = re.findall(r\"^FAIL\\s+(S\\d|\\S+)\\s+(.*)$\", t, re.M); I = sorted({f[0] for f in fl}); cov = re.findall(r\"^RECORD\\s+coverage (\\d{4})\\s+([\\d,]+) of ([\\d,]+) Final games on disk\", t, re.M); sh = [x for x in cov if int(x[1].replace(\",\", \"\")) < int(x[2].replace(\",\", \"\"))]; F(fl, \"the check exited non-zero with no FAIL clause\"); F(set(I) <= {\"S1\", \"S2\", \"S4\"}, \"a clause other than S1, S2 or S4 failed: \" + \", \".join(i for i in I if i not in (\"S1\", \"S2\", \"S4\"))); F(len(cov) == 3, \"the coverage records for 2023, 2024 and 2025 are missing\"); F(sh, \"the AAA corpus is complete, so the deferral has lapsed: S1, S2 and S4 must pass or be amended by a recorded decision\"); [print(\"DEFERRED-PENDING-AAA-PULL %s %s\" % f) for f in fl]; print(\"W3.9 DEFERRED-PENDING-AAA-PULL: %s fail on a partial AAA corpus (%s); every other clause passes or is PENDING; the deferral lapses once the AAA pull (fleet phase 07) completes the corpus, and does not waive S1, S2 or S4\" % (\", \".join(I), \"; \".join(\"%s %s of %s Final games on disk\" % x for x in cov)))' || exit 1; fi; uv run --locked python tests/guard/gd04_scan.py --path R/ch1/12_aaa_formats.R",
+  "duration_s": 17,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W3.9.log",
+  "owner": "W3",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W3.9",
+  "timestamp_madrid": "2026-09-25 21:13:45 CEST",
+  "title": "AAA format classification"
+}

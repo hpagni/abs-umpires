@@ -1,0 +1,50 @@
+RECORD layout                                         warehouse /Users/hudsonpagni/sports-project/warehouse/abs.duckdb; last open day 2026-09-21; output /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   input present                                  /Users/hudsonpagni/sports-project/data/interim/ch1/original_call.parquet
+PASS   input present                                  /Users/hudsonpagni/sports-project/out/ch1/tab/T1_sample.csv
+PASS   input present                                  /Users/hudsonpagni/sports-project/data/interim/dim_batter_season/calibration.json
+PASS   input present                                  /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+PASS   warehouse attached read-only                   /Users/hudsonpagni/sports-project/warehouse/abs.duckdb
+RECORD called pitches with coordinates                1,835,287 rows read from the open view
+PASS   pitcher positions resolved                     1690 pitchers in 17 requests (17 from the raw cache, 0 sent), 0 unresolved
+PASS   pitcher roles by season                        4322 pitcher-seasons, each by the role held that season: 9 from the fielding record; 3450 from the fullSeason roster; 863 from the people endpoint, current season
+RECORD role then differs from today's position        621433 2022, RF then, P today; 621433 2023, CF then, P today
+RECORD position players removed                       203 pitchers, 5,056 called pitches
+PASS   P0 equals W3.5 T1 row P0, per season           1,830,231 rows: 2022 365,884, 2023 373,451, 2024 366,124, 2025 367,666, 2026 357,106
+PASS   P1 equals W3.5 T1 row P1, per season           1,487,927 rows: 2022 217,203, 2023 271,336, 2024 302,183, 2025 340,100, 2026 357,105
+PASS   DT-18 keys unique                              pitch_uid and (game_pk, at_bat_number, pitch_number) unique over 1,830,231 rows
+PASS   population                                     MLB, game_type R, analysis_set open, called descriptions only, 2022-04-07 to 2026-09-21
+PASS   regime map                                     pre_buffer 2022-2024, buffer_2025, abs_2026 on every row
+PASS   every row joins dim_batter_season              0 rows without a roster height
+PASS   every row joins W3.6 original_call             0 rows without a W3.6 row
+PASS   P1 flag agrees with height_source              H_abs is non-null on exactly the rows the warehouse marks abs_measured
+PASS   plane_source by season                         front 2022-2025, mid 2026
+PASS   x_mid, z_mid reproduce under zone.R            front->mid on 1,473,125 rows max 0.00e+00 ft; mid->front on 357,106 rows max 0.00e+00 ft; bar 1e-09 ft
+PASS   roster offset o                                o = 0.002207836934 in: one value over 1,023 people_offset rows, the 2026 overlap mean, calibration.json
+PASS   H is the warehouse height outside P1           roster plus o equals batter_height_in on the 342,304 rows outside P1
+PASS   H_abs is the warehouse height inside P1        h_abs_in equals batter_height_in on the 1,487,927 rows of P1
+PASS   zone.R reproduces sz_top_h and sz_bot_h        max 0.0e+00 ft and 0.0e+00 ft
+RECORD H minus H_abs on P1                            mean -0.0122 in, sd 0.2890 in, max |.| 0.5022 in, over 1,487,927 rows
+PASS   W3.5 bands reproduce on the warehouse height   |d| <= 8 in: 2022 226,561, 2023 233,626, 2024 227,359, 2025 232,907, 2026 233,233; |d| <= 3 in: 2022 96,904, 2023 100,359, 2024 98,159, 2025 100,370, 2026 102,360
+RECORD bands on H (roster plus o)                     |d| <= 8 in: 2022 226,568, 2023 233,594, 2024 227,323, 2025 232,907, 2026 233,223; |d| <= 3 in: 2022 96,906, 2023 100,315, 2024 98,131, 2025 100,387, 2026 102,316
+PASS   d_abs is W3.5's d on P1 and NA outside it      1,487,927 P1 rows equal, 342,304 rows outside P1 NA
+PASS   cs is the original call                        cs differs from the published call on 5,490 rows, exactly the overturned ones; call_original equals the W2.16 column on every row
+PASS   challenges only in 2026                        2026: 10,168 challenged, 5,490 overturned; 0 before 2026; both flags equal the W2.16 columns, whose is_overturned is NULL on exactly the 1,820,063 unchallenged rows
+PASS   count in range                                 balls 0-3 and strikes 0-2 on every row
+PASS   every pitch_type has a group                   17 codes in P0, all in the 17-code map
+RECORD pitch_group FF                                 FF 575,998, FA 10
+RECORD pitch_group SI/FC                              SI 299,442, FC 139,294
+RECORD pitch_group BRK                                SL 266,417, ST 130,704, SV 9,456, CU 137,014, KC 36,772, CS 346
+RECORD pitch_group OFFSP                              CH 187,533, FS 45,126, FO 1,111, SC 139, KN 841, EP 3, UN 25
+PASS   umpire_season is umpire_hp_id:season           463 umpire-seasons, 114 umpires
+PASS   the 19 SOP W3.7 columns present and non-null   19 of 19 present; 0 nulls across them
+PASS   DT-17 null rates                               >=99.5% non-null each: x_mid 100.0000%, z_mid 100.0000%, catcher 100.0000%, delta_run_exp 99.9990%, balls 100.0000%, strikes 100.0000%, stand 100.0000%, p_throws 100.0000%
+RECORD null counts                                    H_abs 342304; d_abs 342304; delta_run_exp 18
+PASS   d <= 0 exactly on the pitches inside the zone  386,520 rows inside the H zone by direct comparison, 386,520 with d <= 0
+RECORD table                                          1,830,231 rows x 33 columns
+PASS   artifact on disk                               /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet
+PASS   artifact equals a rebuild from sources         1,830,231 rows x 33 columns on disk; rebuilt 1,830,231 x 33; names same, types same, values identical, w37 metadata same
+RECORD artifact                                       98,737,971 bytes, md5 c2ccb2501d414038893c65723f51176e
+W3.7 check: 33 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/10_build_analysis_table.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
