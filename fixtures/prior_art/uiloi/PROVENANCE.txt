@@ -1,0 +1,43 @@
+Snapshot 2026-09-22T14:34Z of the "data" release of
+AyanArora29/use-it-or-lose-it (MIT). Upstream rebuilds nightly;
+these files are pinned so the regression test is stable.
+
+Source endpoint: https://github.com/AyanArora29/use-it-or-lose-it/releases/tag/data
+Licence: MIT. Copyright (c) 2026 the author(s) of "Use It or Lose It".
+The upstream licence text is in LICENSE in this directory, copied from
+the upstream main branch (blob 2094f1b9935cb45bda84619e01573b7f00ebd369).
+Pinned by SOP step W5.1 on 2026-09-25T16:53:49+02:00.
+SHA256SUMS covers the data files only. It does not cover PROVENANCE.txt,
+LICENSE or check_pin.py.
+
+Snapshot A: 2026-09-22T14:34Z. Upstream run 35736461428 built it and
+finished at 2026-09-22T14:34:36Z. The next run, 35871445740, started at
+2026-09-23T14:03:55Z and replaced every asset.
+
+Snapshot A files pinned here (3 of the 7 that W5.1 names):
+  dp_V_2026.npy            sha256 e1f3b782...aa084, equal to the SOP literal
+  tier1_results_2026.json  sha256 3c1c8ade...306f8, equal to the SOP literal
+  tier1_card_2026.csv      sha256 183ce54b...96be
+
+How they were obtained. The W5.1 gh command was not used. By 2026-09-25
+the release served the build of run 36009601266 (assets uploaded
+2026-09-24T14:27Z), and none of the 7 files matched snapshot A. The three
+files above are byte copies of a download made on 2026-09-22 at
+19:03:10Z (tier1_results, tier1_card) and 19:29:16Z (dp_V), inside the
+snapshot A window. The two SOP sha256 literals confirm dp_V and
+tier1_results. tier1_card came in the same download as tier1_results.
+
+Snapshot A files not pinned (4 of 7): dp_C_2026.npy, tier1_teams_2026.csv,
+tier1_mtv_2026.csv, perception_fit_2026.json. No copy was found on this
+machine. The 2026-09-22 upstream run kept one Actions artifact, figures.
+The Wayback Machine has no capture of these asset URLs. These four files
+enter the pin with snapshot B.
+
+Drift, measured on 2026-09-25, snapshot A against the 2026-09-24T14:27Z
+build: capture_ratio.n_games went from 2,338 to 2,369. That build
+aggregates games dated 2026-09-22 and 2026-09-23, inside the seal, so its
+cell and gain drift stays out of git until the unseal (D-P4-20).
+
+Snapshot B: not taken yet. W5.1 re-pins once after 2026-09-27. Copy this
+directory to fixtures/prior_art/uiloi_2026-09-22/ first, so snapshot A
+survives, then add the snapshot B date and file list below this line.

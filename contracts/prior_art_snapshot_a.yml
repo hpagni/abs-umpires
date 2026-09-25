@@ -1,0 +1,69 @@
+# contracts/prior_art_snapshot_a.yml -- the prior-art pin, snapshot A.
+#
+# SOP step W5.1. The step names seven files of the "data" release of
+# AyanArora29/use-it-or-lose-it (MIT), snapshot 2026-09-22T14:34Z. This file
+# records, for each of the seven, whether it is pinned on this machine or
+# pending, and for a pending file which later step brings it in. The W5.1
+# verify command reads it; see quality/steps.d/W5.1.yml.
+#
+# Three files are pinned in fixtures/prior_art/uiloi/, byte copies of a
+# download made on 2026-09-22 inside the snapshot A window
+# (fixtures/prior_art/uiloi/PROVENANCE.txt). dp_V_2026.npy and
+# tier1_results_2026.json equal the SOP's sha256 literals.
+#
+# Four files are pending. They are upstream release assets, not outputs of
+# this project. Their snapshot A copies are gone: upstream replaced every asset
+# in its 2026-09-23 run, no copy is on this machine, and the Wayback Machine has
+# no capture. They enter with snapshot B, which the SOP's own last W5.1
+# sentence schedules ("Re-pin once after 2026-09-27 and record both
+# snapshots"), and which fleet phase 10 runs as the W5.1 re-pin (R-17).
+#
+# Seal note for the re-pin. Upstream's build of 2026-09-24 already counts 31
+# more games than snapshot A (capture_ratio.n_games 2,338 to 2,369), so a
+# snapshot B taken after 2026-09-27 aggregates MLB 2026 games dated on or
+# after 2026-09-22, the sealed window. Whether a third-party aggregate of those
+# games may be read is an owner item, raised in
+# logs/decisions-pending/small-gates.md; the re-pin waits on it.
+#
+# A pending file that appears in fixtures/prior_art/uiloi/ fails the W5.1
+# verify until it is pinned here and in SHA256SUMS, so a file never sits there
+# unpinned.
+
+contract: prior_art_snapshot_a
+step: W5.1
+upstream: "AyanArora29/use-it-or-lose-it, release tag data"
+snapshot_a: "2026-09-22T14:34Z"
+directory: fixtures/prior_art/uiloi
+
+pinned:
+  - file: dp_V_2026.npy
+    sha256: e1f3b782e60e489a0eb57d5754dbb46222b9b1a6d401ec830aa68872be3aa084
+    source: "SOP W5.1 sha256 literal"
+  - file: tier1_results_2026.json
+    sha256: 3c1c8ade6f87663157d7c828a62510f9f040b230aecfa24f065bdcd4157306f8
+    source: "SOP W5.1 sha256 literal"
+  - file: tier1_card_2026.csv
+    sha256: 183ce54b3e54cadfe02e1e9367cdea0c3b6674cee0994e3c4a00a3aeb71756be
+    source: "same 2026-09-22 download as tier1_results_2026.json"
+
+pending:
+  - file: dp_C_2026.npy
+    status: PENDING-LATER-PHASE
+    produced_by: "fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B"
+    not_before: "2026-09-27"
+    first_needed_by: "W5.9 (BR-1, the regression against the pinned fixtures), fleet phase 10"
+  - file: tier1_teams_2026.csv
+    status: PENDING-LATER-PHASE
+    produced_by: "fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B"
+    not_before: "2026-09-27"
+    first_needed_by: "W5.9 (BR-1, the regression against the pinned fixtures), fleet phase 10"
+  - file: tier1_mtv_2026.csv
+    status: PENDING-LATER-PHASE
+    produced_by: "fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B"
+    not_before: "2026-09-27"
+    first_needed_by: "W5.9 (BR-1, the regression against the pinned fixtures), fleet phase 10"
+  - file: perception_fit_2026.json
+    status: PENDING-LATER-PHASE
+    produced_by: "fleet phase 10 (Chapter 3, the DP), W5.1 re-pin under R-17: snapshot B"
+    not_before: "2026-09-27"
+    first_needed_by: "W5.9 (BR-1, the regression against the pinned fixtures), fleet phase 10"

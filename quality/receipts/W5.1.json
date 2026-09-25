@@ -1,0 +1,17 @@
+{
+  "cmd": "(cd fixtures/prior_art/uiloi && shasum -a 256 -c SHA256SUMS) && uv run --locked python fixtures/prior_art/uiloi/check_pin.py && uv run --locked python -c 'import hashlib, os, re, sys, yaml; F = lambda c, m: c or sys.exit(\"W5.1 FAIL: \" + m); c = yaml.safe_load(open(\"contracts/prior_art_snapshot_a.yml\", encoding=\"utf-8\")); d = c[\"directory\"]; P = [x[\"file\"] for x in c[\"pinned\"]]; Q = [x[\"file\"] for x in c[\"pending\"]]; N = P + Q; F(len(N) == 7 and len(set(N)) == 7, \"the contract must list the 7 SOP W5.1 files once each\"); s = open(\"sop/SOP-final.md\", encoding=\"utf-8\").read() if os.path.exists(\"sop/SOP-final.md\") else \"\"; w = s[s.index(\"**W5.1 Pin the prior art.**\"):s.index(\"**W5.2\")] if s else \"\"; F(not s or sorted(re.findall(r\"--pattern .([\\w.]+).\", w)) == sorted(N), \"the contract files differ from the SOP W5.1 gh command\"); F(not s or all(x[\"sha256\"] in w for x in c[\"pinned\"] if x[\"source\"].startswith(\"SOP\")), \"an SOP W5.1 sha256 literal differs from the contract\"); S = dict(reversed(l.split()) for l in open(os.path.join(d, \"SHA256SUMS\"), encoding=\"utf-8\") if l.strip()); F(sorted(S) == sorted(P), \"SHA256SUMS lists %s but the contract pins %s\" % (sorted(S), sorted(P))); F(all(hashlib.sha256(open(os.path.join(d, x[\"file\"]), \"rb\").read()).hexdigest() == x[\"sha256\"] == S[x[\"file\"]] for x in c[\"pinned\"]), \"a pinned file differs from its contract sha256 or from SHA256SUMS\"); F(not [x for x in Q if os.path.exists(os.path.join(d, x))], \"a pending file is on disk but not pinned; pin it: \" + str([x for x in Q if os.path.exists(os.path.join(d, x))])); F(all(x[\"status\"] == \"PENDING-LATER-PHASE\" and re.search(r\"fleet phase \\d+\", x[\"produced_by\"]) and re.match(r\"\\d{4}-\\d{2}-\\d{2}$\", x[\"not_before\"]) for x in c[\"pending\"]), \"a pending file lacks its status, its producing phase or its date\"); [print(\"PENDING-LATER-PHASE %s: %s; not before %s\" % (x[\"file\"], x[\"produced_by\"], x[\"not_before\"])) for x in c[\"pending\"]]; print(\"W5.1 OK: %d of 7 snapshot A files pinned and hash-checked against the contract and SHA256SUMS%s (%s); %d PENDING-LATER-PHASE\" % (len(P), \" and the SOP literals and gh command\" if s else \"\", \", \".join(P), len(Q)))'",
+  "duration_s": 0,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W5.1.log",
+  "owner": "W5",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W5.1",
+  "timestamp_madrid": "2026-09-25 21:06:33 CEST",
+  "title": "Pin the prior art"
+}

@@ -1,0 +1,32 @@
+# W5.1, pin the prior art. Owner W5, fleet phase 04. SOP section W5.1, R-17.
+#
+# fixtures/prior_art/uiloi/ holds snapshot A (2026-09-22T14:34Z) of the "data"
+# release of AyanArora29/use-it-or-lose-it (MIT). Upstream replaced every asset on
+# 2026-09-23 and 2026-09-24, so 3 of the 7 named files survive byte for byte:
+# dp_V_2026.npy, tier1_results_2026.json and tier1_card_2026.csv. PROVENANCE.txt
+# names the other four and says why they are absent. shasum -c re-hashes the
+# three files. check_pin.py then asserts the SOP literals: both sha256 values, the
+# npy header, V[1, 6, :], the eight gains, the capture ratio, the structure
+# counts, and that each absent file is named in PROVENANCE.txt. Standard library
+# only, no network.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# SOP W5.1 names seven files of snapshot A (2026-09-22T14:34Z). Three are on this
+# machine and pinned; four are not, and cannot be: they are upstream release assets
+# whose snapshot A copies were replaced upstream on 2026-09-23. They enter with
+# snapshot B at the re-pin the SOP schedules after 2026-09-27, which fleet phase 10
+# runs (R-17). contracts/prior_art_snapshot_a.yml records all seven.
+#
+# The verify command checks the three pins by shasum and check_pin.py as before, then
+# reads the contract: the seven names equal the SOP's gh command, each pinned sha256
+# equals the file, SHA256SUMS and (for two) the SOP literal, and each pending file is
+# absent from disk and names its phase and date. It prints one PENDING-LATER-PHASE
+# line per pending file. A pending file that appears on disk unpinned fails the step.
+# Measured 2026-09-25: exit 0 in about 1 s.
+
+- id: W5.1
+  title: "Pin the prior art"
+  verify: '(cd fixtures/prior_art/uiloi && shasum -a 256 -c SHA256SUMS) && uv run --locked python fixtures/prior_art/uiloi/check_pin.py && uv run --locked python -c ''import hashlib, os, re, sys, yaml; F = lambda c, m: c or sys.exit("W5.1 FAIL: " + m); c = yaml.safe_load(open("contracts/prior_art_snapshot_a.yml", encoding="utf-8")); d = c["directory"]; P = [x["file"] for x in c["pinned"]]; Q = [x["file"] for x in c["pending"]]; N = P + Q; F(len(N) == 7 and len(set(N)) == 7, "the contract must list the 7 SOP W5.1 files once each"); s = open("sop/SOP-final.md", encoding="utf-8").read() if os.path.exists("sop/SOP-final.md") else ""; w = s[s.index("**W5.1 Pin the prior art.**"):s.index("**W5.2")] if s else ""; F(not s or sorted(re.findall(r"--pattern .([\w.]+).", w)) == sorted(N), "the contract files differ from the SOP W5.1 gh command"); F(not s or all(x["sha256"] in w for x in c["pinned"] if x["source"].startswith("SOP")), "an SOP W5.1 sha256 literal differs from the contract"); S = dict(reversed(l.split()) for l in open(os.path.join(d, "SHA256SUMS"), encoding="utf-8") if l.strip()); F(sorted(S) == sorted(P), "SHA256SUMS lists %s but the contract pins %s" % (sorted(S), sorted(P))); F(all(hashlib.sha256(open(os.path.join(d, x["file"]), "rb").read()).hexdigest() == x["sha256"] == S[x["file"]] for x in c["pinned"]), "a pinned file differs from its contract sha256 or from SHA256SUMS"); F(not [x for x in Q if os.path.exists(os.path.join(d, x))], "a pending file is on disk but not pinned; pin it: " + str([x for x in Q if os.path.exists(os.path.join(d, x))])); F(all(x["status"] == "PENDING-LATER-PHASE" and re.search(r"fleet phase \d+", x["produced_by"]) and re.match(r"\d{4}-\d{2}-\d{2}$", x["not_before"]) for x in c["pending"]), "a pending file lacks its status, its producing phase or its date"); [print("PENDING-LATER-PHASE %s: %s; not before %s" % (x["file"], x["produced_by"], x["not_before"])) for x in c["pending"]]; print("W5.1 OK: %d of 7 snapshot A files pinned and hash-checked against the contract and SHA256SUMS%s (%s); %d PENDING-LATER-PHASE" % (len(P), " and the SOP literals and gh command" if s else "", ", ".join(P), len(Q)))'''
+  expect_exit: 0
+  owner: W5
+  needs: fixtures/prior_art/uiloi/SHA256SUMS, fixtures/prior_art/uiloi/PROVENANCE.txt, fixtures/prior_art/uiloi/check_pin.py, fixtures/prior_art/uiloi/dp_V_2026.npy, fixtures/prior_art/uiloi/tier1_results_2026.json, contracts/prior_art_snapshot_a.yml

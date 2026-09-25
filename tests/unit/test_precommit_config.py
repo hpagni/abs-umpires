@@ -11,6 +11,7 @@ a run from a checkout of main always fails and the W1.13 verify command skips it
 by name. Test 1 is what keeps that skip honest.
 """
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -82,6 +83,7 @@ def test_main_is_protected(hooks):
 
 
 RENV_ACTIVATE = r"^renv/activate\.R$"
+PINNED_TIER1 = r"^fixtures/prior_art/uiloi/tier1_results_2026\.json$"
 
 
 def test_trailing_whitespace_excludes_renv_activate(hooks):
@@ -92,13 +94,13 @@ def test_trailing_whitespace_excludes_renv_activate(hooks):
     assert hooks["trailing-whitespace"].get("exclude") == RENV_ACTIVATE
 
 
-def test_the_renv_exclude_is_the_only_one(config):
-    # An exclude is an escape hatch. Exactly one path has earned it, and a
-    # second one arriving without a test is the regression this pins.
+def test_the_two_excludes_are_the_only_ones(config):
+    # An exclude is an escape hatch. Two paths have earned it, each with its own
+    # test below, and a third arriving without a test is the regression this pins.
     excluded = {
         h["id"]: h["exclude"] for repo in config["repos"] for h in repo["hooks"] if h.get("exclude")
     }
-    assert excluded == {"trailing-whitespace": RENV_ACTIVATE}
+    assert excluded == {"trailing-whitespace": RENV_ACTIVATE, "end-of-file-fixer": PINNED_TIER1}
     assert not config.get("exclude"), "a top-level exclude would silence every hook at once"
 
 
@@ -111,6 +113,24 @@ def test_renv_activate_is_committed_as_renv_writes_it(hooks):
     activate = ROOT / "renv" / "activate.R"
     lines = activate.read_text(encoding="utf-8").splitlines()
     assert sum(1 for line in lines if line != line.rstrip()) > 0
+
+
+def test_end_of_file_fixer_excludes_the_pinned_tier1_results(hooks):
+    # SOP W5.1 pins snapshot A byte for byte. Upstream wrote tier1_results_2026.json
+    # with no final newline, so the fixer would append one and break the pin.
+    assert hooks["end-of-file-fixer"].get("exclude") == PINNED_TIER1
+
+
+def test_pinned_tier1_results_is_committed_as_upstream_wrote_it():
+    # The companion half: the file still ends without a newline and still
+    # hashes to its SHA256SUMS line. If the first fails, the exclude is stale;
+    # if the second fails, someone edited a pinned file.
+    pin = ROOT / "fixtures" / "prior_art" / "uiloi"
+    data = (pin / "tier1_results_2026.json").read_bytes()
+    assert not data.endswith(b"\n")
+    lines = (pin / "SHA256SUMS").read_text().splitlines()
+    sums = {name: digest for digest, name in (line.split() for line in lines)}
+    assert hashlib.sha256(data).hexdigest() == sums["tier1_results_2026.json"]
 
 
 def test_ruff_check_fixes(hooks):

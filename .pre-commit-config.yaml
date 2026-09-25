@@ -35,11 +35,17 @@ repos:
         # runs 2 and 3 were green, so the gate erased its own cause and
         # proving wrote to a tracked source file. The regenerated file is now
         # committed exactly as renv writes it, so restore is a true no-op and
-        # the hook has nothing left to fight. This is the only path excluded
-        # and the only file in the tree whose formatting another tool owns;
-        # tests/unit/test_precommit_config.py pins both facts.
+        # the hook has nothing left to fight. It is one of two excluded paths,
+        # each a file whose bytes something other than this repository owns;
+        # tests/unit/test_precommit_config.py pins both.
         exclude: ^renv/activate\.R$
       - id: end-of-file-fixer
+        # SOP W5.1 pins the prior art's snapshot A byte for byte, and the SOP
+        # gives this file's sha256 as a literal. Upstream wrote it
+        # with no final newline, so the fixer would append one, break the pin
+        # and fail check_pin.py. Upstream owns these bytes; the hook does not.
+        # tests/unit/test_precommit_config.py pins the exclude and the bytes.
+        exclude: ^fixtures/prior_art/uiloi/tier1_results_2026\.json$
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict
