@@ -1,0 +1,27 @@
+# W3.12, synthetic machinery: the D-60 power curve, SBC and injected-effect recovery.
+# Owner W3, fleet phase 04. MT-09 is the gate.
+#
+# R/ch1/21_synthetic.R --check reads the raw per-seed draws under
+# out/dev/ch1_synth/power/ and asserts five seeds per cell for both estimators at
+# tau 0.10, 0.20 and 0.30 in, 4,000 draws each. It rebuilds
+# out/tables/ch1_power_curve.csv from those draws and fails unless the file on disk
+# equals the rebuild. It re-derives the CH1-A6 thresholds by the rule written in the
+# script and fails unless thresholds.json and the CH1-A6 table in docs/prereg/ch1.md
+# carry them line for line; PREREGISTRATION.md is checked once W7.6 writes it. It
+# re-reads the design from the mart without any call column, re-runs one seed end to
+# end and requires the stored draws back to 1e-9, and fails on any fit object or
+# provenance.json under out/dev/ch1_synth. SBC (200 replicates) and recovery (100
+# injected, 50 null) are scored when complete. Until then they print PENDING and
+# --check exits 3, so a partial set cannot write a PASS receipt: the 25 Sep 16:46
+# gate read "3 of 100 injected" off a recovery run still in progress. Recovery is
+# scored against the acceptance docs/prereg/ch1.md 8.7 pre-registers. The step's
+# gate also runs `make test-model`, the Chapter 1 MT pack in tests/model/ (MT-01,
+# MT-02, MT-03, MT-04, MT-05 and MT-09 from the stored artefacts). GD-04
+# then scans the script. `needs` names the build's out/dev files, which never enter
+# git, so a clean clone reads MISSING rather than FAIL.
+- id: W3.12
+  title: "Synthetic machinery: recovery, SBC, the D-60 power curve"
+  verify: "Rscript R/ch1/21_synthetic.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/21_synthetic.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/21_synthetic.R, out/tables/ch1_power_curve.csv, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_synth/design.parquet, out/dev/ch1_synth/power/thresholds.json
