@@ -1,0 +1,8 @@
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+docs/prereg/ch1.md:195: WR-06: percentage '50%' with no denominator (warn)
+docs/prereg/ch1.md:275: WR-06: percentage '7%' with no denominator (warn)
+docs/prereg/ch2.md:19: WR-06: percentage '49.0%' with no denominator (warn)
+prose-lint: 6 file(s) from the arguments, 0 violation(s), 3 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10 and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+docs/prior-art.md:99: WR-20 note, not a failure: "buffer" with "2 in" and no "outside": change in the count-bias contrast, P(strike | d = {-1, 0, +1} in, 3-ball) minus P(strike | same d, 2-strike), evaluated on the fitted called-strike GAM surfa...
+wr20: 8 file(s) from the arguments, 8 sentence(s) with "buffer" and "two inches", 0 without "outside"; 1 note(s); 0 undecodable; 0 non-text file(s) skipped; absent: none
+W7.6 FAIL: P0, P1 or the balanced panel differs from out/ch1/tab/T1_sample.csv
