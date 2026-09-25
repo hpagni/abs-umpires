@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript tests/ch1/test_zone.R",
-  "duration_s": 3,
+  "duration_s": 4,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "0c5e49684c201c718dbc9e0e50f2f725985dd2f3",
+  "git_sha": "d6da9a867b763e0340daa0c803045eb9426c701b",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.3.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.3",
-  "timestamp_madrid": "2026-09-24 23:29:10 CEST",
+  "timestamp_madrid": "2026-09-25 00:19:30 CEST",
   "title": "The zone and kinematics module, UT-11 UT-12 UT-13 and the golden file"
 }

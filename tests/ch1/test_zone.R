@@ -67,10 +67,14 @@
 # precision as ay tends to 0. At ay = 0.111 ft/s^2, pitch 663165:55:2, it is
 # 1.620e-12 ft from a 50-digit value, where a cancellation-free form is 2.2e-14
 # ft off. No clause here checks t against an exact value, and the geometry is
-# not changed for it. (2) "2026 CSV reproduces at y = 8.5/12" is asserted on
-# the five fixed days. Over every open day it fails on 1 of 688,686 pitches,
-# 825000/31/3 at 0.063625 ft, the same artefact as above. A RECORD line prints
-# that count on every run.
+# not changed for it. (2) The R module's reproject carries no UT-12 guard: it
+# takes y_from = 54.18 without an error, as the SOP's R block does. The Python
+# twin carries the guard, and the UT-12 clauses below assert it there.
+#
+# THE MID-PLANE CLAUSE. "2026 CSV reproduces at y = 8.5/12" is read over every
+# pitch of every open 2026 day, 688,686 of them. One misses, 825000/31/3 at
+# 0.063625 ft, the same W2.15 artefact as above. It is pinned by identity in
+# MID_ARTEFACTS, and a RECORD line prints the count and the id on every run.
 #
 # WHAT IS ON THIS MACHINE. MLB Statcast CSV for 2022-2026. The Stats API side
 # (x0/y0/z0) for all of MLB 2026 through feed_pitch and pitch_joined, and for
@@ -472,15 +476,28 @@ record("the 0.0011 ft clause, outside its population",
        sprintf("every pitch in ABS games: %d of %d at or above 0.0011 ft, max %s ft. Called pitches in the four non-ABS games (D-P2-01): %d of %d, max %s ft",
                sum(p26$abs_game & e >= PLANE_BAR_FT), sum(p26$abs_game), fmt(max(e[p26$abs_game])),
                sum(nabs & e >= PLANE_BAR_FT), sum(nabs), fmt(max(c(0, e[nabs])))))
-five <- p26$gday %in% DAYS_2026
-check("2026 CSV reproduces at y = 8.5/12 (direct integration)", max(csv_self[five]) < 5e-7,
-      sprintf("max abs err %s ft, prints as %s, %d pitches on the five fixed days",
-              fmt(max(csv_self[five])), fmt(max(csv_self[five]), 6), sum(five)))
-bad_mid <- which(csv_self >= 5e-7)
-record("the same over every open 2026 day",
-       sprintf("%d of %d pitches at or above 5e-7 ft, a stated limit of the clause: %s",
-               length(bad_mid), nrow(p26),
-               paste(sprintf("%s %s ft", key26[bad_mid], fmt(csv_self[bad_mid], 6)), collapse = "; ")))
+# The mid-plane clause over every open 2026 day: every pitch of p26, in every
+# game. One pitch misses, 825000/31/3, the W2.15 artefact (DEV-35, D-P4-03,
+# DEV-43), whose CSV plate_x/plate_z miss the CSV's own trajectory. It is pinned
+# by identity, so a second miss anywhere in the season, or that one leaving,
+# fails the clause. A residual that is not a finite number counts as a miss.
+MID_BAR_FT <- 5e-7
+MID_ARTEFACTS <- c("825000/31/3")   # W2.15; DECISIONS.md D-P4-03, DEV-43
+miss_mid <- is.na(csv_self) | csv_self >= MID_BAR_FT
+bad_mid <- which(miss_mid); bad_mid <- bad_mid[order(-csv_self[bad_mid])]
+found_mid <- key26[bad_mid]
+same_mid <- identical(sort(found_mid), sort(MID_ARTEFACTS))
+check("2026 CSV reproduces at y = 8.5/12 (direct integration)", same_mid,
+      sprintf("%d of %d at or above 5e-7 ft, the %d pinned artefact and no other (%s); every other pitch max abs err %.3e ft, prints as %s; %d open days",
+              length(found_mid), nrow(p26), length(MID_ARTEFACTS),
+              if (same_mid) "identical set" else
+                sprintf("new: %s; gone: %s", paste(setdiff(found_mid, MID_ARTEFACTS), collapse = " "),
+                        paste(setdiff(MID_ARTEFACTS, found_mid), collapse = " ")),
+              max(csv_self[!miss_mid]), fmt(max(csv_self[!miss_mid]), 6), length(OPEN_2026)))
+record("the mid-plane clause, its pinned artefact",
+       sprintf("%d of %d pitches at or above 5e-7 ft over %d open 2026 days; pinned %s. Found: %s. The CSV's own plate_x/plate_z miss its trajectory there (W2.15, D-P4-03, DEV-43)",
+               length(bad_mid), nrow(p26), length(OPEN_2026), paste(MID_ARTEFACTS, collapse = " "),
+               paste(sprintf("%s %s ft", found_mid, fmt(csv_self[bad_mid], 6)), collapse = "; ")))
 record("2026 API pX/pZ at y = 17/12 (direct integration)",
        sprintf("called pitches in ABS games: max %s ft, median %s ft. The API's own pX/pZ do not follow exactly from its x0/y0/z0 at this plane, and this residual, not rounding, is what the cross-source clause measures",
                fmt(max(api_self[pop])), fmt(stats::median(api_self[pop]))))
@@ -663,6 +680,44 @@ check("D-14 the zone-truth predicate",
       signed_edge_in(hw + 1.44/12, 2.5, top, bot) - BALL_R_IN < 0 &&
         !(signed_edge_in(hw + 1.46/12, 2.5, top, bot) - BALL_R_IN < 0),
       "edge - 1.45 in < 0 flips between 1.44 in and 1.46 in outside the side edge")
+# D-14 against Savant's own published column. edge_dist_calc is Savant's signed
+# distance, in inches, from the nearest part of the ball to the zone: the
+# module's signed_edge_in less BALL_R_IN. It is reproduced from the drawer's own
+# plateX, plateZ, strikeZoneTop and strikeZoneBottom on every MLB 2026 row of the
+# 30 cached team drawers, so the radius, the any-part-of-ball rule and the
+# Euclidean corner are held to Savant's number, not bracketed. widthinches is
+# asserted 17 on every row, the module's plate. Each play is carried twice, once
+# in each team's drawer. The drawer has no date parameter, so each file's rows
+# dated on or after the seal boundary are dropped as it is parsed, before any
+# other column is read. No MLB 2026 row is an exception: DT-25.edge's two named
+# exceptions are AAA 2025 plays (DEV-41), outside this population.
+DRAWER_FILES <- sort(list.files(file.path(ROOT, "data", "raw", "savant", "abs_drawer"),
+                                pattern = "^mlb_2026_[0-9]+\\.json$", full.names = TRUE))
+EDGE_TOL_IN <- 1e-6
+EDGE_EXCEPTIONS <- character(0)   # play_ids pinned by identity; none in MLB 2026
+drw <- do.call(rbind, lapply(DRAWER_FILES, function(f) {
+  d <- jsonlite::fromJSON(f, simplifyVector = TRUE)$data
+  played <- as.Date(substr(d$game_date, 1, 10))
+  stopifnot(!anyNA(played))
+  d <- d[played < seal_start, , drop = FALSE]
+  data.frame(play_id = d$play_id, year = d$year, x = d$plateX, z = d$plateZ,
+             top = d$strikeZoneTop, bot = d$strikeZoneBottom, w = d$widthinches,
+             edc = d$edge_dist_calc)
+}))
+edge_err <- abs(signed_edge_in(drw$x, drw$z, drw$top, drw$bot) - BALL_R_IN - drw$edc)
+edge_miss <- is.na(edge_err) | edge_err >= EDGE_TOL_IN
+edge_found <- sort(unique(drw$play_id[edge_miss]))
+edge_same <- identical(edge_found, sort(EDGE_EXCEPTIONS))
+check("D-14 module reproduces Savant edge_dist_calc",
+      length(DRAWER_FILES) == 30 && nrow(drw) > 0 && all(drw$year == 2026) &&
+        all(drw$w == 17) && edge_same,
+      sprintf("max |module - edge_dist_calc| %.3e in, bar 1e-6 in, %d rows (%d plays) in %d MLB 2026 drawers, widthinches 17 on %d; %d rows at or above the bar, %s",
+              max(edge_err, na.rm = TRUE), nrow(drw), length(unique(drw$play_id)),
+              length(DRAWER_FILES), sum(drw$w == 17, na.rm = TRUE), sum(edge_miss),
+              if (edge_same) sprintf("the %d pinned exceptions and no other", length(EDGE_EXCEPTIONS)) else
+                sprintf("new plays %d (first: %s); gone: %s", length(setdiff(edge_found, EDGE_EXCEPTIONS)),
+                        paste(head(setdiff(edge_found, EDGE_EXCEPTIONS), 3), collapse = " "),
+                        paste(setdiff(EDGE_EXCEPTIONS, edge_found), collapse = " "))))
 check("nearest_edge names the edge that is nearest",
       identical(nearest_edge(c(hw + 1/12, 0, 0), c(2.5, top + 1/12, bot - 1/12),
                              top, bot), c("side", "top", "bot")),
