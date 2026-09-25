@@ -29,8 +29,8 @@ Partitioning on the UTC timestamp would put it on the wrong side of the seal.
 
 The filter is on explicit game-type codes, not on a date alone. The 2024 and
 2025 regular seasons started before spring training ended (2024-03-20 in Seoul
-against a spring end of 2024-03-26; 2025-03-18 in Tokyo against 2025-03-25),
-and spring 2025 ran an ABS trial in a subset of parks. A date-only filter would
+against a spring end of 2024-03-26; 2025-03-18 in Tokyo against 2025-03-25).
+Spring 2025 also ran an ABS trial in a subset of parks. A date-only filter would
 leak treated games into the 2025 control regime.
 
 ## Where sealed rows live
@@ -89,9 +89,9 @@ On success it appends one line to this file, in this form:
     UNSEALED | utc=<YYYY-MM-DDTHH:MM:SSZ> | madrid=<YYYY-MM-DD HH:MM TZ> | tag=prereg-v1 | commit=<40 hex> | head=<40 hex>
 
 Passing that gate is necessary, not sufficient. Three further preconditions are
-checked by `absump.seal._unlocked()` before any sealed row is read: the tag is
-pushed and matches `origin`, `quality/prereg.lock` matches the tagged
-pre-registration and its annexes, and the owner has set `ABS_SEAL_UNLOCK=1` in
+checked by `absump.seal._unlocked()` before any sealed row is read. First, the tag
+is pushed and matches `origin`. Second, `quality/prereg.lock` matches the tagged
+pre-registration and its annexes. Third, the owner has set `ABS_SEAL_UNLOCK=1` in
 one shell and appended a dated line to `DECISIONS.md`. No agent ever sets that
 variable.
 

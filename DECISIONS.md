@@ -1,4 +1,4 @@
-# Owner decisions — sports analytics project
+# Owner decisions: sports analytics project
 
 Recorded 2026-09-22 (Europe/Madrid). Hudson Pagni is the owner. Research questions, validation design, acceptance criteria and result calls are his; Claude Code implements under his direction.
 
@@ -32,7 +32,7 @@ Plain, direct prose. No hype, no filler, no rhetorical questions. Short sentence
 - Stop only for a true wall. If stuck, convene an agent panel before asking the owner.
 
 ## Decisions applied under the execution posture (recommended defaults; owner may override)
-- 2026-09-22, from the live data contract: AAA feeds show **two** challenge tokens per team in every 2024 and 2025 game sampled (never three), so the chapter-3 DP is 3x3 for AAA as well as MLB. Size it from the observed per-season maximum, not from the earlier 4x4 note. The 2023 AAA feeds sampled carry no ABS challenge data at all; the AAA arm is 2024-2025 unless a full-season scan of 2023 finds challenge records. AAA 2024 Tuesday games do carry challenges, so the arm is not split by weekday; format is read from each game's feed.
+- 2026-09-22, from the live data contract: AAA feeds show **two** challenge tokens per team in every 2024 and 2025 game sampled (never three). The chapter-3 DP is therefore 3x3 for AAA as well as MLB. Size it from the observed per-season maximum, not from the earlier 4x4 note. The 2023 AAA feeds sampled carry no ABS challenge data at all; the AAA arm is 2024-2025 unless a full-season scan of 2023 finds challenge records. AAA 2024 Tuesday games do carry challenges, so the arm is not split by weekday; format is read from each game's feed.
 
 ## Staging cache (2026-09-23)
 Raw pulls started early so the network time overlaps with fleet design: `~/sports-project/data/staging/` (see STAGING.md there). Ingest steps must import from this cache before hitting the network, then run the SOP's data tests on what they import. Throttle policy A3 was followed; provenance is in `manifest.jsonl`.
@@ -73,7 +73,7 @@ Raw pulls started early so the network time overlaps with fleet design: `~/sport
 ## W1.12 defaults (builder, 2026-09-23)
 - `gitleaks` was absent from PATH. Homebrew core ships exactly 8.30.1, the version SOP W1.12 pins, so it was installed from there rather than vendored into the repository or fetched at an unpinned version. The binary is a machine tool, not a tracked file; nothing under the repo changed to hold it.
 - The 8.30 CLI moved its scan verbs to `gitleaks git` and `gitleaks dir`, but `gitleaks detect` is retained as a hidden command and still scans full history. The SOP's literal `gitleaks detect --redact --no-banner` runs as written, so W1.13 and W1.16 inherit the string unchanged and no deviation is needed.
-- The Backblaze rule regex is the SOP's `00[0-9a-f]{22}` with a word boundary added on each side: `\b00[0-9a-f]{22}\b`. This is the only edit to a string the SOP names, and it is load-bearing rather than cosmetic. A 40-character git commit SHA beginning `00` contains a 24-character substring that matches the bare pattern; about one commit in 256 begins that way; GD-01 and GD-02 put a `git_sha` in every fit receipt under `out/`. The unbounded form would have failed the W1.16 secrets job on an ordinary commit. A real key ID appears as a standalone token, so the boundaries cost no detections. Tested both ways: a 24-character key ID is flagged, a 40-character SHA starting `00` is not.
+- The Backblaze rule regex is the SOP's `00[0-9a-f]{22}` with a word boundary added on each side: `\b00[0-9a-f]{22}\b`. This is the only edit to a string the SOP names, and it is load-bearing rather than cosmetic. A 40-character git commit SHA beginning `00` contains a 24-character substring that matches the bare pattern. About one commit in 256 begins that way. GD-01 and GD-02 put a `git_sha` in every fit receipt under `out/`. The unbounded form would have failed the W1.16 secrets job on an ordinary commit. A real key ID appears as a standalone token, so the boundaries cost no detections. Tested both ways: a 24-character key ID is flagged, a 40-character SHA starting `00` is not.
 - `[extend] useDefault = true`. The Backblaze rule is added to the upstream ruleset, not substituted for it. Replacing the default set with one rule would have been a large silent loss of coverage on a repo that is public from commit 1 (D-02).
 - The `.env.example` allowlist is a path rule, `(^|/)\.env\.example$`, and covers that one file. It deliberately does not extend to `.env`: `.env` is gitignored and must never reach a scan at all, and an allowlist entry for it would quietly excuse the case the hook exists to catch. Verified that the same bytes under another filename are still flagged.
 - `.env.example` contains no absolute path and no personal name. WR-19 and D-69 blind the author in every file reachable from the repository root while the SSAC review window is open, and the repository is public. The `ABS_DATA_ROOT` comment therefore describes the path rather than printing this machine's.
@@ -93,7 +93,7 @@ Raw pulls started early so the network time overlaps with fleet design: `~/sport
 
 ## W2.2 defaults (builder, 2026-09-23)
 - The audit rewrote nothing. SOP section 2.2's 24 `[project].dependencies` entries and 11 `[dependency-groups]` entries are in `pyproject.toml` character for character, checked by diffing both blocks with comments stripped. No pin is missing and no pin is extra, so the step's own condition for editing `pyproject.toml` was not met and the file was left alone. `dbt-adapters` is 1.24.5 and `dbt-common` is 1.39.0 in `uv.lock` and in `.venv`, exactly as section 2.2 states. `pybaseball` and `great-expectations` appear nowhere in the lock, the manifest, or any tracked file.
-- OWNER DECISION, recommended default stated, not taken silently. Section 2.2 says the pinned set "resolves on Python 3.12 in 0.8 s to 74 packages". It resolves to **106**. The default install set means `[project].dependencies` with no dependency group synced. That set is 24 direct and 82 transitive distributions. Four independent measurements agree: `uv export --no-default-groups` gives 106 names; `uv sync --no-default-groups --dry-run` leaves 107 including the editable `absump`. A clean re-lock of the dependency list alone in an empty temp project reports "Resolved 107 packages". The committed full lock, which also carries `dev` and `bayes-fallback`, is 178. The gap of 32 is not a bad resolution and not a pin error, since the pin list is the SOP's own. 74 is stale. It is also not the set with dbt removed, which would be 66, and section 2.2 states in the same sentence that the set pulls dbt-adapters and dbt-common, so dbt is inside whatever 74 counted. Two known sources of recent growth: polars 1.44.2 ships its runtime as a second distribution, `polars-runtime-32`, which older polars did not, and typer 0.27.2 adds `annotated-doc`. **Recommended default: amend section 2.2 to 106 and keep the pin set untouched.** The alternative, cutting packages to reach 74, would mean dropping a pinned dependency the SOP requires, which is worse. `tests/unit/test_deps.py` asserts the audited 106 by name, so any future drift prints the added and removed packages instead of a bare count. The full enumeration with per-package attribution is in `logs/evidence/W2.2-build.log`.
+- OWNER DECISION, recommended default stated, not taken silently. Section 2.2 says the pinned set "resolves on Python 3.12 in 0.8 s to 74 packages". It resolves to **106**. The default install set means `[project].dependencies` with no dependency group synced. That set is 24 direct and 82 transitive distributions. Four independent measurements agree: `uv export --no-default-groups` gives 106 names; `uv sync --no-default-groups --dry-run` leaves 107 including the editable `absump`. A clean re-lock of the dependency list alone in an empty temp project reports "Resolved 107 packages". The committed full lock, which also carries `dev` and `bayes-fallback`, is 178. The gap of 32 is not a bad resolution and not a pin error, since the pin list is the SOP's own. 74 is stale. It is also not the set with dbt removed, which would be 66. Section 2.2 states in the same sentence that the set pulls dbt-adapters and dbt-common, so dbt is inside whatever 74 counted. Two known sources of recent growth: polars 1.44.2 ships its runtime as a second distribution, `polars-runtime-32`, which older polars did not, and typer 0.27.2 adds `annotated-doc`. **Recommended default: amend section 2.2 to 106 and keep the pin set untouched.** The alternative, cutting packages to reach 74, would mean dropping a pinned dependency the SOP requires, which is worse. `tests/unit/test_deps.py` asserts the audited 106 by name, so any future drift prints the added and removed packages instead of a bare count. The full enumeration with per-package attribution is in `logs/evidence/W2.2-build.log`.
 - The 0.8 s resolve time in section 2.2 was a cold resolve with network on 2026-09-22 and is not reproducible offline. It is not gated. Warm re-resolve of the committed lock is 1 to 9 ms.
 - `requests` 2.34.2 is in `uv.lock`, pulled transitively by `dbt-core` and `dbt-duckdb`. Section 2.2's contradiction table drops `requests` as a direct pin, and it is not one. It cannot be removed transitively without removing dbt. This is not a rule 0.5.2 breach: the rule governs call sites in this repository and `ops/lint_http.sh` checks those, and dbt's internal use is not reachable from our code. The test asserts `requests` is absent from the direct list, not from the lock, which is the assertion that can actually hold.
 - The test computes the default set from `uv.lock` by graph traversal rather than by shelling out to `uv`, so the gate needs no subprocess, no network and no warm cache. The traversal follows only requested extras and was checked against `uv export --frozen --offline --no-default-groups --no-emit-project` on this lock: identical set of names, zero diff.
@@ -125,13 +125,13 @@ run. See "Round 5" below and DEV-19 for what that cost and how it was repaired.
 - `quality/steps.yml` did not exist when this step ran. The verify command `uv run --locked pytest tests/unit/test_makefile.py -q` was handed to the W9.1 agent instead, as W1.5 and W2.2 did with theirs.
 
 ## W1.6 defaults (builder, 2026-09-23)
-- OWNER DECISION, recommended default stated, not taken silently. GD-05 as the summary line writes it ("no `sealed` string outside those two allowlisted files") cannot hold together with W1.6, which requires `src/absump/paths.py` to route sealed rows to the sealed directory and to raise `SealViolation`. It already does not hold. `tests/unit/test_layout.py` (W1.2) names the two sealed directories in the section 2.1 tree, and the dbt project file W1.11 writes carries a `sealed` target name. **Recommended default: GD-05 counts the four GD-04 patterns — `analysis_set` with `'sealed'`, `v_pitch_sealed`, an unqualified raw `fct_pitch` read, and a literal date on or after the seal start.** Not the bare substring, and the allowlist stays at exactly two files. A directory name is not a sealed read. To take the strict reading instead, add `src/absump/paths.py` and `tests/unit/test_layout.py` to GD-05's allowlist, which makes the count four and contradicts the "exactly two" the SOP states twice. W9.7 owns the scanner and needs this answer before it writes it.
+- OWNER DECISION, recommended default stated, not taken silently. GD-05 as the summary line writes it ("no `sealed` string outside those two allowlisted files") cannot hold together with W1.6. W1.6 requires `src/absump/paths.py` to route sealed rows to the sealed directory and to raise `SealViolation`. It already does not hold. `tests/unit/test_layout.py` (W1.2) names the two sealed directories in the section 2.1 tree, and the dbt project file W1.11 writes carries a `sealed` target name. **Recommended default: GD-05 counts the four GD-04 patterns: `analysis_set` with `'sealed'`, `v_pitch_sealed`, an unqualified raw `fct_pitch` read, and a literal date on or after the seal start.** Not the bare substring, and the allowlist stays at exactly two files. A directory name is not a sealed read. To take the strict reading instead, add `src/absump/paths.py` and `tests/unit/test_layout.py` to GD-05's allowlist, which makes the count four and contradicts the "exactly two" the SOP states twice. W9.7 owns the scanner and needs this answer before it writes it.
 - Sealed days land under a `plain` subtree of the sealed root, not directly under it. The SOP's own ceremony is `tar -C data/sealed -cf - plain | age -p`, then `rm -rf` of the plain directory, and GD-10 asserts zero `*.parquet` and zero `*.json.zst` under the sealed root afterwards. Writing parts directly under the sealed root would make GD-10 fail by construction on the day the seal closes.
 - The seal boundary is one constant, `paths.LAST_OPEN_DATE`, and it is written as the last open day rather than as the first sealed day. GD-04 fails the repository on a literal date on or after the seal start, so no file outside the two allowlisted paths may spell that date. Everything that needs a sealed date computes it from this constant. W1.8's `seal.py` should import it rather than restate it; the dbt var is the day after it.
 - The uniqueness rule is gated as `tests/unit/test_paths.py::test_layout_strings_live_only_in_paths_py`. It reads the layout templates out of the module at run time and greps the tree, so the test spells none of the strings itself. Two scoping choices: the scan covers source files (`.py .R .sql .yml .yaml .toml .sh .stan .cfg .ini .mk`, plus `Makefile`, `dbt_project.yml` and the dbt profiles example), not Markdown. A document that names a path is not a call site, and `docs/warehouse.md` will name the warehouse file. Two template keys, the spill directory and the sealed root, are excluded as well, because a bare "tmp" or "sealed" is an ordinary word and a section 2.1 directory name.
 - The dbt profiles example is the one declared mirror of the warehouse path, named as such by W1.6, so the test allowlists that one file for that one string. Consequence for later steps: a shell script or Makefile target that needs the warehouse file must read it from `absump.paths.DUCKDB_PATH` or match the `warehouse/` directory by glob. Spelling the full path in `ops/` or the Makefile breaks this gate, which is the gate doing its job.
 - `connect()` tries `LOAD` before `INSTALL` for httpfs and parquet. The SOP writes `INSTALL x; LOAD x;`, and INSTALL reaches the extension repository over the network. Both extensions are already installed on this machine, so LOAD alone makes the connection need no request at all; INSTALL still runs when the extension is absent. This matters on a university network that resets some TLS connections.
-- `preserve_insertion_order = false` is load-bearing beyond memory. DuckDB 1.5.5 refuses `ROW_GROUP_SIZE_BYTES` while insertion order is preserved ("Binder Error: ROW_GROUP_SIZE_BYTES does not work while preserving insertion order"), so the 128 MB row group in the W1.6 write contract depends on the fourth SET statement. Verified both ways.
+- `preserve_insertion_order = false` is load-bearing beyond memory. DuckDB 1.5.5 refuses `ROW_GROUP_SIZE_BYTES` while insertion order is preserved ("Binder Error: ROW_GROUP_SIZE_BYTES does not work while preserving insertion order"). The 128 MB row group in the W1.6 write contract therefore depends on the fourth SET statement. Verified both ways.
 - DuckDB exposes no per-column dictionary switch in `COPY`; it dictionary-encodes strings on its own. The five columns W1.6 names (`pitch_type`, `description`, `home_team`, `stand`, `p_throws`) are therefore applied on the PyArrow writer path, `db.pyarrow_parquet_options()`, and are documented as the intent on both paths. ZSTD level 9 and the 128 MB row group are set on both.
 - The `ci` target is sized for a GitHub-hosted runner, not this Mac: threads 4, `memory_limit '8GB'`, in memory, parquet only. The SOP fixes the dev numbers and says only that ci is the in-memory fixture build. Reversible in two lines if CI hardware changes.
 - `interim()` raises `SealViolation` on a sealed officialDate instead of returning an open path. A writer that wants both sides calls `lake_path()`, which is the only function that knows the sealed branch. `assert_minted()` is the writer-side hook: `db.connect()` and `db.copy_to_parquet()` call it, and a path under the data root that this module did not mint is refused.
@@ -140,19 +140,19 @@ run. See "Round 5" below and DEV-19 for what that cost and how it was repaired.
 
 ## W1.7 defaults (builder, 2026-09-23)
 - Zero requests were issued building this step. Every test in `tests/unit/test_http_etiquette.py` installs an `httpx.MockTransport` and a fake clock; the R parity test writes a zstd frame and sends nothing.
-- RP-09 holds the section 2.3 table as data inside `tests/unit/test_throttle_budget.py` rather than scraping it out of the SOP. `sop/` is private planning material (D-03) and is not in the public repository, and RP-08 requires the test to run in a clean clone. The test asserts `config/throttle.yml` against the table row by row. It then re-derives, from the config's own delays and caps, all twelve section 10.1 rows, the three per-host totals, the 11,816-request grand total, the 17.8 h figure, the night counts and the 1,083-request sprint subset. Section 10.1 states hours to one decimal rounded half up and minutes rounded up, and the test rounds the same way rather than carrying a tolerance. The one exception is the sprint subset, which the SOP itself states as "about 3.0 h".
+- RP-09 holds the section 2.3 table as data inside `tests/unit/test_throttle_budget.py` rather than scraping it out of the SOP. `sop/` is private planning material (D-03) and is not in the public repository, and RP-08 requires the test to run in a clean clone. The test asserts `config/throttle.yml` against the table row by row. It then re-derives all twelve section 10.1 rows from the config's own delays and caps. It also re-derives the three per-host totals, the 11,816-request grand total, the 17.8 h figure, the night counts and the 1,083-request sprint subset. Section 10.1 states hours to one decimal rounded half up and minutes rounded up, and the test rounds the same way rather than carrying a tolerance. The one exception is the sprint subset, which the SOP itself states as "about 3.0 h".
 - The raw cache path is the client's own namespace: `data/raw/<host>/<first two hex of sha256(url)>/<sha256(url)>.zst`. Section 2.3 fixes the signature `get(url, *, host_budget=True)`, so there is nowhere to pass a destination. `absump.paths` (W1.6) mints readable raw paths from feed identifiers that a bare URL does not carry. **Default taken: the client owns this namespace, and `data/raw/_manifest.csv` records the readable URL beside every path.** W6.0's ingest promotes the bytes to `paths.raw_*` when it parses them. Reversible by adding a keyword to `get()`, which would deviate from the signature section 2.3 states.
-- Three module globals are test seams — `_monotonic`, `_sleep` and `_transport` — plus `_reset_state()`. A 10 s per-host gap is not testable in real time; with a clock that only moves when the client sleeps, the gaps are real arithmetic and cost no wall clock. Production code never rebinds them, and `_reset_state()` is documented as tests-only because the throttle clock and the daily budget are deliberately process-wide.
+- Three module globals are test seams (`_monotonic`, `_sleep` and `_transport`), plus `_reset_state()`. A 10 s per-host gap is not testable in real time; with a clock that only moves when the client sleeps, the gaps are real arithmetic and cost no wall clock. Production code never rebinds them, and `_reset_state()` is documented as tests-only because the throttle clock and the daily budget are deliberately process-wide.
 - 429 is retried although it is a 4xx. Section 2.3 names it in the backoff list in the same sentence as the no-retry-on-4xx rule. Every other 4xx raises `Fatal` on the attempt that met it, and 403 raises `Fatal` before any backoff, with no manifest row written.
 - A 3xx is fatal and redirects are not followed. The one redirect section 2.3 records is the leaderboard `year=` form, and the contract check refuses that URL before the transport is touched. A later step that needs a redirected resource fetches the canonical URL instead.
-- The two contract facts are enforced, not merely documented. A `/leaderboard/abs-challenges` URL carrying `csv=true` or `year=` raises before a request is issued. The drawer service at `/leaderboard/services/abs/` is explicitly exempt, because W4.2 records that it works only with the `year=` / `gameType=regular` form; the check is scoped to the leaderboard path and must never be widened to the host.
+- The two contract facts are enforced, not merely documented. A `/leaderboard/abs-challenges` URL carrying `csv=true` or `year=` raises before a request is issued. The drawer service at `/leaderboard/services/abs/` is explicitly exempt, because W4.2 records that it works only with the `year=` / `gameType=regular` form. The check is scoped to the leaderboard path and must never be widened to the host.
 - `Response.text` decodes with `utf-8-sig` for Savant and `utf-8` elsewhere, so the BOM is stripped at the one place bytes become text.
 - Python writes raw frames with `zstandard` level 10 in one shot; R writes them with `arrow::CompressedOutputStream` at the same level, which emits a frame with no content size in its header. `ZstdDecompressor.decompress()` refuses such a frame, so the Python reader streams instead. A frame written by either half is read by the other, and `tests/unit/test_http_etiquette.py` asserts it across an `Rscript` subprocess.
 - `R/lib/http.R` is written here. The W1.5 note recorded it as deferred to this step. It is the same policy in the other language: the same `config/throttle.yml`, the same `sha256(url)` cache path, the same ten manifest columns, the same `data/raw/_budget.json`, the same status classification and the same contract refusals. The parity test compares the User-Agent, both delays, both caps, the manifest columns, the zstd level and the computed destination path.
 - The R half records `wire_bytes` as the host's declared `Content-Length` when there is one and the decoded length otherwise, because curl does not hand the transfer size back through httr2. The Python half records the wire count directly. The column means the same thing on both sides only when the host declares a length; the manifest header is unchanged and the difference is commented at the call site.
 - The daily budget is per host, per UTC day, in `data/raw/_budget.json`, shared by both halves and written atomically. `host_budget=False` skips the cap for a single probe and never skips the delay: the delay is the etiquette, the cap is the ceiling.
 - `--dry-run` is available two ways: `ABSUMP_DRY_RUN` in the environment makes `get()` print the plan and send nothing, and `python -m absump.http --dry-run URL ...` prints a plan for many URLs. Estimated bytes are the manifest's own observed mean for that host, or section 2.3's measured 109,623 B compressed feed when the manifest holds no row for it. No figure in the planner was invented.
-- `ops/lint_http.sh` takes an optional root argument so a test can plant a violation in a temporary tree. Six planted call sites — `urllib`, `requests.`, `httpx.Client`, `httpx.get`, `httr2::request` and `curl ` — are asserted to fail it, and the two allowed files are asserted to pass. It scans `src/`, `R/`, `tools/` and `notebooks/`, skips `__pycache__`, `.ipynb_checkpoints`, `.Rproj.user` and `renv`, and allowlists by exact path.
+- `ops/lint_http.sh` takes an optional root argument so a test can plant a violation in a temporary tree. Six planted call sites (`urllib`, `requests.`, `httpx.Client`, `httpx.get`, `httr2::request` and `curl `) are asserted to fail it, and the two allowed files are asserted to pass. It scans `src/`, `R/`, `tools/` and `notebooks/`, skips `__pycache__`, `.ipynb_checkpoints`, `.Rproj.user` and `renv`, and allowlists by exact path.
 - `docs/legal.md` is not written yet. The RP-09 test that asserts the published statsapi policy equals the enforced one skips until that file exists, rather than passing vacuously.
 - Not fixed here, and not this step's files: `tests/unit/test_deps.py` and `tests/unit/test_layout.py` fail `ruff format --check`, which is the one failing check in `ops/lint.sh`. They belong to W1.4 and W1.2.
 - `quality/steps.yml` still does not exist, so the verify command `uv run --locked pytest tests/unit/test_http_etiquette.py tests/unit/test_throttle_budget.py -q && ops/lint_http.sh -q` was handed to the W9.1 agent, as W1.5, W1.6 and W2.2 did with theirs. No git command was run.
@@ -164,7 +164,7 @@ run. See "Round 5" below and DEV-19 for what that cost and how it was repaired.
 - The delegation table lists every pull in the repository, present and planned, with its host and its client. W2.5, W2.6, W2.7 and W2.8 go to `statsapi.mlb.com`; W2.9, W2.10, W2.11 and W4.2 to `baseballsavant.mlb.com`; W2.12 to `www.retrosheet.org`. W8.2 goes to `api.elections.kalshi.com`, W8.3 to Sportsbook Reviews Online, and W8.5 to `api.the-odds-api.com`. Steps downstream of W2.15 read the local cache and the warehouse and issue no request. The list is the SOP's dependency block and the W8 section; no step was invented.
 - **Recorded, not fixed: `ops/lint_http.sh` scans `src/`, `R/`, `tools/` and `notebooks/`, and does not scan `ops/` or `scripts/`.** The SOP's one shell `curl` is the monthly manual check of the CSAS 2027 page for its announced topic. That is an owner reading a web page, not a data pull, and nothing it returns enters `data/`, the warehouse or a model. If it is ever automated, it routes through the Python client or the linter's scan list grows. Widening the scan would mean editing W1.7's file, which this step is forbidden to do; it is flagged in `docs/data-contract.md` so it is known rather than discovered.
 - `docs/legal.md` publishes the throttle as policy prose and repeats no number that is not in `config/throttle.yml` or section 2.3. Those are 4 s and 3,000/day to statsapi, 10 s and 800/day to Savant, 10 s and 500/day elsewhere, the User-Agent verbatim, no email address ever sent, 4xx never retried, 403 fatal. It carries no email address itself, and a test asserts that. Where a host operator wants the pulls stopped, the file points at the repository's issue tracker rather than an address.
-- The gate test is `tests/unit/test_http_delegation.py`, 23 offline assertions. **No test id was invented for it**: the SOP names no `RP-`, `UT-` or `DT-` id for W2.3, and the file carries none. One assertion plants a `requests.get` call site in a temporary tree and asserts the linter exits 1 on it, so that a linter which silently scanned nothing could not pass the rest of the file.
+- The gate test is `tests/unit/test_http_delegation.py`, 23 offline assertions. **No test id was invented for it**: the SOP names no `RP-`, `UT-` or `DT-` id for W2.3, and the file carries none. One assertion plants a `requests.get` call site in a temporary tree and asserts the linter exits 1 on it. That way a linter which silently scanned nothing could not pass the rest of the file.
 - The verify command is the pytest module plus `sh ops/lint_http.sh -q`, not `make lint`. W1.7 recorded that `tests/unit/test_deps.py` and `tests/unit/test_layout.py` still fail `ruff format --check`, which would fail `make lint` for reasons that are not this step's.
 - `quality/steps.yml` still does not exist, so the verify command was handed to the W9.1 agent, as W1.5, W1.6, W1.7 and W2.2 did with theirs. No git command was run.
 
@@ -175,18 +175,18 @@ run. See "Round 5" below and DEV-19 for what that cost and how it was repaired.
 - Committed W2.3 with its gate red rather than fixing it. `make lint` exits 2 because `ruff format --check` flags `tests/unit/test_deps.py` and `tests/unit/test_layout.py`. The HTTP call-site lint and the throttle-figure prose check both pass. Reformatting a builder's file is the builder's work, not the commit agent's, and doing it silently would have hidden a red gate. The commit body states it.
 - Ran the three raw-data gates before staging, all pass, and added two checks of my own: `gitleaks protect --staged` (no leaks, 162.38 KB) and `bash ops/lint_http.sh` (LINT HTTP OK). No `.pre-commit-config.yaml` exists yet, so no hook ran, and the no-commit-to-branch hook is not installed, so a direct commit to main is correct at this point.
 - D-16 carried forward, still raised and not decided. The `Co-Authored-By: Claude Opus 5 (1M context)` trailer is on `b4c297e`, so it is now on all four commits. The history is still local and unpushed, which remains the cheapest moment for the owner to confirm or remove it.
-- Push is blocked, not failed. `git push -u origin main` was rejected: GitHub refuses an OAuth App creating `.github/workflows/.gitkeep` without `workflow` scope, and the gh token carries gist, read:org, repo only. Nothing reached the remote. This is the deferral already recorded by commit 3fbddfe (W1.3) and is not re-litigated. Two alternatives exist and neither is mine to take: refresh the token (`gh auth refresh -h github.com -s workflow`, needs a browser device code from the owner), or delete `.github/workflows/.gitkeep`, which would change the W1.2 layout and so is an owner decision. Recommended default: refresh the token, because the phase will need real workflow files later anyway.
+- Push is blocked, not failed. `git push -u origin main` was rejected: GitHub refuses an OAuth App creating `.github/workflows/.gitkeep` without `workflow` scope, and the gh token carries gist, read:org, repo only. Nothing reached the remote. This is the deferral already recorded by commit 3fbddfe (W1.3) and is not re-litigated. Two alternatives exist and neither is mine to take. One is to refresh the token (`gh auth refresh -h github.com -s workflow`, needs a browser device code from the owner). The other is to delete `.github/workflows/.gitkeep`, which would change the W1.2 layout and so is an owner decision. Recommended default: refresh the token, because the phase will need real workflow files later anyway.
 
 ## W1.7 / W2.3 independent verification of the HTTP chokepoint -- 2026-09-23 (Europe/Madrid)
 
 Verifier evidence: `logs/evidence/verify-verify-throttle-chokepoint.log`. Verdict REFUTED.
 
 - Throttle STANDS. `config/throttle.yml` is byte-identical to the YAML block quoted in SOP section 2.3 (21 non-comment lines, diffed programmatically). `docs/legal.md` publishes the same three rows. A repo-wide sweep found no surviving 1.5 s, 2.0 s or 2.6 s figure outside the SOP's own record of the withdrawal. Nothing to decide here.
-- Chokepoint guard REFUTED. Thirty realistic bypasses were planted in isolated temp trees and linted; no request was sent. `ops/lint_http.sh` caught three. It misses `subprocess.run(["curl", ...])` and `system2("curl", c(...))`, because PATTERN requires the literal `curl ` with a trailing space. It misses `httpx.post`, `from httpx import get`, `from requests import get`, `http.client`, `aiohttp` and a raw socket. It misses every library that fetches for you -- polars `read_csv` on an https URL, `pandas.read_json` on a URL, duckdb `httpfs`, `pyarrow.fs`, `arrow::read_csv_arrow`, `jsonlite::fromJSON`, `read.csv(url())`, `download.file`, `httr::GET`, bare `request()` after `library(httr2)`, and `baseballr` fetch functions. baseballr 2.0.0 is installed and named in SOP line 255, so that last one is a live risk in W-chapters, not a hypothetical. It also scans only `src R tools notebooks`: `ops/`, `scripts/`, `dbt/`, `app/`, `sql/`, `quality/` and `tests/` are not looked at, and this project keeps 23 shell scripts under `ops/` and 17 under `scripts/`.
+- Chokepoint guard REFUTED. Thirty realistic bypasses were planted in isolated temp trees and linted; no request was sent. `ops/lint_http.sh` caught three. It misses `subprocess.run(["curl", ...])` and `system2("curl", c(...))`, because PATTERN requires the literal `curl ` with a trailing space. It misses `httpx.post`, `from httpx import get`, `from requests import get`, `http.client`, `aiohttp` and a raw socket. It misses every library that fetches for you. These are polars `read_csv` on an https URL, `pandas.read_json` on a URL, duckdb `httpfs`, `pyarrow.fs`, `arrow::read_csv_arrow`, `jsonlite::fromJSON`, `read.csv(url())`, `download.file`, `httr::GET`, bare `request()` after `library(httr2)`, and `baseballr` fetch functions. The package baseballr 2.0.0 is installed and named in SOP line 255, so that last one is a live risk in W-chapters, not a hypothetical. It also scans only `src R tools notebooks`: `ops/`, `scripts/`, `dbt/`, `app/`, `sql/`, `quality/` and `tests/` are not looked at, and this project keeps 23 shell scripts under `ops/` and 17 under `scripts/`.
 - No live violation exists in the committed tree today. The chokepoint is intact as a fact about commit b4c297e. What fails is the guarantee.
 - The linter's own test is a tautology. `tests/unit/test_http_etiquette.py:519-527` plants exactly the six idioms that are literal members of PATTERN, all under directories the linter already scans. It proves the regex matches its own alphabet and cannot fail on any of the 27 misses.
 - Email posture, partly refuted. No header value contains `@`, and the User-Agent is not built from `git config user.email` -- verified by grep for `user.email`, `getpass`, `getuser`, `GIT_AUTHOR` and `gitconfig` across all code, no hits. But `get()` applies no check to the URL, and an offline MockTransport probe showed that `https://hudpag%40gmail.com:tok@statsapi.mlb.com/...` makes httpx add `Authorization: Basic aHVkcGFnQGdtYWlsLmNvbTp0b2s=`, which decodes to `hudpag@gmail.com:tok`. A query parameter carrying an address is also passed through. The `@` guard at `src/absump/http.py:244` and `R/lib/http.R:101` inspects `config["user_agent"]` only.
-- 403-fatal, no-retry-on-4xx and the cache short-circuit STAND, and the tests are real. Five mutations to `src/absump/http.py` (403 made retryable, 404 added to the retry ladder, `_FATAL_STATUS` emptied, the cache short-circuit disabled, `_throttle` removed) each produced a named failing test; the file was restored byte-identical after every one.
+- 403-fatal, no-retry-on-4xx and the cache short-circuit STAND, and the tests are real. Five mutations to `src/absump/http.py` (403 made retryable, 404 added to the retry ladder, `_FATAL_STATUS` emptied, the cache short-circuit disabled, `_throttle` removed) each produced a named failing test. The file was restored byte-identical after every one.
 
 OWNER DECISION D-VERIFY-01, raised, not taken. Widening `ops/lint_http.sh` changes an acceptance criterion that SOP section 2.3 states verbatim ("greps `src/`, `R/`, `tools/` and `notebooks/` for `requests.`, `httpx.get`, `httpx.Client`, `urllib`, `curl ` and `httr2::request`"), so it is not a silent fix. Recommended default: keep the SOP's six idioms as the floor and add six things in one edit. They are (i) the scan set `ops scripts dbt app sql quality tests`; (ii) bare `curl`/`wget` without the trailing space; and (iii) `httpx\.`, `aiohttp`, `http\.client` and `socket\.create_connection` in place of the two `httpx.` spellings. Then (iv) `from +(requests|httpx) +import`, and (vi) a `baseballr` import outside `R/lib/http.R`. Rule (v) is an `https?://` literal in any `.py`, `.R`, `.sql` or `.sh` outside the two call sites, `config/`, `docs/` and `tests/`. It catches every fetch-for-you library at once without enumerating them. Then extend `tests/unit/test_http_etiquette.py` to plant bypasses the pattern does NOT already contain, so the test can fail. Second decision, same entry: whether `src/absump/http.py:get()` should reject a URL carrying userinfo or an `@` in the query. Recommended default: yes, raise `HttpError` on either, since no endpoint in this project authenticates that way and the-odds-api's key rides in a normal query parameter.
 
@@ -229,7 +229,7 @@ behaviour so it is written down rather than discovered during the sealed run.
 Note for W9.7, not a decision. The layer-3 static scan allowlists exactly two paths,
 `src/absump/seal.py` and `quality/sql/analysis_set.sql`. The two new test files necessarily contain
 the sealed label and the seal date as literal expectations. They were written to keep the column
-name and the quoted label off the same source line and to use no date comparison operator, but
+name and the quoted label off the same source line and to use no date comparison operator. But
 whoever writes `tests/guard/test_no_sealed_reads.py` must run it against them and confirm the
 allowlist count of two still holds.
 
@@ -264,21 +264,21 @@ load-bearing rather than decorative. `tests/unit/test_seal_classifier.py` and
 `tests/unit/test_seal_config_agrees.py` pass the scan unaltered, as W2.4 intended.
 
 OWNER DECISION D-GUARD-01, raised with a recommended default (2026-09-23, Madrid). What "walks the
-whole repository" means for GD-04. The scan reads every file the repository ships -- `git ls-files`
-plus everything untracked that git would track -- minus file formats that carry no executable read:
-`.md`, `.txt`, `.csv`, `.lock`, images, archives and the other entries in `NON_CODE_SUFFIXES`. The
+whole repository" means for GD-04. The scan reads every file the repository ships (`git ls-files`
+plus everything untracked that git would track), minus file formats that carry no executable read.
+They are `.md`, `.txt`, `.csv`, `.lock`, images, archives and the other entries in `NON_CODE_SUFFIXES`. The
 exclusion is by format and never by location: `SCANNED_DIR_SKIPS` is empty and a test asserts it
 stays empty, which is the whole point of the R2 inversion. A format-blind scan is not available:
 `DECISIONS.md` itself names the held-out pitch view in prose, in the resolution table, so a scan
 that read `.md` would fail on this file. Recommended default: keep the format rule as built. The
 consequence to accept is that a held-out read hidden in a Markdown code fence is not caught by
-layer 3; it would still be caught by layer 1, layer 2 and GD-12, because prose does not execute.
+layer 3. It would still be caught by layer 1, layer 2 and GD-12, because prose does not execute.
 
 OWNER DECISION D-GUARD-02, raised with a recommended default (2026-09-23, Madrid). Rule 1 fires on
 the expression, not the vocabulary. `analysis_set` and the quoted held-out label must meet within
 one source line. The alternative, failing any file that contains both anywhere, was tried and
-rejected: it fails `tests/unit/test_seal_classifier.py` and `tests/unit/test_seal_config_agrees.py`,
-which are W2.4's correct tests of the frozen predicate, and the allowlist is capped at two paths so
+rejected. It fails `tests/unit/test_seal_classifier.py` and `tests/unit/test_seal_config_agrees.py`,
+which are W2.4's correct tests of the frozen predicate. The allowlist is capped at two paths, so
 they cannot be exempted. Recommended default: keep the one-line rule. GD-05's stricter reading --
 no held-out string anywhere outside the two allowlisted files -- is not implementable against the
 two-path cap and is recorded here as narrowed to the expression form.
@@ -299,9 +299,9 @@ W9.3 fixtures, defaults taken (2026-09-23, Madrid). All synthetic. Game 999001 a
 no fixture row can be mistaken for a real one. Eight plays carry the seven traps plus one
 clean strikeout as a control, because a consumer that handles every trap and breaks the
 ordinary case must still fail. The 119 Statcast column names are the export schema, taken
-from the header of the cached pre-2026 daily exports; no row of any real export is in the
+from the header of the cached pre-2026 daily exports. No row of any real export is in the
 repository, and the header sha256 is identical across all 470 cached pre-2026 files.
-Standing is evaluated on the original call, not the stored final call: the overturned
+Standing is evaluated on the original call, not the stored final call. The overturned
 challenge in the fixture was a ball called by the umpire and challenged by the fielding
 team, so a consumer that reads standing off details.call.code gets it backwards. The
 Statcast-to-feed alignment rule is written into the ground truth: drop Statcast rows whose
@@ -368,7 +368,7 @@ None of them changes a research question, a validation design or an acceptance c
   v6.1.0 and says nothing about checkout, so the current major is used, consistently in
   both files.
 - Every job that reads git history or tags checks out with fetch-depth 0, and the guard,
-  python and seal-guard jobs also fetch tags. gitleaks over full history needs it; the
+  python and seal-guard jobs also fetch tags. The gitleaks scan over full history needs it, and the
   guard would otherwise pass on a shallow clone that cannot see what it is checking.
 - The lint job runs ruff through uv (`uv run --locked ruff check .`), not a bare ruff, so
   CI uses the version uv.lock pins rather than whatever the runner image ships.
@@ -388,8 +388,8 @@ None of them changes a research question, a validation design or an acceptance c
   That is a CI toolchain install, not a data request, and .github/ is outside the scan
   path of ops/lint_http.sh (src, R, tools, notebooks).
 - seal-guard.yml runs W9.7 layer 3 as its own step (tests/guard/test_no_sealed_reads.py)
-  and layer 4 as the whole tests/guard directory, because the GD-01 and GD-02 receipt
-  tests are W9.7's files and a -k filter that matches nothing exits 5.
+  and layer 4 as the whole tests/guard directory. That is because the GD-01 and GD-02 receipt
+  tests are W9.7's files, and a -k filter that matches nothing exits 5.
 - The SOP names three provenance keys verbatim -- prereg_tag, fit_started_at,
   input_max_game_date -- but not the key holding the tag's commit SHA. The check accepts
   prereg_commit, prereg_sha, prereg_commit_sha or prereg_tag_sha and requires the value
@@ -498,7 +498,7 @@ SOP section 9.1 closes the prose artifact with four clauses. Three are now mecha
   scan started is not evidence about the step.
 - The normaliser carries four named rules, RN-01 to RN-04, listed in the header of
   `scripts/prove.sh`. They replace a leading wall-clock stamp, an "in 17ms" style
-  duration, a pytest temporary directory number, and a duration a step times itself on
+  duration and a pytest temporary directory number. They also replace a duration a step times itself on
   a line that already says elapsed, took, duration, load or smoke ok. Each log that had
   a token replaced ends with a line naming the rules that fired. Counts, sizes,
   versions, package names, paths, rule ids and every pass or fail line are untouched.
@@ -653,12 +653,12 @@ named in each entry.
 
 ### D-G3 `ops/env-setup.sh` is exempt from `ops/lint_http.sh`
 
-*(guard lane; written as "DEC-??")* The round-3 chokepoint verifier found the
+*(guard lane; drafted with the placeholder id "DEC-" and no number.)* The round-3 chokepoint verifier found the
 gate red on a clean tree with none of its own plants present: `[SH-CURL]
 ops/env-setup.sh` for the uv installer, and `[R-RSCRIPT]` twice for the R
 packages and CmdStan. The round-2 rewrite moved this file into scan range on
-purpose and gave `R-RSCRIPT` a file-scope conjunct, so a provisioning script that
-names any network idiom anywhere trips on every `Rscript -e` in it, and a
+purpose and gave `R-RSCRIPT` a file-scope conjunct. A provisioning script that
+names any network idiom anywhere then trips on every `Rscript -e` in it, and a
 permanently red gate blocks every prove run that depends on it.
 
 **Decision.** `^ops/env-setup\.sh:` joins `EXEMPT` as its seventh entry. It is
@@ -676,8 +676,8 @@ listed by the scanner; moving it again would reopen DEV-12 for no gain.
 **Evidence.** `logs/evidence/verify-chokepoint-r3.log` (red),
 `logs/evidence/fix-chokepoint-r3.log` (green after).
 
-This also closes the git lane's owner item **D-GIT-01**, which recorded that the
-bootstrap had nowhere to live under the two rules as they then stood and that no
+This also closes the git lane's owner item **D-GIT-01**. That item recorded that the
+bootstrap had nowhere to live under the two rules as they then stood, and that no
 round-3 commit could be written while the file was on disk. The exemption is the
 resolution; the alternatives D-GIT-01 listed (keep the installer outside the
 repository, or relax the guard's executable rule) are both declined.
@@ -686,7 +686,7 @@ repository, or relax the guard's executable rule) are both declined.
 
 *(prove-receipts lane; written as "D-PROVE-06", which is taken above.)*
 `scripts/prove.sh`'s normaliser is a line-wise text filter: it strips escapes and
-rewrites four families of run-local token (RN-01..RN-04), and it cannot reorder
+rewrites four families of run-local token (RN-01..RN-04). It cannot reorder
 lines, because reordering a log would destroy the only thing a log is for. A
 verify command that prints an unordered collection therefore defeats receipt
 byte-identity by construction. Round 3 measured exactly that: a failing
@@ -711,13 +711,13 @@ outputs land in the receipt log. Measured with a stubbed failing lint:
 ### Stated limits, recorded rather than dropped (no decision owed)
 
 The guard and chokepoint lanes each closed round 3 by naming what a text scanner
-cannot decide, in the header of `ops/lint_http.sh` and in the "WHAT THIS STILL
+cannot decide. They named it in the header of `ops/lint_http.sh`, in the "WHAT THIS STILL
 DOES NOT CATCH" header of `tests/guard/gd04_scan.py`, and in
-`logs/decisions-pending/last-round.md`. In short: a URL that does not exist in
-the source; a request made inside a dependency; whether a matched line ever runs;
-a held-out day written with no comparison off the analysis surface; date
-arithmetic whose offset is not a literal on the same line; a character code built
-by arithmetic; a non-date datum copied into a fixture; and anything binary or
+`logs/decisions-pending/last-round.md`. In short, a text scanner cannot decide a URL that does not exist in
+the source, a request made inside a dependency, or whether a matched line ever runs.
+Nor can it decide a held-out day written with no comparison off the analysis surface, or date
+arithmetic whose offset is not a literal on the same line. The same holds for a character code built
+by arithmetic, a non-date datum copied into a fixture, and anything binary or
 under `data/`. The behavioural backstops are `data/raw/_manifest.csv`, the
 pre-commit hook, the red-team run (GD-09) and GD-10.
 
@@ -738,24 +738,24 @@ The git lane does not write `docs/DEVIATIONS.md`. These three arrived in
 highest entry in that file, so the numbers are free. They are parked here so the
 round-3 commit does not lose them.
 
-- **DEV-15 — W1.2 no longer asserts that an ignored directory exists on disk.**
-  Five directories in the section 2.1 tree cannot exist in a clone:
-  `.github/workflows` (no workflow scope, parked at `ops/ci-pending/`, DEV-04),
-  `warehouse`, `data/raw`, `data/interim`, `data/marts` (excluded by
+- **DEV-15: W1.2 no longer asserts that an ignored directory exists on disk.**
+  Five directories in the section 2.1 tree cannot exist in a clone. One is
+  `.github/workflows` (no workflow scope, parked at `ops/ci-pending/`, DEV-04).
+  The rest are `warehouse`, `data/raw`, `data/interim` and `data/marts` (excluded by
   `.gitignore`, and the publish policy forbids anything under `data/` on the
   public remote). `test_directory_exists` now covers the tracked half only, every
   entry of which carries a tracked `.gitkeep`; the ignored half is held by
   `test_ignored_directory_is_ignored`, which asserts the `.gitignore` rule rather
   than the filesystem. An ignored directory that stopped being ignored still
   fails W1.2.
-- **DEV-16 — the ignore checks ask through a probe path inside the directory.**
+- **DEV-16: the ignore checks ask through a probe path inside the directory.**
   `.gitignore` writes these rules with a trailing slash, which matches a
-  directory, and git resolves a path that is not on disk as a file, so in a clone
+  directory. Git resolves a path that is not on disk as a file, so in a clone
   `git check-ignore research` reports nothing and exits 1. Both ignore tests now
   ask `git check-ignore -q <dir>/.ignore-probe`, which matches the same rule and
   answers identically in a clone and on a working machine. The one-call
   multi-path form the SOP names is kept, with probe paths.
-- **DEV-17 — W1.2's branch assertion is anchored on `origin/main`.** A clone
+- **DEV-17: W1.2's branch assertion is anchored on `origin/main`.** A clone
   checked out on `phase01/public` has `origin/main` and no `refs/heads/main`, and
   the round-2 form failed there for a reason that says nothing about the layout.
   `origin/main` is now the anchor; HEAD must be its tip or a descendant; a local
@@ -763,7 +763,7 @@ round-3 commit does not lose them.
 
 ### Owner items still open at the close of round 3
 
-- **D-PROVE-09 (written as D-PROVE-08) — nothing in the bootstrap path installs
+- **D-PROVE-09 (written as D-PROVE-08): nothing in the bootstrap path installs
   the W2.1 hook.** A clean clone has no `.git/hooks/pre-commit` and no
   `.git/hooks/pre-commit.framework`. `make bootstrap` runs `ops/bootstrap.sh`,
   which installs neither, so W2.1 fails in any clone until a human runs two
@@ -782,7 +782,7 @@ round-3 commit does not lose them.
 
 ### Owner items closed by this commit
 
-- **D-PROVE-10 (written as D-PROVE-09) — the three number ledgers were
+- **D-PROVE-10 (written as D-PROVE-09): the three number ledgers were
   untracked.** `docs/numbers.json`, `docs/priorart-numbers.txt` and
   `docs/numbers-allow.txt` are what makes `quality/check_numbers.py` green, and
   `quality/steps.yml` names all three in W9.13's `needs:`, so W9.13 read MISSING
@@ -794,7 +794,7 @@ round-3 commit does not lose them.
   packages to 0). The file now runs `uv sync --locked --all-groups`, matching
   W1.4's own command and D-PROVE-02.
 
-## Round 4 (2026-09-23) — the single-builder round
+## Round 4 (2026-09-23): the single-builder round
 
 One builder owned the whole tree; no parallel lanes, so none of round 3's
 cross-lane churn was possible. Every red-team probe ran in a scratch root under
@@ -818,7 +818,7 @@ can reproduce this from the public repo; while bootstrap installed no hook that
 claim was false.
 
 `ops/bootstrap.sh` now runs `uv run --locked pre-commit install` and then
-`sh ops/install_git_hooks.sh`, in that order and documented as load-bearing:
+`sh ops/install_git_hooks.sh`, in that order and documented as load-bearing.
 `pre-commit install` overwrites `.git/hooks/pre-commit`, and
 `ops/install_git_hooks.sh` preserves the framework hook as
 `pre-commit.framework` and execs it, so both still run on every commit.
@@ -835,14 +835,14 @@ The pairing rule was asserted but had no writer: `ops/unseal.sh` appended the
 `UNSEALED` line to `docs/prereg/SEAL.md` and stopped there, and
 `tests/guard/test_unseal_receipt.py` could only warn until an unseal had already
 happened. That is a gate whose first firing would come immediately after the one
-irreversible act it exists to police, at the moment when the only way to satisfy
+irreversible act it exists to police. At that moment the only way to satisfy
 it is to hand-write the receipt it was designed to forbid.
 
 `ops/unseal.sh` now writes `quality/receipts/unseal-<tag>.log` carrying the same
 `commit=<sha>` as the line, in the same success path. Three details are
-deliberate: the receipt is written **before** the claim, so no window exists in
-which an `UNSEALED` line stands with nothing behind it; the script refuses if the
-receipt already exists, so one tag can never be unsealed twice; and `--check`
+deliberate. The receipt is written **before** the claim, so no window exists in
+which an `UNSEALED` line stands with nothing behind it. The script refuses if the
+receipt already exists, so one tag can never be unsealed twice. And `--check`
 still writes nothing. The test is now unconditional and also asserts the write
 order and the refusal, so the writer cannot regress into a warning.
 
@@ -857,15 +857,15 @@ problem out of proportion to the edit. Both documents are corrected, and
 `tests/unit/test_lint_http_bypasses.py::test_the_documented_rule_count_matches_the_gate`
 now reads the count out of the linter's own banner and fails if either document
 disagrees. A rule added without moving the prose fails in the commit that adds
-it. The SOP paragraph also names the two structural shapes round 3 introduced —
-the file-scope conjunct and the morpheme family — because the shape change
+it. The SOP paragraph also names the two structural shapes round 3 introduced
+(the file-scope conjunct and the morpheme family), because the shape change
 matters more than the count.
 
 **Caveat the owner should know.** `sop/` is excluded by `.gitignore:7`, so
 `sop/SOP-final.md` is not in the public repo and this correction lands on the
 working machine only. The tracked half of the parity claim is
 `docs/DEVIATIONS.md` DEV-04, which every clone gets, and the test asserts that
-one unconditionally; the SOP is checked where it exists and skipped where it
+one unconditionally. The SOP is checked where it exists and skipped where it
 does not, so a reviewer's clone does not fail on a file the publish policy keeps
 out. If the SOP is meant to be part of the public pre-registration, that is an
 owner decision (**O-R4-02**) and not one this round should take silently.
@@ -876,7 +876,7 @@ Owner: round 4. Status: applied.
 
 `data/sealed/` is empty in phase 01, so the immutability guard declares itself
 vacuous through `VacuousGuard` rather than passing silently. That is honest now
-and dangerous later: once the phase-02 pull seals real rows, an empty manifest
+and dangerous later. Once the phase-02 pull seals real rows, an empty manifest
 would let the drift check compare nothing against nothing and report GD-06 green
 while the containment check slept.
 `test_the_vacuity_expires_when_the_seal_carries_rows` is inert while the
@@ -887,9 +887,9 @@ the one check that tests the layer actually holding the data.
 
 Owner: round 4. Status: applied.
 
-`ops/lint_http.sh` already took a ROOT argument; the scanner did not, which is
+`ops/lint_http.sh` already took a ROOT argument, and the scanner did not. That is
 why round 3's guard verifier had to work on a scratch branch inside the shared
-tree and then explain an unrelated diff, and why round 2 planted in the
+tree and then explain an unrelated diff. It is also why round 2 planted in the
 repository and corrupted two other lanes' receipts. `--root DIR` scans any tree,
 repository or not. **SOP W9.7 rule: every red-team plant goes in an isolated
 clone or a scratch root. Never the live tree.**
@@ -914,7 +914,7 @@ since round N", never exhaustiveness.
   O-G1." The minority judge was right and the item was implemented. Checked
   against the tree rather than counted.
 - **Putting `ops/` on rule 5's analysis surface.** One judge asked for it (by
-  file shape, for config-shaped files); two asked for the opposite, that the
+  file shape, for config-shaped files). Two asked for the opposite, that the
   asymmetry be *declared* so that a later round does not widen it and then
   silence the resulting noise. The
   majority was followed: `scripts/` is on the surface, `ops/` is not, rule 6c
@@ -958,15 +958,15 @@ the gate erased its own cause and four rounds of proving never saw it.
 - **Why the exclude is pinned by tests, not by comment.** An exclude is an escape hatch and
   the next one will be easier to add than this one was. `tests/unit/test_precommit_config.py`
   now asserts the exclude is exactly that path, that it is the only exclude in the config
-  and that there is no top-level exclude, and that the tracked `renv/activate.R` still
-  carries the whitespace renv emits -- if someone strips it by hand, bootstrap starts
+  and that there is no top-level exclude. It also asserts that the tracked `renv/activate.R` still
+  carries the whitespace renv emits. If someone strips it by hand, bootstrap starts
   dirtying the tree again and that test says so.
 - **Nothing else was touched.** The verifier's other findings were out of criterion and are
-  recorded as limits, not repairs: the stale brief premise, `make lint-http` not existing
+  recorded as limits, not repairs. One is the stale brief premise. Another is `make lint-http` not existing
   as a target (the HTTP lint lives in `make lint` and standalone at `ops/lint_http.sh`,
-  both exit 0), the three RETIRED steps being bookkeeping, `make prove` rewriting the 26
-  receipts under `quality/receipts/` by design, and three declared GD-04 limits that this
-  run actually caught and that DEV-18's paragraph can therefore be tightened against.
+  both exit 0). The others are the three RETIRED steps being bookkeeping, `make prove` rewriting the 26
+  receipts under `quality/receipts/` by design, and three declared GD-04 limits. This
+  run actually caught those limits, and DEV-18's paragraph can therefore be tightened against them.
 
 ## Decisions applied under the execution posture, phase 02 (2026-09-23, Madrid)
 
@@ -1027,8 +1027,8 @@ Owner: W2.5. Status: applied.
 
 The table carries the SOP's thirteen columns in the SOP's order, plus `status_coded` and
 `status_detailed`. Without the coded state DT-14 cannot be stated at all. MLB reports a
-cancelled or postponed game with `abstractGameState` Final and an empty officials array:
-1 in MLB 2024, 1 in MLB 2026, 26 in AAA 2023, 18 in AAA 2024 and 23 in AAA 2025. The SOP
+cancelled or postponed game with `abstractGameState` Final and an empty officials array.
+The counts are 1 in MLB 2024, 1 in MLB 2026, 26 in AAA 2023, 18 in AAA 2024 and 23 in AAA 2025. The SOP
 sentence "every Final game has exactly one Home Plate official" is false as written in
 five of eight seasons. The two columns stay, and DT-14 reads the coded state.
 
@@ -1115,9 +1115,9 @@ A static import would make the whole unit pack unrunnable until `absump.zone` an
 `absump.geometry` land, which is the opposite of what a coverage contract is for. The names
 come from `SOP_MODULES`, a literal tuple the file's own first test pins verbatim, and all
 five are first-party, so no string reaches that call that the SOP did not put there. The
-exemption is by path and so turns off all thirty-seven rules inside that file; it is kept the
+exemption is by path and so turns off all thirty-seven rules inside that file. It is kept the
 size of the one line that needs it by
-`test_the_coverage_contract_exemption_stays_narrow`, which fails if any other request idiom
+`test_the_coverage_contract_exemption_stays_narrow`. That test fails if any other request idiom
 appears there or if a second dynamic import is added.
 
 ### D-P3-03 The warehouse path is written in `src/absump/paths.py` and nowhere else
@@ -1126,9 +1126,9 @@ Owner: W9.6 / W9.4. Status: applied.
 
 `tests/unit/test_paths.py` holds every layout string to one copy. Phase 03 added seven more
 copies of `warehouse/abs.duckdb`. The two sprint checkpoints and `quality/verify_contract.py`
-now take it from `absump.paths`; `quality/warehouse_contract.yml` and the W9.6 registry record
+now take it from `absump.paths`. `quality/warehouse_contract.yml` and the W9.6 registry record
 name it as the token `{duckdb}`, which `verify_contract.py` and `write_receipt.py` resolve
-through the same module; the rest were prose and were reworded. `--database` still accepts a
+through the same module. The rest were prose and were reworded. `--database` still accepts a
 literal path, so an operator can point the checker at a copy by hand.
 
 ### D-P3-04 `mart_called_pitches` is rebuilt on `int_called_pitch`, and publishes no bare plate_x
@@ -1148,9 +1148,9 @@ reworded to "no call to any MLB or Savant host" for the reason recorded at D-P2-
 
 Owner: W1.8 / W9.7. Status: applied, with the remainder referred to the owner.
 
-`dbt/dbt_packages/` is third-party source whose integration tests carry date literals, and
+`dbt/dbt_packages/` is third-party source whose integration tests carry date literals.
 `dbt/logs/` is dbt's debug log, which echoes back the boundary comparison of the build that
-just ran; rotation meant `dbt.log.1` was scanned while `dbt.log` was not. Both are gitignored
+just ran. Rotation meant `dbt.log.1` was scanned while `dbt.log` was not. Both are gitignored
 transcripts or vendored code, excluded on the same format-and-mode terms as
 `quality/receipts/`, and `tests/guard/test_no_sealed_reads.py` pins the new prefix list. That
 clears 2,477 of the 2,542 findings. The remaining 65 are ours and are not a scanning defect:
@@ -1359,7 +1359,7 @@ called-pitch data, and use the Savant leaderboard only as an out-of-sample bench
 static seasons, 2015-2025.
 
 Why. We hold every called pitch through 2026-09-21. A framing measure built from those
-pitches has a date on it, stops where the seal stops, and can be cut the way every other
+pitches has a date on it and stops where the seal stops. It can be cut the way every other
 Chapter 1 and Chapter 2 quantity is cut: by catcher, by month, by count, by umpire,
 split-half for reliability. The Savant 2026 number can do none of that. It is one
 whole-season scalar per catcher, it moves every night, it cannot be asked for "through
@@ -1384,7 +1384,7 @@ twelve identical files and 28 silent parse errors on the same night.
 
 What the owner decides: whether to accept the default, or to keep the benchmark. If the
 benchmark is kept, the honest form is to pull the 2026 leaderboard once at the end of the
-regular season, pin it then, label it in the paper as a post-seal external figure, and keep it
+regular season and pin it then. The paper would label it as a post-seal external figure and keep it
 out of every fitted model.
 
 ### D-P3-14 DT-04's blank mid-plane bound is re-cut with the corpus, at 900
@@ -1411,7 +1411,7 @@ both places that hold it, `{% set blank_mid_in_mart_max %}` in
 re-measured with it, 591/21/612 to 762/22/784.
 
 Owner question left open: whether a count bound over a growing corpus is meant to be re-cut
-with the corpus, or should be expressed as a rate so the next backfill does not trip it.
+with the corpus. The other option is a rate, so the next backfill does not trip it.
 
 What would reverse it: a blank row that is neither untracked nor missing kinematics, which
 breaks the structural clause and makes the count a symptom rather than a scale.
@@ -1423,7 +1423,7 @@ nothing sealed was committed: the finding is that it nearly was.
 
 Two untracked fixtures, `tests/data/fixtures/savant_abs_batter_2026-09-24.html` and
 `savant_abs_catcher_2026-09-24.html`, were staged for commit carrying the live 2026 ABS
-leaderboard in machine-readable form: `n_total_sample` 103,304 batting and 232,743 fielding,
+leaderboard in machine-readable form. They held `n_total_sample` 103,304 batting and 232,743 fielding,
 `n_challenges` 4,635 and 5,603, plus per-player records with names and ids. Those totals are
 season-to-date aggregates read on 2026-09-24, and DEV-40 measures that they grew by 648 and
 1,520 over the 2026-09-22 baseline, which is exactly the first sealed day. Committing them
@@ -1441,14 +1441,14 @@ real values are not used. Two assertions that read captured values were re-aimed
 they are named in the RUNLOG line for this commit. All eight tests pass, all three absData
 routes and both `leagueData` container shapes still parse.
 
-The general rule this makes explicit: a fixture pins shape, so it never needs real values, and
+The general rule this makes explicit: a fixture pins shape, so it never needs real values. And
 a fixture captured from a live season-to-date endpoint after 2026-09-21 is a sealed-set input
 whatever it is used for.
 
 Two carriages of the same aggregates already exist in the tracked tree and are left as they
-are, because both are prose or receipt scalars rather than a machine-readable record set, and
-one of them is the entry that documents the contamination: `docs/DEVIATIONS.md` DEV-40 states
-103,304 and 232,743 in its diagnosis, and `quality/receipts/W2.11.log` and
+are, because both are prose or receipt scalars rather than a machine-readable record set.
+One of them is the entry that documents the contamination. `docs/DEVIATIONS.md` DEV-40 states
+103,304 and 232,743 in its diagnosis. `quality/receipts/W2.11.log` and
 `quality/receipts/W4.3.log` print 4,635 and 5,603 in DT-24 PASS lines from the 2026-09-24
 sweep. No other tracked file carries an aggregate of this kind.
 
@@ -1458,11 +1458,11 @@ from a static season, 2015-2025, and never from 2026.
 - Owner sign-off, phase 03 decisions: **not given**. Recorded 2026-09-24 by the agent that
   applied the defaults above. Each entry names what would reverse it.
 
-## Owner R0 answers, 2026-09-24 (Madrid) — binding, taken before the prereg-v1 tag
+## Owner R0 answers, 2026-09-24 (Madrid): binding, taken before the prereg-v1 tag
 
 Hudson Pagni answered the three R0 questions himself on 2026-09-24 (Europe/Madrid). Every
 entry below is **the owner's own answer**, not an agent default and not a recommended
-default awaiting sign-off. Two of the three had been argued both ways by agents, and SOP
+default awaiting sign-off. Two of the three had been argued both ways by agents. SOP
 section 9.6 item 12 makes the owner's answer a condition of done, so the answers are
 recorded here before the tag rather than inferred after it.
 
@@ -1509,9 +1509,9 @@ for all seasons, and the ABS-measured cohort is a pre-registered robustness arm.
 cohorts are named in the pre-registration, and the arm is declared before the tag rather
 than chosen after a result.
 
-The coverage that drove it, ABS-measured batter-seasons against all batter-seasons, read
+The coverage that drove it is ABS-measured batter-seasons against all batter-seasons. It was read
 from `data/interim/dim_batter_season` and verified against the warehouse dimension on
-2026-09-24: 2022 303 of 693, 43.7%; 2023 371 of 656, 56.6%; 2024 447 of 651, 68.7%; 2025
+2026-09-24. By season: 2022 303 of 693, 43.7%; 2023 371 of 656, 56.6%; 2024 447 of 651, 68.7%; 2025
 533 of 673, 79.2%; 2026 658 of 662, 99.4%. Roster height plus the offset covers 100% of
 every one of those seasons.
 
@@ -1527,6 +1527,9 @@ survivorship-biased subset still active in 2026.
 What would reverse it: a measured offset that is not small or not unbiased in a season
 other than 2026, which would make the primary cohort carry a systematic error rather than
 noise.
+
+Note added 2026-09-25 by the docs-merge lane, not the owner's words: D-P4-04 refines the
+offset calibration under D-R0-03 and is OWNER-VISIBLE. The answer above is unchanged.
 
 ### D-R0-03 OWNER ANSWER, R0 review: the prereg-v1 tag is pushed on green gates, with no prior read
 
@@ -1554,6 +1557,13 @@ plate-crossing kinematics.
 D-P4-03 joined them on 2026-09-25, when the W3.3 verifier's full sweep reopened D-P4-02.
 It is applied under the same delegation. It too touches no estimand, acceptance criterion or
 sealed set.
+
+D-P4-04 to D-P4-23 joined on 2026-09-25, from the fifth phase-04 run. The docs-merge lane
+merged them from `logs/decisions-pending/` and recorded ten defaults that the phase-04
+orchestrator applied. Unlike the first three, several touch an estimand's inputs, an
+acceptance criterion or the reading of one. D-P4-04 and D-P4-15 are OWNER-VISIBLE for that
+reason. D-P4-17 to D-P4-19, and the snapshot B item in D-P4-20, are OPEN: the lanes left them
+for the owner, and no default is applied. None of the entries reads the sealed set.
 
 **No entry below is an owner answer in his own words.** Each is applied under D-R0-03.
 The owner may override any of them, and an override becomes a DEVIATIONS entry.
@@ -1695,3 +1705,569 @@ override.
 
 Evidence: `logs/evidence/W3.3-fix2.log`; the verifier's sweep,
 `logs/evidence/W3.3.verify-geometry.log`.
+
+### D-P4-04 APPLIED UNDER D-R0-03, OWNER-VISIBLE, refines D-R0-02: the roster offset is calibrated separately inside and outside the ABS-measured cohort, and the robustness arm must agree in sign
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+Hudson Pagni did not answer this question himself. It is OWNER-VISIBLE because it changes the
+primary height model and adds an acceptance clause. The deviation it creates is DEV-48.
+
+The finding. The W3.4 stat verifier asked whether roster height plus offset is one height
+scale (`logs/evidence/W3.4.verify-stat.log`, section G). Inside the cohort, roster height
+equals round(measured) for 658 of 658 batters. D-R0-02's calibration (offset 0.0022 in, SD
+0.2909 in) therefore measures rounding. It cannot see a listing error outside the cohort,
+because no measured height exists there.
+
+The indirect test. Batter-season median `sz_top`, from pre-ABS Hawk-Eye, was regressed on
+measured height inside the cohort. The other batters' residuals were then read against their
+roster height. The table gives listed minus true height for the batters outside the cohort.
+
+| season | batters outside the cohort | listed minus true, in | SE, in | age-adjusted, in | SE, in |
+|---|---|---|---|---|---|
+| 2022 | 270 | +0.47 | 0.25 | +0.39 | 0.26 |
+| 2023 | 204 | +0.26 | 0.27 | +0.18 | 0.29 |
+| 2024 | 132 | +0.28 | 0.30 | +0.20 | 0.31 |
+
+The sign is the same in 2022, 2023 and 2024, at 0.9 to 1.9 SE before the age adjustment. The
+2026 calibration cannot detect it, since cohort roster heights are rounded measurements.
+
+Why it matters. The cohort's share rises across seasons: 43.7% of 2022 batter-seasons against
+99.4% of 2026 batter-seasons (D-R0-02), and 0.5934 against 0.99999 as a share of called
+pitches. An uncorrected listing bias outside the cohort would move the estimated zone top by
+a different amount in each regime. That shift could pass for a regime effect. The verifier's
+section I gives its size on the selection effect. Lowering those heights by the section-G
+estimate moves the 2022 area effect from +2.74 to +1.57 sq in (0.39 in) or +1.27 sq in
+(0.47 in). The same correction moves the 2022 top effect from +0.068 in to -0.029 in or
+-0.052 in. In 2024 a 0.28 in correction moves the area effect from +1.01 to +0.65 sq in.
+
+The default applied, in three parts.
+
+1. The roster offset is calibrated separately for cohort and non-cohort batters. The cohort
+   keeps D-R0-02's 2026 calibration.
+2. The non-cohort offset is estimated from the pre-2026 `sz_top` evidence, pooled across 2022
+   to 2024. One offset serves every season, so it is season-invariant by construction and
+   cannot manufacture a regime contrast.
+3. The pre-registration adds an acceptance clause. The ABS-measured-only robustness arm, which
+   this bias cannot reach, must agree in sign with the primary on the buffer and ABS
+   components. Otherwise the primary is reported as sensitive to the height cohort.
+
+Why a refinement and not a reversal. D-R0-02 named its own reversal condition: a measured
+offset that is not small or not unbiased in a season other than 2026. This evidence is
+indirect and sits at 0.9 to 1.9 SE. The default therefore keeps roster height plus offset
+primary and calibrates the offset where the bias sits. The owner may read the finding as that
+condition met, and this entry is OWNER-VISIBLE for that reason.
+
+Not done by this lane. The pooled offset belongs to W3.4's lane, in `R/ch1/03_heights.R`. The
+clause belongs to the pre-registration lane, in `PREREGISTRATION.md` and
+`docs/prereg/ch1.md`, before the tag. No pooled value is on record yet.
+
+What would reopen it: the owner's override.
+
+### D-P4-05 APPLIED UNDER D-R0-03: `<<N_CALLED>>` reports P0, the sample the primary cohort covers in full
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+The deviation it creates is DEV-47.
+
+The question. SOP W3.5 names P1, the ABS-measured cohort, as the primary sample and the count
+that `<<N_CALLED>>` reports. D-R0-02 made roster height plus offset primary, and that cohort
+covers every P0 row (T1 row `H_roster_offset`, 100.00% of P0 in every season). The W6.5 page,
+finding F2, recorded that the abstract and Chapter 1 disagree on this count.
+
+The default applied: **`<<N_CALLED>>` reports P0.** Measured in `out/ch1/tab/T1_sample.csv`:
+P0 is 1,830,231 called pitches and P1 is 1,487,927. The figures before D-P4-08 moved one
+pitcher's 36 pitches out of P0 were 1,830,267 and 1,487,942. The ledger slot in
+`docs/numbers.json` still holds 1,492,502, the ABS-measured cohort before W3.5's exclusions.
+Its owner (W2.17 and the numbers export) regenerates it to P0. That is a follow-up, not done
+here.
+
+What would reopen it: the owner's override of D-R0-02.
+
+### D-P4-06 APPLIED UNDER D-R0-03: DT-30 is closed, the D-13 fork holds, and D-R0-02 stands as answered
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+
+The measurement, on the SOP's own metric, ABS-measured share of called pitches
+(`out/tables/height_coverage.csv`, W3.4): 2022 0.5934 (217,859 of 367,145), 2023 0.7264,
+2024 0.8253, 2025 0.9249, 2026 0.99999 (358,459 of 358,461). The 2022 share is below the
+0.60 trigger by 2,428 called pitches. The W3.4 verifier reproduced every figure.
+
+The default applied. DT-30 is closed. The D-13 fork holds on the SOP's own metric, and D-R0-02
+stands as the owner answered it. The owner decided on batter-season coverage before the table
+existed (W6.5 finding F5). The table triggers the same branch, so no second answer is owed.
+AAA 2023 and later back-links that land after the tag do not reopen DT-30. D-R0-02's answer
+covers all five seasons, wider than the SOP's "primary for the pre-trend", and DEV-47 records
+that departure.
+
+What would reopen it: the owner's override.
+
+### D-P4-07 APPLIED UNDER D-R0-03: the W3.4 selection effect keeps the SOP's interval, and a batter bootstrap is its named sensitivity
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+
+The primary, per the SOP. The interval stays the one W3.4 publishes: independent `Vp` draws on
+the k = 16 surface (`TE_K` in `R/ch1/03_heights.R`). In 2024 the area effect is +1.01 sq in,
+95% interval -1.22 to +3.14, on an area of 500.29 sq in. In 2022 it is +2.74, interval
++0.14 to +5.30. In 2023 it is +1.78, interval -0.33 to +4.03.
+
+The named sensitivity. A batter-cluster bootstrap interval on the k = 24 surface, the W3.11
+main-effect basis size. What is measured so far comes from the W3.4 verifier. Its bootstrap
+(100 replicates a season, on the k = 16 surface) gives 2024 +0.146 to +1.981 sq in, which
+excludes zero, and 2022 +0.803 to +4.535. Its k = 24 point estimates are +2.99 sq in in 2022
+and +1.40 in 2024. The k = 24 bootstrap interval is not yet computed. It belongs to W3.4's
+lane, and the report states that the 2024 bootstrap interval excludes zero.
+
+What would reopen it: the owner's override.
+
+### D-P4-08 APPLIED UNDER D-R0-03: a position player is judged by the role he held in the season he pitched
+
+Applied by the small-gates lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/small-gates.md` and confirmed by the phase-04 orchestrator. Status:
+**applied default under D-R0-03's delegation, not an owner answer.** The deviation is DEV-53.
+
+Before, a pitch was a position player's when the pitcher's primary position today was not P
+or TWP. Brett Phillips (621433) pitched in 2022 and 2023 as an outfielder and is P today, so
+his 36 lobs stayed in P0. Now `R/ch1/01_sample.R` (W3.5) and
+`R/ch1/10_build_analysis_table.R` (W3.7) share `pitcher_season_roles()`. It reads the club's
+full-season roster for 2022 to 2025 (3,450 pitcher-seasons), the season's fielding record for
+the 9 pitcher-seasons on no roster, and the people endpoint for 2026. A 2026 roster read would
+carry moves dated after the last open day, so 2026 uses the people endpoint.
+
+Across 4,322 pitcher-seasons the only change is Phillips, 2022 (RF) and 2023 (CF). Neither a 2026
+roster nor any sealed day is read. The counts move as follows.
+
+- P0: 1,830,267 to 1,830,231 (-36; 2022 -32, 2023 -4).
+- P1: 1,487,942 to 1,487,927 (-15).
+- Balanced panel: 1,360,457 to 1,360,438.
+- Dev sample, P0 2022 to 2024 with |d| ≤ 8 in: 687,496 to 687,485.
+- T1's 2022 shadow rate: 78.08 to 78.07.
+
+W3.5 passes 30 of 30 checks and W3.7 passes 33 of 33, and W3.8 and W6.5 still pass. Now stale, each for its own lane:
+W3.10's `plane_displacement.csv`, W3.11's frozen `dev_rows_by_season` and refit,
+`PREREGISTRATION.md` lines 71, 149 and 150 (W7.6), `docs/harmonized_zone.md` lines 42, 43 and
+98, and the `quality/steps.yml` comments.
+
+### D-P4-09 APPLIED UNDER D-R0-03: the shadow band is read on the radius-adjusted signed edge distance, and the SOP's expected sizes are restated as measured
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+The deviation it creates is DEV-49.
+
+The question. The W6.5 page, finding F3, found that the letter d names two quantities. W3.5's
+3 in shadow band used the ball-centre `d`, with no radius taken off. W3.6's 2026 overturn
+count in the band used `d_signed_in`, the signed edge distance with the 1.45 in radius taken
+off (D-14).
+
+The default applied: **the band is |d_signed_in| ≤ 3 in**, the harmonised signed edge
+distance that `docs/harmonized_zone.md` names. On it the band holds 111,323 of 358,461 MLB
+2026 called pitches, 31.1% (W3.6 receipt). Before 2026 the warehouse column sits on the
+operator-set zone, so Chapter 1 takes the same radius-adjusted distance on the harmonised zone.
+There the W6.5 verifier measured 29.48%, 29.77%, 29.72% and 30.13% of 2022 to 2025 P0 rows.
+
+The SOP's expected sizes are restated as measured, with the SOP text left as written.
+
+| SOP expectation | measured | source |
+|---|---|---|
+| shadow band 27.7 to 28.7% of called pitches | 31.1% of 2026 called pitches | W3.6 receipt |
+| P1 about 1.20M rows | 1,487,927 | T1 row P1 |
+| \|d\| ≤ 8 in share: 65.9 (2024), 66.9 (2025), 64.8 (2026) | 62.10, 63.35, 65.31 | T1 row `B_d8_P0_pct` |
+| called-strike rate of 66 to 72% inside the band | 59.12, 57.50, 59.00 (2022 to 2024) | W6.5 verifier |
+
+The 8 in filter stays on the ball-centre `d`, as W3.5 fits it. The 2025 and 2026 strike rates
+stay unread until the tag, because they are the raw form of the pre-registered shadow rate.
+T1's band rows still use the ball-centre `d` (26.48% to 28.66% of P0, strike rates 76.86 to
+78.07). Rebuilding them on the new band belongs to W3.5's lane.
+
+### D-P4-10 APPLIED UNDER D-R0-03: DT-28 keeps its round(.,2) key, the D-62 feed fallback is the route of record, and the tests' bound of 40 is recorded
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+The deviation it creates is DEV-50.
+
+The measurement (`quality/receipts/W3.6.log`). DT-28 as written matched 10,167 of 10,167 drawer
+challenges with 0 unmatched. 10,139 matched one pitch and 28 were ambiguous. Of the 28, 18
+share the key with a second called pitch and 10 with one other Statcast row. The feed's
+`play_id` resolves all 28, and each pick is one of the key's candidates. Where both routes
+resolve, bridge and feed pick the same pitch on 10,139 of 10,139.
+
+The default applied. The bridge key stays `round(plate_X, 2)` and `round(plate_Z, 2)`. The
+D-62 feed fallback, which the SOP's DT-28 row already names for a failure, is the route of
+record for the 28. Three tests bound the ambiguity at 40 rather than the SOP's 0:
+`dbt/tests/assert_drawer_bridge_complete.sql`, `tests/data/test_join.py` and
+`tests/data/test_warehouse_pack.py`. The bound of 40 is recorded in place of the SOP's 0.
+CH1-A2 holds as measured: 10,167 of 10,167 recovered, 0 ambiguous after the fallback, 0
+unrecovered.
+
+What would reopen it: more than 40 ambiguous plays, which fails the three tests, or a fallback
+pick outside the key's candidates.
+
+### D-P4-11 APPLIED UNDER D-R0-03: the canonical 2026 challenge count is the feed's 10,168
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+DEV-50 carries it with D-P4-10.
+
+The counts. The feed reconciliation gives 10,168 challenged MLB 2026 pitches before the seal
+(DEV-30, W2.16). Savant's drawer and leaderboard give 10,167. The W3.6 receipt names the one
+review the drawer lacks: 825000:31:3, a strike that was not overturned. It is the same pitch
+as the W2.15 coordinate artefact 825000/31/3 that D-P4-03 names.
+
+The default applied: **10,168 is the canonical count.** The SOP figures of 10,167 stay the
+drawer's count, which DT-28 and CH1-A2 are about. Every 2026 challenged pitch carries an
+original call: 10,168 of 10,168, 10,167 from the drawer and 1 from the feed alone.
+
+### D-P4-12 APPLIED UNDER D-R0-03: the CH1-A14 balanced panel counts home-plate games
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+The deviation it creates is DEV-51.
+
+The SOP asks for umpires with at least 15 games in all five seasons and names no position.
+Counted as home-plate games, the panel is 62 umpires and 1,360,438 P0 rows (T1 rows `U_panel`
+and `U_panel_P0`). Counted at any position, it would be 68 umpires and 1,459,135 rows (W3.5
+stat verifier). Three umpires sit at exactly 15 home-plate games.
+
+The default applied: **home-plate games, 62 umpires.** The called-strike decision belongs to
+the home-plate umpire, so the panel is built from the games in which he makes it.
+
+### D-P4-13 APPLIED UNDER D-R0-03: DT-21 covers challenges through 2026-09-21 until the seal opens, and the W3.23 claim is struck
+
+Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
+docs-merge lane. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+The deviation it creates is DEV-52.
+
+The measurement (`out/ch1/tab/T2_zone_gate.csv`). DT-21 read 10,168 MLB 2026 challenged
+pitches from 2026-03-25 to 2026-09-21. Agreement is 10,164 of 10,168 overall, 99.9607%
+against a 99.75% bar. Outside the 0.5 in band it is 7,573 of 7,574, 99.9868% against 99.95%.
+
+The default applied. DT-21 covers challenges through 2026-09-21 only, until the seal opens
+in fleet phase 11. The comment at `R/ch1/11_zone_gate.R` line 48 says later pitches join the
+gate when W3.23 runs. W3.23 as the SOP words it does not re-run DT-21, so the claim is
+struck. The edit belongs to the lane that owns `R/ch1/`.
+
+### D-P4-14 APPLIED UNDER D-R0-03: the 2026 mid-plane clause reads every open day, and D-14 is held to Savant's `edge_dist_calc`
+
+Applied by the W3.3 fix-3 agent on 2026-09-25 (Europe/Madrid), from the W3.3 verifier's
+findings R3 and R5 (`logs/evidence/W3.3.verify-geometry.log`). Merged from
+`logs/decisions-pending/w33-test-gaps.md`. Status: **applied under D-R0-03's delegation, not
+an owner answer.** Commit 728b1c1. The deviation it creates is DEV-45.
+
+R3. The clause "2026 CSV reproduces at y = 8.5/12 (direct integration)" read 22,604 pitches on
+five fixed days, and mutant M20b passed it. It now reads all 688,686 open 2026 pitches on 178
+days. Exactly one reaches the 5e-7 ft bar: 825000/31/3 at 0.063625 ft, the W2.15 artefact.
+`tests/ch1/test_zone.R` pins it by identity in `MID_ARTEFACTS`, and a second miss or the pin
+leaving fails the clause. Every other pitch has max abs err 0.000e+00 ft. The bar is not
+moved. Run on a scratch shadow of the data, M20b now fails with exit 1.
+
+R5. The only D-14 radius check was a predicate bracket, and mutant M12b (`BALL_R_IN` 1.455 in)
+passed it. A new check compares the module's signed edge distance, radius taken off, with the
+published `edge_dist_calc` on 20,334 MLB 2026 drawer rows (10,167 plays, each in both teams'
+drawers). Rows on or after the seal boundary are dropped at parse. The max difference is
+5.773e-15 in, and M12b now fails with a max of 5.000e-03 in. The tracked `zone.R` was never
+edited. The md5 of `R/lib/zone.R` (32143c9b) and of `src/absump/geometry.py` (63040086) is the
+same before and after.
+
+Stated limits, recorded and not fixed. R `reproject` carries no UT-12 guard and accepts y_from
+= 54.18, as the SOP's R block does. The Python twin carries the guard, and `make test-unit`
+catches the twin's larger-root mutant M17b. The AAA 2024 plane clause stays DEFER until AAA
+pitch-level data is on disk (DEV-25, DEV-27).
+
+### D-P4-15 APPLIED UNDER D-R0-03, OWNER-VISIBLE: the Chapter 2 MT-01 verdict reads the probit arm, and the logit arm is a named finding
+
+Applied by the ch2-w47 lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/ch2-w47.md`. Status: **applied default under D-R0-03's delegation, not
+an owner answer.** It is OWNER-VISIBLE because it changes how an acceptance criterion is read,
+which D-P4-01 to D-P4-03 did not. The deviation it creates is DEV-46.
+
+The first run. `R/ch2/03_prior_predictive.R` sampled M1's prior on two links. A rule written
+before any draw passed MT-01 only if both W4.7 gates held in both arms.
+
+| arm | gate 1 95% interval | median | gate 2 q90 | gates |
+|---|---|---|---|---|
+| probit | [0.0772, 0.9174] | 0.4950 | 0.1413 | both hold |
+| logit | [0.1204, 0.8757] | 0.4988 | 0.1045 | gate 1 does not hold |
+
+The default applied. The verdict is the probit arm's two gates, the scale MT-01 names ("Ch2: the
+two gates in W4.7, on the probit scale", SOP section 6). The logit arm is computed the same way
+and published as sensitivity finding SENS-W4.7-LOGIT. Its interval falls short of [0.10, 0.90]
+by 0.02036 at the lower tail and 0.024277 at the upper. Its median, 0.498771, and its gate 2
+hold. Verdict PASS. The three SOP priors, the seed 20260922, the 1,000 draws, the design and
+the frame are unchanged. The rule written before the draws is kept in the json as
+`rule_before_draws`.
+
+Stated accurately. The rule was narrowed after the prior draws were seen. The draws read no
+outcome, so the choice cannot be tuned to an estimand, but it is still a post-draw change and
+is logged as one. A correction to the brief: the logit arm is not a robustness arm. D-55 fixes
+M2 at probit, and M1 is fitted on the logit link (W4.10). The finding is therefore about M1's
+prior on its fitted link. `docs/prereg/ch2.md` section 10 item 2 already listed this reading as
+the first of two options. The second widens the Intercept prior and reruns.
+
+Owner item. The owner may instead widen M1's Intercept prior so the logit arm also covers
+[0.10, 0.90], rerun W4.7 and re-verify W4.1. After the tag that becomes a DEVIATIONS entry.
+Follow-ups for other lanes: `docs/prereg/ch2.md` line 181 is now stale, and
+`quality/steps.d/W4.7.yml` awaits `quality/merge_steps.py`. The Chapter 2 MT-01 pack,
+`tests/model/ch2_prior_predictive_test.py`, carries no marker, because `pyproject.toml`
+registers only `network` under `--strict-markers`. `make test-model-fast` selects `-m fast`,
+so it skips the pack. That is for the model-tests lane.
+
+### D-P4-16 APPLIED UNDER D-R0-03: "recovery 3 of 100 injected" was a progress count, and the W3.12 check and scorer are fixed
+
+Applied by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/model-tests.md`, items 1 and 5. Status: **applied under D-R0-03's
+delegation, not an owner answer.** No model, prior, interval method or bound was changed.
+
+The 16:46 W3.12 gate line read "recovery 3 of 100 injected". The 3 was the number of replicate
+files on disk. The detached run had been paused with SIGSTOP from 16:13 to 16:43 so SBC could
+use the cores. It finished at 19:43 with 100 injected and 50 null replicates, all with
+distinct seeds and 1,000 of 1,000 draws. The run's snapshot,
+`out/dev/ch1_synth/run/21_synthetic.run4.R`, differs from `R/ch1/21_synthetic.R` only in a
+label string and a check-side comparison. The surface model's 95% interval excludes zero in 100
+of 100 injected replicates for each of the three shifts.
+
+Two defects let the partial count reach a gate. Both are fixed in `R/ch1/21_synthetic.R`.
+
+1. `--check` exited 0 while SBC or recovery was PENDING, so `prove.sh W3.12` wrote a PASS
+   receipt with 3 of 150 replicates on disk. It now exits 3 while anything is PENDING.
+2. `score_recovery()` set `excludes_zero` to the miss count, which printed 9 / 4 / 4 on the
+   injected arm. It now counts 95% intervals that exclude zero (100 / 100 / 100) and keeps the
+   miss count under `misses`. The null arm's numbers are identical, so no verdict changes.
+
+W3.11's own verify passes, 34 PASS and 0 FAIL, with GD-04 clean. Phase 04 runs `make
+test-model` for both W3.11 and W3.12, and 9 of its 72 tests fail, all on W3.12 artefacts.
+Whether W3.11 may pass on its own verify while the shared pack is red is an orchestrator call.
+`quality/steps.d/W3.12.yml` awaits `quality/merge_steps.py`.
+
+### D-P4-17 OPEN, OWNER-VISIBLE: the full recovery run fails 4 of the 12 pre-registered recovery clauses
+
+Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/model-tests.md`, item 2. Status: **OPEN. No default is applied**,
+because every option changes an acceptance criterion or the inference method.
+
+The clauses are those of `docs/prereg/ch1.md` 8.7, which restates SOP W3.12(a) and CH1-A7.
+Injected replicates, n = 100, with the truth read off the generating surfaces:
+
+| shift | injected | truth | mean estimate | mean error | SD | mean abs error | 95% covers | 90% covers | within 0.10 in | 95% excludes 0 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| top_in | -0.60 | -0.5991 | -0.5835 | +0.0155 | 0.0384 | 0.0329 | 91 | 87 | 97 | 100 |
+| bot_in | +0.30 | +0.2989 | +0.2925 | -0.0064 | 0.0253 | 0.0212 | 96 | 92 | 100 | 100 |
+| half_width_in | -0.10 | -0.1027 | -0.0938 | +0.0089 | 0.0196 | 0.0173 | 96 | 90 | 100 | 100 |
+
+Null replicates, n = 50, with the truth at 0:
+
+| shift | mean estimate | SD | sampling SD over posterior SD (95% CI) | 95% excludes 0 | 90% covers 0 | 90% inside +/-0.10 |
+|---|---|---|---|---|---|---|
+| top_in | +0.0006 | 0.0309 | 1.17 (0.97, 1.45) | 3 | 43 | 45 |
+| bot_in | +0.0049 | 0.0204 | 0.99 (0.82, 1.23) | 4 | 46 | 50 |
+| half_width_in | -0.0028 | 0.0159 | 1.30 (1.09, 1.62) | 6 | 40 | 50 |
+
+Mean error within 0.10 in passes for all three shifts. Four clauses fail.
+
+- 95% coverage of the truth, at least 93 of 100: top_in covers 91.
+- Null 95% interval excludes zero in at most 7% of 50: bot_in 4 of 50 (8%), half_width_in 6
+  of 50 (12%).
+- CH1-A7, null 90% interval inside +/-0.10 in in at least 93%: top_in 45 of 50 (90%).
+
+How much is noise. Under calibrated intervals, 91 or fewer of 100 has probability 0.063, 6 or
+more of 50 has 0.038, and 40 or fewer of 50 has 0.025. The top-edge miss comes with a +0.016
+in bias toward zero, 40% of the replicate SD. The half-width null result is not noise: its
+sampling SD is 1.30 times its posterior SD, with a 95% interval of 1.09 to 1.62. A half-width
+shift whose 95% interval excludes zero would carry a false-positive rate near 12% (6 of 50 null replicates), not 5%.
+MT-03 as SOP 6.5 words it passes. MT-04 as worded fails for half_width_in: 6 of 50 fire,
+against at most 5, and the 90% interval covers zero in 40 of 50, against at least 43. One
+reading was not tested. The intervals come from N(beta, Vp), which conditions on the
+estimated smoothing parameters, and that matters most when the season-difference smooth is
+near zero.
+
+Options, none applied. (a) Change the interval method before the tag, to `Vc` or a parametric
+bootstrap, and re-run the 150 replicates, with a DEVIATIONS entry. (b) Pre-register the
+measured calibration as a limitation, which leaves W3.12 FAIL unless the owner restates the
+bounds. (c) Run more replicates, which does not address the half-width result. The lane
+recommends (a).
+
+### D-P4-18 OPEN, OWNER-VISIBLE: MT-05 fails on the 30 fits behind the D-60 power curve
+
+Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/model-tests.md`, item 3. Status: **OPEN. No default is applied**,
+because the question is the scope of an acceptance test.
+
+The `sop` design: 3 of 15 fits had divergent transitions, 6 in total, at tau 0.10 seeds 1, 4
+and 5. R-hat, ESS, tree depth and E-BFMI pass. The `ue_us` design: all 15 fits fail, with a
+worst R-hat of 1.051, a lowest bulk ESS of 106 and tail ESS of 83, and two fits divergent.
+
+The test reads MT-05's "every reported fit" to include these fits, because
+`ch1_power_curve.csv` reports their firing rates and the `sop` design sets CH1-A6. The tau
+0.10 cell is the false-fire cell the CH1-A6 derivation reads, and 3 of its 5 fits fail MT-05.
+`docs/prereg/ch1.md` 8.6 discloses the numbers and defers MT-05 to W3.18, but W3.18 fits real
+data and does not re-run these fits. SOP 6.5 says a fit with a divergence is reparameterised
+or reported as failed. The other
+reading, not applied, scopes MT-05 to W3.18's reported estimates and skips the test until
+W3.18. The remedy for the W3 builder is sampler settings, not a model change: re-run the
+affected seeds with a higher `adapt_delta` and longer chains.
+
+### D-P4-19 OPEN, OWNER-VISIBLE: the Chapter 1 MT-01 prior predictive fails for the 2026 regime
+
+Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/model-tests.md`, item 4. Status: **OPEN. No default is applied**,
+because both options change a pre-registered prior or record a limitation.
+
+No Chapter 1 prior predictive existed, so the test computes one from B2's SOP priors, the
+stored 2022-2024 link and the 2022-2024 shadow-band pitch locations. It reads no 2025 or 2026
+row and fits nothing, over 20,000 draws. The gated reading is the league rate pooled over the
+three edges in each regime. It passes for pre-buffer (0.9859) and 2025 (0.9533) and fails for
+2026 (0.9326). The readings that are not gated:
+
+| reading | pre-buffer | 2025 | 2026 |
+|---|---|---|---|
+| umpire, pooled | 0.9738 | 0.9450 | 0.9251 |
+| cell, pooled | 0.9610 | 0.9346 | 0.9161 |
+| league, per edge | 0.8950 | 0.8127 | 0.7682 |
+| cell, per edge | 0.8325 | 0.7730 | 0.7360 |
+
+The failures are on the high side. The link's midpoint sits 1.9 to 2.4 in outside the
+rulebook edge, so at delta = 0 the shadow-band rate is 0.777. B2's 2026 league offset sums
+three normal(0, 1) terms, so its prior is N(0, 1.73 in). The SD clause passes: P(tau < 3.0 in)
+is 0.9979, and 0.9933 for the 2024-to-2026 shift. The options are a tighter prior on b, an SOP
+W3.18 change and so a deviation, or a recorded limitation.
+
+### D-P4-20 APPLIED UNDER D-R0-03: W5.1 pins 3 of the 7 snapshot A files, and snapshot B stays an OPEN owner item
+
+Applied by the small-gates lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/small-gates.md`. Status: **applied default under D-R0-03's delegation,
+not an owner answer**, except the snapshot B item, which is OPEN. The deviation is DEV-54.
+
+Three files are pinned: `dp_V_2026.npy`, `tier1_results_2026.json` and
+`tier1_card_2026.csv`. The first two equal the SOP sha256 literals. The other four,
+`dp_C_2026.npy`, `tier1_teams_2026.csv`, `tier1_mtv_2026.csv` and `perception_fit_2026.json`,
+are registered as PENDING-LATER-PHASE in `contracts/prior_art_snapshot_a.yml`. They are
+upstream release assets, not outputs of this project. Upstream replaced every asset on
+2026-09-23, and no copy of snapshot A survives on this machine or in the Wayback Machine. They
+can enter only with snapshot B, which fleet phase 10 takes as the W5.1 re-pin under R-17, not
+before 2026-09-27. A pending file that appears on disk unpinned fails the step.
+
+OPEN, OWNER-VISIBLE: snapshot B and the seal. Upstream's 2026-09-24 build counts 31 more games
+than snapshot A (2,338 to 2,369). A snapshot B taken after 2026-09-27 therefore aggregates MLB
+2026 games dated on or after 2026-09-22. The W5.1 `PROVENANCE.txt` drift paragraph already
+compared snapshot A with that 2026-09-24 build. Whether a third-party aggregate over
+sealed-window games may be read is the owner's call. The recommended default is to take no snapshot B until
+the season is unsealed, and to run BR-1 on the three pinned files meanwhile. Until the owner
+answers, nothing takes snapshot B.
+
+### D-P4-21 APPLIED UNDER D-R0-03: W3.9 is deferred until the AAA pull, with three measured shortfalls and two items for other lanes
+
+Applied by the small-gates lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/small-gates.md`. Status: **applied default under D-R0-03's delegation,
+not an owner answer.** The deviation is DEV-55.
+
+On disk, AAA 2023 has 276 of 2,224 Final games, AAA 2024 has 658 of 2,232 and AAA 2025 has
+none. The AAA pull is fleet phase 07. W3.9 is DEFERRED-PENDING-AAA-PULL on three measured
+shortfalls, over 934 games.
+
+- S1: the widest gap between the modes is 0.0039, against 0.04 required.
+- S2: 3 of 351 full_abs games carry the key (752780, 751719 and 752168, all May 2024).
+- S4: the machine-day contour is 399.95 sq in in 2023 and 435.72 in 2024, a spread of 35.77
+  sq in against 2 required.
+
+The verify passes while only these three fail and the corpus is partial. Any other failed
+clause fails it. Once all three seasons are complete the deferral lapses. Nothing is waived.
+
+Caution for later phases: the pull alone is unlikely to clear these. S4 compares raw areas
+across a published rule change, 51.0% in 2023 and 53.5% in 2024, while the residual against
+each season's rule spreads only 0.05 sq in. The lane recommends reading S4 against each
+season's published rule, at 2 sq in, and that reading is not yet in the verify. S1 and S2 are
+contradicted by games already on disk (25 games between the modes, and the three keyed games
+near the D-57 changeover), so they need a re-specified clause or an explanation.
+
+Pre-registration item, before the tag, for the pre-registration lane. `PREREGISTRATION.md`
+line 227 registers P3, "AAA full-ABS days across seasons", with the null that the machine zone
+does not move. On raw area it has already moved 35.77 sq in, because of the published rule
+change. The null should be stated net of the published rule, or it is pre-registered to fail.
+
+### D-P4-22 APPLIED UNDER D-R0-03: three verify commands changed, and three findings go to other lanes
+
+Applied by the small-gates lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/small-gates.md`. Status: **applied under D-R0-03's delegation, not an
+owner answer.** The deviations are DEV-56 and DEV-57.
+
+1. W7.8. The fleet gate runs `bash tools/comms/check_all.sh`, which is W7.42 and which fleet
+   phase 13 builds. The verify now runs it and requires "W7 ALL CHECKS PASS" when the file
+   exists. While it is absent the verify prints "PENDING-LATER-PHASE W7.42
+   tools/comms/check_all.sh" and does not fail. Fleet phase 06 treats the same absence the
+   same way. DEV-56 records it.
+2. W7.2. Six in-scope mutants passed the verify's own sentence split. The verify now also runs
+   `quality/checks/wr20.py` over its default scope, and the verifier's mutants M1 to M10 each
+   exit 1 while C0 exits 0. The scope reading puts `docs/prereg/` in WR-20 scope, stricter than
+   the SOP's WR-20 path list. It finds 0 violations today. DEV-57 records it.
+3. W4.1. The verifier found that 9 of 11 planted faults passed. `quality/steps.d/W4.1.yml`
+   adds `wr20.py` and an anchored threshold check, and all 11 mutants plus 2 more now exit 1.
+   `docs/prereg/ch2.md` itself was correct, so no deviation is owed.
+
+Findings for other lanes, not done here.
+
+- The Chapter 2 annex, before the tag: section 7.1 computes the H2a split-half over
+  challengers with at least 20 challenges. Its threshold line and SOP 9.3 say catchers.
+- `make test-guard` fails GD-04 at `tests/model/test_mt_ch1_02_sbc.py:81`, a 2026-12-04
+  deadline comparison that the model-tests lane wrote. It is a false positive for that lane.
+- `ops/lint_http.sh`, and with it
+  `tests/unit/test_http_delegation.py::test_the_linter_passes_on_this_tree`, is red on the
+  `jsonlite::fromJSON`, `read.csv` and `read_parquet` lines of the untracked `R/ch1/*.R`
+  files. The new role helper adds two lines of the same idiom. It belongs to the `R/ch1/`
+  lane.
+
+### D-P4-23 APPLIED UNDER D-R0-03: the prose gate is `quality/prose_lint.py`, the two decision logs are clean under it, and one form budget is allow-listed
+
+Recorded by the docs-merge lane on 2026-09-25 (Europe/Madrid). Merged from
+`logs/decisions-pending/prose.md` and `logs/decisions-pending/prose-for-docs-lane.md`.
+Status: **applied under D-R0-03's delegation, not an owner answer.**
+
+The gate. W7.5 repointed `make lint-prose` from `ops/lint_prose.sh` to `uv run --locked python
+quality/prose_lint.py`. The newer linter joins wrapped lines before it splits sentences. It
+fails rule 1 at 35 words and adds WR-02 and WR-09. A green `ops/lint_prose.sh` is therefore
+not a green P6.
+
+The clean-up. The W7.6 gate reported 156 violations in 20 files. The prose lane cleared 41
+elsewhere. This lane cleared the 110 in `DECISIONS.md` (62) and `docs/DEVIATIONS.md` (48). Long
+sentences were split at a clause boundary, and each em dash became a colon, a comma, a full
+stop or parentheses. One question mark, in a placeholder id, was reworded. No number changed in
+either file and no id was removed, checked token by token against the files before the edit.
+
+Left for other owners, 5 violations in the default scope.
+
+- `abstract/SPRINT-STATUS.md` lines 18, 44 and 53 (36, 47 and 36 words) sit in the block
+  that `ops/sprint_feed_checkpoint.py` renders. Editing them fails the W6.3 check, so the fix
+  belongs in the generator's template (about lines 456 to 520), followed by a re-render. The
+  prose lane's rewording changes text only, and each piece then measures 34 words or fewer.
+
+```text
+record counted once, and the total is compared game by game with the
+=> record counted once. The total is compared game by game with the
+2026 original call usable: Statcast `description` and the feed's
+=> 2026 original call usable. Statcast `description` and the feed's
+challenge reads as a correct umpire call, and those pitches sit in the
+=> challenge reads as a correct umpire call. Those pitches sit in the
+row, never silently dropped: the ones that read higher are extra-innings games, and
+=> row, never silently dropped. The ones that read higher are extra-innings games, and
+```
+
+- `docs/prior-art.md` lines 245 and 342 carry a question mark inside the quoted title of a
+  cited work (Petriello; Ilan and Gottlieb). Rewording a title would misquote the source. The
+  prose lane recommends a change for the owner of `quality/prose_lint.py` (W7.1 and W7.5): run
+  the rule 2 test on the joined block, and skip a question mark inside a balanced
+  double-quoted span. Its fixtures: a quoted title holding a question mark on one line passes,
+  and so does one that wraps across a line break. A bare rhetorical question still fails, and
+  so does an unbalanced quote followed by a question mark. Checklist rule 2 would then name
+  the exemption. The change departs from the SOP's literal W7.2 wording, so it needs a
+  DEVIATIONS entry when it lands.
+
+Formatting notes from the prose lane. In `docs/prior-art.md`, splitting a 38-word sentence
+moved the Petriello overturn share away from its denominator, so WR-06 now warns there. The
+63-word verbatim quotation in section 1.3 moved into a blockquote with its words unchanged,
+and its WR-20 note now prints at line 99. In `docs/runbook.md`, the 92-word sentence listing
+what `--check` fails on became a ten-item list, with the same items in the same order.
+
+The number gate. `quality/check_numbers.py` found one untraced literal,
+`abstract/FORM-FIELDS.md:119` "60". It is SOP W6.12's budget of about 60 words for the table
+when the form has no upload field. It is an owner budget, which the header of
+`docs/numbers-allow.txt` admits, so it is allow-listed there in the file's own format.

@@ -45,8 +45,8 @@ down and continue.
 
 4 s against `statsapi.mlb.com` is the published number because 0.5 requests per
 second sustained for hours is what MLB's terms describe as automated bulk access.
-The 10 s figure for `baseballsavant.mlb.com` stands on its own: Savant publishes
-no rate limit and no service level, and the measured time to first byte on a
+The 10 s figure for `baseballsavant.mlb.com` stands on its own. Savant publishes
+no rate limit and no service level. The measured time to first byte on a
 one-day CSV is about 7 s, so 10 s is close to serial anyway.
 
 This project runs one request at a time. There is no parallel fetch, no

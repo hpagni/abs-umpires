@@ -14,8 +14,9 @@ Until the slides are read, neither talk can be described as prior art and neithe
 ruled out as prior art. Both are recorded as an open risk in `docs/prior-art.md` section 5.
 
 Rule this log enforces: no novelty claim about pitch-level challenge state transitions, or
-about umpire-level ball and strike modelling, goes into the abstract or the paper until each
-request below is either answered or recorded as unanswered with the date it was sent.
+about umpire-level ball and strike modelling, goes into the abstract or the paper. The rule
+holds until each request below is either answered or recorded as unanswered with the date
+it was sent.
 
 Note on the drafts. The signature block is left as a placeholder. Decision D-69 keeps author
 information out of every file reachable from the repository root while the SSAC review

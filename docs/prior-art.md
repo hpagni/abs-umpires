@@ -94,11 +94,13 @@ There were no substantive hits.
 
 ### 1.3 Their section 8 design, and its placebo problem
 
-Their pre-registered primary estimand, verbatim: "change in the count-bias contrast,
-P(strike | d = {-1, 0, +1} in, 3-ball) minus P(strike | same d, 2-strike), evaluated on the
-fitted called-strike GAM surface, 2026 vs 2025, with 2024 to 2025 as the placebo pair (the
-2025 evaluation-buffer cut from 2 in to 0.75 in and the 2026 zone redefinition are level
-shifts to be reported, not absorbed)."
+Their pre-registered primary estimand, verbatim:
+
+> change in the count-bias contrast,
+> P(strike | d = {-1, 0, +1} in, 3-ball) minus P(strike | same d, 2-strike), evaluated on the
+> fitted called-strike GAM surface, 2026 vs 2025, with 2024 to 2025 as the placebo pair (the
+> 2025 evaluation-buffer cut from 2 in to 0.75 in and the 2026 zone redefinition are level
+> shifts to be reported, not absorbed).
 
 The problem is the placebo. A placebo pair is supposed to be untreated. The 2024 to 2025
 pair is the treated pair for the grading change. The December 2024 umpire labor agreement
@@ -144,7 +146,7 @@ Sources: the Savant ABS leaderboard, an undocumented Savant drawer service, and 
 API live feed.
 
 Method: rebuild base, out, count and score state for each challenged pitch; fit a
-season-to-date run-distribution win-probability model; take expected win-probability added
+season-to-date run-distribution win-probability model. Take expected win-probability added
 as win probability after the corrected call minus win probability after the original call,
 from the challenging team's point of view. A proxy term converts Savant's lost-challenge
 run penalty to wins "using a 10 runs-per-win rule of thumb".
@@ -236,9 +238,10 @@ Newest first. No ABS post exists on that site after 2026-08-31.
 - ABS metrics documentation, https://baseballsavant.mlb.com/abs-metrics-documentation.
   A challenge opportunity is "Any pitch where a player is allowed, by the rulebook, to make
   a challenge." A reasonable pitch is a challenge opportunity where the call was mistaken,
-  or was correct but within 3 inches with a run value of at least plus 0.30 on RE288, or
-  was correct but had a high challenge expectation. This page defines the expected-challenge
-  and expected-runs metrics that this project benchmarks against.
+  or was correct but within 3 inches with a run value of at least plus 0.30 on RE288. A
+  challenge opportunity also counts when the call was correct but had a high challenge
+  expectation. This page defines the expected-challenge and expected-runs metrics that this
+  project benchmarks against.
 - Mike Petriello, "Think you know who's been good at using ABS? It's not so simple",
   https://www.mlb.com/news/how-to-know-who-is-good-at-using-abs-2026-mlb, 2026-04-30. Model
   inputs, verbatim:
@@ -248,7 +251,7 @@ Newest first. No ABS post exists on that site after 2026-08-31.
 
   The page requires a browser user agent; a plain fetch returns HTTP 406.
 - Petriello, 2026-02-26, a Triple-A 2025 breakdown over about 861,000 pitches and 9,432
-  challenges: about 50% overturn overall, batters 45%, fielders about 55%; 3% of
+  challenges: about 50% overturn overall, batters 45%, fielders about 55%. 3% of
   challengeable pitches challenged; challenge rate rising from 2.1% to about 5% by late
   innings. 121 catchers with at least 10 challenges showed no framing-to-challenge
   relationship. [second-hand]
@@ -368,8 +371,8 @@ which is every public treatment of either transition found on 2026-09-22.
    grading change. It is descriptive, covering accuracy and shadow-zone rates for March and
    April 2024 against March and April 2025, and reports no estimate in inches or square
    inches.
-3. Dwyer, FanSided, 2026-05-27, puts 2022 to 2026 on one axis and dates the shift to 2025,
-   but never mentions the grading change, so the piece reads the 2024 to 2025 drop as
+3. Dwyer, FanSided, 2026-05-27, puts 2022 to 2026 on one axis and dates the shift to 2025.
+   It never mentions the grading change, so the piece reads the 2024 to 2025 drop as
    anticipation of ABS.
 4. Doolittle, ESPN, 2026-05-19, gives 2025 against 2026 aggregates only.
 5. `use-it-or-lose-it` METHODS.md section 8, v0.3c, 2026-08-18, is the only design that
@@ -395,10 +398,10 @@ comes closest is listed here.
   effects.
 - Clemens (2026-04-01) lists umpire identity among the questions he did not answer.
   Doolittle flags crew inconsistency. Neither measures it.
-- The peer-reviewed antecedents are umpire-level but stop before these regimes: Zimmerman
-  et al. 2019 (2008 to 2016), Shinya and Tomomura 2026 (88 umpires, 2015 to 2024, proposing
-  2026 as future work), Flannagan et al. 2024 (121 umpires, 2008 to 2015). Post et al. 2025
-  has no umpire identifiers and ends in 2023.
+- The peer-reviewed antecedents are umpire-level but stop before these regimes. They are
+  Zimmerman et al. 2019 (2008 to 2016), Shinya and Tomomura 2026 (88 umpires, 2015 to 2024,
+  proposing 2026 as future work), and Flannagan et al. 2024 (121 umpires, 2008 to 2015).
+  Post et al. 2025 has no umpire identifiers and ends in 2023.
 
 ### 6.3 The best public numbers, by regime
 
@@ -446,7 +449,7 @@ Source: Andrews, FanGraphs, 5 and 6 May 2025, unless noted.
 
 Statcast's `plate_x` and `plate_z` are measured at the front of the plate through 2025 and
 at the middle of the plate from 2026. This is a project data fact recorded in
-`docs/data-contract.md`, and it is corroborated by `use-it-or-lose-it` METHODS.md section
+`docs/data-contract.md`. It is corroborated by `use-it-or-lose-it` METHODS.md section
 3.1, which propagates 2015 to 2025 coordinates forward and reports agreement with Savant's
 2026 values to 0.001 to 0.002 in.
 
@@ -468,9 +471,9 @@ Chapter 1, the headline.
 - A third regime. `use-it-or-lose-it` METHODS.md v0.3c section 8 pre-registers a 2026
   against 2025 contrast whose only placebo pair is 2024 to 2025, which is the treated pair
   for the grading change. This project adds 2022 to 2024 under the earlier buffer of two
-  inches outside the zone edge, so 2022 to 2024 against 2025 identifies the grading change
-  on the same estimand, and 2025 against 2026 identifies ABS net of it, with a genuinely
-  untreated placebo pair inside 2022 to 2024.
+  inches outside the zone edge. That way 2022 to 2024 against 2025 identifies the grading
+  change on the same estimand, and 2025 against 2026 identifies ABS net of it. A genuinely
+  untreated placebo pair sits inside 2022 to 2024.
 - Zone geometry as the headline quantity, in square inches and signed edge inches. Their
   section 8 demotes geometry to a secondary result and headlines the count-bias contrast.
 - Umpire heterogeneity as an estimand, with shrinkage and reliability. Their per-umpire
@@ -531,7 +534,7 @@ in this project must match or beat. Its dual implementation of the dynamic progr
 reproducibility standard this project follows.
 
 Clemens (FanGraphs, 2026-04-28) is the public estimate of the 2026 zone change that
-Chapter 1 is built to extend, and Andrews (FanGraphs, 5 and 6 May 2025) is the public record
+Chapter 1 is built to extend. Andrews (FanGraphs, 5 and 6 May 2025) is the public record
 of the grading change that Chapter 1 is built to separate from it. TapToChallenge and
 `ilan-goodman/mlb-abs-xwpa` are the public leaderboards this project compares against.
 

@@ -1,16 +1,16 @@
 # abs-umpires
 
 Decompose the change in the MLB called strike zone between 2024 and 2026 into a 2025
-umpire-grading component and a 2026 ABS component, on one scale: square inches of the 50%
-called-strike contour, and signed edge shifts in inches.
+umpire-grading component and a 2026 ABS component. Both sit on one scale: square inches of
+the 50% called-strike contour, and signed edge shifts in inches.
 
 The 2026 rollout of the ABS challenge system did not land on a stable baseline. The December
 2024 umpire labor agreement had already cut the grading buffer from two inches outside the
 zone edge to three-quarters of an inch on either side of it. Every published estimate of the
 2026 zone change uses 2025 as its baseline, so the 2025 change is differenced out rather
-than measured. This project adds 2022 to 2024 as a third regime under the earlier rule, so
-one transition identifies the grading change and the other identifies ABS net of it, with a
-genuinely untreated placebo pair inside 2022 to 2024. The evidence that no published work
+than measured. This project adds 2022 to 2024 as a third regime under the earlier rule. One
+transition then identifies the grading change and the other identifies ABS net of it, and a
+genuinely untreated placebo pair sits inside 2022 to 2024. The evidence that no published work
 does this is in [docs/prior-art.md](docs/prior-art.md), section 6.1.
 
 ## What is here
@@ -19,9 +19,9 @@ does this is in [docs/prior-art.md](docs/prior-art.md), section 6.1.
   Statcast coordinate change, umpire-level heterogeneity with shrinkage and reliability, the
   framing split, and a Triple-A arm that uses the within-week format alternation.
 - **Chapter 2.** A partially pooled challenger-skill leaderboard with a random effect for
-  the player challenged against, split-half reliability reported beside variance components,
-  calibration curves for the probability a challenge succeeds, and a benchmark against
-  Baseball Savant's published expectation.
+  the player challenged against, and split-half reliability reported beside variance
+  components. Calibration curves for the probability a challenge succeeds, and a benchmark
+  against Baseball Savant's published expectation.
 - **Chapter 3.** A dynamic program that carries both teams' remaining challenges in the
   state, presented as a benchmark replication of the published single-sided solution plus
   one new number.
@@ -61,8 +61,8 @@ refuses a commit that reaches into it. Terms and attribution for each source are
 
 Every pull is throttled from one place, `config/throttle.yml`, which is the only file in the
 repository carrying a delay, a budget or a user-agent string. The current policy is a 10
-second minimum interval and 800 requests a day to Baseball Savant, 4 seconds and 3,000 a day
-to the MLB Stats API, and 10 seconds and 500 a day to every other host. Requests run through
+second minimum interval and 800 requests a day to Baseball Savant. It is 4 seconds and 3,000
+a day to the MLB Stats API, and 10 seconds and 500 a day to every other host. Requests run through
 a single client module, and a lint step fails the build on an HTTP call from anywhere else.
 
 ## How results are checked
@@ -70,15 +70,15 @@ a single client module, and a lint step fails the build on an HTTP call from any
 Every piece of work has a step id and a registered verify command in `quality/steps.yml`.
 `make prove` runs them and writes a receipt per step. A step is not done because someone
 says so; it is done when its command exits zero. Numbers that reach human-facing text are
-traced back to a source file by a checker, and prose is linted for the writing rules this
+traced back to a source file by a checker. Prose is linted for the writing rules this
 project holds itself to, including a rule that any novelty claim carries a citation on the
 same line.
 
 ## Prior art
 
 [docs/prior-art.md](docs/prior-art.md) is a dated ledger of the public work this project
-builds on, with what each piece does and what it does not do, and a section listing what
-this project may not claim because someone published it first. The nearest public
+builds on, with what each piece does and what it does not do. It also has a section listing
+what this project may not claim because someone published it first. The nearest public
 antecedent, `AyanArora29/use-it-or-lose-it`, sets the correctness bar for Chapters 2 and 3,
 and its zone reconstruction is the benchmark this project's zone truth must match or beat.
 

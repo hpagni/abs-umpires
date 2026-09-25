@@ -83,7 +83,7 @@ If a field exists that is not listed here, add it to section 4.
    - Field label on the form: `________________________`
    - Input type (short text / long text / other): `________________`
    - Character or word cap shown: `________________`
-   - Is the title counted separately from the body, or entered inside the body field?
+   - Whether the title is counted separately from the body, or entered inside the body field:
      `________________`
 
 2. **Track.** The answer is **Baseball**.
@@ -94,24 +94,24 @@ If a field exists that is not listed here, add it to section 4.
 3. **Abstract body.** Under 500 words including the title.
    - Field label: `________________________`
    - Character cap enforced by the form, if any: `________________`
-   - Does the field accept line breaks and blank lines? `________________`
-   - Does it accept any formatting (bold, headings, markdown), or is it plain text only?
+   - Whether the field accepts line breaks and blank lines: `________________`
+   - Whether it accepts any formatting (bold, headings, markdown), or is plain text only:
      `________________`
-   - Does it strip leading or trailing whitespace? `________________`
+   - Whether it strips leading or trailing whitespace: `________________`
 
 4. **The four required sections.** Introduction, Methods, Results, Conclusion.
-   - Are they four separate fields, or four headings inside one body field?
+   - Whether they are four separate fields, or four headings inside one body field:
      `________________________`
    - If separate, record each label and each cap:
      - Introduction: `________________`
      - Methods: `________________`
      - Results: `________________`
      - Conclusion: `________________`
-   - Does the form state anywhere that Results must be actual rather than promised?
+   - Whether the form states anywhere that Results must be actual rather than promised:
      `________________`
 
 5. **Tables and figures.** Up to two combined.
-   - Is there an upload field at all? `________________`
+   - Whether there is an upload field at all: `________________`
    - Accepted file types: `________________`
    - Size cap: `________________`
    - Maximum number of files: `________________`
@@ -121,12 +121,12 @@ If a field exists that is not listed here, add it to section 4.
 
 6. **Blind review and name handling.** Author identity goes in the form only, never in the
    abstract body.
-   - Does the form say anything about blind review or anonymisation? `________________`
-   - Does it ask for author names in a separate section from the abstract?
+   - Whether the form says anything about blind review or anonymisation: `________________`
+   - Whether it asks for author names in a separate section from the abstract:
      `________________`
-   - Does it warn that identifying information in the body disqualifies the entry?
+   - Whether it warns that identifying information in the body disqualifies the entry:
      `________________`
-   - Does it ask for a repository or supplementary link? `________________`
+   - Whether it asks for a repository or supplementary link: `________________`
      If yes, record whether it is optional, and do not supply one for the abstract round
      unless the form requires it.
 
@@ -136,9 +136,9 @@ If a field exists that is not listed here, add it to section 4.
    - Status: undergraduate, class of June 2028
    - Email: hudpag@gmail.com
    - Fields the form actually asks for: `________________________`
-   - Does it ask for co-authors, and how many rows does it allow? `________________`
-   - Does it ask for a phone number, a mailing address, or a headshot? `________________`
-   - Does it ask for a resume or a CV? `________________`
+   - Whether it asks for co-authors, and how many rows it allows: `________________`
+   - Whether it asks for a phone number, a mailing address, or a headshot: `________________`
+   - Whether it asks for a resume or a CV: `________________`
 
 8. **Consent, terms and eligibility.**
    - Checkboxes or agreements required: `________________________`
@@ -146,10 +146,10 @@ If a field exists that is not listed here, add it to section 4.
      `________________________`
 
 9. **Submission mechanics.**
-   - Is a Google sign-in required to submit? `________________`
-   - Does the form allow editing after submit ("Edit your response")? `________________`
-   - Does it send a confirmation email to the signed-in account? `________________`
-   - Is there a "one response per account" restriction? `________________`
+   - Whether a Google sign-in is required to submit: `________________`
+   - Whether the form allows editing after submit ("Edit your response"): `________________`
+   - Whether it sends a confirmation email to the signed-in account: `________________`
+   - Whether there is a "one response per account" restriction: `________________`
    - Number of pages or steps in the form: `________________`
    - Any question that requires an answer the project does not yet have:
      `________________________`
