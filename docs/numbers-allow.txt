@@ -14,6 +14,7 @@
 # Owner budgets and in-file cross-references, abstract/FORM-FIELDS.md.
 20    # minutes budgeted for the owner's form survey
 3     # "Section 3", a cross-reference to a section of that same file
+60    # words budgeted for the table in the body when the form has no upload field, SOP W6.12
 
 # Observed facts about the submission form, verified 2026-09-22, abstract/FORM-FIELDS.md
 # section 1. Not a measurement of anything the project models.

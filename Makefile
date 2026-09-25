@@ -75,9 +75,12 @@ lint: ## ruff check, ruff format --check, HTTP call-site lint
 fmt: ## ruff format and ruff check --fix, in place
 	bash ops/fmt.sh
 
-# owner: SOP W9.13, fleet phase 06 -- writes ops/lint_prose.sh
-lint-prose: ## prose lint for human-facing text
-	bash ops/lint_prose.sh
+# owner: SOP W7.5, fleet phase 04 -- delegates to quality/prose_lint.py (SOP W7.1).
+# SOP section 2.8 names one prose linter, quality/prose_lint.py: W7 rules 1 to 11,
+# the ban list, WR-01 to WR-08 and the P8 ban list. CI sets ABS_PROSE_FILES, one
+# path per line, and the linter reads it. ops/lint_prose.sh stays with W9.13.
+lint-prose: ## prose lint for human-facing text, quality/prose_lint.py
+	uv run --locked python quality/prose_lint.py
 
 # ---------------------------------------------------------------- tests
 

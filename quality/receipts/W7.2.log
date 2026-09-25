@@ -1,0 +1,10 @@
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+prose-lint: 1 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10 and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+lint-prose selftest: OK, 3 rules, 2 fixtures
+lint-prose: 1 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
+check_numbers selftest: OK, 27 cases
+docs/writing-checklist.md:9: WR-07 warn: 'eleven' is a number above nine in words; rule 6 wants digits in a claim sentence, so check it by hand
+check_numbers: 1 file(s), 66 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 1 word-number warning(s)
+W7.2 OK: quality/banned.txt holds 74 entries and 9 P8 entries, equal to SOP W7.2 and to sop/SOP-final.md; 11 numbered rules, each naming a check and a finding label the tools print; 16 SOP literals present; WR-20 over 5 files, 10 sentences with buffer and two inches, 0 without outside; WR-19 0 author strings in 2 files and 0 linked files
+docs/prior-art.md:99: WR-20 note, not a failure: "buffer" with "2 in" and no "outside": change in the count-bias contrast, P(strike | d = {-1, 0, +1} in, 3-ball) minus P(strike | same d, 2-strike), evaluated on the fitted called-strike GAM surfa...
+wr20: 14 file(s) from the default scope, 8 sentence(s) with "buffer" and "two inches", 0 without "outside"; 1 note(s); 0 undecodable; 0 non-text file(s) skipped; absent: docs/ch1.md

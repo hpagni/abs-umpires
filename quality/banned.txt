@@ -1,0 +1,99 @@
+# quality/banned.txt: the ban list of SOP step W7.2.
+#
+# The union of the W7 and W9 lists and the W8 P8 list, entry for entry and in the SOP's
+# order. quality/prose_lint.py reads this file. Each line is one word or phrase, matched
+# whole and ignoring case. A line that starts with # is a comment. The entries under [p8]
+# apply to docs/p8/** only. Two entries carry a qualifier: "robust" is banned only as a
+# hype adjective, so "robust standard errors" stays legal, and "roi" is banned only in a
+# heading.
+#
+# The linter also carries the SOP list as a floor, and a file that drops a floor entry
+# fails the scan. The W7.2 verify command in quality/steps.yml fails on any difference
+# from the SOP text, in either direction. Change the list only after an owner decision
+# in DECISIONS.md and a matching change to the SOP.
+
+revolutionary
+groundbreaking
+game-changing
+game changer
+cutting-edge
+state-of-the-art
+best-in-class
+seamless
+seamlessly
+effortless
+effortlessly
+unlock
+unlocks
+leverage
+leveraging
+harness
+harnesses
+empower
+supercharge
+elevate
+transformative
+deep dive
+dive into
+delve
+unpack
+journey
+landscape
+realm
+tapestry
+lens
+boasts
+stands out
+sets apart
+powerful
+innovative
+exciting
+thrilled
+proud to
+passionate
+a testament to
+needless to say
+it is worth noting
+at the end of the day
+in today's world
+the world of
+holistic
+synergy
+best practices
+actionable insights
+key takeaway
+robust (as a hype adjective)
+robustly
+massive
+huge
+incredible
+amazing
+simply put
+basically
+essentially
+fundamentally
+arguably
+very
+really
+quite
+comprehensive
+unprecedented
+first-of-its-kind
+myriad
+plethora
+crucial
+vital
+pivotal
+showcase
+testament
+
+[p8]
+edge
+profitable
+beat the book
+units
+alpha
+crushing
+sharp
++EV
+roi in any heading

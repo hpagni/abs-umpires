@@ -1,0 +1,48 @@
+selftest  1/37 ok   base all six hold: fails none
+selftest  2/37 ok   1a tag deleted locally: fails 1, 2, 3, 5, 6
+selftest  3/37 ok   1b lightweight tag, pushed: fails 1
+selftest  4/37 ok   2a tag deleted on origin: fails 2
+selftest  5/37 ok   2b origin holds another tag object under the name: fails 2
+selftest  6/37 ok   2c no remote named origin: fails 2
+selftest  7/37 ok   2d origin on a network host, D-63 budget spent: fails 2
+selftest  8/37 ok   3a HEAD on an orphan branch with the same files: fails 3
+selftest  9/37 ok   4a untracked file: fails 4
+selftest 10/37 ok   4b modified tracked file: fails 4
+selftest 11/37 ok   4c staged, uncommitted change: fails 4
+selftest 12/37 ok   5a annex edited after the lock was hashed: fails 5
+selftest 13/37 ok   5b lock leaves out a named annex: fails 5
+selftest 14/37 ok   5c lock leaves out docs/prereg/SEAL.md: fails 5
+selftest 15/37 ok   5d lock leaves out PREREGISTRATION.md: fails 5
+selftest 16/37 ok   5e lock lines reordered after the tag: fails 5
+selftest 17/37 ok   5f lock carries a comment line: fails 5
+selftest 18/37 ok   6a ABS_SEAL_UNLOCK unset: fails 6
+selftest 19/37 ok   6b ABS_SEAL_UNLOCK=true: fails 6
+selftest 20/37 ok   6c line without the manifest sha256: fails 6
+selftest 21/37 ok   6d manifest changed after the line: fails 6
+selftest 22/37 ok   6e line with no date: fails 6
+selftest 23/37 ok   6f line already present at the tag: fails 6
+selftest 24/37 ok   6g line dated before the tag: fails 6
+selftest 25/37 ok   6h line dated after today: fails 6
+selftest 26/37 ok   6i line without ABS_SEAL_UNLOCK=1: fails 6
+selftest 27/37 ok   6j no DECISIONS.md line at all: fails 6
+selftest 28/37 ok   T1 first request waits 0 s and is logged
+selftest 29/37 ok   T2 second request 3 s later waits 7 s of the 10 s gap
+selftest 30/37 ok   T3 gap and cap are per host: another host 1 s later neither waits nor is refused
+selftest 31/37 ok   T4 a third request to one host over a cap of 2 is refused and not logged
+selftest 32/37 ok   T5 remote_host reads 5 URL shapes
+selftest 33/37 ok   T6 config/throttle.yml gives both D-63 tables a default row
+selftest 34/37 ok   C1 main --root on the baseline exits 0
+selftest 35/37 ok   C2 --only 1,2,3,4,5 exits 0 and --only 6 exits 1 with no variable
+selftest 36/37 ok   C3 --only 7 exits 2
+selftest 37/37 ok   C4 the summary names what was not checked; no cross-check on another root
+check_prereg selftest: 37 of 37 cases pass. 26 planted violations; each of checks 1 to 6 caught its own and failed alone in at least one case; the D-63 throttle waits, caps and logs; the command line exits 0, 1 and 2 as documented
+PREREG 1/6 FAIL tag prereg-v1 exists: no ref refs/tags/prereg-v1 in this repository
+PREREG 2/6 FAIL tag prereg-v1 is pushed to origin: no local tag, so there is nothing to compare with origin
+PREREG 3/6 FAIL tag prereg-v1 is an ancestor of HEAD: no tagged commit, so no ancestry can be shown
+PREREG 4/6 FAIL the worktree is clean: git status --porcelain is not empty: a tracked change or an untracked file is present
+PREREG 5/6 FAIL quality/prereg.lock matches prereg-v1: no tagged commit, so the lock has no blobs to match
+PREREG 6/6 FAIL ABS_SEAL_UNLOCK=1 and its DECISIONS.md line: ABS_SEAL_UNLOCK is not set in this environment; no tag prereg-v1, so no line can be shown to postdate it; DECISIONS.md has no line carrying ABS_SEAL_UNLOCK=1; at the unseal the owner appends one such as '- YYYY-MM-DD: `ABS_SEAL_UNLOCK=1` set in one shell. Manifest sha256 `a52ebf469aaafb3b37c18dcca68f01a421a7cd5a2995bd08e6af40a470904dfb`.'
+PREREG CHECK FAILED: 6 of 6 preconditions do not hold (1, 2, 3, 4, 5, 6)
+CROSS-CHECK absump.seal: consistent on clauses 1, 3, 4, 5, 6 (environment half); no clause passes here that absump.seal fails. Clause 2 is not asked twice, so a run sends at most one request
+W7.8 OK: self-test green; the run on this repository reported 6 preconditions, exit 1, consistent with absump.seal
+PENDING-LATER-PHASE W7.42 tools/comms/check_all.sh: not built yet; fleet phase 13 builds it after W7.1..W7.41 (SOP W7.42)

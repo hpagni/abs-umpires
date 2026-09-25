@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked python quality/checks/wr20.py --selftest && ABS_PROSE_FILES= uv run --locked python quality/checks/wr20.py && ABS_PROSE_FILES= uv run --locked python quality/checks/wr20.py | tail -n 1 | grep -Eq '^wr20: [1-9][0-9]* file\\(s\\) from the default scope, [0-9]+ sentence\\(s\\) with \"buffer\" and \"two inches\", 0 without \"outside\"; [0-9]+ note\\(s\\); 0 undecodable; '",
+  "duration_s": 0,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W7.4.log",
+  "owner": "W7",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W7.4",
+  "timestamp_madrid": "2026-09-25 19:16:52 CEST",
+  "title": "Writing standard: WR-20 and the buffer rule check"
+}

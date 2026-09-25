@@ -1,0 +1,2 @@
+check_numbers selftest: OK, 27 cases
+W7.3 OK: quality/check_numbers.py reads the 3 SOP sources, 66 traceable values, 0 bad source lines; WR-07 scope abstract/ and docs/memo/; SOP text matched

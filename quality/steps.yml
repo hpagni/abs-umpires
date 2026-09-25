@@ -673,6 +673,53 @@
   owner: W3
   needs: R/lib/zone.R, src/absump/geometry.py, tests/golden/reproject_golden.csv, data/interim
 
+# W3.5, regimes, sample and exclusions. Owner W3, fleet phase 04.
+#
+# The verify command is the script itself. It fetches the season boundaries
+# from the Stats API seasons endpoint through R/lib/http.R (served from the raw
+# cache after the first run), builds the exclusion waterfall on the open views,
+# writes out/ch1/tab/T1_sample.csv only when its bytes change, and prints one
+# PASS or FAIL line per assertion. It exits 1 after reporting every failure.
+# 29 assertions: every fetched boundary field present, the SOP W3.5 table
+# matched cell by cell (the 2026 regular-season end against config/seal.yml),
+# the regime map, every open game_type R pitch inside its fetched regular
+# season, the waterfall arithmetic per season, P0 and P1 recounted in SQL, the
+# harmonised zone against sz_top_h and sz_bot_h, roster coverage of P0 and the
+# balanced umpire panel. Measured 2026-09-25: P0 1,830,267, P1 1,487,942.
+#
+# `needs` names the script and the warehouse directory, as W3.2 does, so a
+# clean clone reads MISSING rather than FAIL.
+
+- id: W3.5
+  title: "Regimes, sample and exclusions, T1_sample.csv with P0 and P1"
+  verify: "Rscript R/ch1/01_sample.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/01_sample.R, warehouse
+
+# W3.6, original-call reconstruction. Owner W3, fleet phase 04.
+#
+# R/ch1/02_original_call.R writes data/interim/ch1/original_call.parquet, one
+# row per called pitch in the open view, with call_final, call_original and
+# is_overturned kept apart. The verify command rebuilds the table in memory
+# from the Savant drawer and the open views. It fails unless CH1-A2 holds: every
+# drawer challenge recovered, by the DT-28 bridge or the feed fallback, with 0
+# ambiguous. It also fails unless the file on disk equals the rebuild. GD-04
+# then scans the script. DT-28 as written is printed, not asserted: at
+# round(., 2) 28 of 10,167 plays are ambiguous, and D-62's feed fallback takes
+# them.
+#
+# `needs` names the script, the artifact, the warehouse and the drawer
+# directory. data/ and warehouse/ never enter git, so on a clean clone the step
+# reads MISSING rather than FAIL, as W3.2 and W3.3 do.
+
+- id: W3.6
+  title: "Original-call reconstruction, CH1-A2 through the DT-28 bridge and the feed fallback"
+  verify: "Rscript R/ch1/02_original_call.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/02_original_call.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/02_original_call.R, data/interim/ch1/original_call.parquet, warehouse, data/raw/savant/abs_drawer
+
 # W4.0, the Chapter 2 environment additions. Owner W4, fleet phase 04.
 #
 # The three packages the SOP installs are lme4, tidybayes and marginaleffects.
@@ -1075,3 +1122,516 @@
   expect_exit: 0
   owner: W9
   needs: ops/lint_prose.sh, quality/check_numbers.py, docs/numbers.json, docs/priorart-numbers.txt, docs/numbers-allow.txt
+
+# W3.4, height harmonisation, DT-30 and the D-13 fork. Owner W3, fleet phase 04.
+#
+# R/ch1/03_heights.R --check recomputes the per-season ABS-height coverage of
+# called pitches from the open view and dim_batter_season, refits the 2022-2024
+# selection-effect contours (nine bam fits, 1,000 Vp draws each, seeded) and
+# compares both with out/tables/height_coverage.csv cell for cell: counts and
+# shares exactly, contour cells within 2e-4. It also asserts one roster offset,
+# 100% roster+offset coverage, fits on the pre-buffer regime only, closed
+# contours, and that prereg-v1, once tagged, carries the table byte for byte.
+# About 50 s. `needs` names the warehouse directory, as W3.2 does, so a clean
+# clone reads MISSING rather than FAIL.
+- id: W3.4
+  title: "Height harmonisation, DT-30 coverage table and the D-13 fork"
+  verify: "Rscript R/ch1/03_heights.R --check"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/03_heights.R, out/tables/height_coverage.csv, warehouse
+
+# W3.7, the analysis table. Owner W3, fleet phase 04.
+#
+# R/ch1/10_build_analysis_table.R writes data/marts/ch1_called.parquet, one row
+# per P0 pitch (SOP W3.5), 33 columns: the 19 SOP W3.7 names, identifiers, the
+# ABS-measured arm (H_abs, d_abs), the W3.6 flags and delta_run_exp. H is roster
+# height plus the offset, under DECISIONS.md D-R0-02. cs is the W3.6 original
+# call. The verify command rebuilds the table in memory from the open views,
+# original_call.parquet and the people-endpoint cache, and runs every assertion.
+# It fails unless the file on disk equals the rebuild in names, types, values
+# and metadata. The assertions include P0 and P1 per season equal to
+# T1_sample.csv, DT-18 key uniqueness, DT-17 null rates, x_mid and z_mid
+# reproduced by zone.R, cs moved off the published call on exactly the
+# overturned pitches, and the W3.5 band counts reproduced. GD-04 then scans the
+# script. Measured 2026-09-25: 1,830,267 rows x 33 columns, 98,753,953 bytes,
+# about 10 s.
+#
+# `needs` names the script, the artifact, its two file inputs and the warehouse
+# directory, so a clean clone reads MISSING rather than FAIL.
+- id: W3.7
+  title: "The analysis table, data/marts/ch1_called.parquet"
+  verify: "Rscript R/ch1/10_build_analysis_table.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/10_build_analysis_table.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/10_build_analysis_table.R, data/marts/ch1_called.parquet, data/interim/ch1/original_call.parquet, out/ch1/tab/T1_sample.csv, warehouse
+
+# W3.8, the zone-truth gate, DT-21. Hard go/no-go. Owner W3, fleet phase 04.
+#
+# R/ch1/11_zone_gate.R --check rebuilds the ABS verdict for every MLB 2026
+# challenged pitch in the open view from D-14's zone (53.5%/27% of ABS-measured
+# height, mid-plate, r = 1.45 in, Euclidean at the corners, all from
+# R/lib/zone.R) and scores it against call_final. It fails unless overall
+# agreement is >= 99.75% and agreement outside the +/-0.5 in band is >= 99.95%,
+# both compared in integers, and unless out/ch1/tab/T2_zone_gate.csv equals the
+# rebuild byte for byte. Cross-checks: the published zone, the warehouse
+# edge_dist_calc and W3.7's d_abs. Nothing is fitted. GD-04 then scans the
+# script. Measured 2026-09-25: 10,164/10,168 overall, 7,573/7,574 outside the
+# band, about 1 s. `needs` names the script, the table, the analysis table and
+# the warehouse directory, so a clean clone reads MISSING rather than FAIL.
+- id: W3.8
+  title: "The zone-truth gate, DT-21, hard go/no-go"
+  verify: "Rscript R/ch1/11_zone_gate.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/11_zone_gate.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/11_zone_gate.R, out/ch1/tab/T2_zone_gate.csv, data/marts/ch1_called.parquet, warehouse
+
+# W3.10, pitch-level plane displacements. Owner W3, fleet phase 04.
+#
+# R/ch1/13_plane_displacement.R moves every P0 pitch from the front plane to the
+# middle plane with R/lib/zone.R and writes data/interim/ch1/plane_displacement.csv:
+# n, mean, sd, 5th and 95th percentiles of dz, dx and dabsx (the change in |x|), by
+# velocity decile, pitch group, vertical-break decile, pitch type, p_throws and
+# shadow-band edge, pooled 2022-2026 and per season. The verify command rebuilds
+# the table in memory. It fails unless reproject() equals the warehouse mid-plate
+# pair and W3.7's x_mid and z_mid to 1e-9 ft, t_mid > t_front and dz < 0 hold
+# pitch by pitch, the mean dz of every 2022-2025 day lies in [-1.10, -0.90] in,
+# every breakdown partitions its population, and the file on disk equals the
+# rebuild. Nothing is fitted and no call is read. GD-04 then scans the script.
+# Measured 2026-09-25: 1,830,267 pitches, 274 rows, about 12 s. `needs` names the
+# script, the table, the analysis table and the warehouse directory, so a clean
+# clone reads MISSING rather than FAIL.
+- id: W3.10
+  title: "Pitch-level plane displacements"
+  verify: "Rscript R/ch1/13_plane_displacement.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/13_plane_displacement.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/13_plane_displacement.R, data/interim/ch1/plane_displacement.csv, data/marts/ch1_called.parquet, warehouse
+
+# W3.9, AAA format classification. Owner W3, fleet phase 04.
+#
+# R/ch1/12_aaa_formats.R --check recomputes, from the AAA GUMBO feeds, every game
+# that out/ch1/tab/T5_aaa_formats.csv lists: has_abs_challenges from key presence,
+# agree = mean(called_strike == zone_pred) on the umpire's call against D-14's
+# rule (mid-plate, r = 1.45 in) on the published rule zone, and the class
+# (full_abs at agree >= 0.99, else human_called; unclassified under 50 scored
+# pitches). It fails unless T5, out/tables/aaa_regime_scan.csv,
+# out/tables/aaa_changeover.csv and the W3.9 rows of out/tables/aaa_format.csv
+# equal the rebuild, and unless every evaluable SOP test passes: S1 a gap of at
+# least 0.04 between the agree modes, S2 no full_abs game with the key, S3 the six
+# data-contract games, S4 machine-day contour area within 2 sq in across
+# 2023/2024/2025. A clause the corpus cannot evaluate yet prints PENDING. The game
+# list is frozen at the last build, so a feed pull running beside it does not move
+# the check. GD-04 then scans the script. Measured 2026-09-25 on 934 games (2023:
+# 276, 2024: 658, 2025: 0): S1, S2 and S4 fail as written, about 20 s.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# R/ch1/12_aaa_formats.R --check runs as before. On disk are 276 of 2,224 Final AAA
+# 2023 games, 658 of 2,232 for 2024 and none for 2025; the AAA pull is fleet phase 07
+# and the AAA arm (W3.20) is paper tier and blocked on D-11, D-12 and D-57. When the
+# check fails, the wrapper passes only if every failed clause is S1, S2 or S4 and the
+# corpus is still partial, and prints DEFERRED-PENDING-AAA-PULL with each measured
+# shortfall. Any other failed clause fails the step. Once all three seasons are
+# complete the deferral lapses and S1, S2 and S4 must pass or be amended by a recorded
+# decision. The deferral waives nothing: see logs/decisions-pending/small-gates.md,
+# which records why the pull alone is unlikely to clear S1, S2 or S4.
+
+- id: W3.9
+  title: "AAA format classification"
+  verify: 'out=$(Rscript R/ch1/12_aaa_formats.R --check 2>&1); rc=$?; printf "%s\n" "$out"; if [ $rc -ne 0 ]; then printf "%s\n" "$out" | uv run --locked python -c ''import re, sys; t = sys.stdin.read(); F = lambda c, m: c or sys.exit("W3.9 FAIL: " + m); fl = re.findall(r"^FAIL\s+(S\d|\S+)\s+(.*)$", t, re.M); I = sorted({f[0] for f in fl}); cov = re.findall(r"^RECORD\s+coverage (\d{4})\s+([\d,]+) of ([\d,]+) Final games on disk", t, re.M); sh = [x for x in cov if int(x[1].replace(",", "")) < int(x[2].replace(",", ""))]; F(fl, "the check exited non-zero with no FAIL clause"); F(set(I) <= {"S1", "S2", "S4"}, "a clause other than S1, S2 or S4 failed: " + ", ".join(i for i in I if i not in ("S1", "S2", "S4"))); F(len(cov) == 3, "the coverage records for 2023, 2024 and 2025 are missing"); F(sh, "the AAA corpus is complete, so the deferral has lapsed: S1, S2 and S4 must pass or be amended by a recorded decision"); [print("DEFERRED-PENDING-AAA-PULL %s %s" % f) for f in fl]; print("W3.9 DEFERRED-PENDING-AAA-PULL: %s fail on a partial AAA corpus (%s); every other clause passes or is PENDING; the deferral lapses once the AAA pull (fleet phase 07) completes the corpus, and does not waive S1, S2 or S4" % (", ".join(I), "; ".join("%s %s of %s Final games on disk" % x for x in cov)))'' || exit 1; fi; uv run --locked python tests/guard/gd04_scan.py --path R/ch1/12_aaa_formats.R'
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/12_aaa_formats.R, R/lib/zone.R, out/ch1/tab/T5_aaa_formats.csv, out/tables/aaa_regime_scan.csv, out/tables/aaa_changeover.csv, out/tables/aaa_format.csv, data/interim/schedule_game/level=aaa, data/raw/statsapi/feed/sport=11
+
+# W3.11, specification development on 2022-2024 only. Owner W3, fleet phase 04.
+#
+# R/ch1/20_spec_dev.R --check reloads the development sample (P0 in 2022-2024
+# with |d| <= 8.0 in, 687,496 rows) through the script's one filtered read and
+# asserts that no 2025 or 2026 row arrived. It then refits the frozen
+# specification and the rung above it, two bam fits in parallel, about 10
+# minutes and 3.9 GB peak. It fails unless both refits reproduce
+# out/dev/ch1_spec/k_sweep.csv, no k-index moves by 0.01 or more between the two
+# rungs, and docs/prereg/ch1.md carries the same k values, the k.check table,
+# the 2022-2024 disclosure, both CH1-A5 tolerances and the single-thread record.
+# GD-04 then scans the script. `needs` names the analysis table and the build's
+# out/dev files, which never enter git, so a clean clone reads MISSING rather
+# than FAIL.
+- id: W3.11
+  title: "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
+  verify: "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/20_spec_dev.R, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_spec/frozen_spec.json, out/dev/ch1_spec/k_sweep.csv
+
+# W3.12, synthetic machinery: the D-60 power curve, SBC and injected-effect recovery.
+# Owner W3, fleet phase 04. MT-09 is the gate.
+#
+# R/ch1/21_synthetic.R --check reads the raw per-seed draws under
+# out/dev/ch1_synth/power/ and asserts five seeds per cell for both estimators at
+# tau 0.10, 0.20 and 0.30 in, 4,000 draws each. It rebuilds
+# out/tables/ch1_power_curve.csv from those draws and fails unless the file on disk
+# equals the rebuild. It re-derives the CH1-A6 thresholds by the rule written in the
+# script and fails unless thresholds.json and the CH1-A6 table in docs/prereg/ch1.md
+# carry them line for line; PREREGISTRATION.md is checked once W7.6 writes it. It
+# re-reads the design from the mart without any call column, re-runs one seed end to
+# end and requires the stored draws back to 1e-9, and fails on any fit object or
+# provenance.json under out/dev/ch1_synth. SBC (200 replicates) and recovery (100
+# injected, 50 null) are scored when complete and print PENDING until then. GD-04
+# then scans the script. `needs` names the build's out/dev files, which never enter
+# git, so a clean clone reads MISSING rather than FAIL.
+- id: W3.12
+  title: "Synthetic machinery: recovery, SBC, the D-60 power curve"
+  verify: "Rscript R/ch1/21_synthetic.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/21_synthetic.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/21_synthetic.R, out/tables/ch1_power_curve.csv, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_synth/design.parquet, out/dev/ch1_synth/power/thresholds.json
+
+# W5.1, pin the prior art. Owner W5, fleet phase 04. SOP section W5.1, R-17.
+#
+# fixtures/prior_art/uiloi/ holds snapshot A (2026-09-22T14:34Z) of the "data"
+# release of AyanArora29/use-it-or-lose-it (MIT). Upstream replaced every asset on
+# 2026-09-23 and 2026-09-24, so 3 of the 7 named files survive byte for byte:
+# dp_V_2026.npy, tier1_results_2026.json and tier1_card_2026.csv. PROVENANCE.txt
+# names the other four and says why they are absent. shasum -c re-hashes the
+# three files. check_pin.py then asserts the SOP literals: both sha256 values, the
+# npy header, V[1, 6, :], the eight gains, the capture ratio, the structure
+# counts, and that each absent file is named in PROVENANCE.txt. Standard library
+# only, no network.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# SOP W5.1 names seven files of snapshot A (2026-09-22T14:34Z). Three are on this
+# machine and pinned; four are not, and cannot be: they are upstream release assets
+# whose snapshot A copies were replaced upstream on 2026-09-23. They enter with
+# snapshot B at the re-pin the SOP schedules after 2026-09-27, which fleet phase 10
+# runs (R-17). contracts/prior_art_snapshot_a.yml records all seven.
+#
+# The verify command checks the three pins by shasum and check_pin.py as before, then
+# reads the contract: the seven names equal the SOP's gh command, each pinned sha256
+# equals the file, SHA256SUMS and (for two) the SOP literal, and each pending file is
+# absent from disk and names its phase and date. It prints one PENDING-LATER-PHASE
+# line per pending file. A pending file that appears on disk unpinned fails the step.
+# Measured 2026-09-25: exit 0 in about 1 s.
+
+- id: W5.1
+  title: "Pin the prior art"
+  verify: '(cd fixtures/prior_art/uiloi && shasum -a 256 -c SHA256SUMS) && uv run --locked python fixtures/prior_art/uiloi/check_pin.py && uv run --locked python -c ''import hashlib, os, re, sys, yaml; F = lambda c, m: c or sys.exit("W5.1 FAIL: " + m); c = yaml.safe_load(open("contracts/prior_art_snapshot_a.yml", encoding="utf-8")); d = c["directory"]; P = [x["file"] for x in c["pinned"]]; Q = [x["file"] for x in c["pending"]]; N = P + Q; F(len(N) == 7 and len(set(N)) == 7, "the contract must list the 7 SOP W5.1 files once each"); s = open("sop/SOP-final.md", encoding="utf-8").read() if os.path.exists("sop/SOP-final.md") else ""; w = s[s.index("**W5.1 Pin the prior art.**"):s.index("**W5.2")] if s else ""; F(not s or sorted(re.findall(r"--pattern .([\w.]+).", w)) == sorted(N), "the contract files differ from the SOP W5.1 gh command"); F(not s or all(x["sha256"] in w for x in c["pinned"] if x["source"].startswith("SOP")), "an SOP W5.1 sha256 literal differs from the contract"); S = dict(reversed(l.split()) for l in open(os.path.join(d, "SHA256SUMS"), encoding="utf-8") if l.strip()); F(sorted(S) == sorted(P), "SHA256SUMS lists %s but the contract pins %s" % (sorted(S), sorted(P))); F(all(hashlib.sha256(open(os.path.join(d, x["file"]), "rb").read()).hexdigest() == x["sha256"] == S[x["file"]] for x in c["pinned"]), "a pinned file differs from its contract sha256 or from SHA256SUMS"); F(not [x for x in Q if os.path.exists(os.path.join(d, x))], "a pending file is on disk but not pinned; pin it: " + str([x for x in Q if os.path.exists(os.path.join(d, x))])); F(all(x["status"] == "PENDING-LATER-PHASE" and re.search(r"fleet phase \d+", x["produced_by"]) and re.match(r"\d{4}-\d{2}-\d{2}$", x["not_before"]) for x in c["pending"]), "a pending file lacks its status, its producing phase or its date"); [print("PENDING-LATER-PHASE %s: %s; not before %s" % (x["file"], x["produced_by"], x["not_before"])) for x in c["pending"]]; print("W5.1 OK: %d of 7 snapshot A files pinned and hash-checked against the contract and SHA256SUMS%s (%s); %d PENDING-LATER-PHASE" % (len(P), " and the SOP literals and gh command" if s else "", ", ".join(P), len(Q)))'''
+  expect_exit: 0
+  owner: W5
+  needs: fixtures/prior_art/uiloi/SHA256SUMS, fixtures/prior_art/uiloi/PROVENANCE.txt, fixtures/prior_art/uiloi/check_pin.py, fixtures/prior_art/uiloi/dp_V_2026.npy, fixtures/prior_art/uiloi/tier1_results_2026.json, contracts/prior_art_snapshot_a.yml
+
+# W4.5, the challenge frame. Owner W4, fleet phase 04. SOP W4.5.
+#
+# R/ch2/01_challenge_frame.R --check rebuilds data/interim/ch2/challenges.parquet
+# in memory from the 60 Savant drawer files, the W3.6 pitch key and the drawer
+# contract. It fails unless the file on disk equals the rebuild in names, types,
+# values and metadata. Its assertions: overturned == 1{m > 0} on every row;
+# edge_dist_calc re-derived by R/lib/zone.R to 1e-6 in on every row from
+# plate_X/plate_Z; role resolved with one match per row; role is batter if and
+# only if the original call was a strike; DT-25 totals 10,167 = 4,612 + 5,555 on
+# the MLB open set; the chronological index has no gaps. The file carries
+# w45_m1_excluded, the columns M1 may not read. GD-04 then scans the script.
+# Measured 2026-09-25: 19,469 rows x 41 columns, 2,347,823 bytes, about 6 s.
+#
+# `needs` names the script, the artifact and its three inputs. data/ never
+# enters git, so a clean clone reads MISSING rather than FAIL.
+- id: W4.5
+  title: "The challenge frame, data/interim/ch2/challenges.parquet"
+  verify: "Rscript R/ch2/01_challenge_frame.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch2/01_challenge_frame.R"
+  expect_exit: 0
+  owner: W4
+  needs: R/ch2/01_challenge_frame.R, data/interim/ch2/challenges.parquet, data/raw/savant/abs_drawer, data/interim/ch1/original_call.parquet, contracts/savant_drawer.yml
+
+# W6.5, the harmonized zone, sprint view. Owner W6, fleet phase 04.
+# SOP section 3: `W6.5  harmonized zone -> W3.3, W3.4, W3.8`. W6.5 rebuilds none of them.
+# The verify command re-proves DT-30 (W3.4 check mode) and DT-21 (W3.8 check mode),
+# asserts the six D-14 constants in R/lib/zone.R, src/absump/geometry.py and
+# src/absump/ingest/normalize_sc.py, and checks every row of the DT-30 and T2 tables in
+# docs/harmonized_zone.md against out/tables/height_coverage.csv and
+# out/ch1/tab/T2_zone_gate.csv, so a CSV change not carried into the page fails it.
+# Measured 2026-09-25: exit 0 in about 70 s; 5 DT-30 rows and 8 DT-21 rows match.
+- id: W6.5
+  title: "The harmonized zone, sprint view"
+  verify: "Rscript R/ch1/03_heights.R --check && Rscript R/ch1/11_zone_gate.R --check && Rscript -e \"source('R/lib/zone.R'); stopifnot(identical(c(PLATE_HALF_W_FT, Y_FRONT_FT, Y_MID_FT, ABS_TOP_FRAC, ABS_BOT_FRAC, BALL_R_IN), c(8.5/12, 17/12, 8.5/12, 0.535, 0.27, 1.45))); writeLines('W6.5 OK: R/lib/zone.R carries the D-14 constants')\" && uv run --locked python -c \"import csv, absump.geometry as g, absump.ingest.normalize_sc as n; K=('PLATE_HALF_W_FT','Y_FRONT_FT','Y_MID_FT','ABS_TOP_FRAC','ABS_BOT_FRAC','BALL_R_IN'); W=(8.5/12, 17/12, 8.5/12, 0.535, 0.27, 1.45); assert tuple(getattr(g, k) for k in K) == W == tuple(getattr(n, k) for k in K), 'W6.5: the D-14 constants differ between modules'; doc=set(open('docs/harmonized_zone.md').read().splitlines()); cr=list(csv.DictReader(open('out/tables/height_coverage.csv'))); tr=list(csv.DictReader(open('out/ch1/tab/T2_zone_gate.csv'))); cov=[f'| {r['season']} | {r['regime']} | {r['first_date']} to {r['last_date']} | {int(r['n_called']):,} | {int(r['n_called_abs_measured']):,} | {r['abs_measured_share']} | {r['roster_offset_share']} | {r['n_batters_abs_measured']} of {r['n_batters']} | {'yes' if r['abs_below_trigger'] == 'true' else 'no'} | {r['abs_height_link']} |' for r in cr]; t2=[f'| {r['row_id']} | {r['zone'].split(',')[0]} | {int(r['n']):,} | {int(r['n_agree']):,} | {int(r['n_disagree']):,} | {r['agreement_pct']} | {r['threshold_pct'] or 'not gated'} | {r['verdict']} |' for r in tr]; miss=[x for x in cov + t2 if x not in doc]; assert not miss, 'W6.5: rows missing from docs/harmonized_zone.md: ' + ' || '.join(miss); assert [r['season'] for r in cr] == ['2022', '2023', '2024', '2025', '2026'], 'W6.5: the DT-30 table does not hold 2022-2026'; assert len(tr) == 8 and all(r['verdict'] == 'PASS' for r in tr if r['row_id'] in ('overall', 'outside_band')), 'W6.5: the DT-21 gate rows are not PASS'; print(f'W6.5 OK: D-14 constants agree in R/lib/zone.R, geometry.py and normalize_sc.py; {len(cov)} DT-30 rows and {len(t2)} DT-21 rows match docs/harmonized_zone.md')\""
+  expect_exit: 0
+  owner: W6
+  needs: docs/harmonized_zone.md, out/tables/height_coverage.csv, out/ch1/tab/T2_zone_gate.csv, R/ch1/03_heights.R, R/ch1/11_zone_gate.R, R/lib/zone.R, src/absump/geometry.py, data/marts/ch1_called.parquet, warehouse
+
+# W4.7, prior predictive checks for M1, gate MT-01 (Chapter 2 half). Owner W4, fleet
+# phase 04. SOP W4.7.
+#
+# R/ch2/03_prior_predictive.R --check samples M1's prior again with brms and
+# sample_prior = "only" (1,000 draws, seed 20260922), once on the probit link MT-01
+# names and once on the logit link W4.10 fits, and compares every number with
+# out/ch2/log/prior_predictive.json. It exits 0 only if the file matches the rerun and
+# both W4.7 gates pass in both arms: the league overturn rate's central 95% interval
+# covers [0.10, 0.90] with median in [0.35, 0.65], and the 90th percentile of the
+# between-challenger SD on the probability scale is below 0.30. No likelihood is used
+# and the outcome column is never read. GD-04 then scans the script.
+# Measured 2026-09-25: about 45 s; probit arm passes both gates, logit arm fails gate 1.
+- id: W4.7
+  title: "Prior predictive checks for M1, MT-01 Chapter 2"
+  verify: "Rscript R/ch2/03_prior_predictive.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch2/03_prior_predictive.R"
+  expect_exit: 0
+  owner: W4
+  needs: R/ch2/03_prior_predictive.R, out/ch2/log/prior_predictive.json, data/interim/ch2/challenges.parquet, warehouse
+
+# W4.1, the Chapter 2 pre-registration annex. Owner W4, fleet phase 04. SOP W4.1.
+#
+# The verify command runs the prose lint (WR-01, WR-03, WR-05) on docs/prereg/ch2.md,
+# then one inline check. It fails unless: the M1, M2 and m blocks equal the SOP W4.10,
+# W4.11 and W4.5 text byte for byte; the sealed predicate equals
+# quality/sql/analysis_set.sql and the seal.yml constants agree; the 12 CH2 thresholds
+# equal SOP section 9.3; CH2-H2a..H2e each carry a threshold, a test id and a failure
+# rule; the excluded-column list equals the W4.5 frame's w45_m1_excluded metadata; the
+# frame counts (rows, AAA, MLB role overturns, the overturn identity) and the W4.7 table
+# are recomputed from data/interim/ch2/challenges.parquet and
+# out/ch2/log/prior_predictive.json; section 8.5 agrees with whether
+# out/ch2/power_curve.csv exists; the open-item count is current; no em dash (WR-09),
+# no question mark (WR-02), WR-20 holds; and every numeric literal traces to the SOP, the
+# RUNLOG, docs/prior-art.md, the W4.7 json, the seal files or the frame.
+# Mutation-tested 2026-09-25: 13 planted faults, each exits 1.
+# Measured 2026-09-25: exit 0 in about 3 s.
+#
+# `needs` names the private SOP and RUNLOG and the gitignored frame, so a clean clone
+# reads MISSING rather than FAIL.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# small-gates lane's, fleet phase 04 (run 5).
+#
+# The stat verifier (logs/evidence/W4.1.verify-prereg.log) refuted the previous verify:
+# 9 of 11 planted faults passed it, because each threshold was looked up anywhere in
+# the file. Two checks are added after the unchanged original. quality/checks/wr20.py
+# reads the annex with the project's sentence model, so a hard-wrapped "two inches"
+# counts. The anchored check reads each CH2 threshold at its own criterion line and
+# requires its numbers, in order, to equal the SOP 9.3 clause; the four reproduction
+# gates in 7.6 and the four Plus items in 7.7; every test id in section 7 defined in
+# SOP section 6; six failure rules, each marked SOP or annex default, the SOP ones
+# carrying the SOP's words; and the 8.4 grid equal to SOP W4.8. Mutation-tested
+# 2026-09-25: the verifier's 11 mutants and 3 more each exit 1; the control exits 0.
+
+- id: W4.1
+  title: "Chapter 2 pre-registration annex, docs/prereg/ch2.md"
+  verify: 'ABS_PROSE_FILES=docs/prereg/ch2.md bash ops/lint_prose.sh && uv run --locked python -c ''import re, os, sys, json, pyarrow.parquet as pq; F = lambda c, m: c or sys.exit("W4.1 FAIL: " + m); t = open("docs/prereg/ch2.md", encoding="utf-8").read(); s = open("sop/SOP-final.md", encoding="utf-8").read(); blk = lambda h: s[s.index("```", s.index(h)):s.index("```", s.index("\n", s.index("```", s.index(h))) + 1) + 3]; V = [blk(h) for h in ("**W4.10 M1, accuracy", "**W4.11 M2, signal detection.**", "**M2, the perception model", "**The design fact that determines everything.**")]; F(all(v in t for v in V), "an M1, M2 or m block is not the SOP W4.5/W4.10/W4.11 text byte for byte"); q = open("quality/sql/analysis_set.sql", encoding="utf-8").read(); F("```sql\n" + q[q.index("CASE"):].rstrip("\n") + "\n```" in t, "the sealed-set predicate differs from quality/sql/analysis_set.sql"); c93 = s[s.index("### 9.3 Chapter 2 is done when"):s.index("### 9.4")]; TH = ["`P(sd_challenger > 0.10 logit | data) ≥ 0.80`", "split-half Spearman-Brown ≥0.40 for catchers with ≥20 challenges", "`P(sd_tau > 0.20 probit | data) ≥ 0.80`", "variance-components signal share ≥0.60", "`P(sd_opponent > 0.10 logit | data) ≥ 0.80`", "Cox slope is in [0.80, 1.25] with its 95% CI containing 1", "`|α| ≤ 0.05` logit", "`|α| ≤ 0.15`", "reproduce 58.8 / 49.0 / 39.3 to ±0.3 pp", "within 0.4 in of 1.90", "within 0.6 in of 3.02", "to 1e-6 on 100% of rows"]; F(all(x in c93 and x in t for x in TH), "a CH2 threshold is missing or differs from SOP section 9.3: " + str([x for x in TH if not (x in c93 and x in t)])); H = [t[t.index("### 7.%d CH2-H2%s" % (i + 1, c)):t.index("\n### ", t.index("### 7.%d CH2-H2%s" % (i + 1, c)) + 5)] for i, c in enumerate("abcde")]; F(all(re.search(r"\n- Threshold[^\n]*\d", h) and re.search(r"\n- Checked by:[^\n]*\b(MT|UT|DT|BR)-\d\d", h) and "\n- If it fails" in h for h in H), "a CH2-H2 criterion lacks a threshold, a test id or a failure consequence"); F("**The rule: M1 does not condition on `m`.**" in t, "the exclusion rule is missing"); fr = pq.read_table("data/interim/ch2/challenges.parquet"); ex = fr.schema.metadata[b"w45_m1_excluded"].decode().split(","); F(", ".join("`%s`" % x for x in ex[:-1]) + " and `%s`" % ex[-1] in t and "the %d columns" % len(ex) in t, "the excluded-column list differs from the W4.5 frame metadata"); d = fr.select(["level", "role", "overturned", "m"]).to_pylist(); n, ok, z, aaa = len(d), sum((r["overturned"] == 1) == (r["m"] > 0) for r in d), sum(r["m"] == 0 for r in d), sum(r["level"] == "aaa" for r in d); F(ok == n and "%s of %s rows, with %d rows at `m == 0`" % (format(ok, ","), format(n, ","), z) in t and "AAA 2025 adds %s challenges" % format(aaa, ",") in t, "the overturn identity or the AAA count differs from the W4.5 frame"); cnt = lambda k, o=None: sum(r["level"] == "mlb" and r["role"] == k and (o is None or r["overturned"] == o) for r in d); F(all("%s of %s %s challenges" % (format(cnt(k, 1), ","), format(cnt(k), ","), k) in t for k in ("batter", "catcher", "pitcher")), "the MLB role overturn counts differ from the W4.5 frame"); j = json.load(open("out/ch2/log/prior_predictive.json", encoding="utf-8")); A, D = j["arms"], j["design"]; g = lambda a: A[a]["gates"]; row = lambda a: "| [%.4f, %.4f] | %.4f | %.4f | %s |" % (g(a)["gate1_league_rate"]["interval95"][0], g(a)["gate1_league_rate"]["interval95"][1], g(a)["gate1_league_rate"]["median"], g(a)["gate2_between_challenger_sd"]["q90"], "both gates pass" if A[a]["pass"] else ("gate 1 fails" if not g(a)["gate1_league_rate"]["pass"] else "gate 2 fails")); F(all(row(a) in t for a in ("probit", "logit")), "the W4.7 table differs from out/ch2/log/prior_predictive.json"); lv = D["levels"]; F("%s challengers, %s opponents, %s pitchers, %s plate umpires and %s teams" % tuple(format(lv[k], ",") for k in ("challenger_id", "opponent_id", "pitcher_id", "ump_id", "team_id")) in t and "%d challengers have 20 or more" % D["challengers_with_20_or_more"] in t and "%s catcher challenges and %s pitcher challenges" % (format(D["role"]["catcher"], ","), format(D["role"]["pitcher"], ",")) in t and "N = %s MLB 2026" % format(D["n"], ",") in t, "the W4.7 design counts differ"); y = open("config/seal.yml", encoding="utf-8").read(); yv, yl = dict(re.findall(r"^(\w+): \"([^\"]*)\"", y, re.M)), dict(re.findall(r"^(\w+): \[(.*)\]", y, re.M)); L = lambda k: [x.strip().strip("\"") for x in yl[k].split(",")]; F(all("`%s` %s" % (k, yv[k]) in t for k in ("seal_start_date", "regular_season_end", "postseason_end_estimate")) and "Sealed game types are %s and %s; excluded types are %s and %s." % (", ".join(L("sealed_game_types")[:-1]), L("sealed_game_types")[-1], ", ".join(L("excluded_game_types")[:-1]), L("excluded_game_types")[-1]) in t, "config/seal.yml and the annex disagree"); P = s[s.index("**W4.8 SBC and the power curve.**"):s.index("One conclusion is already established")]; PR = re.findall(r"^\| [0-9,]+ \| 0\.\d+ \|.*\|$", P, re.M); F(len(PR) == 4 and all(r in t for r in PR), "the four single-replication rows differ from SOP W4.8"); F(os.path.exists("out/ch2/power_curve.csv") != ("The grid has not run." in t), "section 8.5 disagrees with out/ch2/power_curve.csv"); k = len(re.findall(r"^\d+\. \*\*", t[t.index("## 10."):], re.M)); F("lists %s items" % "zero one two three four five six seven eight nine ten eleven twelve".split()[k] in t, "the open-item count in the preamble is stale"); b = re.sub(r"```.*?```", "", t, flags=re.S); F("—" not in t and "?" not in re.sub(r"`[^`]*`", "", b), "WR-09 em dash or WR-02 question mark in the prose"); F(not [x for x in re.split(r"(?<=[.!?])\s+", b) if "buffer" in x.lower() and "two inches" in x.lower() and "outside" not in x.lower()], "WR-20"); NUM = r"(?<![\w.])\d+(?:,\d{3})*(?:\.\d+)?(?!\w)"; src = "".join(open(p, encoding="utf-8").read() for p in ("sop/SOP-final.md", "RUNLOG.md", "docs/prior-art.md", "out/ch2/log/prior_predictive.json", "quality/sql/analysis_set.sql", "config/seal.yml", "config/seeds.yml", "docs/prereg/SEAL.md")) + " %d %d %d " % (n, aaa, len(ex)); key = lambda x, dd: (dd, round(float(x.replace(",", "")), dd)); ST = {key(x, dd) for x in re.findall(NUM, src) for dd in ([0] if "." not in x else range(1, len(x.split(".")[1]) + 1))}; w = re.sub(r"(?i)\bsections? [\d.]+(?: and [\d.]+)?|\b(?:items?|phase) \d+|\d{4}-\d{2}-\d{2}(?:T[\d:]+Z)?|^#+ [\d.]+|^\d+\. ", " ", t, flags=re.M); U = sorted({x for x in re.findall(NUM, w) if key(x, len(x.split(".")[1]) if "." in x else 0) not in ST}); F(not U, "numbers with no source: " + " ".join(U)); print("W4.1 OK: formulas M1, M2, m and the sealed predicate byte-identical to their sources; %d CH2 thresholds equal SOP 9.3; CH2-H2a..H2e each carry a threshold, a test id and a failure rule; %d excluded columns; frame %d rows, AAA %d; W4.7 table matches; %d open items; %d numeric literals traced, 0 untraced" % (len(TH), len(ex), n, aaa, k, len(re.findall(NUM, w))))'' && uv run --locked python quality/checks/wr20.py docs/prereg/ch2.md && uv run --locked python -c ''import re, sys; F = lambda c, m: c or sys.exit("W4.1 FAIL: " + m); t = open("docs/prereg/ch2.md", encoding="utf-8").read(); s = open("sop/SOP-final.md", encoding="utf-8").read(); c = s[s.index("### 9.3 Chapter 2 is done when"):s.index("### 9.4")]; ids = set(re.findall(r"\b(?:MT|UT|DT|BR|GD)-\d+\b", s[s.index("## 6. The consolidated test pack"):s.index("## 7. Owner decision log")])); sec = lambda h: t[t.index(h):t.index("\n### ", t.index(h) + 5)]; ln = lambda h, *p: "\n".join(x for x in sec(h).split("\n") if x.startswith(p)); cut = lambda x, a, b: x[x.index(a):x.index(b, x.index(a)) + len(b)]; NUM = r"(?<![\w.])\d+(?:,\d{3})*(?:\.\d+)?(?!\w)"; nums = lambda x: re.findall(NUM, x); SP = "Savant" + chr(39) + "s public expectation is already as well calibrated as a hierarchical model"; A = [("CH2-H2a", cut(c, "CH2-H2a accuracy is rankable:", "CH2-H2b"), ln("### 7.1 CH2-H2a", "- Threshold:")), ("CH2-H2b", cut(c, "CH2-H2b willingness is rankable:", "pre-registered as the lower of the two"), ln("### 7.2 CH2-H2b", "- Threshold:", "- The split-half is reported beside it")), ("CH2-H2c", cut(c, "CH2-H2c the opponent effect:", "power curve"), ln("### 7.3 CH2-H2c", "- Threshold:")), ("CH2-H2d open set", cut(c, "CH2-H2d calibration:", "on the sealed set"), ln("### 7.4 CH2-H2d", "- Threshold, open set:")), ("CH2-H2d sealed set", cut(c, "on the sealed set", "CH2-H2e"), ln("### 7.4 CH2-H2d", "- Threshold, sealed set:")), ("CH2-H2e", cut(c, "CH2-H2e", "excluding 0"), ln("### 7.5 CH2-H2e", "- Threshold:"))]; F(all(a[2] for a in A), "a criterion threshold line is missing"); F(all(nums(a[1]) == nums(a[2]) for a in A), "a threshold at its criterion differs from SOP 9.3: " + "; ".join("%s SOP %s annex %s" % (a[0], nums(a[1]), nums(a[2])) for a in A if nums(a[1]) != nums(a[2]))); F("game_pk" in A[3][2] and "pre-registered as the lower of the two" in A[1][2] and "five-seed firing-rate" in sec("### 7.3 CH2-H2c") and all(x in A[5][2] for x in ("log loss", "`exp_rate_overturns`", "game-clustered")), "a criterion lost its grouping, its lower-of-two rule, its five-seed curve or its baseline"); G = ["reproduce 58.8 / 49.0 / 39.3 to ±0.3 pp", "within 0.4 in of 1.90", "within 0.6 in of 3.02", "to 1e-6 on 100% of rows"]; F(all(g in c and g in sec("### 7.6") for g in G), "a reproduction gate is not in section 7.6 as SOP 9.3 writes it"); PL = [x.strip().rstrip(".") for x in c[c.index("Plus: ") + 6:].strip().split(";")]; F(len(PL) == 4 and all(x.lower() in sec("### 7.7").lower() for x in PL), "a SOP 9.3 Plus item is not in section 7.7: " + str([x for x in PL if x.lower() not in sec("### 7.7").lower()])); T7 = t[t.index("## 7. Acceptance criteria"):t.index("## 8. The power curve")]; U = sorted(set(re.findall(r"\b(?:MT|UT|DT|BR|GD)-\d+\b", T7)) - ids); F(not U, "section 7 cites test ids the SOP section 6 does not define: " + ", ".join(U)); R = [x for h in ("### 7.1", "### 7.2", "### 7.3", "### 7.4", "### 7.5", "### 7.6") for x in sec(h).split("\n") if re.match(r"- If (it|any gate) fails", x)]; F(len(R) == 6 and all(re.match(r"- If (it|any gate) fails \((SOP[^)]*|annex default)\): \S+( \S+){7,}", x) for x in R), "a failure rule is missing, unmarked as SOP or annex default, or empty"); F(SP in c and SP in sec("### 7.5") and "not resolvable in one season" in s and "not resolvable in one season" in sec("### 7.3") and "novelty claim" in ln("### 7.6", "- If any gate fails"), "an SOP-sourced failure consequence differs from the SOP"); W = s[s.index("**W4.8 SBC and the power curve.**"):]; W = cut(W, "Power grid: ", "N = 20,000"); P84 = sec("### 8.4 The grid, pre-registered"); F(nums(W) == nums(ln("### 8.4 The grid, pre-registered", "- Cells:")) and re.search(r"share of its (\d+) seeds", P84).group(1) == re.search(r"× (\d+) seeds", W).group(1), "the power grid in section 8.4 differs from SOP W4.8: SOP %s annex %s" % (nums(W), nums(ln("### 8.4 The grid, pre-registered", "- Cells:")))); print("W4.1 anchored: %d thresholds each at its own criterion line equal SOP 9.3 (%s); 4 reproduction gates in 7.6; %d Plus items in 7.7; %d test ids cited in section 7, all defined in SOP section 6; %d failure rules marked SOP or annex default; power grid equals SOP W4.8 (%s)" % (sum(len(nums(a[1])) for a in A), ", ".join(a[0] for a in A), len(PL), len(set(re.findall(r"\b(?:MT|UT|DT|BR|GD)-\d+\b", T7))), len(R), " ".join(nums(W))))'''
+  expect_exit: 0
+  owner: W4
+  needs: docs/prereg/ch2.md, sop/SOP-final.md, RUNLOG.md, data/interim/ch2/challenges.parquet, out/ch2/log/prior_predictive.json, quality/sql/analysis_set.sql, config/seal.yml, quality/checks/wr20.py
+
+# W7.1, the prose linter and its self-test. Owner W7, fleet phase 04. SOP W7.1..W7.5
+# cluster and section 2.8: one implementation at quality/prose_lint.py of W7.2 rules 1
+# to 11 and the ban list, WR-01..WR-08, and the P8 ban list on docs/p8/**. Rule 6 and
+# WR-07 stay with quality/check_numbers.py, the one number gate.
+#
+# The verify command runs the self-test: 53 fixture cases, each of the 19 checks
+# tripped by at least one; the command line end to end on a temporary tree; the ban
+# file parser; and, when the private sop/SOP-final.md is on disk, the built-in ban
+# list, P8 list, thresholds and strings compared with the SOP text. It then prints the
+# rule table and scans the default scope, and passes only if the scan completes and
+# prints its summary. The scan's own exit code is not this gate: W7.5 wires
+# `make lint-prose`, and the corpus held 156 violations over 15 files at registration.
+# Mutation-tested 2026-09-25: 24 planted faults, each exits 1.
+# Measured 2026-09-25: exit 0 in about 1 s.
+#
+# The SOP gives W7.1, W7.3, W7.4 and W7.5 no standalone paragraphs. This row is the
+# slice W7.1 built, quality/prose_lint.py. The other three ids register their own rows.
+- id: W7.1
+  title: "Writing standard: the linter and its self-test"
+  verify: "uv run --locked python quality/prose_lint.py --selftest && uv run --locked python quality/prose_lint.py --list-rules >/dev/null && { ABS_PROSE_FILES= uv run --locked python quality/prose_lint.py 2>&1 || true; } | tail -n 1 | grep -q '^prose-lint: [0-9]* file(s) from the default scope'"
+  expect_exit: 0
+  owner: W7
+  needs: quality/prose_lint.py
+
+# W7.2, the writing checklist and the ban list. Owner W7, fleet phase 04. SOP W7.2.
+# docs/writing-checklist.md states the eleven numbered rules and the two R2 rules,
+# WR-20 and WR-19. Each rule names the check that enforces it and the finding label
+# that check prints. quality/banned.txt is the SOP ban list entry for entry and in the
+# SOP's order: 74 entries for every file and 9 under [p8] for docs/p8/**.
+#
+# The verify command runs quality/prose_lint.py, ops/lint_prose.sh (the current
+# `make lint-prose`) and quality/check_numbers.py on the checklist. It then checks that
+# the ban file equals the linter's SOP floor in order and scope, and equals the SOP
+# paragraph when the private sop/SOP-final.md is on disk; that rules 1 to 11 each name
+# a real check, flag and label; that 16 SOP literals are present; WR-20 over its SOP
+# scope (abstract/, PREREGISTRATION.md, docs/prior-art.md, docs/memo/, docs/ch1.md)
+# plus the checklist; and WR-19 on both files and any file the checklist links to.
+# WR-20 runs here because quality/prose_lint.py does not carry it at registration.
+# Mutation-tested 2026-09-25: 24 planted faults, each exits 1. With sop/ absent, as in
+# a clean clone, it exits 0 and says the SOP comparison was skipped.
+# Measured 2026-09-25: exit 0 in about 0.3 s.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# lane's, fleet phase 04 (run 5).
+#
+# The verifier (logs/evidence/W7.2.verify-prereg.log) refuted the previous verify: its
+# WR-20 scan split sentences on its own, so six in-scope mutants passed (unpunctuated
+# bullets, a closing quote, &#160; and &#xA0;, a heading, an HTML paragraph), and it
+# read PREREGISTRATION.md but not docs/prereg/. The original command is unchanged; it
+# is followed by quality/checks/wr20.py (W7.4) over its default scope, the five SOP
+# paths plus docs/prereg/, which is how checklist rule 2 defines the pre-registration.
+# Replayed 2026-09-25 on the verifier's mutant trees: M1 to M10 each exit 1, C0 exits 0.
+
+- id: W7.2
+  title: "The writing checklist and the ban list"
+  verify: 'uv run --locked python quality/prose_lint.py docs/writing-checklist.md && ABS_PROSE_FILES=docs/writing-checklist.md bash ops/lint_prose.sh && uv run --locked python quality/check_numbers.py docs/writing-checklist.md && uv run --locked python -c ''import re, os, sys; sys.path.insert(0, "quality"); import prose_lint as L; F = lambda c, m: c or sys.exit("W7.2 FAIL: " + m); rd = lambda p: open(p, encoding="utf-8").read(); t, b = rd("docs/writing-checklist.md"), rd("quality/banned.txt"); R = [x.strip() for x in b.split("\n") if x.strip() and not x.strip().startswith("#")]; F(R.count("[p8]") == 1 and "[all]" not in R, "quality/banned.txt needs exactly one [p8] line and no [all] line"); k = R.index("[p8]"); A, Q = R[:k], R[k + 1:]; F(A == list(L.SOP_BAN), "the general ban list differs from SOP W7.2: missing %s, extra %s, or out of order" % ([x for x in L.SOP_BAN if x not in A], [x for x in A if x not in L.SOP_BAN])); F(Q == list(L.SOP_BAN_P8), "the [p8] ban list differs from SOP W7.2: missing %s, extra %s, or out of order" % ([x for x in L.SOP_BAN_P8 if x not in Q], [x for x in Q if x not in L.SOP_BAN_P8])); bans, notes = L.parse_ban_file(b); F(not notes and bans == L.floor_bans(), "the linter reads quality/banned.txt differently from its SOP floor: " + "; ".join(notes)); S = "sop/SOP-final.md"; sop = os.path.isfile(S); s = rd(S) if sop else ""; m = re.search(r"^\*\*Ban list\*\* \([^)]*\): (.*?)\. P8-only additions applied to `docs/p8/\*\*`: (.*?)\.$", s, re.M); F(not sop or m, "the Ban list paragraph is not in sop/SOP-final.md"); F(not sop or (A == [x.strip() for x in m.group(1).split(",")] and Q == [re.sub(r"^and ", "", x.strip()).replace("`", "") for x in m.group(2).split(",")]), "quality/banned.txt differs from the Ban list paragraph of sop/SOP-final.md"); N = re.findall(r"^(\d+)\. (.*)$", t, re.M); F([int(n) for n, _ in N] == list(range(1, 12)), "the checklist needs eleven numbered rules, 1 to 11, and has %s" % [n for n, _ in N]); C = [re.search(r"Check: `quality/(prose_lint|check_numbers)\.py( --ship)?`, label `([^`]+)`", r) for _, r in N]; F(all(C), "rules with no named check: %s" % [i + 1 for i, c in enumerate(C) if not c]); ok = lambda k, c: (c.group(1) == "check_numbers" and c.group(3) == "WR-07" and c.group(2) is None and "WR-07" in rd("quality/check_numbers.py")) if k == 6 else (c.group(1) == "prose_lint" and c.group(3) in L.LABELS.values() and c.group(3).split(",")[0] == "rule %d" % k and bool(c.group(2)) == (k in (8, 9, 11))); F(all(ok(i + 1, c) for i, c in enumerate(C)) and "label `P8 ban list`" in N[2][1] and "P8 ban list" in L.LABELS.values(), "a rule names a check, a flag or a label the tools do not have: %s" % [i + 1 for i, c in enumerate(C) if not ok(i + 1, c)]); W = ["abstract/", "PREREGISTRATION.md", "docs/prior-art.md", "docs/memo/", "docs/ch1.md"]; WS = ", ".join("`%s`" % w for w in W[:-1]) + " and `%s`" % W[-1]; R20 = "any sentence containing \"buffer\" and \"two inches\" must also contain \"outside\""; V = ["\u2264%d words, file median \u2264%d" % (L.MAX_WORDS_RULE1, L.MAX_MEDIAN_RULE1), "sentence over %d words" % L.MAX_WORDS_WR03, "above %d%%" % round(100 * L.MAX_PASSIVE_WR08), "`" + L.ATTRIBUTION + "`", "`U+2014`", "`Q1.` to `Qn.` or `H1.` to `Hn.`", "`95%`, `90%`, `[`, `\u00b1` or `n = `", "`lit/04`, `lit/06`, `lit/22` and `METHODS_REVIEW` item `B5`", re.sub(r"are \w+(?=\x27s;)", "are [owner]", L.DIRECTION), "no file reachable from the repository root may name the author", WS] + list(L.PRIOR_ART_TOKENS); F(all(v in t for v in V) and R20 in t.lower(), "SOP literals missing from the checklist: %s" % [v for v in V + [R20] if v not in t and v != R20 or v == R20 and R20 not in t.lower()]); F(not sop or all(v in s for v in (V[0], "WR-03 " + V[1], "density " + V[2], V[3], R20, "applied to " + WS, "(WR-19)", "(WR-20)")), "a checklist literal or the WR-20 scope differs from sop/SOP-final.md"); X = sorted({p for p in W + ["docs/writing-checklist.md"] if os.path.isfile(p)} | {os.path.join(d, f) for w in W if os.path.isdir(w) for d, _, fs in os.walk(w) for f in fs if f.lower().endswith((".md", ".html", ".htm", ".txt", ".tex", ".qmd", ".rmd"))}); T = [(p, x) for p in X for x in re.split(r"(?<=[.!?])\s+|\n\s*\n", re.sub(r"<[^>]+>", " ", rd(p)) if p.endswith(("html", "htm")) else rd(p)) if re.search(r"buffer", x, re.I) and re.search(r"two(?:\s|&nbsp;|\u00a0)+inches", x, re.I)]; B = [(p, " ".join(x.split())[:120]) for p, x in T if not re.search(r"outside", x, re.I)]; F(not B, "WR-20: %d sentence(s) contain buffer and two inches but not outside: %s" % (len(B), B)); AU = r"hudson|pagni|hudpag|\bucla\b"; lk = [os.path.normpath(os.path.join("docs", x)) for x in re.findall(r"\]\(([^)\s#]+)", t) if not re.match(r"[a-z]+:", x)]; F(not re.search(AU, t + b, re.I) and not [x for x in lk if os.path.isfile(x) and re.search(AU, rd(x), re.I)], "WR-19: the checklist, the ban file or a file the checklist links to names the author"); print("W7.2 OK: quality/banned.txt holds %d entries and %d P8 entries, equal to SOP W7.2 %s; %d numbered rules, each naming a check and a finding label the tools print; %d SOP literals present; WR-20 over %d files, %d sentences with buffer and two inches, 0 without outside; WR-19 0 author strings in 2 files and %d linked files" % (len(A), len(Q), "and to sop/SOP-final.md" if sop else "(sop/SOP-final.md absent, compared with the linter floor only)", len(N), len(V) + 1, len(X), len(T), len(lk)))'' && uv run --locked python quality/checks/wr20.py'
+  expect_exit: 0
+  owner: W7
+  needs: docs/writing-checklist.md, quality/banned.txt, quality/prose_lint.py, quality/check_numbers.py, ops/lint_prose.sh, quality/checks/wr20.py
+
+# W7.3, the number gate. Owner W7, fleet phase 04. SOP W7.1..W7.5 cluster, section 2.8
+# and WR-07: one gate at quality/check_numbers.py. It reads docs/numbers.json,
+# docs/priorart-numbers.txt and docs/numbers-allow.txt, over abstract/ and docs/memo/.
+#
+# The verify command runs the self-test: 17 fixture files and 10 further checks, 27 in
+# all. It then scans the default scope. It passes only if the scan completes, reads at
+# least one traceable value and finds 0 bad source lines. Last, it checks the three
+# source paths, the scope and the WR-07 label against the constants, and against
+# sop/SOP-final.md when that private file is on disk. The scan's untraced count is not
+# this gate: the prose steps and W9.13 own a clean corpus. At registration the scan
+# found 1 untraced literal, abstract/FORM-FIELDS.md:119 "60".
+# Mutation-tested 2026-09-25: 27 planted faults, each exits 1.
+# Measured 2026-09-25: exit 0 in about 0.3 s.
+#
+# The SOP gives W7.3 no standalone paragraph. This row is the slice W7.3 built,
+# quality/check_numbers.py. W7.4 and W7.5 register their own rows.
+- id: W7.3
+  title: "Writing standard: the number gate"
+  verify: 'uv run --locked python quality/check_numbers.py --selftest && { uv run --locked python quality/check_numbers.py 2>&1 || true; } | tail -n 1 | grep -Eq ''^check_numbers: [0-9]+ file\(s\), [1-9][0-9]* traceable value\(s\), [0-9]+ untraced literal\(s\), 0 bad source line\(s\), [0-9]+ word-number warning\(s\)$'' && uv run --locked python -c ''import os, sys; sys.path.insert(0, "quality"); import check_numbers as C; F = lambda c, m: c or sys.exit("W7.3 FAIL: " + m); src = (C.LEDGER, C.PRIOR_ART, C.ALLOW); F(src == ("docs/numbers.json", "docs/priorart-numbers.txt", "docs/numbers-allow.txt"), "the sources differ from SOP section 2.8: %s" % (src,)); F(tuple(C.DEFAULT_SCOPE) == ("abstract", "docs/memo") and C.LABEL == "WR-07", "the scope or the label differs from WR-07"); S = "sop/SOP-final.md"; s = open(S, encoding="utf-8").read() if os.path.isfile(S) else ""; T = ["**One gate at `quality/check_numbers.py`**, reading `docs/numbers.json`", "plus `docs/priorart-numbers.txt` and `docs/numbers-allow.txt`", "WR-07 every numeric literal in `abstract/` and `docs/memo/` present in `docs/numbers.json`, `docs/priorart-numbers.txt` or `docs/numbers-allow.txt`"]; F(not s or all(t in s for t in T), "sop/SOP-final.md no longer states the gate as registered: %s" % [t for t in T if t not in s]); v, n, p = C.ledger_values(); F(not p and not n, "a source is missing or malformed: %s %s" % (n, p)); print("W7.3 OK: quality/check_numbers.py reads the 3 SOP sources, %d traceable values, 0 bad source lines; WR-07 scope abstract/ and docs/memo/; SOP text %s" % (len(v), "matched" if s else "absent, constants checked only"))'''
+  expect_exit: 0
+  owner: W7
+  needs: quality/check_numbers.py
+
+# W7.4, WR-20 and the buffer rule check. Owner W7, fleet phase 04. SOP W7.1..W7.5
+# cluster and section 6, WR-20: any sentence containing "buffer" and "two inches" must
+# also contain "outside", applied to abstract/, PREREGISTRATION.md, docs/prior-art.md,
+# docs/memo/ and docs/ch1.md. quality/checks/wr20.py reads that scope plus docs/prereg/,
+# the pre-registration annexes, because quality/prose_lint.py (PREREG_PATHS) and
+# docs/writing-checklist.md rule 2 read the pre-registration as PREREGISTRATION.md plus
+# docs/prereg/. The W7.2 verifier found that gap. The sentence model is prose_lint's
+# split_sentences, and the check also reads headings, list items, tables, block quotes,
+# code, HTML comments, alt text and every file type under the scope.
+#
+# The verify command runs the self-test: 49 fixture cases, among them the ten WR-20
+# mutants the W7.2 verifier named, and 12 command-line checks on a temporary tree. With
+# the private sop/SOP-final.md on disk it also matches the rule text and the scope to the
+# SOP in 3 strings; with sop/ absent, as in a clean clone, it says so and passes. It then
+# scans the scope, and passes only if at least one file was read, no sentence breaks the
+# rule and no text file failed to decode.
+# At registration: 10 files, 4 sentences with "buffer" and "two inches", 0 without
+# "outside"; 1 note, not a failure: docs/prior-art.md:97 quotes "cut from 2 in" verbatim.
+# PREREGISTRATION.md and docs/ch1.md are absent and reported as absent.
+# Mutation-tested 2026-09-25: 37 planted faults in wr20.py, each exits 1; 14 corpus
+# mutants on a scratch copy of the scope, each exits 1, and the unmutated copy exits 0.
+# Measured 2026-09-25: exit 0 in about 0.9 s.
+#
+# The SOP gives W7.4 no standalone paragraph. This row is the slice W7.4 built,
+# quality/checks/wr20.py. W7.5 wires `make lint-prose`.
+- id: W7.4
+  title: "Writing standard: WR-20 and the buffer rule check"
+  verify: 'uv run --locked python quality/checks/wr20.py --selftest && ABS_PROSE_FILES= uv run --locked python quality/checks/wr20.py && ABS_PROSE_FILES= uv run --locked python quality/checks/wr20.py | tail -n 1 | grep -Eq ''^wr20: [1-9][0-9]* file\(s\) from the default scope, [0-9]+ sentence\(s\) with "buffer" and "two inches", 0 without "outside"; [0-9]+ note\(s\); 0 undecodable; '''
+  expect_exit: 0
+  owner: W7
+  needs: quality/checks/wr20.py, quality/prose_lint.py
+
+# W7.5, `make lint-prose` and the CI prose step. Owner W7, fleet phase 04. SOP W7.1..W7.5
+# cluster and section 2.8: one prose linter, quality/prose_lint.py. The Makefile target
+# lint-prose now runs `uv run --locked python quality/prose_lint.py`. Before this step it ran
+# ops/lint_prose.sh, the phase-01 linter with 3 rules. SOP W1.16 gives the CI lint job
+# "`make lint-prose` on changed `.md`". ci.yml runs ABS_PROSE_FILES="$changed" make lint-prose,
+# so CI reaches the same linter through the Makefile, and ci.yml needs no edit.
+# ops/lint_prose.sh is W9.13's file. It still runs under the W9.13 and W7.2 verify commands.
+#
+# The verify command runs the W1.14 Makefile test. It then runs 5 checks through make, on
+# temporary files outside the repo. `make -n lint-prose` must print the one prose_lint line.
+# A clean file plus a deleted path in ABS_PROSE_FILES must exit 0. A file with a question
+# mark, a banned word and an em dash must exit non-zero and report rules 2, 3 and 4. An
+# empty ABS_PROSE_FILES must scan the default scope. The CI job must call make lint-prose.
+# With the private sop/SOP-final.md on disk it also matches 2 SOP strings.
+# The default-scope exit code is not this gate: the prose steps own a clean corpus. At
+# registration `make lint-prose` exits 2 on 156 violations and 22 warnings over 16 files:
+# 62 in DECISIONS.md, 48 in docs/DEVIATIONS.md, 21 in abstract/.
+# Mutation-tested 2026-09-25: 11 planted faults, each exits 1. With sop/ absent, and with
+# ci.yml moved to .github/workflows, it exits 0.
+#
+# The SOP gives W7.5 no standalone paragraph. This row is the slice W7.5 built, the
+# Makefile wiring. WR-20 is not in the section 2.8 union; W7.4 registers it on its own row.
+- id: W7.5
+  title: "Writing standard: wiring into make lint-prose and CI"
+  verify: 'uv run --locked pytest tests/unit/test_makefile.py -q && ( t=$(mktemp -d "${TMPDIR:-/tmp}/w75.XXXXXX") || exit 1; F() { rm -rf "$t"; echo "W7.5 FAIL: $1"; exit 1; }; printf "# Clean\n\nThe zone is 17 inches wide.\n" > "$t/clean.md"; printf "# Dirty\n\nIs this rule enforced?\n\nThe result \342\200\224 as shown \342\200\224 is groundbreaking.\n" > "$t/dirty.md"; [ "$(make -n lint-prose)" = "uv run --locked python quality/prose_lint.py" ] || F "make -n lint-prose is not the one line uv run --locked python quality/prose_lint.py"; c=$(ABS_PROSE_FILES="$(printf "%s\n%s" "$t/clean.md" "$t/gone.md")" make lint-prose 2>&1) || F "make lint-prose exited non-zero on a clean file plus a deleted path"; printf "%s\n" "$c" | grep -Eq "^prose-lint: 1 file\(s\) from [^,]*ABS_PROSE_FILES, 0 violation\(s\)" || F "make lint-prose did not read ABS_PROSE_FILES as one path per line"; d=$(ABS_PROSE_FILES="$t/dirty.md" make lint-prose 2>&1) && F "make lint-prose exited 0 on a file with 3 violations"; for k in "rule 2, WR-02" "rule 3, WR-01: banned word" "rule 4, WR-09" "ABS_PROSE_FILES, 3 violation(s)" "lint-prose] Error 1"; do printf "%s\n" "$d" | grep -qF "$k" || F "the dirty file did not print: $k"; done; s=$(ABS_PROSE_FILES= make lint-prose 2>&1); n=$(printf "%s\n" "$s" | grep -E "^prose-lint: [1-9][0-9]* file\(s\) from the default scope, [0-9]+ violation\(s\)") || F "make lint-prose with no ABS_PROSE_FILES did not scan the default scope"; grep -qsF "ABS_PROSE_FILES=\"\$changed\" make lint-prose" .github/workflows/ci.yml ops/ci-pending/ci.yml || F "the CI lint job no longer runs ABS_PROSE_FILES=changed make lint-prose"; [ ! -f sop/SOP-final.md ] || { grep -qF "**One implementation at \`quality/prose_lint.py\`**" sop/SOP-final.md && grep -qF "\`make lint-prose\` on changed \`.md\`" sop/SOP-final.md; } || F "sop/SOP-final.md no longer names quality/prose_lint.py or the CI lint-prose step"; rm -rf "$t"; echo "W7.5 OK: make lint-prose runs quality/prose_lint.py; ABS_PROSE_FILES clean file exit 0, deleted path skipped; dirty file 3 violations, rules 2 3 4, make exit non-zero; CI calls make lint-prose; default scope: ${n%%. Ran*}" )'
+  expect_exit: 0
+  owner: W7
+  needs: Makefile, quality/prose_lint.py, tests/unit/test_makefile.py
+
+# W7.7, the sealed manifest, regular tail. Owner W7, fleet phase 04.
+#
+# quality/sealed_manifest.json carries the six section 2.4 constants, the 88
+# regular-tail gamePks and gamepks_sha256. The command runs GD-06, UT-16 and
+# UT-17, checks each constant against its line in config/seal.yml, refuses a
+# postseason block, and recomputes the count and the hash. When the staged
+# schedule the list came from is on disk with the recorded sha256, it applies
+# the rule to that file again and requires the same list. In a clean clone that
+# check prints that it is vacuous. The postseason block arrives later, in the
+# seal-postseason commit, and this row changes with it.
+- id: W7.7
+  title: "The sealed manifest, regular tail"
+  verify: '( m=quality/sealed_manifest.json; F() { echo "W7.7 FAIL: $1"; exit 1; }; uv run --locked pytest tests/guard/test_seal_immutability.py tests/unit/test_seal_classifier.py tests/unit/test_seal_config_agrees.py -q || F "GD-06, UT-16 or UT-17 is red"; n=0; for k in seal_start_date regular_season_end postseason_end_estimate sealed_game_types excluded_game_types prereg_tag; do grep -qxF "$(jq -r --arg k $k "\"\(\$k): \(.[\$k]|tojson)\"" $m)" config/seal.yml || F "$k in the manifest differs from config/seal.yml"; n=$((n+1)); done; [ $n -eq 6 ] || F "checked $n of 6 constants"; jq -e "has(\"postseason_gamepks\") or has(\"postseason_appended_at\") or has(\"postseason\")" $m >/dev/null && F "a postseason block is present at M1"; jq -e ".partition_field == \"gameData.datetime.officialDate\"" $m >/dev/null || F "partition_field is not officialDate"; jq -e ".regular_gamepks | length > 0 and all(type == \"number\" and . == floor) and . == unique" $m >/dev/null || F "regular_gamepks is not a sorted list of distinct integers"; jq -e ".regular_game_count == (.regular_gamepks | length)" $m >/dev/null || F "regular_game_count does not match the list"; h=$(jq -r "(.regular_gamepks + (.postseason_gamepks // [])) | sort | .[]" $m | shasum -a 256 | cut -d" " -f1); [ "$h" = "$(jq -r .gamepks_sha256 $m)" ] || F "gamepks_sha256 does not recompute"; src=$(jq -r .regular_gamepks_source.path $m); if [ -f "$src" ] && [ "$(shasum -a 256 "$src" | cut -d" " -f1)" = "$(jq -r .regular_gamepks_source.sha256 $m)" ]; then s=$(jq -r .seal_start_date $m); [ "$(jq -c --arg s $s "[.dates[].games[] | select(.gameType == \"R\" and .season == (\$s[0:4]) and .officialDate >= \$s) | .gamePk] | unique" "$src")" = "$(jq -c .regular_gamepks $m)" ] || F "regular_gamepks differs from the rule applied to its source"; echo "source recomputed: the rule gives the same $(jq .regular_game_count $m) gamePks"; else echo "source check vacuous: $src is absent or has other bytes in this tree"; fi; echo "W7.7 OK: $(jq .regular_game_count $m) regular-tail gamePks, 6 constants equal config/seal.yml, no postseason block, gamepks_sha256 recomputes" )'
+  expect_exit: 0
+  owner: W7
+  needs: quality/sealed_manifest.json, config/seal.yml, tests/guard/test_seal_immutability.py, tests/unit/test_seal_classifier.py, tests/unit/test_seal_config_agrees.py
+
+# W7.6, PREREGISTRATION.md and the four annexes. Owner W7, fleet phase 04. SOP section 3
+# (W7.6 -> all chapter prereg annexes, part of M1) and section 2.8 (the name, the tag
+# prereg-v1, one root document with four annexes).
+#
+# The verify command runs quality/prose_lint.py over the root document, the four chapter
+# annexes and the release notes, and quality/checks/wr20.py over PREREGISTRATION.md, every
+# docs/prereg/*.md and docs/prior-art.md. One Python check follows. It fails unless the
+# header carries version: 1.0 and tag prereg-v1 and no PRE-REGISTRATION.md exists; every
+# criterion of SOP sections 9.2, 9.3 and 9.4 (root, and 9.4 again in ch3.md) and 9.5
+# (p8.md) is quoted byte for byte, in a block with a Threshold quote and a Test ids line
+# that names SOP section 6 ids, or names none and a checking step; section 14 item 5 lists
+# exactly the criteria with none; every cited test id is quoted verbatim in section 13; the
+# buffer-rule paragraph, the P1/P2 consequence, the 2022-2024 disclosure, the seal sentence
+# and the D-67 narrow sentence are present; the sealed predicate, config/seal.yml, the
+# manifest count and gamepks_sha256, the DT-21 line, the DT-30 table, P0, P1, the balanced
+# panel and the neutral-site row count equal their source files; every CH1-A6 line cites
+# docs/prereg/ch1.md or states the rule, the clause W3.12 checks; the Chapter 2 power-grid
+# status matches out/ch2/power_curve.csv; every annex cross-reference resolves; no author
+# string appears; every numeric literal outside the SOP quotes traces to a named source
+# file. 29 of 29 planted faults exit 1. quality/check_numbers.py is not in the chain: its
+# three ledgers carry no pre-registration source. `needs` names sop/, RUNLOG.md and the
+# analysis table, which never enter git, so a clean clone reads MISSING rather than FAIL.
+- id: W7.6
+  title: "PREREGISTRATION.md and the four annexes, version 1.0 for prereg-v1"
+  verify: 'uv run --locked python quality/prose_lint.py PREREGISTRATION.md docs/prereg/ch1.md docs/prereg/ch2.md docs/prereg/ch3.md docs/prereg/p8.md docs/prereg/RELEASE_NOTES.md && uv run --locked python quality/checks/wr20.py PREREGISTRATION.md docs/prereg/*.md docs/prior-art.md && uv run --locked python -c ''import re, os, sys, csv, json, decimal, pyarrow.parquet as pq; F = lambda c, m: c or sys.exit("W7.6 FAIL: " + m); rd = lambda p: open(p, encoding="utf-8").read(); t, s = rd("PREREGISTRATION.md"), rd("sop/SOP-final.md"); A = {k: rd("docs/prereg/%s.md" % k) for k in ("ch1", "ch2", "ch3", "p8", "RELEASE_NOTES")}; uq = lambda x: "\n".join(re.sub(r"^> ?", "", ln) for ln in x.split("\n")); q, q3, q8 = uq(t), uq(A["ch3"]), uq(A["p8"]); F(not os.path.exists("PRE-REGISTRATION.md") and t.startswith("---\n"), "hyphenated filename present, or no front matter"); fm = t.split("---\n")[1]; F(re.search(r"^version: 1\.0$", fm, re.M) and re.search(r"^tag: prereg-v1$", fm, re.M) and "\nVersion 1.0. " in t, "the header does not carry version: 1.0 and tag: prereg-v1"); F(re.search(r"^prereg_tag: \"prereg-v1\"$", rd("config/seal.yml"), re.M), "config/seal.yml names a different prereg tag"); F(all(os.path.isfile(p.strip()) for p in re.search(r"^annexes: (.*)$", fm, re.M).group(1).split(",")) and len(A) == 5, "an annex named in the header is missing"); sec = lambda h, n: s[s.index(h) + len(h):s.index(n, s.index(h))].strip(); P = lambda h, n, pat: [x.strip() for x in re.split(pat, sec(h, n)) if x.strip()]; c92 = P("### 9.2 Chapter 1 is done when", "### 9.3", r"(?<=[.*] )(?=CH1-A\d+ )|(?<=\. )(?=Plus: )"); c93 = P("### 9.3 Chapter 2 is done when", "### 9.4", r"(?<=[.*] )(?=CH2-H2[a-e] )|(?<=\*\* )(?=\*\*Blocking)|(?<=\. )(?=Plus: )"); c94 = P("### 9.4 Chapter 3 is done when", "### 9.5", r"(?<=[.*] )(?=CH3-A\d )"); c95 = P("### 9.5 Phase 2 (P8) is done when", "### 9.6", r"(?<=[.*] )(?=P8-A\d )|(?<=\. )(?=Plus )"); ids = lambda cs, pat: [re.match(pat, x).group(0) for x in cs if re.match(pat, x)]; I1, I2, I3, I8 = ids(c92, r"CH1-A\d+"), ids(c93, r"CH2-H2[a-e]"), ids(c94, r"CH3-A\d"), ids(c95, r"P8-A\d"); F(I1 == ["CH1-A%d" % i for i in range(1, 15)] and I2 == ["CH2-H2" + c for c in "abcde"] and I3 == ["CH3-A%d" % i for i in range(1, 9)] and I8 == ["P8-A%d" % i for i in range(1, 7)] and len(c92) == 15 and len(c93) == 7 and len(c95) == 7, "SOP section 9 did not split into the expected criteria"); M = [x[:70] for x in c92 + c93 + c94 if x not in q] + [x[:70] for x in c94 if x not in q3] + [x[:70] for x in c95 if x not in q8]; F(not M, "a SOP section 9 criterion is not quoted byte for byte: %s" % M); BL = [(f, m.group(1), m.group(0)) for f, x in (("root", t), ("ch3", A["ch3"]), ("p8", A["p8"])) for m in re.finditer(r"(?ms)^#{3,4} (?:\d+\.\d+ )?(CH1-A\d+|CH2-H2[a-e]|CH3-A\d|P8-A\d)\b.*?(?=^#{2,4} |\Z)", x)]; F(sorted(k for f, k, v in BL if f == "root") == sorted(I1 + I2 + I3) and sorted(k for f, k, v in BL if f == "ch3") == sorted(I3) and sorted(k for f, k, v in BL if f == "p8") == sorted(I8), "a criterion has no block, or a block is duplicated: %s" % sorted((f, k) for f, k, v in BL)); TU = set(re.findall(r"\b(?:RP|UT|DT|GD|MT|BR|WR)-(?:\d\d|1x|\d)\b", sec("## 6. The consolidated test pack", "## 7."))); TL = [(f, k, v, re.search(r"^- Test ids: (.*)$", v, re.M)) for f, k, v in BL]; F(all(tl for f, k, v, tl in TL) and all("Threshold, SOP section 9." in v and "\n> " + k + " " in v for f, k, v, tl in TL), "a criterion block lacks its Threshold quote or its Test ids line: %s" % [(f, k) for f, k, v, tl in TL if not tl or "\n> " + k + " " not in v]); TN = [(f, k, v, tl.group(1), re.findall(r"\b(?:RP|UT|DT|GD|MT|BR|WR)-(?:\d\d|1x|\d)\b", tl.group(1))) for f, k, v, tl in TL]; bad = [(f, k) for f, k, v, g, n in TN if not ((n and set(n) <= TU) or (not n and g == "none in the SOP." and "\n- Checked by: " in v))]; F(not bad, "a Test ids line names an id outside SOP section 6, or names none without a checking step: %s" % bad); F(len({(k, tuple(n)) for f, k, v, g, n in TN}) == len({k for f, k, v, g, n in TN}), "the root and an annex give one criterion different test ids"); NO = sorted({k for f, k, v, g, n in TN if not n and not k.startswith("P8")}); i5 = re.search(r"^5\. \*\*Criteria with no SOP test id\.\*\* (.*)$", t, re.M).group(1); F(all(k in i5 for k in NO if k != "CH1-A10") and "CH1-A10" + chr(39) + "s calibration clause" in i5 and not [k for k in re.findall(r"CH[13]-A\d+", i5) if k not in NO], "section 14 item 5 and the Test ids lines disagree: %s against %s" % (NO, i5)); T13 = t[t.index("## 13. Test ids cited"):t.index("## 14. ")]; CI = set(re.findall(r"\b(?:RP|UT|DT|GD|MT|BR|WR)-(?:\d\d|1x|\d)\b", t.replace(T13, ""))); DL = {re.match(r"> (?:\*\*|\| )?((?:RP|UT|DT|GD|MT|BR|WR)-(?:\d\d|1x|\d))\b", ln).group(1): ln[2:] for ln in T13.split("\n") if re.match(r"> (?:\*\*|\| )?(?:RP|UT|DT|GD|MT|BR|WR)-(?:\d\d|1x|\d)\b", ln)}; F(CI <= set(DL) and all(v in s for v in DL.values()), "a cited test id has no verbatim SOP definition in section 13: %s" % sorted((CI - set(DL)) | {k for k, v in DL.items() if v not in s})); F(all(ln[2:] in s for ln in A["ch3"].split("\n") + A["p8"].split("\n") if re.match(r"> (?:\*\*)?(?:UT|BR|WR|GD)-", ln)), "an annex test quote is not the SOP text"); bp = s[s.index("**The buffer rule, stated once"):s.index("\n\n", s.index("**The buffer rule, stated once"))]; F(bp in q, "the SOP buffer-rule paragraph is not quoted verbatim"); cs = s[s.index("if P1 or P2 fails"):s.index("the headline finding.", s.index("if P1 or P2 fails")) + 21]; F(cs in q, "the pre-registered P1/P2 consequence is not verbatim"); F("**Specification development used 2022–2024 only.**" in t and "No row from 2025 or 2026 entered any specification fit." in t and "developed on 2022–2024 only" in A["RELEASE_NOTES"], "the 2022-2024 disclosure is missing"); F(all("a passphrase on a single-user laptop, not a separation of duties" in x for x in (t, A["RELEASE_NOTES"])), "the seal sentence is missing"); F("the sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened" in t, "the D-67 narrow sentence is missing"); sq = rd("quality/sql/analysis_set.sql"); F("```sql\n" + sq[sq.index("CASE"):].rstrip("\n") + "\n```" in t, "the sealed predicate differs from quality/sql/analysis_set.sql"); y = rd("config/seal.yml"); yv, yl = dict(re.findall(r"^(\w+): \"([^\"]*)\"", y, re.M)), dict(re.findall(r"^(\w+): \[(.*)\]", y, re.M)); L = lambda k: [x.strip().strip("\"") for x in yl[k].split(",")]; F(all("`%s` %s" % (k, yv[k]) in t for k in ("seal_start_date", "regular_season_end", "postseason_end_estimate")) and "Sealed game types are %s and %s; excluded types are %s and %s." % (", ".join(L("sealed_game_types")[:-1]), L("sealed_game_types")[-1], ", ".join(L("excluded_game_types")[:-1]), L("excluded_game_types")[-1]) in t, "config/seal.yml and the root document disagree"); mf = json.load(open("quality/sealed_manifest.json", encoding="utf-8")); F(all(re.search(r"\b%d (?:regular-season )?gamePks" % mf["regular_game_count"], x) and mf["gamepks_sha256"] in x for x in (t, A["RELEASE_NOTES"])) and mf["regular_game_count"] == len(mf["regular_gamepks"]), "the manifest count or gamepks_sha256 differs from quality/sealed_manifest.json"); a6 = [ln for ln in (t + "\n" + A["ch3"] + "\n" + A["p8"] + "\n" + A["RELEASE_NOTES"]).split("\n") if "CH1-A6" in ln]; F(a6 and all("docs/prereg/ch1.md" in ln or "P(τ ≥ 0.20 in) ≥ 0.90" in ln for ln in a6), "a CH1-A6 line neither cites docs/prereg/ch1.md nor states the rule"); T2 = {r["row_id"]: r for r in csv.DictReader(open("out/ch1/tab/T2_zone_gate.csv", encoding="utf-8"))}; F("- At the freeze: %s%% overall, %s of %s; %s%% outside the band, %s of %s." % (T2["overall"]["agreement_pct"], format(int(T2["overall"]["n_agree"]), ","), format(int(T2["overall"]["n"]), ","), T2["outside_band"]["agreement_pct"], format(int(T2["outside_band"]["n_agree"]), ","), format(int(T2["outside_band"]["n"]), ",")) in t and all(T2[k]["verdict"] == "PASS" for k in ("overall", "outside_band")), "the CH1-A1 freeze line differs from out/ch1/tab/T2_zone_gate.csv"); HC = list(csv.DictReader(open("out/tables/height_coverage.csv", encoding="utf-8"))); F(len(HC) == 5 and all("| %s | `%s` | %s | %s | %s | %s | %s |" % (r["season"], r["regime"], format(int(r["n_called"]), ","), format(int(r["n_called_abs_measured"]), ","), r["abs_measured_share"], r["roster_offset_share"], "yes" if float(r["abs_measured_share"]) < float(r["trigger_share"]) else "no") in t for r in HC), "the DT-30 table differs from out/tables/height_coverage.csv"); T1 = {r["row_id"]: r for r in csv.DictReader(open("out/ch1/tab/T1_sample.csv", encoding="utf-8"))}; F("P0 is every called pitch" in t and "It holds %s rows at the freeze." % format(int(T1["P0"]["total"]), ",") in t and "It holds %s rows at the freeze." % format(int(T1["P1"]["total"]), ",") in t and "%s of them" % T1["U_panel"]["total"] in t, "P0, P1 or the balanced panel differs from out/ch1/tab/T1_sample.csv"); g4 = pq.read_table("data/marts/ch1_called.parquet", columns=["game_pk"]).column("game_pk").to_pylist(); n4 = sum(g in (823669, 823745, 825093, 825094) for g in g4); F(("still holds their %d called pitches" % n4 in t) if n4 else ("still holds their" not in t), "the neutral-site count in section 7 differs from the analysis table: %d rows" % n4); F(os.path.exists("out/ch2/power_curve.csv") != ("power grid has not run" in t) and os.path.exists("out/ch2/power_curve.csv") != ("It had not run at this tag" in A["RELEASE_NOTES"]), "the Chapter 2 power-grid status is stale"); H = {"ch1": A["ch1"], "ch2": A["ch2"], "ch3": A["ch3"], "p8": A["p8"], "root": t}; hd = lambda k, n: bool(re.search(r"(?m)^#{2,3} " + re.escape(n) + r"[. ]", H[k])); R = [(k, n) for x in (t, A["ch3"], A["p8"], A["RELEASE_NOTES"]) for k, n in re.findall(r"`docs/prereg/(ch[123]|p8)\.md` sections? (\d+(?:\.\d+)?)", x)] + [("ch1", n) for n in re.findall(r"Chapter 1 annex, section (\d+(?:\.\d+)?)", t)] + [("root", n) for x in (A["ch3"], A["p8"], A["RELEASE_NOTES"]) for n in re.findall(r"`PREREGISTRATION\.md` section (\d+(?:\.\d+)?)", x)]; F(R and all(hd(k, n) for k, n in R), "a cross-reference names a section that does not exist: %s" % [r for r in R if not hd(*r)]); i14 = t[t.index("## 14. "):]; F(all(re.search(r"(?m)^%s\. " % n, i14) for n in re.findall(r"section 14, item (\d+)", t)), "a section 14 item reference is dangling"); F(not re.search(r"(?i)hudson|pagni|hudpag|\bucla\b", t + "".join(A[k] for k in ("ch3", "p8", "RELEASE_NOTES"))), "WR-19: an author string is present"); NUM = r"(?<![\w.])\d+(?:,\d{3})*(?:\.\d+)?(?:[eE][-+]?\d+)?(?![\w])"; dk = lambda x: decimal.Decimal(x.replace(",", "")).normalize(); SRC = ["sop/SOP-final.md", "docs/prereg/ch1.md", "docs/prereg/ch2.md", "docs/prereg/SEAL.md", "DECISIONS.md", "docs/DEVIATIONS.md", "docs/harmonized_zone.md", "docs/prior-art.md", "RUNLOG.md", "out/ch1/tab/T1_sample.csv", "out/ch1/tab/T2_zone_gate.csv", "out/tables/height_coverage.csv", "out/tables/ch1_power_curve.csv", "quality/sealed_manifest.json", "config/seal.yml", "config/seeds.yml", "fixtures/prior_art/uiloi/PROVENANCE.txt"]; ST = {dk(x) for p in SRC for x in re.findall(NUM, rd(p))} | {decimal.Decimal(n4).normalize()}; strip = lambda x: re.sub(r"(?ms)^```.*?^```$|^>[^\n]*$", " ", x); lab = lambda x: re.sub(r"(?i)\b[A-Z][A-Z0-9]*-[A-Za-z0-9]+(?:\.\d+)?\b|\bW\d+\.\d+(?:\([a-c]\))?|\d{4}-\d{2}-\d{2}(?:T[\d:]+Z)?|\bsections? \d+(?:\.\d+)*(?: (?:to|and) \d+(?:\.\d+)*)?|\bitems? \d+(?: to \d+)?|^#+ [\d.]+|^\d+\. |\bQ\d\b|prereg-v\d|\b(?:19|20)\d{2}\b(?![.,]\d)|\w*[A-Za-z_]\d+\w*|\d+x\d+|\b[0-9a-f]{64}\b", " ", x, flags=re.M); W = {p: lab(strip(x)) for p, x in (("PREREGISTRATION.md", t), ("ch3.md", A["ch3"]), ("p8.md", A["p8"]), ("RELEASE_NOTES.md", A["RELEASE_NOTES"]))}; U = sorted({(p, x) for p, w in W.items() for x in re.findall(NUM, w) if dk(x) not in ST}); F(not U, "numbers with no source: %s" % U); print("W7.6 OK: header version 1.0, tag prereg-v1, 4 annexes present; %d CH1 + %d CH2 + %d CH3 + %d P8 criteria quoted byte for byte from SOP section 9, each with a Threshold quote and a Test ids line (%d name SOP test ids, %d name none and a checking step, all listed in section 14); %d cited test ids defined verbatim; buffer rule, P1/P2 consequence, 2022-2024 disclosure, seal sentence, sealed predicate, seal.yml constants, %d-game manifest hash, CH1-A6 lines, DT-21, DT-30, P0/P1 and %d neutral-site rows all match their sources; %d cross-references resolve; %d numeric literals traced, 0 untraced" % (len(I1) + 1, len(I2) + 2, len(I3), len(I8) + 1, sum(1 for f, k, v, g, n in TN if n), sum(1 for f, k, v, g, n in TN if not n), len(CI), mf["regular_game_count"], n4, len(R), sum(len(re.findall(NUM, w)) for w in W.values())))'''
+  expect_exit: 0
+  owner: W7
+  needs: sop/SOP-final.md, RUNLOG.md, data/marts/ch1_called.parquet, PREREGISTRATION.md, docs/prereg/ch1.md, docs/prereg/ch2.md, docs/prereg/ch3.md, docs/prereg/p8.md, docs/prereg/RELEASE_NOTES.md, out/ch1/tab/T1_sample.csv, out/ch1/tab/T2_zone_gate.csv, out/tables/height_coverage.csv, quality/sealed_manifest.json
+
+# W7.8, the pre-registration checker. Owner W7, fleet phase 04. SOP section 3
+# (W7.8 prereg checker -> W7.6, W7.7), SOP W7.42 (check_all.sh calls it second) and
+# the six preconditions of SOP section 2.4, phase 5.
+#
+# quality/check_prereg.py runs the six as separate checks and reports each one. Its
+# self-test builds throwaway git repositories with a bare local origin, plants 26
+# violations, and requires each to fail exactly the expected checks: every check fails
+# in at least one case and alone in at least one case. It also tests the D-63
+# throttle on the one request the checker sends, with a fake clock, and the command
+# line's exit codes. 37 of 37 cases pass; 24 of 24 planted faults in the checker make
+# the self-test exit 1. The command then runs the checker on this repository. Before
+# the tag and the owner's unseal the six do not hold, so that run exits 1, and the
+# command asks only that it exit 0 or 1, report six preconditions and find itself no
+# weaker than absump.seal on clauses 1, 3, 4, 5 and 6. Measured 2026-09-25: about 15 s.
+#
+# Amended 2026-09-25, fleet phase 04 run 5, small-gates lane:
+# The fleet gate for W7.8 also runs `bash tools/comms/check_all.sh`. That script is
+# W7.42, which fleet phase 13 builds after W7.1..W7.41 (SOP W7.42). The verify
+# command runs the checker's self-test and its run on this repository as before,
+# then runs check_all.sh if it exists and requires `W7 ALL CHECKS PASS`. While the
+# file is absent it prints one PENDING-LATER-PHASE line naming W7.42 and does not
+# fail, as fleet phase 06 already treats the same absence.
+
+- id: W7.8
+  title: "The pre-registration checker, the six preconditions of SOP section 2.4"
+  verify: 'uv run --locked python quality/check_prereg.py --selftest && ( out=$(uv run --locked python quality/check_prereg.py 2>&1); rc=$?; printf "%s\n" "$out"; [ $rc -le 1 ] || { echo "W7.8 FAIL: the run on this repository exited $rc"; exit 1; }; [ "$(printf "%s\n" "$out" | grep -cE "^PREREG [1-6]/6 (PASS|FAIL) ")" -eq 6 ] || { echo "W7.8 FAIL: the run on this repository did not report six preconditions"; exit 1; }; printf "%s\n" "$out" | grep -q "^CROSS-CHECK absump.seal: consistent" || { echo "W7.8 FAIL: the cross-check with absump.seal did not report consistent"; exit 1; }; echo "W7.8 OK: self-test green; the run on this repository reported 6 preconditions, exit $rc, consistent with absump.seal" ) && if [ -f tools/comms/check_all.sh ]; then out=$(bash tools/comms/check_all.sh 2>&1); rc=$?; printf "%s\n" "$out"; [ $rc -eq 0 ] && printf "%s\n" "$out" | grep -q "^W7 ALL CHECKS PASS" || { echo "W7.8 FAIL: tools/comms/check_all.sh exited $rc or did not print W7 ALL CHECKS PASS"; exit 1; }; else echo "PENDING-LATER-PHASE W7.42 tools/comms/check_all.sh: not built yet; fleet phase 13 builds it after W7.1..W7.41 (SOP W7.42)"; fi'
+  expect_exit: 0
+  owner: W7
+  needs: quality/check_prereg.py, config/seal.yml, config/throttle.yml, src/absump/seal.py

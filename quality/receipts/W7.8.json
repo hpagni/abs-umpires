@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked python quality/check_prereg.py --selftest && ( out=$(uv run --locked python quality/check_prereg.py 2>&1); rc=$?; printf \"%s\\n\" \"$out\"; [ $rc -le 1 ] || { echo \"W7.8 FAIL: the run on this repository exited $rc\"; exit 1; }; [ \"$(printf \"%s\\n\" \"$out\" | grep -cE \"^PREREG [1-6]/6 (PASS|FAIL) \")\" -eq 6 ] || { echo \"W7.8 FAIL: the run on this repository did not report six preconditions\"; exit 1; }; printf \"%s\\n\" \"$out\" | grep -q \"^CROSS-CHECK absump.seal: consistent\" || { echo \"W7.8 FAIL: the cross-check with absump.seal did not report consistent\"; exit 1; }; echo \"W7.8 OK: self-test green; the run on this repository reported 6 preconditions, exit $rc, consistent with absump.seal\" ) && if [ -f tools/comms/check_all.sh ]; then out=$(bash tools/comms/check_all.sh 2>&1); rc=$?; printf \"%s\\n\" \"$out\"; [ $rc -eq 0 ] && printf \"%s\\n\" \"$out\" | grep -q \"^W7 ALL CHECKS PASS\" || { echo \"W7.8 FAIL: tools/comms/check_all.sh exited $rc or did not print W7 ALL CHECKS PASS\"; exit 1; }; else echo \"PENDING-LATER-PHASE W7.42 tools/comms/check_all.sh: not built yet; fleet phase 13 builds it after W7.1..W7.41 (SOP W7.42)\"; fi",
+  "duration_s": 14,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W7.8.log",
+  "owner": "W7",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W7.8",
+  "timestamp_madrid": "2026-09-25 21:12:42 CEST",
+  "title": "The pre-registration checker, the six preconditions of SOP section 2.4"
+}
