@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "044ad8a5343b7b004a77b6140dab3f4f1c2b8001",
+  "git_sha": "147c851c9484da74216cdb462b1b9e4f7c80370a",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W7.6.log",
   "owner": "W7",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W7.6",
-  "timestamp_madrid": "2026-09-29 21:59:26 CEST",
+  "timestamp_madrid": "2026-09-29 22:26:03 CEST",
   "title": "PREREGISTRATION.md and the four annexes, version 1.0 for prereg-v1"
 }

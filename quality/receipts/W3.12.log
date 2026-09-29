@@ -14,7 +14,7 @@ PASS    an admissible estimator sets CH1-A6                primary sop (admissib
 PASS    thresholds.json equals the re-derivation           c* 0.20 in, powered TRUE, gate attainable FALSE
 PASS    the materiality threshold is one the curve supports P(tau >= 0.20 in) >= 0.90 fires in 0 of 5 seeds at tau = 0.10 in
 PASS    docs/prereg/ch1.md carries the CH1-A6 table        14 table lines present
-PASS    PREREGISTRATION.md carries CH1-A6 as the curve implies 3 CH1-A6 lines, each cites docs/prereg/ch1.md or states P(τ ≥ 0.20 in) ≥ 0.90
+PASS    PREREGISTRATION.md carries CH1-A6 as the curve implies 5 CH1-A6 lines, each cites docs/prereg/ch1.md or states P(τ ≥ 0.20 in) ≥ 0.90
 PASS    design read selects no outcome column              umpire_hp_id season game_pk game_index half edge d
 PASS    cached design equals a fresh read                  498,055 pitches, seasons 2022 2023 2024 2025 2026
 PASS    calibration cells are 2022-2024 only               840 cells, seasons 2022 2023 2024

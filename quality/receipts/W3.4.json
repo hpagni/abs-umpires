@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/03_heights.R --check",
-  "duration_s": 48,
+  "duration_s": 51,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "044ad8a5343b7b004a77b6140dab3f4f1c2b8001",
+  "git_sha": "147c851c9484da74216cdb462b1b9e4f7c80370a",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.4.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.4",
-  "timestamp_madrid": "2026-09-29 21:59:22 CEST",
+  "timestamp_madrid": "2026-09-29 22:26:56 CEST",
   "title": "Height harmonisation, DT-30 coverage table and the D-13 fork"
 }

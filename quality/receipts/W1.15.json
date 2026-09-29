@@ -1,17 +1,17 @@
 {
   "cmd": "bash ops/smoke.sh",
-  "duration_s": 20,
+  "duration_s": 23,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
+  "git_sha": "147c851c9484da74216cdb462b1b9e4f7c80370a",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.15.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.15",
-  "timestamp_madrid": "2026-09-24 06:51:40 CEST",
+  "timestamp_madrid": "2026-09-29 22:42:28 CEST",
   "title": "Smoke test, 12 checks, no call to any MLB or Savant host"
 }

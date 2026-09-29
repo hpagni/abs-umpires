@@ -1,0 +1,12 @@
+export_numbers: app/data exists; its *.rds aggregates are not read until phase 12 adds that reader (W7.24)
+export_numbers: absent out/tables/abstract_slots_ch1.csv (W6.7 not run yet)
+export_numbers: absent out/tables/abstract_slots_ch2.csv (W6.9 not run yet)
+export_numbers: absent out/ch1/tab/umpire_eb_summary.csv (W6.8 not run yet)
+export_numbers: absent out/ch1/tab/T4_decomposition.csv (W3.16 not run yet)
+export_numbers: absent out/ch1/tab/T4_plane_component.csv (W3.17 not run yet)
+export_numbers: read out/ch1/tab/T1_sample.csv, 2 entries
+export_numbers: read out/ch1/tab/T2_zone_gate.csv, 1 entry
+export_numbers --check: /Users/hudsonpagni/sports-project/docs/numbers.json unchanged
+check_numbers selftest: OK, 27 cases
+check_numbers: 5 file(s), 77 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
+.......                                                                  [100%]

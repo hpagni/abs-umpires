@@ -4,11 +4,13 @@ PASS   T1 present                                   /Users/hudsonpagni/sports-pr
 PASS   development guard: seasons                   2022 2023 2024
 PASS   development guard: last official date        2024-09-30
 PASS   development guard: regime and set            pre_buffer open
-RECORD development sample                           687,496 rows, |d| <= 8.0 in: 2022 226,578, 2023 233,595, 2024 227,323
+RECORD development sample                           687,485 rows, |d| <= 8.0 in: 2022 226,568, 2023 233,594, 2024 227,323
 PASS   one read path                                1 open_dataset call outside comments
 PASS   frozen_spec.json present                     /Users/hudsonpagni/sports-project/out/dev/ch1_spec/frozen_spec.json
 PASS   docs/prereg/ch1.md present                   /Users/hudsonpagni/sports-project/docs/prereg/ch1.md
-PASS   development rows equal the build             226,578 / 233,595 / 227,323
+PASS   the recorded build holds the rows of section 1 687,496 rows: 226,578 / 233,595 / 227,323
+PASS   the table under the single offset holds the disclosed rows 687,485 rows: 226,568 / 233,594 / 227,323
+DISCLOSED development rows: the build record holds 687,496, from before D-P4-08 and under the single offset; the table now gives 687,485 under the single offset and 687,366 under D-P4-04 (DEV-68, docs/prereg/ch1.md section 1.2)
 PASS   formula block in ch1.md                      one fenced r block that starts with cs ~
 PASS   ch1.md k values equal the frozen k           main 24, season 18, ccst 12, velo 10
 PASS   ch1.md formula uses the ordered by-factors   season_o, count_class_o, stand_o
@@ -17,19 +19,7 @@ PASS   ch1.md states: edge tolerance                "0.15 in"
 PASS   ch1.md states: area tolerance                "3 sq in"
 PASS   ch1.md states: single-thread record          "single-threaded"
 PASS   ch1.md states: no-OpenMP warning             "openMP not available"
-start  k24-18-12-10_ord_d8                20:43:39
-start  k32-24-16-20_ord_d8                20:43:39
-done   k24-18-12-10_ord_d8                20:50:00  379.3 s wall, 2.36 GB peak
-done   k32-24-16-20_ord_d8                20:52:30  528.1 s wall, 3.79 GB peak
-PASS   refits completed                             k24-18-12-10_ord_d8 k32-24-16-20_ord_d8
-PASS   no 2025 or 2026 row: k24-18-12-10_ord_d8     seasons 2022 2023 2024, last date 2024-09-30, 687,496 rows fitted
-PASS   no 2025 or 2026 row: k32-24-16-20_ord_d8     seasons 2022 2023 2024, last date 2024-09-30, 687,496 rows fitted
-PASS   refit reproduces the build: k24-18-12-10_ord_d8 max |k-index change| 0.00e+00, max |edf change| 0.00e+00
-PASS   refit reproduces the build: k32-24-16-20_ord_d8 max |k-index change| 0.00e+00, max |edf change| 0.00e+00
-PASS   k stable at the frozen rung: main            k 24 -> 32, max |k-index change| 0.0000 < 0.01
-PASS   k stable at the frozen rung: season          k 18 -> 24, max |k-index change| 0.0011 < 0.01
-PASS   k stable at the frozen rung: ccst            k 12 -> 16, max |k-index change| 0.0004 < 0.01
-PASS   k stable at the frozen rung: velo            k 10 -> 20, max |k-index change| 0.0000 < 0.01
+PASS   the build's k.check record of the frozen fit k24-18-12-10_ord_d8
 PASS   ch1.md k-index: te(x_mid,zn)                 0.962
 PASS   ch1.md k-index: te(x_mid,zn):season_o2023    0.956
 PASS   ch1.md k-index: te(x_mid,zn):season_o2024    0.962
@@ -37,10 +27,35 @@ PASS   ch1.md k-index: te(x_mid,zn):count_class_o1-strike 0.962
 PASS   ch1.md k-index: te(x_mid,zn):count_class_o2-strike 0.956
 PASS   ch1.md k-index: te(x_mid,zn):stand_oR        0.958
 PASS   ch1.md k-index: s(velo)                      0.996
+PASS   the --check-noncohort record is present      out/dev/ch1_spec/noncohort/fits/k24-18-12-10_ord_d8nc.json out/dev/ch1_spec/noncohort/fits/k32-24-16-20_ord_d8nc.json
+PASS   record holds the D-P4-04 rows: k24-18-12-10_ord_d8nc 687,366 rows fitted, seasons 2022 2023 2024, last date 2024-09-30
+PASS   record holds the D-P4-04 rows: k32-24-16-20_ord_d8nc 687,366 rows fitted, seasons 2022 2023 2024, last date 2024-09-30
+PASS   record stable at the frozen rung: main       k 24 -> 32, max |k-index change| 0.0001 < 0.01
+PASS   record stable at the frozen rung: season     k 18 -> 24, max |k-index change| 0.0006 < 0.01
+PASS   record stable at the frozen rung: ccst       k 12 -> 16, max |k-index change| 0.0007 < 0.01
+PASS   record stable at the frozen rung: velo       k 10 -> 20, max |k-index change| 0.0000 < 0.01
+PASS   ch1.md states: 687,496                       "687,496"
+PASS   ch1.md states: 687,485                       "687,485"
+PASS   ch1.md states: 687,366                       "687,366"
+PASS   ch1.md states: 0.0007                        "0.0007"
+PASS   ch1.md states: DEV-68                        "DEV-68"
+start  k24-18-12-10_ord_d8nc              22:49:06
+start  k32-24-16-20_ord_d8nc              22:49:06
+done   k24-18-12-10_ord_d8nc              22:55:41  391.1 s wall, 2.97 GB peak
+done   k32-24-16-20_ord_d8nc              22:58:01  532.6 s wall, 4.02 GB peak
+PASS   refits completed                             k24-18-12-10_ord_d8nc k32-24-16-20_ord_d8nc
+PASS   no 2025 or 2026 row: k24-18-12-10_ord_d8nc   seasons 2022 2023 2024, last date 2024-09-30, 687,366 rows fitted
+PASS   no 2025 or 2026 row: k32-24-16-20_ord_d8nc   seasons 2022 2023 2024, last date 2024-09-30, 687,366 rows fitted
+PASS   refit reproduces the record: k24-18-12-10_ord_d8nc 687,366 rows, max |k-index change| 0.00e+00, max |edf change| 0.00e+00
+PASS   refit reproduces the record: k32-24-16-20_ord_d8nc 687,366 rows, max |k-index change| 0.00e+00, max |edf change| 0.00e+00
+PASS   k stable at the frozen rung: main            k 24 -> 32, max |k-index change| 0.0001 < 0.01
+PASS   k stable at the frozen rung: season          k 18 -> 24, max |k-index change| 0.0006 < 0.01
+PASS   k stable at the frozen rung: ccst            k 12 -> 16, max |k-index change| 0.0007 < 0.01
+PASS   k stable at the frozen rung: velo            k 10 -> 20, max |k-index change| 0.0000 < 0.01
 PASS   no fit object or provenance.json under out/dev /Users/hudsonpagni/sports-project/out/dev/ch1_spec
-RECORD check refit cost                             k24-18-12-10_ord_d8 379 s wall, 2.36 GB peak; k32-24-16-20_ord_d8 528 s wall, 3.79 GB peak
+RECORD check refit cost                             k24-18-12-10_ord_d8nc 391 s wall, 2.97 GB peak; k32-24-16-20_ord_d8nc 533 s wall, 4.02 GB peak
 
-W3.11 check: 34 PASS, 0 FAIL, <elapsed> s
+W3.11 check: 48 PASS, 0 FAIL, <elapsed> s
 GD-04: 0 violation(s) in R/ch1/20_spec_dev.R
 
 -- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing
