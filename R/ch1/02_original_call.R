@@ -108,7 +108,24 @@ finish <- function() {
 
 ## --- paths and the seal boundary --------------------------------------------
 
-WAREHOUSE  <- file.path(ROOT, "warehouse", "abs.duckdb")
+# The warehouse path is minted once, in src/absump/paths.py, and read from there:
+# absolute for the ATTACH, and relative to the root for the w36 provenance line.
+warehouse_from_python <- function() {
+  code <- paste("import os; from absump.paths import DUCKDB_PATH, REPO_ROOT",
+                "print(DUCKDB_PATH); print(os.path.relpath(DUCKDB_PATH, REPO_ROOT))", sep = "; ")
+  out <- suppressWarnings(system2("uv", c("run", "--locked", "python", "-c", shQuote(code)),
+                                  stdout = TRUE, stderr = TRUE))
+  status <- attr(out, "status")
+  if (is.null(status)) status <- 0L
+  if (status != 0L || length(out) < 2L) {
+    stop("could not read the warehouse path from absump.paths (exit ", status, "): ",
+         paste(out, collapse = " "), call. = FALSE)
+  }
+  n <- length(out)
+  list(abs = trimws(out[n - 1L]), rel = trimws(out[n]))
+}
+WAREHOUSE_PATHS <- warehouse_from_python()
+WAREHOUSE  <- WAREHOUSE_PATHS$abs
 DRAWER_DIR <- file.path(ROOT, "data", "raw", "savant", "abs_drawer")
 MANIFEST   <- file.path(ROOT, "data", "raw", "_manifest.csv")
 OUT_DIR    <- file.path(ROOT, "data", "interim", "ch1")
@@ -502,7 +519,8 @@ meta <- list(
   w36_step = "W3.6 original-call reconstruction",
   w36_grain = "one row per called pitch in v_called_pitch_open; key pitch_uid",
   w36_rule = "call_original = call_final unless is_overturned, then the other call",
-  w36_sources = paste("Statcast via warehouse/abs.duckdb open views v_called_pitch_open and v_pitch_open;",
+  w36_sources = paste(sprintf("Statcast via %s open views v_called_pitch_open and v_pitch_open;",
+                              WAREHOUSE_PATHS$rel),
                       "Savant ABS drawer", DRAWER_ENDPOINT, "(30 files, data/raw/savant/abs_drawer);",
                       "MLB Stats API feed play_id via v_pitch_open"),
   w36_drawer_fetched_utc = if (length(fetched)) paste(min(fetched), "to", max(fetched)) else "NA",

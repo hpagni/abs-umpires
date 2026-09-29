@@ -15,9 +15,11 @@ Rule by rule, with the SOP threshold and where it applies:
                      sentence is over 22 words fails. Every file.
     WR-03            a sentence over 35 words. Every file. Reported on the
                      rule 1 line, since every WR-03 hit is also a rule 1 hit.
-    rule 2, WR-02    a question mark in prose. Exempt only on a line that
-                     begins Q1. to Qn. or H1. to Hn. in the pre-registration
-                     (PREREGISTRATION.md and docs/prereg/**).
+    rule 2, WR-02    a question mark in prose. Exempt on a line that begins
+                     Q1. to Qn. or H1. to Hn. in the pre-registration
+                     (PREREGISTRATION.md and docs/prereg/**), and inside a
+                     balanced double-quoted span of the joined paragraph,
+                     such as the quoted title of a cited work (D-P4-23).
     rule 3, WR-01    the ban list, whole word, case-insensitive. Every file.
     P8 ban list      the P8-only entries, and `roi` in a heading. docs/p8/**.
     rule 4, WR-09    an em dash (U+2014), or `' - '` used as a sentence dash.
@@ -620,6 +622,17 @@ def to_blocks(segs):
     return blocks
 
 
+def quoted_spans(text: str):
+    """(start, end) offsets of double-quoted spans, paired in order.
+
+    The quotes pair first with second, third with fourth. A quote left with no
+    partner opens nothing, so a question mark after it stays in prose. Run on a
+    joined paragraph, a span may cross a line break.
+    """
+    marks = [i for i, ch in enumerate(text) if ch == '"']
+    return [(marks[i], marks[i + 1]) for i in range(0, len(marks) - 1, 2)]
+
+
 def inline_clean(text: str) -> str:
     """Prose as a reader sees it. Every substitution keeps its newlines."""
     t = text.replace("\u00a0", " ").replace("\u2019", "'").replace("\u2018", "'")
@@ -695,9 +708,16 @@ def scan_text(relpath: str, text: str, ctx: Context):
         def line_at(offset, _nl=nl, _lines=block.lines):
             return _lines[bisect.bisect_left(_nl, offset)]
 
+        # Rule 2 on the joined block, so a quoted title that wraps is still one span.
+        spans = quoted_spans(clean)
+        q_lines = set()
+        for off, ch in enumerate(clean):
+            if ch == "?" and not any(a < off < b for a, b in spans):
+                q_lines.add(clean.count("\n", 0, off))
+
         # Line rules: 2, 4, 7, 10.
         for k, (line_no, seg_clean) in enumerate(zip(block.lines, clean.split("\n"), strict=True)):
-            if "?" in seg_clean and not (prereg and QH_LINE.match(block.raw[k])):
+            if k in q_lines and not (prereg and QH_LINE.match(block.raw[k])):
                 add(
                     line_no,
                     "r2",
@@ -916,6 +936,7 @@ RULE_TABLE = """\
 check      labels            scope
 rule 1     rule 1, WR-03     every file: sentence over 34 words; WR-03 over 35; file median over 22
 rule 2     rule 2, WR-02     every file: '?' outside a Q<n>./H<n>. line of the pre-registration
+                             and outside a balanced double-quoted span (D-P4-23)
 rule 3     rule 3, WR-01     every file: quality/banned.txt plus the SOP W7.2 floor
 P8         P8 ban list       docs/p8/**: the P8-only entries; roi in a heading
 rule 4     rule 4, WR-09     every file: U+2014, or ' - ' as a sentence dash
@@ -1062,6 +1083,42 @@ def _cases():
             "Q line outside the pre-registration",
             "docs/a.md",
             "Q1. Does the zone shrink?",
+            {"r2"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "quoted title with a question mark",
+            "docs/a.md",
+            'Petriello, "Think you know who is good? It is not so simple", 2026.',
+            set(),
+            {"r2"},
+            False,
+            False,
+        ),
+        (
+            "quoted title wrapping across a line break",
+            "docs/a.md",
+            'Ilan and Gottlieb, "When Should\nYou Challenge? Estimating Value", a repository.',
+            set(),
+            {"r2"},
+            False,
+            False,
+        ),
+        (
+            "rhetorical question after a balanced quote",
+            "docs/a.md",
+            'The page is "the source". Why does this matter?',
+            {"r2"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "unbalanced quote followed by a question mark",
+            "docs/a.md",
+            'He wrote "why does this matter? and never closed it.',
             {"r2"},
             set(),
             False,

@@ -270,6 +270,12 @@ paths_from_python <- function() {
        out_file = trimws(out[n]))
 }
 lay <- paths_from_python()
+# The w37 provenance line names the warehouse relative to the root, as paths.py mints it.
+duckdb_rel <- if (startsWith(lay$duckdb, paste0(ROOT, "/"))) {
+  substring(lay$duckdb, nchar(ROOT) + 2L)
+} else {
+  lay$duckdb
+}
 OUT_FILE <- lay$out_file
 OUT_DIR  <- dirname(OUT_FILE)
 record("layout", sprintf("warehouse %s; last open day %s; output %s",
@@ -601,7 +607,8 @@ meta <- list(
   w37_cs      = "cs = 1 when W3.6 call_original is strike",
   w37_count_class = "0-strike, 1-strike, 2-strike from strikes before the pitch",
   w37_pitch_group = paste(sprintf("%s=%s", names(PITCH_GROUP), PITCH_GROUP), collapse = ","),
-  w37_sources = paste("warehouse/abs.duckdb open views v_called_pitch_open and dim_batter_season;",
+  w37_sources = paste(sprintf("%s open views v_called_pitch_open and dim_batter_season;",
+                              duckdb_rel),
                       "data/interim/ch1/original_call.parquet (W3.6);",
                       "Stats API club fullSeason rosters 2022-2025, fielding records and the people endpoint for the role each pitcher held in the season he pitched"),
   w37_licence = LICENCE,

@@ -17,7 +17,7 @@ open day, every one of them extracted on the corrected pitch key, and
 
 Reconciliation is a record difference, not a rate. The challenge table is
 built from three JSON locations, each filtered to reviewType MJ and each
-record counted once, and the total is compared game by game with the
+record counted once. The total is compared game by game with the
 `absChallenges` tally the feed carries in `gameData`. 10,168 records meet
 10,168 tallies across 2,338 games, with 0 games not reconciling. Four games
 carry no `absChallenges` block in either source and hold no challenge, so
@@ -42,16 +42,16 @@ DT-08 and DT-15 are refreshed here, not owned here. They are owned by
 DT-15 is the one the floor reads. The overturn count is reconstructed from
 `call_original`, which the feed does not state directly, and it comes to
 5,490, the sum of `usedSuccessful` exactly. That number is what makes the
-2026 original call usable: Statcast `description` and the feed's
+2026 original call usable. Statcast `description` and the feed's
 `details.call` both record the post-challenge call, so an unflipped
-challenge reads as a correct umpire call, and those pitches sit in the
+challenge reads as a correct umpire call. Those pitches sit in the
 shadow band where the contour is estimated, which is R-05.
 
 DT-08 takes the starting allotment from the per-game maximum of `remaining`
 observed across the play-by-play, not from the end-of-game block, which is
 D-12 as R2 reversed it. The modal MLB 2026 allotment is 2, and
 44 team-games depart from it. Each departure is enumerated as an audit
-row, never silently dropped: the ones that read higher are extra-innings games, and
+row, never silently dropped. The ones that read higher are extra-innings games, and
 the ones with no allotment evidence are the same four games that carry no
 `absChallenges` block.
 

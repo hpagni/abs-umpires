@@ -455,7 +455,7 @@ def render_block(slots: dict) -> str:
         "",
         "Reconciliation is a record difference, not a rate. The challenge table is",
         "built from three JSON locations, each filtered to reviewType MJ and each",
-        "record counted once, and the total is compared game by game with the",
+        "record counted once. The total is compared game by game with the",
         "`absChallenges` tally the feed carries in `gameData`. {a} records meet".format(
             a=s["N_CHALLENGES_2026"]
         ),
@@ -502,9 +502,9 @@ def render_block(slots: dict) -> str:
         "{a}, the sum of `usedSuccessful` exactly. That number is what makes the".format(
             a=s["N_OVERTURNED_2026"]
         ),
-        "2026 original call usable: Statcast `description` and the feed's",
+        "2026 original call usable. Statcast `description` and the feed's",
         "`details.call` both record the post-challenge call, so an unflipped",
-        "challenge reads as a correct umpire call, and those pitches sit in the",
+        "challenge reads as a correct umpire call. Those pitches sit in the",
         "shadow band where the contour is estimated, which is R-05.",
         "",
         "DT-08 takes the starting allotment from the per-game maximum of `remaining`",
@@ -515,7 +515,7 @@ def render_block(slots: dict) -> str:
         "{a} team-games depart from it. Each departure is enumerated as an audit".format(
             a=s["N_ALLOTMENT_EXCEPTIONS_2026"]
         ),
-        "row, never silently dropped: the ones that read higher are extra-innings games, and",
+        "row, never silently dropped. The ones that read higher are extra-innings games, and",
         "the ones with no allotment evidence are the same four games that carry no",
         "`absChallenges` block.",
         "",

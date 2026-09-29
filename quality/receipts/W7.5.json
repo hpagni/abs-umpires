@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "f891d7144d59b1af1e0ba4f5066eec598555d66a",
+  "git_sha": "b23967b9dfc28b038ce5d3f69fa6a9f7cd68a1d9",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W7.5.log",
   "owner": "W7",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W7.5",
-  "timestamp_madrid": "2026-09-25 19:24:27 CEST",
+  "timestamp_madrid": "2026-09-25 23:04:21 CEST",
   "title": "Writing standard: wiring into make lint-prose and CI"
 }
