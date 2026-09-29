@@ -477,7 +477,7 @@
       "cmdstan": "2.40.0"
     },
     "design": {
-      "source": "data/interim/ch2/challenges.parquet (W4.5), MLB 2026 open rows; tokens from warehouse view v_opportunity_open and plate umpire from dim_umpire_game, open rows only",
+      "source": "data/interim/ch2/challenges.parquet (W4.5), MLB 2026 open rows; tokens from warehouse view v_opportunity_open and plate umpire from v_umpire_game_open, open rows only",
       "n": 10167,
       "levels": {
         "challenger_id": 652,
@@ -1085,8 +1085,8 @@
     ],
     "verdict": "PASS",
     "frame_sha256": "43fbf0b965410022e9664d082ebad188fc48211074d6a2c4ed5ccaf57db989ee",
-    "code_sha256": "59da535c8686bb7129de7b4a482d31f21036748d7b715303d22f8b7393e7a913",
-    "written_madrid": "2026-09-25T23:56:15+02:00",
-    "wall_s": 125.1
+    "code_sha256": "8d5024a38fe072783b1916ed251dd20d2c25d48645ae4a55550ad86e3743a926",
+    "written_madrid": "2026-09-29T23:30:08+02:00",
+    "wall_s": 61.1
   }
 ]

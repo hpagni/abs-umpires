@@ -85,10 +85,11 @@
 #
 # THE HEIGHT RULE. The build ran on the table's H, roster height plus the one
 # D-R0-02 offset. Sample d8nc applies D-P4-04 instead: a batter outside the
-# ABS-measured cohort (H_abs NA) gets H = H - offset_in + offset_noncohort_in from
-# data/interim/dim_batter_season/calibration.json, zn and d are recomputed with
-# R/lib/zone.R, and |d| <= 8.0 in is applied to the new d. The arrow read keeps
-# |d| <= 8.0 in plus NC_READ_MARGIN_IN, which exceeds the largest edge move.
+# ABS-measured cohort (H_abs NA) gets H = H - offset_in + offset_noncohort_in,
+# the two offsets as data/interim/dim_batter_season/calibration.json holds
+# them; zn and d are recomputed with R/lib/zone.R, and |d| <= 8.0 in is applied
+# to the new d. The arrow read keeps |d| <= 8.0 in plus NC_READ_MARGIN_IN,
+# which exceeds the largest edge move.
 #
 # WHAT IT READS. data/marts/ch1_called.parquet (W3.7) through one arrow scan whose
 # filter keeps seasons 2022, 2023 and 2024. No 2025 or 2026 row reaches R. The

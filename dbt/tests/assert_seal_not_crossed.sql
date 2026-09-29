@@ -14,14 +14,17 @@
 -- day is not a held-out day, and `official_date > last_open_date` selects
 -- exactly the rows `official_date >= seal_start_date` selects.
 --
--- The seven relations are every model in the contract that carries
--- official_date. A failing row names the relation, the date and the row count.
+-- The seven tables are every contracted table that carries official_date. The
+-- eighth relation is v_umpire_game_open, the one open view on a dimension
+-- (DECISIONS.md D-P4-45), listed so that the view's own date restriction is
+-- asserted and not only its base table's. A failing row names the relation,
+-- the date and the row count.
 
 {% set boundary = var('last_open_date') %}
 
 {% set dated_relations = [
     'fct_pitch', 'fct_called_pitch', 'fct_challenge', 'fct_challenge_opportunity',
-    'fct_team_game_tokens', 'dim_game', 'dim_umpire_game'
+    'fct_team_game_tokens', 'dim_game', 'dim_umpire_game', 'v_umpire_game_open'
 ] %}
 
 with past_the_boundary as (

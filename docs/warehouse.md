@@ -114,8 +114,12 @@ The checker lists what it finds. Today that is `agg_closed_season_rowcount` and
 
 ### Views
 
-Four views, each restricted to the open rows of its base table:
-`v_pitch_open`, `v_called_pitch_open`, `v_challenge_open`, `v_opportunity_open`.
+Five views, each restricted to the open rows of its base table. Section 2.6
+names four: `v_pitch_open`, `v_called_pitch_open`, `v_challenge_open`,
+`v_opportunity_open`. D-P4-45 adds `v_umpire_game_open` on `dim_umpire_game`.
+That dimension has the grain of a game and an `official_date` on every row, so a
+held-out game could reach it as it could reach a fact table. The view also
+repeats the last-open-day cut its base table applies when it is built.
 Model code reads only these. The checker tests both halves of that claim. It
 compares each view's row count against the same restriction applied to the base
 table, and it reads the stored view definition and fails when the restriction is
@@ -186,6 +190,19 @@ name unless the same statement restricts it to the open label. `dbt/` is not on
 that list, because dbt is what builds the tables. Measured 2026-09-24: 4 files on
 that surface, 0 direct reads. The surface is nearly empty because the chapter
 code is not written yet, so this check gets stronger as the chapters land.
+Measured 2026-09-29: 18 files, 0 direct reads.
+
+The rule reaches the dimensions too, and D-P4-45 settles how each is read.
+`dim_umpire_game` is dated by game, so it is read through `v_umpire_game_open`.
+`dim_batter_season` has no date to cut on. Its builder, rule B-2 in
+`src/absump/heights.py`, drops every day after the last open day before it
+counts anything, so no held-out game can add a batter or move a count or a
+height. On 2026-09-29 every one of its 3,335 batter-seasons matched its pitch
+count in `fct_pitch`, and every one had a row in `v_pitch_open`. The model
+therefore writes `analysis_set = 'open'` on every row. A view could filter only
+on that constant, so the table is read with the label in the same statement,
+which the rule allows. The contract's `allow` list is empty. It exempts a whole
+file, every table in it, which is wider than a dimension read needs.
 
 ### How the checker names tables
 

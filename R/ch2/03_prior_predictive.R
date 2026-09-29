@@ -76,7 +76,8 @@
 #   tokens_own, tokens_opp
 #                     the warehouse view v_opportunity_open, open rows only, joined on
 #                     (game_pk, at_bat_number, pitch_number) and the challenger's side
-#   ump_id            hp_umpire_id from the warehouse table dim_umpire_game, open rows only
+#   ump_id            hp_umpire_id in the warehouse view v_umpire_game_open (D-P4-45),
+#                     open rows only
 #   leverage_tercile  NOT BUILT YET. The tercile needs W5's win-probability surface. The
 #                     design carries a placeholder: balanced thirds (low, mid, high) by a
 #                     permutation seeded at 20260922. The prior predictive depends on this
@@ -250,7 +251,7 @@ tok <- DBI::dbGetQuery(con, "
              FROM abs.main_marts.v_opportunity_open WHERE analysis_set = 'open') AS o
     ON o.game_pk = f.game_pk AND o.at_bat_number = f.at_bat_number
    AND o.pitch_number = f.pitch_number AND o.acting_side = f.side
-  LEFT JOIN (SELECT game_pk, hp_umpire_id FROM abs.main_marts.dim_umpire_game
+  LEFT JOIN (SELECT game_pk, hp_umpire_id FROM abs.main_marts.v_umpire_game_open
              WHERE analysis_set = 'open' AND level = 'mlb') AS u
     ON u.game_pk = f.game_pk")
 DBI::dbDisconnect(con, shutdown = TRUE)
@@ -631,7 +632,7 @@ res <- list(
     cmdstan = cmdstanr::cmdstan_version()),
   design = list(
     source = paste(FRAME, "(W4.5), MLB 2026 open rows; tokens from warehouse view",
-                   "v_opportunity_open and plate umpire from dim_umpire_game, open rows only"),
+                   "v_opportunity_open and plate umpire from v_umpire_game_open, open rows only"),
     n = nrow(d),
     levels = as.list(n_levels),
     n_b_columns = n_b_columns,

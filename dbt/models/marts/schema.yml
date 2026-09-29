@@ -595,3 +595,30 @@ models:
     description: "fct_challenge where analysis_set = 'open'."
   - name: v_opportunity_open
     description: "fct_challenge_opportunity where analysis_set = 'open'."
+  - name: v_umpire_game_open
+    description: >
+      dim_umpire_game where analysis_set = 'open' and official_date is on or
+      before the last open day. The one open view on a dimension, because this
+      dimension is dated by game. DECISIONS.md D-P4-45. The date half is
+      asserted by dbt/tests/assert_seal_not_crossed.sql, which lists this view.
+    columns:
+      - name: game_pk
+        data_tests:
+          - unique:
+              name: v_umpire_game_open_game_pk_is_unique
+          - not_null:
+              name: v_umpire_game_open_game_pk_is_not_null
+      - name: hp_umpire_id
+        data_tests:
+          - not_null:
+              name: v_umpire_game_open_hp_umpire_id_is_not_null
+      - name: official_date
+        data_tests:
+          - not_null:
+              name: v_umpire_game_open_official_date_is_not_null
+      - name: analysis_set
+        data_tests:
+          - accepted_values:
+              name: v_umpire_game_open_analysis_set_is_open_only
+              arguments:
+                values: ["open"]

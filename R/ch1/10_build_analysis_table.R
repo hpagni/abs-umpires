@@ -26,7 +26,8 @@
 #   H              batter height in inches: roster height plus the one
 #                  calibration offset o. DECISIONS.md D-R0-02, the owner's answer
 #                  to D-13, makes roster plus offset the primary cohort in every
-#                  season. o is read from dim_batter_season as W3.4 reads it.
+#                  season. o comes out of dim_batter_season, read the way W3.4
+#                  reads it.
 #   top_ft, bot_ft abs_top_ft(H) and abs_bot_ft(H): 53.5% and 27% of H, in feet.
 #   zn             z_norm(z_mid, H) = z_mid * 12 / H.
 #   d              signed_edge_in(x_mid, z_mid, top_ft, bot_ft): the distance of

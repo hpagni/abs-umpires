@@ -2897,3 +2897,41 @@ SOP D-66 requires the three abstract variants to be committed before `prereg-v1`
 registration. The branch's `quality/prose_lint.py`, `quality/check_numbers.py` and
 `ops/lint_prose.sh` pass the pre-registration at 0 violations and 0 untraced numbers, and
 `scripts/prove.sh W7.6` passes. No existing text needed a change for them.
+
+### D-P4-45 APPLIED UNDER D-R0-03: the read rule on the two dimensions, and a fifth open view
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `phase01/public`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** No deviation: the SOP's rule is "model code reads
+only the `v_*_open` views", and this entry applies it to two tables it does not name.
+
+W9.4 check C7 failed at 044ad8a and at ba63935. It flagged nine places in four R files. Five were
+real reads of `dim_batter_season` in `R/ch1/03_heights.R` with no open label. Four were prose that
+the line scan read as a read: a comment in each of `10_build_analysis_table.R`, `20_spec_dev.R`
+and `R/ch2/03_prior_predictive.R`, and one output string in the last. The actual reads in those
+three files already carried `analysis_set = 'open'`.
+
+1. `dim_umpire_game` is read through a new view, `v_umpire_game_open`. The table has the grain
+   of a game and dates each row with the game's `official_date`, so a held-out game could reach
+   it as it could reach a fact table. The view keeps the open label and the last open day, and
+   the contract lists it with its base, so check C5 holds it to the open rows of
+   `dim_umpire_game`. It carries key, null and label tests, and `assert_seal_not_crossed` now
+   lists it. Chapter 2's prior predictive reads the plate umpire from it.
+2. `dim_batter_season` gets no view. Its grain is a batter-season and it has no date to cut on.
+   Its builder, rule B-2 in `src/absump/heights.py`, drops every Statcast day and every feed
+   after the last open day before it counts anything. So no batter can enter a 2026 row
+   through a held-out game, and no held-out pitch can move a count or a height. Measured
+   today: each of the 3,335 MLB batter-seasons, 662 of them in 2026, has an `n_pitches` equal
+   to its pitch count in `fct_pitch`, which the seal guard cuts at the last open day. Each
+   also has a row in `v_pitch_open`. The model writes `analysis_set = 'open'` on every row
+   for that reason, and a view could filter only on that constant. The five reads in
+   `03_heights.R` now carry the label in the same statement, which C7 accepts and which
+   `01_sample.R`, `10_build_analysis_table.R` and `11_zone_gate.R` already did.
+3. The contract's `allow` list stays empty. It exempts a whole file, every table in it, which
+   is wider than one dimension read needs.
+
+The outputs did not move. `03_heights.R` rewrote `calibration.json` and
+`out/tables/height_coverage.csv` byte for byte. The analysis table was not rebuilt, because no
+read in `10_build_analysis_table.R` changed. The prior predictive, rerun from its fixed seed,
+wrote the same JSON bar four fields: the source string, the code hash, the stamp and the wall
+time. `quality/warehouse_contract.yml` and `docs/warehouse.md` carry the reason, and W9.4's
+gate now expects five open views.

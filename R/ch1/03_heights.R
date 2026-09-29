@@ -85,7 +85,9 @@
 #    moves the non-cohort rows at fit time, so no mart is rebuilt.
 #
 # WHAT IT READS. main_marts.v_called_pitch_open, main_marts.v_pitch_open (counts
-# only) and main_marts.dim_batter_season in the DuckDB warehouse, read-only; the
+# only) and main_marts.dim_batter_season in the DuckDB warehouse, read-only; each
+# read of the dimension carries analysis_set = 'open' in its own statement, the
+# form the read rule allows for it (DECISIONS.md D-P4-45); the
 # 2022-2024 interim Statcast day files for item 3; data/interim/dim_batter_season/
 # calibration.json; docs/prereg/ch1.md, which must carry item 3's values; and
 # DECISIONS.md. It fits nothing on 2025 or 2026: the fit seasons are asserted to
@@ -226,6 +228,7 @@ SELECT p.season,
 FROM main_marts.v_called_pitch_open AS p
 LEFT JOIN main_marts.dim_batter_season AS b
        ON b.batter = p.batter AND b.season = p.season AND b.level = p.level
+      AND b.analysis_set = 'open'
 WHERE p.level = 'mlb'
 GROUP BY p.season, p.level
 ORDER BY p.season", 2 * SIG_TOL_MM)
@@ -235,7 +238,7 @@ SELECT season,
        count(*)                                   AS n_batter_seasons,
        count(h_abs_in)                            AS n_batter_seasons_abs
 FROM main_marts.dim_batter_season
-WHERE level = 'mlb'
+WHERE level = 'mlb' AND analysis_set = 'open'
 GROUP BY season
 ORDER BY season"
 
@@ -245,7 +248,7 @@ SELECT min(height_in - h_roster_in) FILTER (WHERE height_source = 'people_offset
        avg(h_abs_in - h_roster_in)  FILTER (WHERE season = 2026 AND h_abs_in IS NOT NULL) AS o_2026,
        count(*) FILTER (WHERE height_source = 'people_offset') AS n_people_offset
 FROM main_marts.dim_batter_season
-WHERE level = 'mlb'"
+WHERE level = 'mlb' AND analysis_set = 'open'"
 
 # ---------------------------------------------------------------- the surface
 fit_sql <- "
@@ -253,6 +256,7 @@ SELECT p.cs, p.plate_x_mid AS x, p.plate_z_mid AS z, b.h_roster_in, b.h_abs_in
 FROM main_marts.v_called_pitch_open AS p
 JOIN main_marts.dim_batter_season AS b
   ON b.batter = p.batter AND b.season = p.season AND b.level = p.level
+ AND b.analysis_set = 'open'
 WHERE p.level = 'mlb' AND p.season = ? AND p.regime = ?
   AND p.plate_x_mid IS NOT NULL AND p.plate_z_mid IS NOT NULL
 ORDER BY p.pitch_uid"
@@ -470,7 +474,8 @@ GROUP BY season ORDER BY season", min(NC_SEASONS), max(NC_SEASONS))
 nc_dim_sql <- sprintf("
 SELECT season, batter, h_abs_in, h_roster_in
 FROM main_marts.dim_batter_season
-WHERE level = 'mlb' AND season BETWEEN %d AND %d", min(NC_SEASONS), max(NC_SEASONS))
+WHERE level = 'mlb' AND analysis_set = 'open' AND season BETWEEN %d AND %d",
+                      min(NC_SEASONS), max(NC_SEASONS))
 
 nc_guard <- DBI::dbGetQuery(con, nc_guard_sql)
 nc_wh <- DBI::dbGetQuery(con, nc_wh_sql)

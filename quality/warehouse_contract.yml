@@ -11,8 +11,9 @@
 # table name of its own, so a table renamed here is a table renamed in the check.
 #
 # LAYERS. staging is views and does renames and casts only, intermediate is
-# views, marts are tables. The four v_*_open views are the exception the SOP
-# itself makes: they are marts-layer views, and model code reads only them.
+# views, marts are tables. The v_*_open views are the exception the SOP itself
+# makes: they are marts-layer views, and model code reads only them. Section 2.6
+# names four. D-P4-45 adds a fifth, on the one game-dated dimension.
 #
 # THE agg_* ROW. Section 2.6 lists `agg_*` with the grain "various" and the
 # required columns "the published aggregates listed per chapter". No chapter has
@@ -146,10 +147,16 @@ tables:
     model: dbt/models/marts/fct_wp_state.sql
     columns: [wp, n]
 
-# The four views of section 2.6. Each selects its base table restricted to the
-# open rows. The checker compares the view's row count against the same
-# restriction applied to the base table, so a view that widened its filter is a
-# failure and not a comment.
+# The four views of section 2.6, and v_umpire_game_open. Each selects its base
+# table restricted to the open rows. The checker compares the view's row count
+# against the same restriction applied to the base table, so a view that widened
+# its filter is a failure and not a comment.
+#
+# v_umpire_game_open is not in section 2.6. D-P4-45 adds it because
+# dim_umpire_game has the grain of a game and dates every row with the game's
+# official_date, so a held-out game could reach it as it could reach a fact
+# table. The view also repeats the last-open-day cut that its base table
+# applies when it is built.
 views:
   v_pitch_open:
     base: fct_pitch
@@ -163,6 +170,9 @@ views:
   v_opportunity_open:
     base: fct_challenge_opportunity
     model: dbt/models/marts/v_opportunity_open.sql
+  v_umpire_game_open:
+    base: dim_umpire_game
+    model: dbt/models/marts/v_umpire_game_open.sql
 
 open_label_column: analysis_set
 open_label: open
@@ -304,6 +314,29 @@ references:
 # analysis surface that runs a model: the R chapters, the SQL the app and the
 # notebooks run, and the three Python chapter packages. dbt/ is not here,
 # because dbt is what builds the tables.
+#
+# DIMENSIONS, D-P4-45. The rule reaches all twelve contracted tables, and a
+# dimension is read one of two ways, chosen by whether it carries a game date.
+#
+#   dim_umpire_game has one row per game and an official_date on each. A
+#   held-out game could put a row in it, so it is read through its open view,
+#   v_umpire_game_open, which cuts on the label and on the last open day.
+#
+#   dim_batter_season has one row per batter-season and no date to cut on. Its
+#   builder, src/absump/heights.py rule B-2, drops every Statcast day and every
+#   feed after the last open day before it counts anything, so no batter can
+#   enter a 2026 row through a held-out game, and no held-out pitch can move a
+#   count or a height. Measured 2026-09-29: every one of the 3,335 MLB
+#   batter-seasons has an n_pitches equal to its pitch count in fct_pitch, which
+#   the seal guard cuts at the last open day, and has at least one row in
+#   v_pitch_open. The model writes analysis_set = 'open' on every row for that
+#   reason. A view on it could filter only on that constant, so none is added.
+#   The table is read with the open label in the same statement, as the read
+#   rule below allows and as R/ch1/01_sample.R, 10_build_analysis_table.R and
+#   11_zone_gate.R already read it.
+#
+# `allow` exempts a whole file from the rule, every table in it. No file is on
+# it: a dimension read is not a reason to stop checking a file's fact reads.
 open_view_only:
   paths:
     - R
