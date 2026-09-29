@@ -39,8 +39,8 @@ W3.3 checked the D-14 rule against Savant's own `edge_dist_calc`. The error is 5
 
 Three heights are in use.
 
-- **Chapter 1 primary.** H is roster height plus the calibration offset, 0.0022 in, in all five seasons. This is the owner's answer D-R0-02 of 2026-09-24. The sample is P0, 1,830,267 called pitches.
-- **Chapter 1 robustness arm.** H is the ABS-measured height, `sz_top * 12 / 0.535`. For 2022-2025 it is back-linked from the batter's 2026 appearance. The sample is P1, 1,487,942 called pitches.
+- **Chapter 1 primary.** H is roster height plus the calibration offset, 0.0022 in, in all five seasons. This is the owner's answer D-R0-02 of 2026-09-24. The sample is P0, 1,830,231 called pitches.
+- **Chapter 1 robustness arm.** H is the ABS-measured height, `sz_top * 12 / 0.535`. For 2022-2025 it is back-linked from the batter's 2026 appearance. The sample is P1, 1,487,927 called pitches.
 - **ABS itself.** The 2026 system scores each pitch on the measured height. The W3.8 gate uses measured height for that reason.
 
 **The D-13 fork is decided.** The SOP rule reads: if 2022 coverage is below 60%, either shorten the baseline to 2023-2024 or make the roster-height arm primary for the pre-trend. The 2022 share of called pitches with a measured height is 0.593387. That is 2,428 called pitches short of 0.60. The owner took the roster-height branch and applied it to all five seasons, not to the pre-trend alone.
@@ -95,7 +95,7 @@ The band is `|e| <= 0.5 in`, where `e = signed_edge_in - 1.45`.
 ## 6. What was measured on 2026-09-25
 
 - **Constants.** The six constants are identical in all three modules (section 1).
-- **Chapter 1 follows D-14.** `top_ft` equals 0.535 × H / 12 and `bot_ft` equals 0.27 × H / 12 on every one of 1,830,267 rows. `d` recomputed from the D-14 formula matches to 2.842e-14 in. `d_abs` matches to 1.137e-13 in.
+- **Chapter 1 follows D-14.** `top_ft` equals 0.535 × H / 12 and `bot_ft` equals 0.27 × H / 12 on every one of 1,830,231 rows. `d` recomputed from the D-14 formula matches to 7.105e-15 in. `d_abs` matches to 7.105e-15 in on its 1,487,927 rows.
 - **Chapter 2 against the Chapter 1 arm.** All 10,168 challenged pitches join on `pitch_uid`. `edge_dist_calc` equals `d_abs - 1.45` to 8.748e-9 in. The in-or-out verdict differs on 0 pitches.
 - **Chapter 2 against the Chapter 1 primary.** The verdict differs on 123 of 10,168 challenged pitches.
 - **Chapter 1 primary against the measured-height zone, all open called pitches.** The verdict differs on 854 of 357,105 in 2026 (0.2391%). Over P1 rows it differs on 475, 650, 687 and 785 in 2022 to 2025, 0.2187% to 0.2396%.
@@ -107,7 +107,7 @@ The geometry agrees everywhere: one plane, one pair of height fractions, one edg
 
 **F1. Chapter 1 and Chapter 2 use different heights in 2026.** Chapter 1's primary H is roster plus offset under D-R0-02. Chapter 2 reads Savant's zone, which is the measured height, because that is the zone ABS scores. The two give different verdicts on 123 of 10,168 challenged pitches. On those pitches the roster+offset zone agrees with the ABS verdict on 98.7707%. That is under DT-21's 99.75% bar, though the row is not gated. The zone that passed DT-21 is the measured-height zone, which is Chapter 1's robustness arm and not its primary.
 
-**F2. The abstract does not match Chapter 1.** The SOP's Methods template says the fit uses batters with an ABS-measured height. It says the zone is rebuilt from ABS-measured height. D-R0-02 makes roster plus offset primary, so Chapter 1's primary sample is P0, 1,830,267 called pitches. The `N_CALLED` slot holds 1,492,502, the measured-height cohort in `fct_called_pitch` before W3.5's exclusions. W3.5's P1, which the SOP says `N_CALLED` reports, is 1,487,942. The 4,560-row gap is rows W3.5 excludes; 639 of them have blank coordinates.
+**F2. The abstract does not match Chapter 1.** The SOP's Methods template says the fit uses batters with an ABS-measured height. It says the zone is rebuilt from ABS-measured height. D-R0-02 makes roster plus offset primary, so Chapter 1's primary sample is P0, 1,830,231 called pitches. The `N_CALLED` slot holds 1,492,502, the measured-height cohort in `fct_called_pitch` before W3.5's exclusions. W3.5's P1, which the SOP says `N_CALLED` reports, is 1,487,927. The 4,575-row gap is rows W3.5 excludes; 639 of them have blank coordinates.
 
 **F3. The letter d names two quantities.** Chapter 1's `d` is the ball-centre distance on the harmonised zone, with no radius taken off. The warehouse's `d_signed_in` has the 1.45 in radius taken off, and before 2026 it sits on the operator-set zone. W3.5's `|d| <= 8.0 in` filter and 3 in shadow band are on the ball-centre `d`. W3.8's 0.5 in band is on `e`, the radius-adjusted distance. Chapter 2 reads the warehouse column on MLB 2026 challenged pitches only, where the published zone is the ABS zone. Chapter 1 reads it in one place. W3.6's 2026 shadow-band overturn count in `R/ch1/02_original_call.R` uses `|d_signed_in| <= 3`, not the ball-centre `d`. The W3.6 stat verifier flagged the same line. The abstract does not read the column.
 

@@ -1,0 +1,22 @@
+# W3.10, pitch-level plane displacements. Owner W3, fleet phase 04.
+#
+# R/ch1/13_plane_displacement.R moves every P0 pitch from the front plane to the
+# middle plane with R/lib/zone.R and writes data/interim/ch1/plane_displacement.csv:
+# n, mean, sd, 5th and 95th percentiles of dz, dx and dabsx (the change in |x|), by
+# velocity decile, pitch group, vertical-break decile, pitch type, p_throws and
+# shadow-band edge, pooled 2022-2026 and per season. The verify command rebuilds
+# the table in memory. It fails unless reproject() equals the warehouse mid-plate
+# pair and W3.7's x_mid and z_mid to 1e-9 ft, t_mid > t_front and dz < 0 hold
+# pitch by pitch, the mean dz of every 2022-2025 day lies in [-1.10, -0.90] in,
+# every breakdown partitions its population, and the file on disk equals the
+# rebuild. Nothing is fitted and no call is read. GD-04 then scans the script.
+# Measured 2026-09-25: 1,830,231 pitches, 274 rows, about 17 s (rebuilt after D-P4-08, which
+# moved 36 position-player pitches out of P0; it read 1,830,267 before). `needs` names the
+# script, the table, the analysis table and the warehouse directory, so a clean
+# clone reads MISSING rather than FAIL.
+- id: W3.10
+  title: "Pitch-level plane displacements"
+  verify: "Rscript R/ch1/13_plane_displacement.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/13_plane_displacement.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/13_plane_displacement.R, data/interim/ch1/plane_displacement.csv, data/marts/ch1_called.parquet, warehouse

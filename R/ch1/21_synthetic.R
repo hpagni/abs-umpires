@@ -4,6 +4,8 @@
 #
 # Run from the repository root so that .Rprofile activates renv:
 #
+#   Rscript R/ch1/21_synthetic.R --prepare    the inputs of (b) and (c) from the mart: the link,
+#                                             the design, the calibration fit, the SBC design
 #   Rscript R/ch1/21_synthetic.R --power      (c) the D-60 umpire power curve. Writes
 #                                             out/tables/ch1_power_curve.csv and the raw
 #                                             per-seed output under out/dev/ch1_synth/power/
@@ -27,13 +29,17 @@
 #   B1  per umpire-season-edge offset delta, by maximising the binomial likelihood of
 #       y_i ~ g_e(d_i - delta) over delta in [-4, 4] in 0.01 in steps, profile SE;
 #   B2  brm(delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:regime
-#           + (1 + regime | umpire_hp_id), SOP priors, 4 chains x 2000, seed 20260922);
+#           + (1 + regime | umpire_hp_id), SOP priors but for the abs_step prior below,
+#           seed 20260922, the sampler settings STAN_SETTINGS below);
 #   B3  split-half reliability, each umpire-season's plate games split odd/even by game
 #       index, Spearman-Brown corrected, for the level and the response.
 # Regime enters B2 as two step contrasts, buf_step = 1 in 2025 and 2026, abs_step = 1 in
 # 2026. That is the SOP's edge:regime and (1 + regime | umpire) re-coded so that the
 # abs_step slope is the umpire's 2025 -> 2026 response and its SD is tau. The fixed
-# effects span the same nine edge x regime means.
+# effects span the same nine edge x regime means. The re-coding is not prior-neutral: under
+# the SOP's treatment coding each regime's league offset is b + b_regime, N(0, 1.41 in), and
+# under the step coding the 2026 offset is b + b_buf + b_abs, N(0, 1.73 in) at the SOP's
+# normal(0, 1). ABS_STEP_PRIOR_SD below restores MT-01 for 2026.
 #
 # The simulation keeps every real shadow-band pitch of 2022-2026 (|d| <= 3.0 in, SOP
 # W3.5): its umpire, season, game, edge and d. Only the call is simulated. The script
@@ -75,8 +81,8 @@ if (!nzchar(ROOT)) ROOT <- normalizePath(file.path(dirname(SELF), "..", ".."))
 setwd(ROOT)
 
 MODE <- if (length(args) == 0L) "--power" else args[1]
-if (!MODE %in% c("--power", "--sbc", "--recovery", "--check", "--worker", "--curve")) {
-  cat("usage: Rscript R/ch1/21_synthetic.R --power | --sbc | --recovery [n_inject n_null] |",
+if (!MODE %in% c("--power", "--sbc", "--recovery", "--check", "--worker", "--curve", "--prepare")) {
+  cat("usage: Rscript R/ch1/21_synthetic.R --prepare | --power | --sbc | --recovery [n_inject n_null] |",
       "--check | --curve\n")
   quit(status = 2)
 }
@@ -115,13 +121,46 @@ FALSE_FIRE_MAX <- 1L                        # of 5 seeds at tau = 0.10
 POWER_MIN     <- 4L                         # of 5 seeds at tau = 0.30
 REL_FLOOR     <- 0.50                       # the reliability gate D-60 names
 STAN_SEED     <- 20260922L                  # SOP W3.18
+# Sampler settings, pre-registered for every Stan fit this script runs: the calibration fit,
+# the 30 power-curve fits, the 200 SBC fits, and W3.18. SOP W3.18 writes chains = 4 and
+# iter = 2000, 1,000 warmup and 1,000 draws a chain, which is also the MT-05 minimum. The first
+# curve, 2026-09-25, ran at exactly that with cmdstan's default adapt_delta 0.80: 3 of 15 sop fits
+# had divergent transitions (6, all at tau 0.10) and all 15 ue_us fits failed R-hat or ESS
+# (worst R-hat 1.051, lowest bulk ESS 106). The settings below were fixed on re-runs of those
+# failing fits, before the tag and before any new seed ran (docs/prereg/ch1.md 8.2). ue_us mixes
+# slowly in its correlation parameters, so it runs twice as long as sop; the calibration fit
+# carries ue_us's two nuisance intercepts and uses ue_us's settings.
+STAN_SETTINGS <- list(
+  sop         = list(chains = 4L, warmup = 1000L, sampling = 2000L, adapt_delta = 0.99, max_treedepth = 10L),
+  ue_us       = list(chains = 4L, warmup = 2000L, sampling = 6000L, adapt_delta = 0.99, max_treedepth = 10L))
+STAN_SETTINGS$calibration <- STAN_SETTINGS$ue_us
+stan_draws <- function(st) st$chains * st$sampling   # draws kept per fit
+# The MT-05 escalation for a reported fit (the power curve here, and W3.18). A fit that has no
+# divergence, no tree-depth hit and E-BFMI >= 0.2 but misses R-hat <= 1.01 or ESS >= 400 is run
+# again from the same seed with the draws a chain doubled, at most STAN_ESCALATE_MAX times. A fit
+# with a divergence, or still short after that, is reported as failed. Every attempt is recorded.
+# Added after the second curve's ue_us tau 0.30 seed 1 reached R-hat 1.0133 at 6,000 draws a
+# chain, before it was re-run; SBC fits are not reported fits and never escalate.
+STAN_ESCALATE_MAX <- 2L
+mt05_short <- function(dg) dg$divergent == 0 && dg$treedepth_hits == 0 && dg$ebfmi_min >= 0.2 &&
+  (dg$rhat_max > 1.01 || dg$ess_bulk_min < 400 || dg$ess_tail_min < 400)
+# The prior on the three edge:abs_step coefficients, the league's 2025-to-2026 step. SOP W3.18
+# puts normal(0, 1) on every b. With the step coding of section 8.2 the 2026 league offset of an
+# edge is b + b_buf + b_abs, so its prior is N(0, sqrt(3)) = N(0, 1.73 in), and MT-01's implied
+# league shadow rate then lies in [0.10, 0.90] with prior probability 0.9288 for 2026 (0.9525 for
+# 2025, 0.9852 pre-buffer). ABS_STEP_PRIOR_SD is the largest multiple of 0.05 in at which all three
+# regimes clear 0.95 (2026: 0.95002 at 0.30, 0.94913 at 0.35), derived in docs/prereg/ch1.md 8.8
+# before any fit that uses it; tests/model/test_mt_ch1_01_prior_predictive.py re-derives it. The
+# SOP's normal(0, 1) stays as the pre-registered sensitivity arm SENS-B2-ABS-PRIOR: b2_priors(NA).
+ABS_STEP_PRIOR_SD <- 0.30
+ABS_STEP_COEFS    <- c("edgeside:abs_step", "edgetop:abs_step", "edgebot:abs_step")
 DATA_SEED     <- 31200L
 SBC_L         <- 200L                       # SOP W3.12(b)
 SBC_DRAWS     <- 199L                       # ranks 0..199
 SBC_BINS      <- 10L
 SBC_ALPHA     <- 0.05
 SBC_SEED      <- 31300L
-MAX_PAR       <- 2L                         # concurrent brms workers, 4 chains each
+MAX_PAR       <- as.integer(Sys.getenv("W312_MAX_PAR", "2"))   # concurrent brms workers, 4 chains each
 
 OUT_DIR    <- file.path(ROOT, "out", "dev", "ch1_synth")
 POWER_DIR  <- file.path(OUT_DIR, "power")
@@ -136,12 +175,12 @@ FIT_SUFFIXES <- c("rds", "npz", "stanfit", "qs", "pkl")
 B2_FORMULA_TEXT <- paste("delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step +",
                          "edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)")
 B2_UE_US_TEXT <- paste(B2_FORMULA_TEXT, "+ (1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)")
-# The estimators the curve measures. "sop" is SOP W3.18's B2 as written. "ue_us" adds the
+# The estimators the curve measures. "sop" is SOP W3.18's B2 with the abs_step prior above. "ue_us" adds the
 # two nuisance intercepts the 2022-2024 calibration finds: a persistent umpire x edge
 # tendency and an umpire x season shift common to the three edges.
 ESTIMATORS <- c(sop = "sop", ue_us = "ue_us")
 EST_FORMULA <- c(sop = B2_FORMULA_TEXT, ue_us = B2_UE_US_TEXT)
-EST_LABEL <- c(sop = "SOP W3.18 B2 as written",
+EST_LABEL <- c(sop = sprintf("SOP W3.18 B2, abs_step prior normal(0, %.2f)", ABS_STEP_PRIOR_SD),
                ue_us = "B2 plus (1 | umpire x edge) and (1 | umpire x season)")
 # Which estimator sets CH1-A6. Written after the sop curve's first four seeds showed tau
 # under-estimated at 0.10 in, before any ue_us seed ran. An estimator is admissible when its
@@ -421,11 +460,15 @@ load_brms <- function() {
           mc.cores = 4L)
 }
 
-b2_priors <- function() {
-  c(brms::prior(normal(0, 1), class = "b"),
-    brms::prior(exponential(2), class = "sd"),
-    brms::prior(exponential(2), class = "sigma"),
-    brms::prior(lkj(2), class = "cor"))
+b2_priors <- function(abs_sd = ABS_STEP_PRIOR_SD) {
+  p <- c(brms::prior(normal(0, 1), class = "b"),
+         brms::prior(exponential(2), class = "sd"),
+         brms::prior(exponential(2), class = "sigma"),
+         brms::prior(lkj(2), class = "cor"))
+  # abs_sd = NA is the SOP's prior, the sensitivity arm SENS-B2-ABS-PRIOR
+  if (!is.na(abs_sd)) for (cf in ABS_STEP_COEFS)
+    p <- c(p, brms::set_prior(sprintf("normal(0, %s)", format(abs_sd)), class = "b", coef = cf))
+  p
 }
 cal_priors <- function() {
   c(brms::prior(normal(0, 1), class = "b"),
@@ -433,13 +476,15 @@ cal_priors <- function() {
     brms::prior(exponential(2), class = "sigma"))
 }
 
-fit_brms <- function(formula_text, data, priors) {
+fit_brms <- function(formula_text, data, priors, st) {
   warn <- character(0)
   pt0 <- proc.time()
   fit <- withCallingHandlers(
     brms::brm(brms::bf(as.formula(formula_text)), data = data, family = gaussian(),
-              prior = priors, chains = 4, iter = 2000, cores = 4, backend = "cmdstanr",
-              seed = STAN_SEED, refresh = 0, silent = 2),
+              prior = priors, chains = st$chains, iter = st$warmup + st$sampling,
+              warmup = st$warmup, cores = st$chains, backend = "cmdstanr", seed = STAN_SEED,
+              control = list(adapt_delta = st$adapt_delta, max_treedepth = st$max_treedepth),
+              refresh = 0, silent = 2),
     warning = function(w) {
       warn <<- c(warn, conditionMessage(w))
       invokeRestart("muffleWarning")
@@ -449,10 +494,12 @@ fit_brms <- function(formula_text, data, priors) {
   list(fit = fit, warn = warn, elapsed = unname(pt[["elapsed"]]))
 }
 
-diagnostics <- function(fit, pars) {
+sampler_record <- function(st) c(st, list(seed = STAN_SEED))
+
+diagnostics <- function(fit, pars, st) {
   np <- brms::nuts_params(fit)
   div <- sum(np$Value[np$Parameter == "divergent__"])
-  td <- sum(np$Value[np$Parameter == "treedepth__"] >= 10)
+  td <- sum(np$Value[np$Parameter == "treedepth__"] >= st$max_treedepth)
   en <- np[np$Parameter == "energy__", ]
   ebfmi <- vapply(split(en$Value, en$Chain), function(e) sum(diff(e)^2) / length(e) / stats::var(e), 0)
   dr <- posterior::subset_draws(posterior::as_draws_array(fit), variable = pars)
@@ -537,9 +584,19 @@ run_power_seed <- function(tau, seed, est, outdir) {
   b1h <- b1_cells(des[, c("umpire_hp_id", "season", "edge", "half")], des$base, sim$y, lut)
   t_b1 <- unname((proc.time() - pt0)[["elapsed"]])
   dd <- b2_rows(b1)
-  ft <- fit_brms(EST_FORMULA[[est]], dd, b2_priors())
-  fit <- ft$fit
-  dr <- posterior::as_draws_df(fit)
+  st <- STAN_SETTINGS[[est]]
+  attempts <- list()
+  repeat {
+    ft <- fit_brms(EST_FORMULA[[est]], dd, b2_priors(), st)
+    fit <- ft$fit
+    dr <- posterior::as_draws_df(fit)
+    pars <- c(grep("^b_", names(dr), value = TRUE), grep("^sd_", names(dr), value = TRUE),
+              grep("^cor_", names(dr), value = TRUE), "sigma")
+    dg <- diagnostics(fit, pars, st)
+    attempts[[length(attempts) + 1L]] <- c(sampler_record(st), dg, list(seconds = ft$elapsed))
+    if (!mt05_short(dg) || length(attempts) > STAN_ESCALATE_MAX) break
+    st$sampling <- 2L * st$sampling
+  }
   tau_d <- dr[["sd_umpire_hp_id__abs_step"]]
   buf_d <- dr[["sd_umpire_hp_id__buf_step"]]
   if (is.null(tau_d) || is.null(buf_d)) stop("B2 draws lack the abs_step or buf_step SD", call. = FALSE)
@@ -550,9 +607,6 @@ run_power_seed <- function(tau, seed, est, outdir) {
   post_var <- apply(rm, 2, stats::var)
   truth <- sim$truth[match(as.integer(rid), sim$truth$umpire_hp_id), ]
   sh <- split_half(b1h)
-  pars <- c(grep("^b_", names(dr), value = TRUE), grep("^sd_", names(dr), value = TRUE),
-            grep("^cor_", names(dr), value = TRUE), "sigma")
-  dg <- diagnostics(fit, pars)
   ensure_dir(outdir)
   data.table::fwrite(data.frame(draw = seq_along(tau_d), tau_abs = tau_d, tau_buf = buf_d,
                                 sigma = dr[["sigma"]]),
@@ -578,6 +632,7 @@ run_power_seed <- function(tau, seed, est, outdir) {
     reliability_vc_response = 1 - mean(post_var) / mean(tau_d^2),
     cor2_shrunken_truth = stats::cor(post_mean, truth$abs_true)^2,
     split_half = sh, diagnostics = dg, b1_seconds = t_b1, b2_seconds = ft$elapsed,
+    sampler = sampler_record(st), sampler_attempts = attempts, abs_step_prior_sd = ABS_STEP_PRIOR_SD,
     brms_warnings = unique(ft$warn))
   write_json_file(res, file.path(outdir, "summary.json"))
   invisible(res)
@@ -830,7 +885,7 @@ run_sbc_reps <- function(est, from, to) {
     out <- file.path(sdir, sprintf("rep%03d.json", l))
     if (file.exists(out)) next
     set.seed(SBC_SEED + l)
-    b <- stats::rnorm(ncol(X), 0, 1)
+    b <- stats::rnorm(ncol(X), 0, ifelse(colnames(X) %in% ABS_STEP_COEFS, ABS_STEP_PRIOR_SD, 1))
     sdv <- stats::rexp(3, 2)
     R <- rlkjcorr(3, 2)
     sigma <- stats::rexp(1, 2)
@@ -851,7 +906,7 @@ run_sbc_reps <- function(est, from, to) {
     truth <- c(tau_abs = sdv[3], tau_buf = sdv[2], sd_intercept = sdv[1], sigma = sigma,
                cor_buf_abs = R[2, 3], b_side_abs = b[7], b_top_abs = b[8], b_bot_abs = b[9],
                regime_mean_abs = mean(b[7:9]), regime_mean_buf = mean(b[4:6]))
-    ft <- fit_brms(EST_FORMULA[[est]], d, b2_priors())
+    ft <- fit_brms(EST_FORMULA[[est]], d, b2_priors(), STAN_SETTINGS[[est]])
     dr <- posterior::as_draws_df(ft$fit)
     nm <- names(dr)
     stopifnot(identical(colnames(X)[7:9], c("edgeside:abs_step", "edgetop:abs_step", "edgebot:abs_step")))
@@ -870,11 +925,12 @@ run_sbc_reps <- function(est, from, to) {
                                                    dr[["b_edgebot:buf_step"]])))
     keep <- round(seq(1, nrow(post), length.out = SBC_DRAWS))
     ranks <- vapply(SBC_QUANTITIES, function(q) sum(post[keep, q] < truth[[q]]), 0)
-    dg <- diagnostics(ft$fit, c(grep("^b_", nm, value = TRUE), grep("^sd_", nm, value = TRUE),
+    dg <- diagnostics(ft$fit, st = STAN_SETTINGS[[est]], pars = c(grep("^b_", nm, value = TRUE), grep("^sd_", nm, value = TRUE),
                                 grep("^cor_", nm, value = TRUE), "sigma"))
     write_json_file(list(rep = l, estimator = est, seed = SBC_SEED + l, truth = as.list(truth),
                          sd_ue = sd_ue, sd_us = sd_us, ranks = as.list(ranks),
-                         n_draws = SBC_DRAWS, diagnostics = dg, seconds = ft$elapsed),
+                         n_draws = SBC_DRAWS, diagnostics = dg, seconds = ft$elapsed,
+                         sampler = sampler_record(STAN_SETTINGS[[est]]), abs_step_prior_sd = ABS_STEP_PRIOR_SD),
                     out)
     cat(sprintf("sbc rep %d done in %.1f s\n", l, ft$elapsed))
   }
@@ -937,7 +993,7 @@ score_sbc <- function(est) {
 # A null replicate draws both copies from the undeformed surface. Each replicate fits the
 # frozen specification with season in {2024, 2026}, extracts top_in, bot_in and
 # half_width_in on the standardised surfaces, and takes 95% intervals from 1,000 draws of
-# the coefficients from N(beta, Vp). Nothing fitted is saved. CH1-A7 asks for the
+# the coefficients from N(beta, Vc), REC_INTERVAL_COV below. Nothing fitted is saved. CH1-A7 asks for the
 # zero-effect criterion as an equivalence test in CH1-A3's form, so each replicate also
 # records whether its 90% interval for the error lies inside +/-0.10 in; the null set
 # passes when that holds in at least 93% of replicates for every shift, beside the SOP's
@@ -950,6 +1006,21 @@ REC_TOL_IN   <- 0.10
 REC_COVER_MIN_SHARE <- 0.93                 # 93 of 100
 REC_FPR_MAX  <- 0.07
 REC_DRAWS    <- 1000L
+# The interval covariance, changed before the tag (docs/prereg/ch1.md 8.7). The first full run,
+# 2026-09-25, drew from N(beta, Vp). Vp conditions on the estimated smoothing parameters, and that
+# run's top_in 95% interval covered the truth in 91 of 100 against the pre-registered 93, with a
+# half-width null sampling SD 1.30 times its posterior SD (95% CI 1.09 to 1.62). Vc is mgcv's
+# smoothing-parameter-corrected covariance (Wood, Pya and Saefken 2016, JASA 111, 1548-1563).
+# bam(discrete = TRUE, method = "fREML") returns Vc = Vp + J V_rho J', where J is the derivative
+# of the coefficients with respect to the log smoothing parameters and V_rho the inverse Hessian
+# of the fREML criterion; it omits the second-order term gam(method = "REML") adds. No bound,
+# seed or draw count changed with it.
+REC_INTERVAL_COV <- "Vc"
+rec_interval_cov <- function(m) {
+  V <- m[[REC_INTERVAL_COV]]
+  if (is.null(V) || !identical(dim(V), dim(m$Vp))) stop("bam returned no ", REC_INTERVAL_COV, call. = FALSE)
+  V
+}
 REC_SEED     <- 31500L
 REC_MAX_PAR  <- 4L
 REC_SEASONS  <- c("2024", "2026")
@@ -1200,8 +1271,11 @@ run_recovery_rep <- function(kind, l) {
   met <- lapply(REC_SEASONS, function(se) edge_metrics(rec_surface(m, mix, se, re, dummies)))
   names(met) <- REC_SEASONS
   est <- met[["2026"]] - met[["2024"]]
+  V <- rec_interval_cov(m)
+  js <- grep(":season_o", names(stats::coef(m)), fixed = TRUE)
+  sd_ratio <- sqrt(diag(V)[js] / diag(m$Vp)[js])
   set.seed(seed + 7L)
-  B <- MASS::mvrnorm(REC_DRAWS, stats::coef(m), m$Vp)
+  B <- MASS::mvrnorm(REC_DRAWS, stats::coef(m), V)
   d24 <- draw_edges(m, mix, "2024", dummies, met[["2024"]], B)
   d26 <- draw_edges(m, mix, "2026", dummies, met[["2026"]], B)
   dd <- d26 - d24
@@ -1210,7 +1284,10 @@ run_recovery_rep <- function(kind, l) {
   ci90 <- apply(dd[ok, , drop = FALSE], 2, stats::quantile, c(0.05, 0.95), names = FALSE)
   tr <- if (kind == "inject") unlist(truth$truth)[names(INJ_IN)] else setNames(c(0, 0, 0), names(INJ_IN))
   res <- list(kind = kind, rep = l, seed = seed, n_rows = nrow(df), fit_seconds = ft$elapsed,
-              interval_seconds = unname((proc.time() - pt0)[["elapsed"]]), n_draws = REC_DRAWS,
+              interval_seconds = unname((proc.time() - pt0)[["elapsed"]]), interval_cov = REC_INTERVAL_COV,
+              season_smooth = list(n_coef = length(js), edf = sum(m$edf[js]),
+                                   sd_ratio_to_vp_median = stats::median(sd_ratio), sd_ratio_to_vp_max = max(sd_ratio)),
+              n_draws = REC_DRAWS,
               n_draws_complete = sum(ok),
               truth = as.list(tr), estimate = as.list(est[names(INJ_IN)]),
               lo95 = as.list(setNames(ci[1, ], names(INJ_IN))), hi95 = as.list(setNames(ci[2, ], names(INJ_IN))),
@@ -1349,7 +1426,7 @@ prepare_inputs <- function() {
   record("calibration B1 cells", sprintf("%d of %d umpire-season-edge cells kept (n >= %d, not at the grid bound), median se %.3f in",
                                          nrow(cd), nrow(b1r), N_MIN_CELL, stats::median(cd$se_delta)))
   load_brms()
-  ft <- fit_brms(CAL_FORMULA_TEXT, cd, cal_priors())
+  ft <- fit_brms(CAL_FORMULA_TEXT, cd, cal_priors(), STAN_SETTINGS$calibration)
   dr <- posterior::as_draws_df(ft$fit)
   qs <- function(v) as.list(setNames(stats::quantile(v, c(0.05, 0.5, 0.95), names = FALSE), c("q05", "median", "q95")))
   comp <- list(sd_level = qs(dr[["sd_umpire_hp_id__Intercept"]]),
@@ -1357,10 +1434,12 @@ prepare_inputs <- function() {
                sd_ump_season = qs(dr[["sd_umpire_hp_id:season__Intercept"]]),
                sigma_resid = qs(dr[["sigma"]]))
   nm <- names(dr)
-  dg <- diagnostics(ft$fit, c(grep("^b_", nm, value = TRUE), grep("^sd_", nm, value = TRUE), "sigma"))
+  dg <- diagnostics(ft$fit, c(grep("^b_", nm, value = TRUE), grep("^sd_", nm, value = TRUE), "sigma"),
+                    STAN_SETTINGS$calibration)
   dgp <- lapply(comp, function(x) round(x$median, 4))
   cal <- list(window = "2022-2024 regular season, shadow band |d| <= 3.0 in, calls read",
               formula = CAL_FORMULA_TEXT, n_cells = nrow(cd), components = comp, diagnostics = dg,
+              sampler = sampler_record(STAN_SETTINGS$calibration),
               dgp = dgp, links = lk$info, seconds = ft$elapsed)
   write_json_file(cal, file.path(OUT_DIR, "calibration.json"))
   for (k in names(comp)) record(sprintf("calibration %s", k), sprintf("median %.3f in, 90%% interval %.3f to %.3f",
@@ -1392,6 +1471,12 @@ compile_models <- function() {
               prior = b2_priors(), chains = 1, iter = 20, warmup = 10, backend = "cmdstanr",
               seed = STAN_SEED, refresh = 0, silent = 2)))
   invisible(TRUE)
+}
+
+if (MODE == "--prepare") {
+  cat("W3.12 inputs: the link, the design, the calibration and the SBC design, from the mart\n")
+  invisible(prepare_inputs())
+  quit(status = 0)
 }
 
 if (MODE == "--power") {
@@ -1467,14 +1552,21 @@ if (MODE == "--recovery") {
 
 if (MODE == "--check") {
   cat("W3.12 check: the D-60 power curve, the CH1-A6 thresholds, SBC and recovery\n")
-  # 1. the raw per-seed output: five seeds per cell, 4,000 draws each
+  # 1. the raw per-seed output: five seeds per cell, stan_draws() draws each
   for (est in ESTIMATORS) {
-    got <- 0L; nd <- integer(0)
+    got <- 0L; nd <- integer(0); okd <- logical(0)
+    base <- STAN_SETTINGS[[est]]
     for (t in TAUS) for (s in seq_len(N_SEEDS)) {
       x <- read_seed_raw(t, s, est)
-      if (!is.null(x)) { got <- got + 1L; nd <- c(nd, nrow(x$draws)) }
+      if (!is.null(x)) {
+        got <- got + 1L; nd <- c(nd, nrow(x$draws)); sm <- x$summary$sampler
+        okd <- c(okd, !is.null(sm) && sm$chains == base$chains && sm$warmup == base$warmup &&
+                   sm$adapt_delta == base$adapt_delta && sm$max_treedepth == base$max_treedepth &&
+                   sm$sampling %in% (base$sampling * 2L^(0:STAN_ESCALATE_MAX)) &&
+                   nrow(x$draws) == sm$chains * sm$sampling)
+      }
     }
-    check(sprintf("five seeds per cell, %s", est), got == length(TAUS) * N_SEEDS && all(nd == 4000L),
+    check(sprintf("five seeds per cell, %s", est), got == length(TAUS) * N_SEEDS && all(okd),
           sprintf("%d of %d seed directories, draws per seed %s", got, length(TAUS) * N_SEEDS,
                   paste(unique(nd), collapse = " ")))
   }

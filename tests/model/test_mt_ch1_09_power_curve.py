@@ -3,7 +3,7 @@
 SOP 6.5: "MT-09 ... the D-60 curve exists, out/tables/ch1_power_curve.csv reports the firing
 rate of P(tau >= 0.20 in) >= 0.90 and the simulated split-half at tau in {0.10, 0.20, 0.30} in
 over 5 seeds each, and the CH1-A6 thresholds in PREREGISTRATION.md are the ones that file
-implies." The firing rate is re-derived from each seed's 4,000 stored tau draws, not read from
+implies." The firing rate is re-derived from each seed's stored tau draws, not read from
 the csv. CH1-A6 is checked in docs/prereg/ch1.md (the table) and in PREREGISTRATION.md, whose
 CH1-A6 lines must cite that table or state the rule at the threshold thresholds.json carries.
 """

@@ -1,0 +1,19 @@
+# W3.11, specification development on 2022-2024 only. Owner W3, fleet phase 04.
+#
+# R/ch1/20_spec_dev.R --check reloads the development sample (P0 in 2022-2024
+# with |d| <= 8.0 in, 687,485 rows since D-P4-08; 687,496 before) through the script's one filtered read and
+# asserts that no 2025 or 2026 row arrived. It then refits the frozen
+# specification and the rung above it, two bam fits in parallel, about 10
+# minutes and 3.9 GB peak. It fails unless both refits reproduce
+# out/dev/ch1_spec/k_sweep.csv, no k-index moves by 0.01 or more between the two
+# rungs, and docs/prereg/ch1.md carries the same k values, the k.check table,
+# the 2022-2024 disclosure, both CH1-A5 tolerances and the single-thread record.
+# GD-04 then scans the script. `needs` names the analysis table and the build's
+# out/dev files, which never enter git, so a clean clone reads MISSING rather
+# than FAIL.
+- id: W3.11
+  title: "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
+  verify: "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/20_spec_dev.R, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_spec/frozen_spec.json, out/dev/ch1_spec/k_sweep.csv

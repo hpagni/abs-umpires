@@ -136,7 +136,7 @@ The `bam` side uses the SOP W3.14 definitions: the 50% contour of the standardis
 
 **Pre-registered agreement tolerance, CH1-A5.** The headline from the binned logistic falls inside the `bam` 95% interval, and the two point estimates differ by ≤0.15 in on edge shifts and ≤3 sq in on area. Wider disagreement is reported as a limitation, not silently resolved.
 
-The comparison covers `Δ_buffer` and `Δ_ABS` for top_in, bot_in, half_width_in and area_sqin, which is eight quantities. The binned side applies the same decomposition to its own season estimates, with its own pre-trend slope `g`. The interval clause uses the 1,000 `Vp` draws of W3.15.
+The comparison covers `Δ_buffer` and `Δ_ABS` for top_in, bot_in, half_width_in and area_sqin, which is eight quantities. The binned side applies the same decomposition to its own season estimates, with its own pre-trend slope `g`. The interval clause uses the 1,000 `Vc` draws of W3.15 (section 8.7).
 
 Dry run on 2023 minus 2022. No acceptance criterion uses this contrast. It tests the point clause only.
 
@@ -184,15 +184,17 @@ No fitted model object from this step is saved. GD-01 fails on a fitted object u
 
 ## 8. Umpire heterogeneity: the D-60 power curve and the CH1-A6 thresholds
 
-Section 8 comes from SOP step W3.12(c) and decision D-60. The code is `R/ch1/21_synthetic.R`. The curve is `out/tables/ch1_power_curve.csv`. The raw draws of every seed are in `out/dev/ch1_synth/power/`, which is not committed. The curve was run on 2026-09-25, before the `prereg-v1` tag and before any heterogeneity fit on real 2025 or 2026 data.
+Section 8 comes from SOP step W3.12(c) and decision D-60. The code is `R/ch1/21_synthetic.R`. The curve is `out/tables/ch1_power_curve.csv`. The raw draws of every seed are in `out/dev/ch1_synth/power/`, which is not committed. The curve was run before the `prereg-v1` tag and before any heterogeneity fit on real 2025 or 2026 data.
+
+It was run twice: the first run on 2026-09-25, the second from 2026-09-25 to 2026-09-29. The second run replaces the first, for three reasons fixed before any seed of it ran. D-P4-08 moved 36 pitches out of P0, so the inputs were rebuilt: the design went from 498,059 to 498,055 pitches, and the link and calibration were refitted on 687,485 pitches instead of 687,496. The sampler settings of section 8.2 replace the SOP's, under which the first run failed MT-05. The prior of section 8.8 replaces the SOP's on `abs_step`, under which MT-01 failed for 2026. The first run's draws are kept in `out/dev/ch1_synth/first_curve_run/`. Every number in section 8 is the second run's unless it says otherwise.
 
 ### 8.1 What was simulated
 
-The design is every real called pitch of 2022–2026 in the shadow band, |d| ≤ 3.0 in: 498,059 pitches from 114 umpires in 12,060 games. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
+The design is every real called pitch of 2022–2026 in the shadow band, |d| ≤ 3.0 in: 498,055 pitches from 114 umpires in 12,060 games. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
 
 Two inputs come from 2022–2024 calls, and from nothing later:
 
-- The link g_e(d), one per edge: `glm(cs ~ ns(d, 6), binomial)` on 687,496 pitches with |d| ≤ 8 in. The 50% point sits at d = 2.20 in (side), 1.95 in (top) and 2.42 in (bottom). The slope there is 0.99, 0.84 and 0.91 logit per inch.
+- The link g_e(d), one per edge: `glm(cs ~ ns(d, 6), binomial)` on 687,485 pitches with |d| ≤ 8 in. The 50% point sits at d = 2.20 in (side), 1.95 in (top) and 2.42 in (bottom). The slope there is 0.99, 0.84 and 0.90 logit per inch.
 - The nuisance variance components. B1 ran on the real 2022–2024 shadow-band calls, and a `brms` fit on its 825 umpire-season-edge offsets returned four posterior medians. The umpire level is 0.111 in. A persistent umpire-by-edge tendency is 0.217 in. An umpire-by-season shift common to the three edges is 0.097 in. The residual is 0.136 in.
 
 The generating offset of umpire u in season s at edge e is the sum of those four terms, plus b_u in 2025 and 2026, plus c_u in 2026. The ABS response c_u and the buffer response b_u are each drawn with SD τ. Five seeds were run at each τ ∈ {0.10, 0.20, 0.30} in.
@@ -204,10 +206,23 @@ The same link serves all five seasons. The SOP measured 1.405 logit per inch on 
 The whole SOP W3.18 estimator runs on each simulated league.
 
 - B1: for each umpire-season-edge, δ maximises the binomial likelihood of y ~ g_e(d − δ) over [−4, 4] in by 0.01 in. The SE is the profile half-width where the log likelihood falls by 0.5. B2 keeps cells with at least 30 pitches whose δ is not at the grid bound.
-- B2: the SOP formula and priors, 4 chains × 2,000 iterations, seed 20260922. Regime enters as two step contrasts, `buf_step` (1 in 2025 and 2026) and `abs_step` (1 in 2026). This is the SOP's `edge:regime` and `(1 + regime | umpire_hp_id)` re-coded, so the nine edge-by-regime means are unchanged. The `abs_step` slope is each umpire's 2025-to-2026 response, and its SD is τ. W3.18 uses this coding, so the thresholds below apply to the fit it runs.
+- B2: the SOP formula and priors, with two changes made before the tag: the prior on the three `edge:abs_step` coefficients is `normal(0, 0.30)` (section 8.8), and the sampler settings are the ones below. Seed 20260922. Regime enters as two step contrasts, `buf_step` (1 in 2025 and 2026) and `abs_step` (1 in 2026). This is the SOP's `edge:regime` and `(1 + regime | umpire_hp_id)` re-coded, so the nine edge-by-regime means are unchanged. The `abs_step` slope is each umpire's 2025-to-2026 response, and its SD is τ. W3.18 uses this coding, so the thresholds below apply to the fit it runs. The re-coding is not neutral for the prior: section 8.8.
 - B3: each umpire-season's plate games are split odd and even by game index, and B1 runs on each half. The per-umpire response is 2026 minus 2025, centred per edge and pooled over edges by precision. It is correlated across halves and Spearman-Brown corrected. MT-07 makes the variance-components reliability the gating value. For the response it is 1 minus the mean posterior variance of the umpire's `abs_step` over the posterior mean of τ².
 
-The curve measures two estimators on the same simulated leagues. `sop` is B2 as the SOP writes it. `ue_us` adds `(1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)`, the two nuisance terms the calibration found. A rule written in the script before any `ue_us` seed ran chose which one sets CH1-A6. It is `sop` if its 95% interval for τ covers the true τ in at least 13 of 15 seeds. Failing that it is `ue_us` on the same test, and failing both, neither.
+The curve measures two estimators on the same simulated leagues. `sop` is B2 as above. `ue_us` adds `(1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)`, the two nuisance terms the calibration found. A rule written in the script before any `ue_us` seed ran chose which one sets CH1-A6. It is `sop` if its 95% interval for τ covers the true τ in at least 13 of 15 seeds. Failing that it is `ue_us` on the same test, and failing both, neither.
+
+**Sampler settings, pre-registered.** SOP W3.18 writes 4 chains × 2,000 iterations: 1,000 warmup and 1,000 draws a chain, the MT-05 minimum, at CmdStan's default `adapt_delta` of 0.80. The first curve ran at exactly that. 3 of its 15 `sop` fits had divergent transitions, 6 in total, all at τ = 0.10 in. All 15 `ue_us` fits failed MT-05 on R-hat or ESS: worst R-hat 1.051, lowest bulk ESS 106.
+
+Before any seed of the second curve ran, the failing fits were re-run on their own simulated leagues. At `adapt_delta` 0.95 the three divergent `sop` fits had none, but one fell to a bulk ESS of 383. At 0.99 none diverged. The worst of them, τ = 0.10 in seed 5, gave R-hat 1.0037 and bulk ESS 940 at 2,000 draws a chain. The six divergences had not gathered at small τ: they sat between the 6th and 98th percentile of τ's posterior, four of them in one chain. `ue_us` needed longer chains as well. At 0.99 with 2,000 warmup and 4,000 draws a chain, its three worst fits gave R-hat 1.008, 1.0067 and 1.0039 and bulk ESS 595, 699 and 908.
+
+| estimator | chains | warmup a chain | draws a chain | `adapt_delta` | `max_treedepth` |
+|---|---:|---:|---:|---:|---:|
+| `sop` | 4 | 1,000 | 2,000 | 0.99 | 10 |
+| `ue_us` | 4 | 2,000 | 6,000 | 0.99 | 10 |
+
+These are the pre-registered settings for the curve, SBC and W3.18. `ue_us` keeps 6,000 draws a chain, a margin over the 4,000 at which its worst fit reached R-hat 1.008. The 2022–2024 calibration fit carries `ue_us`'s two nuisance terms and uses its settings. `R/ch1/21_synthetic.R` holds them in `STAN_SETTINGS`, and every fit records the settings it ran with.
+
+**The MT-05 escalation, pre-registered for the curve and W3.18.** It covers a reported fit with no divergence, no tree-depth hit and E-BFMI of at least 0.2. If that fit's R-hat is above 1.01 or its ESS is below 400, it is run again from the same seed with the draws a chain doubled, at most twice. A fit with a divergence, or still short after two doublings, is reported as failed. Every attempt is recorded. SBC fits are not reported fits and never escalate. The rule was added when one fit of the second curve, `ue_us` at τ = 0.30 in seed 1, reached R-hat 1.0133 at 6,000 draws a chain. That was before the fit was re-run, and the rule is the one W3.18 applies.
 
 ### 8.3 The curve
 
@@ -215,14 +230,14 @@ Five seeds per cell. "Fired" counts the seeds in which P(τ ≥ 0.20 in | data) 
 
 | estimator | true τ, in | fired | posterior median of τ, in | 95% interval covers τ | variance-components reliability | split-half reliability |
 |---|---:|---:|---:|---:|---:|---:|
-| `sop` | 0.10 | 0/5 | 0.060 | 5/5 | 0.147 | 0.690 |
-| `sop` | 0.20 | 0/5 | 0.153 | 4/5 | 0.307 | 0.768 |
-| `sop` | 0.30 | 4/5 | 0.283 | 5/5 | 0.479 | 0.861 |
-| `ue_us` | 0.10 | 0/5 | 0.068 | 5/5 | 0.141 | 0.690 |
-| `ue_us` | 0.20 | 1/5 | 0.191 | 5/5 | 0.376 | 0.768 |
-| `ue_us` | 0.30 | 5/5 | 0.292 | 5/5 | 0.501 | 0.861 |
+| `sop` | 0.10 | 0/5 | 0.062 | 5/5 | 0.139 | 0.658 |
+| `sop` | 0.20 | 0/5 | 0.158 | 3/5 | 0.313 | 0.763 |
+| `sop` | 0.30 | 4/5 | 0.288 | 5/5 | 0.494 | 0.859 |
+| `ue_us` | 0.10 | 0/5 | 0.076 | 5/5 | 0.147 | 0.658 |
+| `ue_us` | 0.20 | 0/5 | 0.188 | 5/5 | 0.374 | 0.763 |
+| `ue_us` | 0.30 | 5/5 | 0.296 | 5/5 | 0.512 | 0.859 |
 
-`sop` covered the true τ in 14 of 15 seeds and `ue_us` in 15 of 15. By the rule in section 8.2, `sop` sets CH1-A6. `ue_us` is a pre-registered sensitivity row.
+The table is the second run, which `out/tables/ch1_power_curve.csv` holds. `sop` covered the true τ in 13 of 15 seeds and `ue_us` in 15 of 15. By the rule in section 8.2, `sop` sets CH1-A6. `ue_us` is a pre-registered sensitivity row.
 
 ### 8.4 How the curve becomes thresholds
 
@@ -230,43 +245,42 @@ The script fixes the rule. Write F_c(t) for the number of seeds, of five, at tru
 
 1. The materiality threshold c* is the smallest c in {0.20, 0.25, 0.30} in with F_c(0.10) ≤ 1. `sop` gives F_0.20 = 0, 0, 4 at τ = 0.10, 0.20, 0.30 in, so c* = 0.20 in.
 2. The materiality claim is powered when F_c*(0.30) ≥ 4. It is: 4 of 5.
-3. The reliability gate is the variance-components reliability of the per-umpire response, as MT-07 requires, at the 0.50 floor D-60 names. It is attainable when some grid τ where the rule is powered reaches 0.50. `sop` reaches 0.479 at τ = 0.30 in. The gate is not attainable, so no per-umpire table is published.
-4. When the rule does not fire, the bounded null is the reportable result. The `sop` one-sided 95% upper bound fell below the true τ in 2 of 5 seeds at τ = 0.20 in and 1 of 5 at τ = 0.30 in. So the bound is the larger of the `sop` and `ue_us` bounds.
+3. The reliability gate is the variance-components reliability of the per-umpire response, as MT-07 requires, at the 0.50 floor D-60 names. It is attainable when some grid τ where the rule is powered reaches 0.50. `sop` reaches 0.494 at τ = 0.30 in. The gate is not attainable, so no per-umpire table is published.
+4. When the rule does not fire, the bounded null is the reportable result. The `sop` one-sided 95% upper bound fell below the true τ in 2 of 5 seeds at τ = 0.20 in. So the bound is the larger of the `sop` and `ue_us` bounds.
 
-One step of this rule was revised after the `sop` curve and before any `ue_us` seed. The first version gated the table on split-half alone, at the `sop` split-half for τ = 0.20 in, 0.76. The curve showed a split-half of 0.690 at τ = 0.10 in, above the 0.50 floor at half the materiality threshold. Split-half counts each umpire's season-specific shift as signal, and the shrunken per-umpire response does not. MT-07 names the variance-components value as the gate, so step 3 now uses it.
+One step of this rule was revised after the `sop` curve and before any `ue_us` seed. The first version gated the table on split-half alone, at the `sop` split-half for τ = 0.20 in, 0.76. The first curve showed a split-half of 0.690 at τ = 0.10 in, above the 0.50 floor at half the materiality threshold. Split-half counts each umpire's season-specific shift as signal, and the shrunken per-umpire response does not. MT-07 names the variance-components value as the gate, so step 3 now uses it.
 
 ### 8.5 CH1-A6 as pre-registered
 
 | CH1-A6 item | pre-registered value |
 |---|---|
-| estimator that sets the thresholds | `sop`: SOP W3.18 B2 as written |
+| estimator that sets the thresholds | `sop`: SOP W3.18 B2, with the `abs_step` prior `normal(0, 0.30)` of section 8.8 |
 | materiality rule | material only if P(τ ≥ 0.20 in) ≥ 0.90 |
 | firing rate of the rule at τ = 0.10 / 0.20 / 0.30 in | 0/5, 0/5, 4/5 |
-| 95% interval for τ covers the true τ, at τ = 0.10 / 0.20 / 0.30 in | 5/5, 4/5, 5/5 |
-| one-sided 95% upper bound at or above the true τ, at τ = 0.10 / 0.20 / 0.30 in | 5/5, 3/5, 4/5 |
+| 95% interval for τ covers the true τ, at τ = 0.10 / 0.20 / 0.30 in | 5/5, 3/5, 5/5 |
+| one-sided 95% upper bound at or above the true τ, at τ = 0.10 / 0.20 / 0.30 in | 5/5, 3/5, 5/5 |
 | powered for the materiality claim | yes: 4 of 5 seeds fire at τ = 0.30 in, 0 of 5 at τ = 0.10 in |
-| variance-components reliability of the response at τ = 0.10 / 0.20 / 0.30 in | 0.147 / 0.307 / 0.479 |
-| split-half reliability of the response at τ = 0.10 / 0.20 / 0.30 in | 0.690 / 0.768 / 0.861 |
+| variance-components reliability of the response at τ = 0.10 / 0.20 / 0.30 in | 0.139 / 0.313 / 0.494 |
+| split-half reliability of the response at τ = 0.10 / 0.20 / 0.30 in | 0.658 / 0.763 / 0.859 |
 | reliability gate attainable | no |
 | per-umpire table | no per-umpire table: the curve does not reach a variance-components reliability of 0.50 at any τ where the rule is powered |
-| reportable result when the rule does not fire | bounded null: the posterior median of τ and the larger of the one-sided 95% upper bounds from `sop` and `ue_us`, because the `sop` bound fell below the true τ in 3 of 15 seeds; the curve's mean 95% upper bound is 0.124 / 0.223 / 0.350 in at τ = 0.10 / 0.20 / 0.30 in |
+| reportable result when the rule does not fire | bounded null: the posterior median of τ and the larger of the one-sided 95% upper bounds from `sop` and `ue_us`, because the `sop` bound fell below the true τ in 2 of 15 seeds; the curve's mean 95% upper bound is 0.130 / 0.225 / 0.356 in at τ = 0.10 / 0.20 / 0.30 in |
 | bounded null is the primary reportable result | no |
 
 Stated in words: τ is reported with its 95% interval. "Material" is declared only if P(τ ≥ 0.20 in | data) ≥ 0.90 in the `sop` fit. The study is powered for τ = 0.30 in, 4 of 5 seeds, and not for τ = 0.20 in, 0 of 5. If the rule does not fire, the reportable result is the bounded null in the table above, as D-42 does for Chapter 3. No per-umpire table is published, under D-21, whatever the fit returns. The split-half and variance-components reliability are reported side by side, with their difference as a number.
 
 ### 8.6 What the curve changes
 
-- The SOP's analytic sketch put the reliability of the per-umpire response near 0.8 at τ = 0.25 in. The simulated split-half agrees: 0.768 at τ = 0.20 in and 0.861 at τ = 0.30 in. The variance-components reliability is 0.307 and 0.479.
+- The SOP's analytic sketch put the reliability of the per-umpire response near 0.8 at τ = 0.25 in. The simulated split-half agrees: 0.763 at τ = 0.20 in and 0.859 at τ = 0.30 in. The variance-components reliability is 0.313 and 0.494.
 - The two differ because the calibration found an umpire-by-season shift of 0.097 in, common to the three edges. A split half shares it; the umpire's true ABS response does not include it.
-- The squared correlation between each umpire's shrunken `sop` response and his true response is 0.286 at τ = 0.20 in and 0.536 at τ = 0.30 in. A named table would rank umpires mostly on noise at τ = 0.20 in.
-- `sop` puts τ low: a mean posterior median of 0.153 in at a true 0.20 in, where `ue_us` gives 0.191 in. The likely cause is the persistent umpire-by-edge tendency of 0.217 in, which `sop` leaves to its residual SD.
-- `ue_us` did not converge at 4 chains × 2,000 iterations: R-hat up to 1.051 and bulk ESS down to 106 at τ = 0.30 in. W3.18 runs it longer until MT-05 holds, or reports it as failed.
-- 3 of 15 `sop` fits had divergent transitions, 6 in total, all at τ = 0.10 in. MT-05 allows none on a reported fit. W3.18 reparameterises or reports the fit as failed, as MT-05 says.
-- The 2022–2024 calibration fit reached R-hat 1.021 and bulk ESS 384. It sets simulation inputs only and is not a reported estimate.
+- The squared correlation between each umpire's shrunken `sop` response and his true response is 0.318 at τ = 0.20 in and 0.519 at τ = 0.30 in. A named table would rank umpires mostly on noise at τ = 0.20 in.
+- `sop` puts τ low: a mean posterior median of 0.158 in at a true 0.20 in, where `ue_us` gives 0.188 in. The likely cause is the persistent umpire-by-edge tendency of 0.217 in, which `sop` leaves to its residual SD.
+- MT-05 on the 30 fits. In the first run, 3 of 15 `sop` fits had divergent transitions, 6 in total, all at τ = 0.10 in. All 15 `ue_us` fits failed on R-hat or ESS, the worst at R-hat 1.051 and bulk ESS 106. At the settings of section 8.2 none of the 30 fits diverges. Every `sop` fit meets MT-05 at once: worst R-hat 1.0072, lowest bulk ESS 982, lowest tail ESS 1,313. 14 of the 15 `ue_us` fits meet it too. The fifteenth, τ = 0.30 in seed 1, reached R-hat 1.0133 and bulk ESS 572 at 6,000 draws a chain. Its escalated re-run, at 12,000 draws a chain, never finished: the Mac hibernated from 2026-09-26 to 2026-09-29, and the job was killed on 2026-09-29. So the curve's MT-05 verdict reads `sop`, the estimator that sets CH1-A6, at the settings of section 8.2. `ue_us` is a sensitivity estimator, and its MT-05 convergence is deferred to W3.18, which applies the escalation rule above (DECISIONS.md D-P4-35, DEV-64).
+- The 2022–2024 calibration fit, at `ue_us`'s settings, reached R-hat 1.0059 and bulk ESS 1,670; in the first run, R-hat 1.021 and bulk ESS 384. It sets simulation inputs only and is not a reported estimate.
 
 ### 8.7 Injected-effect recovery and SBC, SOP W3.12(a) and (b)
 
-Recovery. The 2024 called pitches with |d| ≤ 8 in, 227,323 rows, are used twice: as 2024 and as synthetic 2026. A generating surface is fitted once on the real 2024 calls. Both copies then get new calls from it. The 2026 copy uses the surface with the zone deformed: top down 0.60 in, bottom up 0.30 in, half-width in 0.10 in. The truth, read off the generating surfaces with the W3.14 estimand code, is −0.599, +0.299 and −0.103 in. Each replicate fits the frozen specification on 454,646 rows, and its 95% intervals come from 1,000 draws from N(β, Vp). A null replicate draws both copies from the undeformed surface.
+Recovery. The 2024 called pitches with |d| ≤ 8 in, 227,323 rows, are used twice: as 2024 and as synthetic 2026. A generating surface is fitted once on the real 2024 calls. Both copies then get new calls from it. The 2026 copy uses the surface with the zone deformed: top down 0.60 in, bottom up 0.30 in, half-width in 0.10 in. The truth, read off the generating surfaces with the W3.14 estimand code, is −0.599, +0.299 and −0.103 in. Each replicate fits the frozen specification on 454,646 rows, and its 95% and 90% intervals come from 1,000 draws from N(β, Vc), where Vc is `mgcv`'s covariance corrected for smoothing-parameter uncertainty. A null replicate draws both copies from the undeformed surface.
 
 Pre-registered acceptance, SOP W3.12(a), CH1-A7 and MT-03/MT-04:
 
@@ -275,7 +289,13 @@ Pre-registered acceptance, SOP W3.12(a), CH1-A7 and MT-03/MT-04:
 - over 50 null replicates, each shift's 95% interval excludes zero in at most 7%;
 - CH1-A7's equivalence form: in at least 93% of the null replicates, each shift's 90% interval lies inside ±0.10 in.
 
-One replicate of each kind ran as a pilot, before the 90% interval was added to the output. The pilot's injected estimates are −0.620, +0.309 and −0.096 in, its null estimates are −0.012, −0.006 and +0.009 in, and all six intervals cover the truth. A replicate costs about 5 minutes, 230–250 s of it for the fit. The full set started on 2026-09-25 and runs past the tag. Its results go to `out/dev/ch1_synth/recovery/` and the W3.12 receipt, not into this annex.
+One replicate of each kind ran as a pilot, before the 90% interval was added to the output. The pilot's injected estimates are −0.620, +0.309 and −0.096 in, its null estimates are −0.012, −0.006 and +0.009 in, and all six intervals cover the truth. A replicate costs about 5 minutes, 230–250 s of it for the fit.
+
+**The interval method, changed before the tag.** The first full run, on 2026-09-25, drew each replicate's intervals from N(β, Vp). Vp treats the estimated smoothing parameters as known. That run failed four of the twelve clauses above. The top edge's 95% interval covered the truth in 91 of 100 replicates. The null 95% interval excluded zero for the bottom edge in 4 of 50 and for the half-width in 6 of 50. The top edge's null 90% interval lay inside ±0.10 in in 45 of 50. The half-width's null sampling SD was 1.30 times its posterior SD, with a 95% interval of 1.09 to 1.62.
+
+The intervals now come from Vc, `mgcv`'s covariance corrected for smoothing-parameter uncertainty (Wood, Pya and Säfken, 2016). The SOP's fitter exposes it. `bam(discrete = TRUE, method = "fREML")` returns Vc = Vp + J V_ρ Jᵀ, where J is the derivative of the coefficients with respect to the log smoothing parameters and V_ρ is the inverse Hessian of the fREML criterion. It leaves out the second-order term that `gam(method = "REML")` adds. So no parametric bootstrap was needed. W3.15's 1,000 draws use the same Vc. The 150 replicates were run again with the same seeds and the same fits: every point estimate is unchanged, and only the intervals differ. No bound was changed.
+
+@@RECOVERY@@
 
 SBC. Parameters are drawn from the B2 prior and δ is drawn from the B2 likelihood at the real design: 1,367 umpire-season-edge cells, each with its analytic SE at its real pitch locations. B2 is refitted, and the rank of each true value among 199 thinned draws is binned into 10 bins. Pre-registered acceptance, CH1-A8 and MT-02, over 200 replicates:
 
@@ -283,4 +303,24 @@ SBC. Parameters are drawn from the B2 prior and δ is drawn from the B2 likeliho
 - the worst Benjamini-Hochberg-adjusted p across ten tracked quantities exceeds 0.01;
 - no quantity leaves the 95% simultaneous ECDF band.
 
-The 200 replicates ran on 2026-09-25 for `sop`, the estimator that sets CH1-A6. The chi-square p is 0.770 for τ and 0.993 for the regime mean. The worst Benjamini-Hochberg-adjusted p is 0.441, for the residual SD. All ten quantities stay inside the ECDF band. 25 of the 200 fits had divergent transitions, 58 in total.
+The 200 replicates ran on 2026-09-25 for `sop`, the estimator that sets CH1-A6. The chi-square p is 0.770 for τ and 0.993 for the regime mean. The worst Benjamini-Hochberg-adjusted p is 0.441, for the residual SD. All ten quantities stay inside the ECDF band. 25 of the 200 fits had divergent transitions, 58 in total. That run used the SOP's `normal(0, 1)` on `abs_step` and the first curve's sampler settings.
+
+The SBC at the prior of section 8.8 and the settings of section 8.2 started on 2026-09-26. Both of its workers failed when the Mac hibernated, with 37 of the 200 replicates on disk. Scored on those 37, all ten quantities stay inside the ECDF band. The chi-square p runs from 0.1186 to 0.9915, 0.9915 for τ and 0.1186 for the regime mean, and the worst adjusted p is 0.9613. The other 163 replicates are deferred, so CH1-A8 is not yet read at this prior (DECISIONS.md D-P4-36, DEV-65).
+
+### 8.8 The prior on the 2025-to-2026 league step, and MT-01
+
+MT-01 requires B2's prior to put the implied shadow-zone called-strike rate in [0.10, 0.90] in at least 95% of draws. `tests/model/test_mt_ch1_01_prior_predictive.py` reads it at the league level. A draw's rate is the mean of the 2022–2024 link g_e(d − δ) over each edge's 2022–2024 shadow-band pitches, where δ is the edge's league offset in the regime. The three edges are pooled by their pitch counts. No 2025 or 2026 row is read. The share is computed exactly: the rate rises with each edge's offset, so the bottom edge's offset is integrated in closed form and the other two by Gauss-Hermite quadrature. The 20,000-draw Monte Carlo the test used first is kept as a cross-check.
+
+The link puts the 50% point 1.9 to 2.4 in outside the rulebook edge, so at δ = 0 the pooled rate is already high, and a wide offset pushes it past 0.90. With the step coding of section 8.2, the 2026 league offset of an edge is b + b_buf + b_abs. Under the SOP's `normal(0, 1)` on every b, its prior is N(0, 1.73 in). Under the SOP's own treatment coding it would be b + b_2026, N(0, 1.41 in). So the re-coding, not the SOP, widened the 2026 prior. The exact shares under the SOP prior:
+
+| regime | league-offset prior | share of the prior inside [0.10, 0.90] |
+|---|---|---:|
+| pre-buffer, 2022–2024 | N(0, 1.00 in) | 0.9852 |
+| buffer, 2025 | N(0, 1.41 in) | 0.9525 |
+| ABS, 2026 | N(0, 1.73 in) | 0.9288 |
+
+The derivation, written before any fit used it. Only `abs_step` enters 2026 alone, so the change is confined to its prior: `normal(0, s)` on the three `edge:abs_step` coefficients, which gives the 2026 offset N(0, sqrt(2 + s²)). The pre-buffer and 2025 shares do not move. s is the largest multiple of 0.05 in at which all three regimes clear 0.95. The 2026 share is 0.95079 at s = 0.25, 0.95002 at s = 0.30 and 0.94913 at s = 0.35; the boundary is s = 0.3013. So s = 0.30, and the 2026 league offset's prior is N(0, 1.45 in). Changing the quadrature from 100 to 300 nodes moves the share at 0.30 by at most 0.00002, and it stays above 0.95.
+
+The prior is on a league-level step that W3.18 estimates from about 110 umpires. Its posterior SD there is a few hundredths of an inch, so a prior SD of 0.30 in costs the estimate almost nothing. It matters for the prior predictive, which is what MT-01 checks.
+
+The SOP's `normal(0, 1)` on `abs_step` is the pre-registered sensitivity arm SENS-B2-ABS-PRIOR. W3.18 fits B2 under both priors and reports both. The power curve, SBC and CH1-A6 use `normal(0, 0.30)`. The SD clause of MT-01 is unaffected: P(τ < 3.0 in) is 1 − e⁻⁶ = 0.9975 under B2's `exponential(2)`.

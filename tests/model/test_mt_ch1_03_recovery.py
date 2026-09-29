@@ -1,7 +1,10 @@
 """MT-03 and MT-04, Chapter 1: injected-effect recovery and null injection, over the full run.
 
 The runs are W3.12(a)'s: 100 injected and 50 null replicates of the frozen W3.11 surface, each
-with a 95% and a 90% interval from 1,000 draws of N(beta, Vp) (out/dev/ch1_synth/recovery/).
+with a 95% and a 90% interval from 1,000 draws of N(beta, Vc), mgcv's smoothing-parameter-
+corrected covariance (out/dev/ch1_synth/recovery/). The interval method changed from Vp to Vc
+before the tag, with the same seeds and fits (docs/prereg/ch1.md 8.7); the Vp run's record is
+out/dev/ch1_synth/recovery_vp_run4/.
 Every count below is re-derived from the per-replicate estimates and intervals, not from a
 summary. Two sets of bounds apply and both are tested, each under its own name:
 
@@ -41,6 +44,9 @@ def excludes_zero(rs, q, lo="lo95", hi="hi95"):
 
 def test_the_run_is_complete_and_is_the_sop_design():
     assert TRUTH["injected"] == INJECTED
+    assert all(r.get("interval_cov") == "Vc" for r in INJ + NUL), (
+        "a replicate's interval is not from Vc"
+    )
     assert len({r["seed"] for r in INJ + NUL}) == 150
     assert all(r["n_draws_complete"] == r["n_draws"] == 1000 for r in INJ + NUL)
     for q in SHIFTS:
