@@ -1,0 +1,19 @@
+# W6.8, the empirical-Bayes umpire summary. Owner W6, fleet phase 05, the ch1-fits lane.
+#
+# R/ch1/28_umpire_summary.R reads out/ch1/tab/umpire_eb.csv alone and writes SD_UMP (tau with its
+# 95% interval), REL_UMP (the split-half reliability of the response, estimator named) and N_UMP,
+# then regenerates docs/numbers.json with tools/comms/export_numbers.R.
+#
+# Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
+# succeeds and the fit code is committed (GD-12), and writes a provenance receipt under
+# out/models/. The verify command re-reads what the step wrote with
+# tests/ch1/check_ch1_outputs.R --step W6.8 and refits nothing; GD-04 then scans the script.
+# `needs` names the step's outputs, which exist only after the post-tag run, so before it the step
+# reads MISSING rather than FAIL. The dry run on a synthetic table is
+# tests/model/test_mt_ch1_sprint.py.
+- id: W6.8
+  title: "Chapter 1 umpire summary: SD_UMP, REL_UMP and N_UMP"
+  verify: "Rscript tests/ch1/check_ch1_outputs.R --out out --step W6.8 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/28_umpire_summary.R"
+  expect_exit: 0
+  owner: W6
+  needs: R/ch1/28_umpire_summary.R, out/ch1/tab/umpire_eb_summary.csv

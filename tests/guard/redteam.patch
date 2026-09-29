@@ -15,22 +15,23 @@
 #
 #     sed 's/@H@/<the held-out label>/g' tests/guard/redteam.patch | git apply
 #
-# The two hunks are keyed to the stubs W9.7 wrote. When the owning W3 and W5
-# steps replace those stubs with the real script and the real solver, this
-# patch is regenerated against them and the planted lines move. The run script
+# The R hunk is keyed to the real W3.14 script, R/ch1/20_surfaces.R, and the
+# Python hunk to the stub W9.7 wrote for the Chapter 3 solver. When the owning
+# W5 step replaces that stub, its hunk is regenerated the same way and the
+# planted line moves. The run script
 # reads the planted line numbers back from the files, so nothing here needs a
 # line number written by hand.
 diff --git a/R/ch1/20_surfaces.R b/R/ch1/20_surfaces.R
 --- a/R/ch1/20_surfaces.R
 +++ b/R/ch1/20_surfaces.R
-@@ -28,6 +28,7 @@ surface_frame <- function(con) {
+@@ -89,6 +89,7 @@ fit_one <- function(ctx, name, rows, height_rule) {
 
- fit_surfaces <- function(con) {
-   d <- surface_frame(con)
+ fit_surfaces <- function(ctx, opt) {
+   d <- surface_frame(ctx)
 +  d <- dplyr::filter(d, analysis_set == '@H@')
-   message(nrow(d), " open pitches")
-   stop("R/ch1/20_surfaces.R is a stub; the owning W3 step writes the fit.")
- }
+   cal <- read_calibration(ctx, opt)
+   allow_single <- identical(opt_get(opt, "height-rule"), "single-offset")
+   fits <- strsplit(opt_get(opt, "fits", paste(ALL_FITS, collapse = ",")), ",")[[1]]
 diff --git a/src/absump/ch3/dp_fast.py b/src/absump/ch3/dp_fast.py
 --- a/src/absump/ch3/dp_fast.py
 +++ b/src/absump/ch3/dp_fast.py

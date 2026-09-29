@@ -1,0 +1,22 @@
+# W3.14, fit the Chapter 1 regime surfaces. Owner W3, fleet phase 05, the ch1-fits lane.
+#
+# R/ch1/20_surfaces.R fits the frozen specification of docs/prereg/ch1.md section 2 with
+# mgcv::bam(discrete = TRUE, method = "fREML") on the open window, |d| <= 8 in, less the four games
+# without ABS hardware: the primary cohort (roster + cohort-specific offset, D-R0-02 and D-P4-04),
+# the ABS-measured arm, the CH1-A14 balanced panel, and the binned logistic of annex section 5. Each
+# bam fit writes a 1,000 x coefficients matrix of draws from N(beta, Vc) (annex 8.7, DEV-60) that
+# every later interval reads; nothing refits for an interval.
+#
+# Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
+# succeeds and the fit code is committed (GD-12). Each fit writes out/models/<fit>/provenance.json,
+# and out/ch1/model/provenance.json unions them with one git_sha, the earliest fit commit. The
+# verify command re-reads what the step wrote with tests/ch1/check_ch1_outputs.R --step W3.14 and
+# refits nothing; GD-04 then scans the script and the four shared libraries. `needs` names the
+# step's outputs, which exist only after the post-tag run, so before it the step reads MISSING
+# rather than FAIL. The dry run on a synthetic table is tests/model/test_mt_ch1_sprint.py.
+- id: W3.14
+  title: "Chapter 1 regime surfaces: frozen bam specification, 1,000 Vc draws"
+  verify: "Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.14 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_surfaces.R && uv run --locked python tests/guard/gd04_scan.py --path R/lib/ch1_fits.R && uv run --locked python tests/guard/gd04_scan.py --path R/lib/ch1_estimands.R && uv run --locked python tests/guard/gd04_scan.py --path R/lib/ch1_decomp.R && uv run --locked python tests/guard/gd04_scan.py --path R/lib/ch1_hetero.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/20_surfaces.R, data/marts/ch1_called.parquet, out/ch1/model/provenance.json, out/ch1/model/draws_vc_main.rds, out/models/surface_main/provenance.json

@@ -25,6 +25,10 @@ out/**/*.parquet
 out/dev/
 out/models/**/*.rds
 out/models/**/*.npz
+# Chapter 1 fitted objects and posterior draws (W3.14 to W3.21). A bam object on the five-season
+# sample runs to hundreds of megabytes, and the B1 cells and B2 fits hold per-umpire estimates that
+# CH1-A6 and D-21 keep unpublished. Their provenance.json receipts beside them are tracked.
+out/ch1/model/*.rds
 
 # Secrets and local environment
 .env

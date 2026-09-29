@@ -1,0 +1,21 @@
+# W3.18, umpire heterogeneity, stages B1, B2 and B3. Owner W3, fleet phase 05, the ch1-fits lane.
+#
+# R/ch1/25_heterogeneity.R runs the estimator the D-60 curve measured: B1 per umpire-season-edge on
+# annex 8.1's band, B2 sop (it sets CH1-A6), SENS-B2-ABS-PRIOR, the exponential(1) and
+# exponential(4) prior-sensitivity fits and ue_us, at annex 8.2's sampler settings with the MT-05
+# escalation, and B3 split-half. No per-umpire table is published: the curve does not reach the
+# reliability gate (annex 8.5, D-21).
+#
+# Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
+# succeeds and the fit code is committed (GD-12), and writes a provenance receipt under
+# out/models/. The verify command re-reads what the step wrote with
+# tests/ch1/check_ch1_outputs.R --step W3.18 and refits nothing; GD-04 then scans the script.
+# `needs` names the step's outputs, which exist only after the post-tag run, so before it the step
+# reads MISSING rather than FAIL. The dry run on a synthetic table is
+# tests/model/test_mt_ch1_sprint.py.
+- id: W3.18
+  title: "Chapter 1 umpire heterogeneity: B1 offsets, B2 brms fits, B3 split-half"
+  verify: "Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.18 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/25_heterogeneity.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/25_heterogeneity.R, out/ch1/tab/T6_heterogeneity.csv, out/ch1/tab/umpire_eb.csv, out/ch1/model/umpire_me.rds

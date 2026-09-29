@@ -1,0 +1,21 @@
+# W3.17, the mechanical plane component, per edge. Owner W3, fleet phase 05, the ch1-fits lane.
+#
+# R/ch1/24_plane.R fits 2025 twice with the single-season form of the frozen specification, on
+# the front-plane pair read from the warehouse's open view and on the mid-plane pair, and reports
+# the component at the top, the bottom, the half-width and the area, each with a 95% interval,
+# beside the corrected and the published-convention 2025-to-2026 change. T9 attributes the
+# published figures. The dz-by-pitch-type figure has a sidecar CSV (CH1-A13).
+#
+# Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
+# succeeds and the fit code is committed (GD-12), and writes a provenance receipt under
+# out/models/. The verify command re-reads what the step wrote with
+# tests/ch1/check_ch1_outputs.R --step W3.17 and refits nothing; GD-04 then scans the script.
+# `needs` names the step's outputs, which exist only after the post-tag run, so before it the step
+# reads MISSING rather than FAIL. The dry run on a synthetic table is
+# tests/model/test_mt_ch1_sprint.py.
+- id: W3.17
+  title: "Chapter 1 plate-plane component per edge (CH1-A13)"
+  verify: "Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.17 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/24_plane.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/24_plane.R, out/ch1/tab/T4_plane_component.csv, out/ch1/tab/T9_published_comparison.csv, out/ch1/fig/F_dz_by_pitch_type.csv
