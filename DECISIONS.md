@@ -2513,6 +2513,14 @@ The default. `sop` at the settings of D-P4-34 is the pre-registered power curve,
 CH1-A6. `ue_us` is a sensitivity estimator. Its MT-05 convergence is DEFERRED to W3.18, which
 applies the escalation rule. Nothing was re-run for this entry.
 
+Follow-up, 2026-09-29 21:10 (Europe/Madrid), not the owner's words: the deferral is closed. The
+orchestrator re-ran the fifteenth fit on 2026-09-29 from 20:42 to 21:06, on simulated calls,
+under the escalation rule. It met MT-05 after one doubling, at 12,000 draws a chain: no
+divergence, no tree-depth hit, lowest E-BFMI 0.593, R-hat 1.0066, bulk ESS 1,106, tail ESS
+2,644. All 30 power fits now meet MT-05. Nothing on this point is deferred to W3.18. One row of
+`out/tables/ch1_power_curve.csv` changed, `ue_us` at τ = 0.30 in, and none of its three-decimal
+figures in `docs/prereg/ch1.md` 8.3 moved.
+
 ### D-P4-36 RECORDED: the hibernation left the SBC at the new prior incomplete, and the recovery workers survived
 
 Recorded on 2026-09-29 (Europe/Madrid). Status: **a finding, with the missing replicates
@@ -2527,6 +2535,12 @@ to 0.9915.
 So W3.12(b) at L = 200 has not run at the pre-registered prior. The 200-replicate SBC of
 2026-09-25 passed, but under the SOP's prior on `abs_step` and the default sampler. The four
 recovery workers survived the hibernation. The orchestrator is re-running the Vc recovery.
+
+Follow-up, 2026-09-29 21:10 (Europe/Madrid): the SBC finished at 20:39, 200 of 200 replicates,
+both workers exit 0. All ten quantities stay inside the 95% ECDF band. The chi-square p runs from
+0.1538 to 0.8906: 0.8906 for τ and 0.7695 for the regime mean. The worst Benjamini-Hochberg p is
+0.8130, and no fit diverged. CH1-A8 is met at the pre-registered prior, and so is MT-02 at
+L = 200. Nothing is deferred.
 
 ### D-P4-37 APPLIED UNDER D-R0-03: `out/dev/` is ignored by git, and the W2.21 export gate skips only its ignored, untracked files
 

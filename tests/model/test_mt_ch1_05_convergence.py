@@ -11,7 +11,7 @@ Each seed's summary.json holds the diagnostics diagnostics() in R/ch1/21_synthet
 from nuts_params() and posterior::summarise_draws() over the b_, sd_, cor_ and sigma
 parameters, and the sampler settings the fit ran with. The settings are pre-registered per
 estimator in STAN_SETTINGS (docs/prereg/ch1.md 8.2): adapt_delta 0.99, 4 chains, 1,000 warmup
-and 2,000 draws a chain for sop, 2,000 and 4,000 for ue_us. tau_draws.csv.gz holds every kept
+and 2,000 draws a chain for sop, 2,000 and 6,000 for ue_us. tau_draws.csv.gz holds every kept
 draw. The 200 SBC fits (MT-02 governs them) and the 2022-2024 calibration fit, which
 sets simulation inputs only (docs/prereg/ch1.md 8.6), are not reported fits and are not gated.
 """

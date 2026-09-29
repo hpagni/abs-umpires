@@ -1327,7 +1327,7 @@ at most twice. The settings were fixed before any seed of the second curve ran.
 
 ## DEV-64: MT-05 on the D-60 power curve reads `sop`, and `ue_us` is deferred to W3.18
 
-Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W3.18. Applied under D-R0-03's delegation,
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by the follow-up below; it was OPEN until W3.18. Applied under D-R0-03's delegation,
 not as an owner answer. The decision is D-P4-35. OWNER-VISIBLE.
 
 What the SOP said. MT-05 holds on every reported fit.
@@ -1337,9 +1337,13 @@ ESS 982. `ue_us` is a sensitivity estimator. One of its 15 fits reached R-hat 1.
 escalated re-run was lost to the hibernation of 2026-09-26 to 2026-09-29. Its convergence is
 deferred to W3.18.
 
+Follow-up, 2026-09-29. The fit was re-run under the escalation rule and met MT-05 at 12,000
+draws a chain: R-hat 1.0066, bulk ESS 1,106, tail ESS 2,644, no divergence. All 30 power fits
+meet MT-05, and nothing is deferred to W3.18.
+
 ## DEV-65: W3.12(b), the SBC at the pre-registered prior has 37 of its 200 replicates
 
-Raised 2026-09-29 (Europe/Madrid). Status: OPEN until the 163 missing replicates run. Recorded
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by the follow-up below. Recorded
 under D-R0-03's delegation, not as an owner answer. The decision is D-P4-36.
 
 What the SOP said. 200 SBC replicates, with a chi-square uniformity test at α = 0.05 for τ and
@@ -1348,6 +1352,10 @@ the regime mean.
 What was done instead. The hibernation stopped the run at 37 replicates. On those 37 all ten
 quantities stay inside the ECDF band, with chi-square p from 0.1186 to 0.9915. The 200-replicate
 run of 2026-09-25 passed under the SOP prior on `abs_step`.
+
+Follow-up, 2026-09-29. The run finished with 200 of 200 replicates. All ten quantities stay
+inside the ECDF band, with chi-square p from 0.1538 to 0.8906 and a worst adjusted p of 0.8130.
+CH1-A8 is met at the pre-registered prior.
 
 ## DEV-66: W2.21, the export gate skips the ignored, untracked files under `out/dev/`
 

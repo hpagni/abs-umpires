@@ -1,53 +1,51 @@
 W3.12 check: the D-60 power curve, the CH1-A6 thresholds, SBC and recovery
-PASS    five seeds per cell, sop                           15 of 15 seed directories, draws per seed 4000
-PASS    five seeds per cell, ue_us                         15 of 15 seed directories, draws per seed 4000
+PASS    five seeds per cell, sop                           15 of 15 seed directories, draws per seed 8000
+PASS    five seeds per cell, ue_us                         15 of 15 seed directories, draws per seed 24000 48000
 PASS    ch1_power_curve.csv present                        /Users/hudsonpagni/sports-project/out/tables/ch1_power_curve.csv
 PASS    ch1_power_curve.csv equals the rebuild from raw draws 6 rows x 32 columns
-RECORD  curve sop tau 0.10                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0000;0.0000;0.0000;0.0015;0.0057, 95% CI covers 5/5, split-half 0.690, VC 0.147
-RECORD  curve sop tau 0.20                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0285;0.8590;0.0240;0.1678;0.0770, 95% CI covers 4/5, split-half 0.768, VC 0.307
-RECORD  curve sop tau 0.30                                 fired 4 (1;0;1;1;1), P(tau>=0.20) 0.9990;0.7825;0.9940;0.9952;0.9858, 95% CI covers 5/5, split-half 0.861, VC 0.479
-RECORD  curve ue_us tau 0.10                               fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0000;0.0000;0.0000;0.0032;0.0065, 95% CI covers 5/5, split-half 0.690, VC 0.141
-RECORD  curve ue_us tau 0.20                               fired 1 (0;1;0;0;0), P(tau>=0.20) 0.2933;0.9485;0.1415;0.3598;0.2320, 95% CI covers 5/5, split-half 0.768, VC 0.376
-RECORD  curve ue_us tau 0.30                               fired 5 (1;1;1;1;1), P(tau>=0.20) 0.9998;0.9113;0.9865;0.9995;0.9702, 95% CI covers 5/5, split-half 0.861, VC 0.501
-RECORD  estimator coverage of 15                           sop 14, ue_us 15
+RECORD  curve sop tau 0.10                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0006;0.0000;0.0005;0.0015;0.0005, 95% CI covers 5/5, split-half 0.658, VC 0.139
+RECORD  curve sop tau 0.20                                 fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0092;0.7288;0.0079;0.2717;0.4581, 95% CI covers 3/5, split-half 0.763, VC 0.313
+RECORD  curve sop tau 0.30                                 fired 4 (1;0;1;1;1), P(tau>=0.20) 0.9941;0.8556;0.9996;0.9978;0.9926, 95% CI covers 5/5, split-half 0.859, VC 0.494
+RECORD  curve ue_us tau 0.10                               fired 0 (0;0;0;0;0), P(tau>=0.20) 0.0021;0.0000;0.0007;0.0090;0.0007, 95% CI covers 5/5, split-half 0.658, VC 0.147
+RECORD  curve ue_us tau 0.20                               fired 0 (0;0;0;0;0), P(tau>=0.20) 0.1321;0.8078;0.0694;0.4693;0.5590, 95% CI covers 5/5, split-half 0.763, VC 0.374
+RECORD  curve ue_us tau 0.30                               fired 5 (1;1;1;1;1), P(tau>=0.20) 0.9974;0.9123;0.9994;0.9995;0.9715, 95% CI covers 5/5, split-half 0.859, VC 0.512
+RECORD  estimator coverage of 15                           sop 13, ue_us 15
 PASS    an admissible estimator sets CH1-A6                primary sop (admissible at >= 13 of 15)
 PASS    thresholds.json equals the re-derivation           c* 0.20 in, powered TRUE, gate attainable FALSE
 PASS    the materiality threshold is one the curve supports P(tau >= 0.20 in) >= 0.90 fires in 0 of 5 seeds at tau = 0.10 in
 PASS    docs/prereg/ch1.md carries the CH1-A6 table        14 table lines present
 PASS    PREREGISTRATION.md carries CH1-A6 as the curve implies 3 CH1-A6 lines, each cites docs/prereg/ch1.md or states P(τ ≥ 0.20 in) ≥ 0.90
 PASS    design read selects no outcome column              umpire_hp_id season game_pk game_index half edge d
-PASS    cached design equals a fresh read                  498,059 pitches, seasons 2022 2023 2024 2025 2026
+PASS    cached design equals a fresh read                  498,055 pitches, seasons 2022 2023 2024 2025 2026
 PASS    calibration cells are 2022-2024 only               840 cells, seasons 2022 2023 2024
 PASS    re-run of sop tau 0.20 seed 2 reproduces B1        1389 cells
-PASS    re-run of sop tau 0.20 seed 2 reproduces the draws max abs difference in tau draws 0, P(tau >= 0.20) 0.8590
-PASS    no fit object or provenance.json under out/dev/ch1_synth 697 files scanned
-PASS    SBC chi-square uniform at 0.05: tau_abs            p = 0.7695 over 200 replicates, 10 bins
-PASS    SBC chi-square uniform at 0.05: regime_mean_abs    p = 0.9930 over 200 replicates, 10 bins
-PASS    SBC worst BH-adjusted p > 0.01 (MT-02)             worst 0.4411 (sigma)
+PASS    re-run of sop tau 0.20 seed 2 reproduces the draws max abs difference in tau draws 0, P(tau >= 0.20) 0.7288
+PASS    no fit object or provenance.json under out/dev/ch1_synth 1399 files scanned
+PASS    SBC chi-square uniform at 0.05: tau_abs            p = 0.8906 over 200 replicates, 10 bins
+PASS    SBC chi-square uniform at 0.05: regime_mean_abs    p = 0.7695 over 200 replicates, 10 bins
+PASS    SBC worst BH-adjusted p > 0.01 (MT-02)             worst 0.8130 (sigma)
 PASS    SBC ECDF inside the 95% simultaneous band (MT-02)  10 quantities
-RECORD  SBC divergences                                    25 of 200 replicates with any, 58 in total
-RECORD  recovery injected so far                           n 100, bias 0.016 / -0.006 / 0.009, covers 91 / 96 / 96
-RECORD  recovery null so far                               n 50, interval excludes 0 3 / 4 / 6
-RECORD  recovery injected, 95% interval excludes zero      100 / 100 / 100 of 100 (power; the misses are 9 / 4 / 4)
-RECORD  recovery null, 90% interval covers zero (MT-04)    43 / 46 / 40 of 50
+RECORD  SBC divergences                                    0 of 200 replicates with any, 0 in total
+RECORD  recovery injected so far                           n 100, bias 0.016 / -0.006 / 0.009, covers 91 / 98 / 97
+RECORD  recovery null so far                               n 50, interval excludes 0 3 / 3 / 3
+RECORD  recovery injected, 95% interval excludes zero      100 / 100 / 100 of 100 (power; the misses are 9 / 2 / 3)
+RECORD  recovery null, 90% interval covers zero (MT-04)    45 / 46 / 42 of 50
 PASS    recovery bias within 0.10 in: top_in               mean bias 0.016 in
-FAIL    recovery 95% coverage >= 93/100: top_in            91 of 100
+NOTMET  recovery 95% coverage >= 93/100: top_in            measured 91, disclosed 91, bound 93; NOT MET, DISCLOSED UNDER D-R0-04
 PASS    null false-positive rate <= 7%: top_in             3 of 50
-FAIL    null 90% interval inside +/-0.10 in (CH1-A7): top_in 45 of 50
+NOTMET  null 90% interval inside +/-0.10 in (CH1-A7): top_in measured 44, disclosed 44, bound 47; NOT MET, DISCLOSED UNDER D-R0-04
 PASS    recovery bias within 0.10 in: bot_in               mean bias -0.006 in
-PASS    recovery 95% coverage >= 93/100: bot_in            96 of 100
-FAIL    null false-positive rate <= 7%: bot_in             4 of 50
+PASS    recovery 95% coverage >= 93/100: bot_in            98 of 100
+PASS    null false-positive rate <= 7%: bot_in             3 of 50
 PASS    null 90% interval inside +/-0.10 in (CH1-A7): bot_in 50 of 50
 PASS    recovery bias within 0.10 in: half_width_in        mean bias 0.009 in
-PASS    recovery 95% coverage >= 93/100: half_width_in     96 of 100
-FAIL    null false-positive rate <= 7%: half_width_in      6 of 50
+PASS    recovery 95% coverage >= 93/100: half_width_in     97 of 100
+PASS    null false-positive rate <= 7%: half_width_in      3 of 50
 PASS    null 90% interval inside +/-0.10 in (CH1-A7): half_width_in 50 of 50
+NOTMET  null 90% interval covers zero >= 43/50 (MT-04): half_width_in measured 42, disclosed 42, bound 43; NOT MET, DISCLOSED UNDER D-R0-04
+PASS    recovery: each D-R0-04 disclosure is scored        3 of 3 NOT MET AND DISCLOSED
 
-W3.12 --check: 27 PASS, 4 FAIL, 0 PENDING, <elapsed> s
-failures:
-  recovery 95% coverage >= 93/100: top_in -- 91 of 100
-  null 90% interval inside +/-0.10 in (CH1-A7): top_in -- 45 of 50
-  null false-positive rate <= 7%: bot_in -- 4 of 50
-  null false-positive rate <= 7%: half_width_in -- 6 of 50
+W3.12 --check: 30 PASS, 3 NOT MET AND DISCLOSED (D-R0-04), 0 FAIL, 0 PENDING, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/21_synthetic.R
 
 -- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

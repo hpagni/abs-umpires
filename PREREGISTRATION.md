@@ -355,6 +355,7 @@ Threshold, SOP section 9.2, verbatim:
 - Checked by: SOP W3.12, `Rscript R/ch1/21_synthetic.R --check`.
 - If it fails: SOP section 9.6 item 8 applies: the failure is reported as the finding, with an interval.
 - Detail: `docs/prereg/ch1.md` section 8.7.
+- At the freeze: met. Over 200 replicates at the prior of `docs/prereg/ch1.md` section 8.8, the chi-square p is 0.8906 for τ and 0.7695 for the regime mean, and all ten quantities stay inside the 95% simultaneous ECDF band.
 
 #### CH1-A9, sign stability, and when the share is reported
 
