@@ -92,6 +92,45 @@
       "carried_by": "W6.3"
     },
     {
+      "slot": "N_CALLED_P0",
+      "value": 1830231,
+      "units": "counts",
+      "what": "P0, the Chapter 1 primary sample: MLB regular-season called pitches, 2022 to 2026-09-21 (D-P4-05)",
+      "source": "out/ch1/tab/T1_sample.csv",
+      "source_row": 26,
+      "produced_by": "W3.5",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "1,830,231"
+      }
+    },
+    {
+      "slot": "N_GAMES_P0",
+      "value": 12060,
+      "units": "counts",
+      "what": "games with at least one P0 pitch",
+      "source": "out/ch1/tab/T1_sample.csv",
+      "source_row": 35,
+      "produced_by": "W3.5",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "12,060"
+      }
+    },
+    {
+      "slot": "N_CHAL",
+      "value": 10168,
+      "units": "counts",
+      "what": "MLB 2026 challenged pitches the zone-truth gate scored, overall row",
+      "source": "out/ch1/tab/T2_zone_gate.csv",
+      "source_row": 1,
+      "produced_by": "W3.8",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "10,168"
+      }
+    },
+    {
       "slot": "N_CALLED",
       "value": 1492502,
       "units": "counts",

@@ -24,3 +24,12 @@
 # Dates written as a day of the month rather than in ISO form, which the gate's date
 # pattern does not recognise.
 1     # "1 October", the published abstract deadline day, 2026-10-01
+
+# Definitions the SSAC abstract states, SOP W6 abstract template. W9.13 and W6.10, phase 06.
+# Each is a rule or an estimand's definition, fixed before any fit, so nothing produces it.
+53.5  # Statcast's 2026 top-of-zone rule, 53.5 percent of batter height (the ABS zone)
+27    # Statcast's 2026 bottom-of-zone rule, 27 percent of batter height (the ABS zone)
+50    # "the 50 percent contour", the called-strike estimand's definition, SOP W3.15
+95    # the interval level printed with every estimate, "95% CI", SOP 6.6 WR-07
+72    # the batter height, in inches, at which the edges are read, docs/prereg/ch1.md
+1,000 # draws from N(beta, Vc) behind each 95% interval, docs/prereg/ch1.md and SOP W3.15
