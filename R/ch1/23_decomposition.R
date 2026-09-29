@@ -57,7 +57,9 @@ decompose_fit <- function(ctx, t3, fit) {
     res <- decompose_estimand(p5, d5, e, ESTIMAND_UNITS[[e]])
     tb <- res$table
     tb$ci95_half_width <- (tb$hi95 - tb$lo95) / 2
-    tb$estimator <- sprintf("%s; 95%% percentile interval over %d joint draws", EST_LABEL[[fit]], res$table$n_draws[1])
+    src <- if (fit == "binned") "each edge glm's N(beta, vcov)" else "N(beta, Vc), W3.14"
+    tb$estimator <- sprintf("%s; 95%% percentile interval over %d joint draws of %s", EST_LABEL[[fit]],
+                            res$table$n_draws[1], src)
     out[[e]] <- cbind(fit = fit, tb, stringsAsFactors = FALSE)
   }
   do.call(rbind, out)
