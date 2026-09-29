@@ -18,6 +18,7 @@ import importlib.util
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 
 import pytest
@@ -36,6 +37,15 @@ CONTRACT = (
     "git_sha",
 )
 B2_FITS = "sop,sens_abs_prior,sens_sd_exp1,sens_sd_exp4,ue_us"
+T2_FIXTURE = ROOT / "tests" / "ch1" / "fixtures" / "T2_zone_gate_synthetic.csv"
+ARMS = {
+    "main": "primary",
+    "undersmooth": "SENS-B1-UNDERSMOOTH",
+    "abs_cohort": "ABS-measured arm",
+    "single_offset": "SENS-HEIGHT-SINGLE",
+    "panel": "CH1-A14 balanced panel",
+    "binned": "CH1-A5 binned logistic",
+}
 
 
 def rscript(*args, timeout=3600):
@@ -115,6 +125,9 @@ def dry_run(tmp_path_factory):
     logs = {}
     made = rscript(GEN, "--make", "--out", base / "syn", "--scale", "tiny")
     assert made.returncode == 0, made.stdout + made.stderr
+    # W6.7 reads N_CHAL from W3.8's zone-gate table; a dry run gets the synthetic fixture.
+    (out / "ch1" / "tab").mkdir(parents=True)
+    shutil.copy(T2_FIXTURE, out / "ch1" / "tab" / "T2_zone_gate.csv")
     t = ["--table", table, "--out", out]
     stan = ["--stan-chains", "2", "--stan-warmup", "250", "--stan-sampling", "250"]
     runs = [
@@ -198,3 +211,94 @@ def test_no_output_names_a_cause_before_the_placebos_pass(dry_run):
         assert "attributable" not in headline
     w316 = [r["sentence"] for r in read_rows(dry_run["out"] / "tables" / "headline.csv")]
     assert w316 and "attributable" not in w316[0]
+
+
+def test_every_arm_is_in_t3_and_t4_under_its_label(dry_run):
+    tab = dry_run["out"] / "ch1" / "tab"
+    t3 = read_rows(tab / "T3_estimands.csv")
+    assert {r["fit"]: r["arm"] for r in t3} == ARMS
+    arms = read_rows(tab / "T4_decomposition_arms.csv")
+    assert {r["fit"]: r["arm"] for r in arms} == {k: v for k, v in ARMS.items() if k != "main"}
+    t4 = read_rows(tab / "T4_decomposition.csv")
+    assert {r["arm"] for r in t4} == {"primary"}
+
+
+def test_the_height_cohort_flag_agrees_on_the_synthetic_table(dry_run):
+    """Every synthetic batter shares the generating zone, so D-P4-04's clause must read agree."""
+    t4 = read_rows(dry_run["out"] / "ch1" / "tab" / "T4_decomposition.csv")
+    assert {r["height_cohort_flag"] for r in t4} == {"agree"}
+
+
+def test_n_chal_is_traced_to_the_zone_gate_table(dry_run):
+    slots = read_rows(dry_run["out"] / "tables" / "abstract_slots_ch1.csv")
+    gate = read_rows(T2_FIXTURE)
+    n_chal = [r for r in slots if r["slot"] == "N_CHAL"]
+    overall = [r for r in gate if r["row_id"] == "overall"]
+    assert len(n_chal) == 1 and len(overall) == 1
+    assert float(n_chal[0]["point"]) == float(overall[0]["n"])
+    assert n_chal[0]["source_csv"] == "out/ch1/tab/T2_zone_gate.csv"
+    assert n_chal[0]["source_columns"] == "n"
+
+
+def _broken_copy(dry_run, tmp_path, name, edit):
+    """A copy of the dry run's out/ with one table edited, and the checker's exit on it."""
+    root = tmp_path / name
+    shutil.copytree(dry_run["out"], root / "out", symlinks=True)
+    path = root / "out" / "ch1" / "tab" / edit[0]
+    rows = read_rows(path)
+    rows, fields = edit[1](rows, list(rows[0].keys()))
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
+        w.writeheader()
+        w.writerows(rows)
+    done = rscript(
+        ROOT / "tests/ch1/check_ch1_outputs.R",
+        "--out",
+        root / "out",
+        "--step",
+        edit[2],
+        "--synthetic",
+    )
+    return done.returncode, fails(done.stdout)
+
+
+def test_the_checker_fails_on_a_missing_arm_a_missing_flag_or_a_wrong_label(dry_run, tmp_path):
+    cases = {
+        "missing_arm_t3": (
+            "T3_estimands.csv",
+            lambda rows, f: ([r for r in rows if r["fit"] != "single_offset"], f),
+            "W3.15",
+        ),
+        "wrong_label_t3": (
+            "T3_estimands.csv",
+            lambda rows, f: (
+                [{**r, "arm": "SENS-HEIGHT"} if r["fit"] == "single_offset" else r for r in rows],
+                f,
+            ),
+            "W3.15",
+        ),
+        "missing_arm_t4": (
+            "T4_decomposition_arms.csv",
+            lambda rows, f: ([r for r in rows if r["fit"] != "abs_cohort"], f),
+            "W3.16",
+        ),
+        "missing_flag": (
+            "T4_decomposition.csv",
+            lambda rows, f: (rows, [c for c in f if c != "height_cohort_flag"]),
+            "W3.16",
+        ),
+        "wrong_flag": (
+            "T4_decomposition.csv",
+            lambda rows, f: (
+                [
+                    {**r, "height_cohort_flag": "primary is sensitive to the height cohort"}
+                    for r in rows
+                ],
+                f,
+            ),
+            "W3.16",
+        ),
+    }
+    for name, edit in cases.items():
+        code, failed = _broken_copy(dry_run, tmp_path, name, edit)
+        assert code == 1 and failed, (name, code)

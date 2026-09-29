@@ -15,11 +15,17 @@
 # its 95% interval, are the primary result (CH1-A4); the identity delta_buffer + delta_abs + 2g =
 # delta_total is asserted to 1e-9 on every row and written as its own column.
 #
-# Beside each primary row, three pre-registered comparisons:
-#   abs_cohort_*  the ABS-measured arm. D-P4-04: it must agree in sign with the primary on the
-#                 buffer and ABS components, or the primary is reported as sensitive to the height
-#                 cohort. The verdict is read on area_sqin, the headline quantity; the edges are
-#                 reported beside it.
+# Beside each primary row, the pre-registered comparisons:
+#   abs_cohort_*  the ABS-measured arm, with sign_agrees_abs_cohort on each component row.
+#                 D-P4-04, part 3: it must agree in sign with the primary on the buffer and ABS
+#                 components, or the primary is reported as sensitive to the height cohort. The
+#                 verdict is read on area_sqin, the quantity of the headline and of D_BUF and
+#                 D_ABS; the edges' signs are reported beside it. height_cohort_flag carries the
+#                 verdict on every row: "agree" or "primary is sensitive to the height cohort".
+#                 W6.7 reads it.
+#   single_offset_* SENS-HEIGHT-SINGLE (PREREGISTRATION.md section 7), with
+#                 sign_agrees_single_offset on each component row. Its signs are reported only:
+#                 the pre-registration gives this arm no clause.
 #   panel_*       the CH1-A14 balanced umpire panel, with panel minus primary as a number
 #   binned_*      the CH1-A5 cross-check: the binned logistic's own decomposition, inside the bam
 #                 95% interval and within 0.15 in (edges) or 3 sq in (area)
@@ -31,7 +37,8 @@
 #
 # WRITES, under --out:
 #   ch1/tab/T4_decomposition.csv       the primary, one row per estimand and component
-#   ch1/tab/T4_decomposition_arms.csv  the full decomposition of every other fit
+#   ch1/tab/T4_decomposition_arms.csv  the full decomposition of every other fit, each labelled
+#                                      with its arm (ARM_LABEL) beside the fit name
 #   tables/headline.csv                W3.16's row, keyed CH1_W316: one descriptive sentence.
 #                                      W3.21 reads CH1-A3 later, so no sentence here claims more
 #                                      than a decomposition of the change.
@@ -47,10 +54,11 @@ source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
 A5_TOL <- c(top_in = 0.15, bot_in = 0.15, half_width_in = 0.15, area_sqin = 3)   # annex 5, CH1-A5
 EST_LABEL <- c(main = "bam primary: P0, roster + cohort-specific offset",
                abs_cohort = "bam ABS-measured arm: P1, H_abs",
+               single_offset = "bam SENS-HEIGHT-SINGLE: P0, roster + D-R0-02's one offset for every batter",
                panel = "bam balanced umpire panel (CH1-A14)",
                binned = "binned logistic (annex 5, CH1-A5)",
                undersmooth = "bam SENS-B1-UNDERSMOOTH: P0, season by-term k = 24 (annex 8.7)")
-ARMS <- c("abs_cohort", "panel", "binned", "undersmooth")
+ARMS <- setdiff(FIT_ARMS, "main")
 
 decompose_fit <- function(ctx, t3, fit) {
   f <- file.path(ctx$paths$model, sprintf("estimand_draws_%s.csv", fit))
@@ -67,7 +75,7 @@ decompose_fit <- function(ctx, t3, fit) {
     src <- if (fit == "binned") "each edge glm's N(beta, vcov)" else "N(beta, Vc), W3.14"
     tb$estimator <- sprintf("%s; 95%% percentile interval over %d joint draws of %s", EST_LABEL[[fit]],
                             res$table$n_draws[1], src)
-    out[[e]] <- cbind(fit = fit, tb, stringsAsFactors = FALSE)
+    out[[e]] <- cbind(fit = fit, arm = ARM_LABEL[[fit]], tb, stringsAsFactors = FALSE)
   }
   do.call(rbind, out)
 }
@@ -79,6 +87,9 @@ main <- function() {
   t3 <- read_csv_plain(file.path(p$tab, "T3_estimands.csv"))
   dec <- lapply(setNames(c("main", ARMS), c("main", ARMS)), function(f) decompose_fit(ctx, t3, f))
   if (is.null(dec$main)) die("no W3.15 draws for the primary fit")
+  missing_arms <- ARMS[vapply(ARMS, function(a) is.null(dec[[a]]), TRUE)]
+  check("every pre-registered arm has W3.15 draws", length(missing_arms) == 0L,
+        if (length(missing_arms)) paste("missing:", paste(missing_arms, collapse = ", ")) else paste(ARMS, collapse = ", "))
   prim <- dec$main
   resid <- max(abs(unlist(lapply(Filter(Negate(is.null), dec), function(x) x$identity_residual))))
   check("identity delta_buffer + delta_abs + 2g = delta_total", resid < IDENTITY_TOL,
@@ -95,6 +106,15 @@ main <- function() {
   comp_rows <- prim$component %in% c("delta_buffer", "delta_abs")
   prim$sign_agrees_abs_cohort <- ifelse(comp_rows & is.finite(prim$abs_cohort_point),
                                         sign(prim$point) == sign(prim$abs_cohort_point), NA)
+  so <- side("single_offset", c("point", "lo95", "hi95"))
+  prim$single_offset_point <- so[, 1]; prim$single_offset_lo95 <- so[, 2]; prim$single_offset_hi95 <- so[, 3]
+  prim$sign_agrees_single_offset <- ifelse(comp_rows & is.finite(prim$single_offset_point),
+                                           sign(prim$point) == sign(prim$single_offset_point), NA)
+  # D-P4-04, part 3, read on the area's two components; one verdict, on every row.
+  ag <- prim$sign_agrees_abs_cohort[prim$estimand == CLAUSE_ESTIMAND & prim$component %in% c("delta_buffer", "delta_abs")]
+  prim$height_cohort_flag <- height_cohort_flag(ag)
+  prim$height_cohort_flag_read_on <- sprintf("%s delta_buffer and delta_abs, ABS-measured arm against the primary",
+                                             CLAUSE_ESTIMAND)
   pn <- side("panel", c("point", "lo95", "hi95"))
   prim$panel_point <- pn[, 1]; prim$panel_lo95 <- pn[, 2]; prim$panel_hi95 <- pn[, 3]
   prim$panel_minus_primary <- prim$panel_point - prim$point
@@ -134,12 +154,24 @@ main <- function() {
                                                     if (r$ci95_half_width <= 3) "it is" else "it is not")
            else "the interval excludes zero"))
   }
+  flag <- prim$height_cohort_flag[1]
+  check("D-P4-04 clause evaluated", flag %in% c(CLAUSE_AGREE, CLAUSE_SENSITIVE), flag)
   if (!is.null(dec$abs_cohort)) {
     ag <- prim[comp_rows & prim$estimand %in% GEOM, ]
-    verdict <- all(row("delta_buffer")$sign_agrees_abs_cohort, row("delta_abs")$sign_agrees_abs_cohort)
-    record("D-P4-04 sign agreement, ABS-measured arm", sprintf("area: %s; %d of %d geometric components agree in sign",
-           if (isTRUE(verdict)) "agrees on both components" else "DISAGREES: the primary is reported as sensitive to the height cohort",
-           sum(ag$sign_agrees_abs_cohort, na.rm = TRUE), nrow(ag)))
+    record("D-P4-04 sign agreement, ABS-measured arm", sprintf("height_cohort_flag: %s (area, both components); %d of %d geometric components agree in sign",
+           flag, sum(ag$sign_agrees_abs_cohort, na.rm = TRUE), nrow(ag)))
+    if (identical(flag, CLAUSE_SENSITIVE)) cat("OWNER   D-P4-04: the ABS-measured arm disagrees in sign; the primary is sensitive to the height cohort.\n")
+  }
+  if (!is.null(dec$single_offset)) {
+    for (k in c("delta_buffer", "delta_abs")) {
+      r <- row(k)
+      record(sprintf("SENS-HEIGHT-SINGLE area %s", k), sprintf("%s sq in (%s); sign %s the primary's (reported, no clause)",
+             num_txt(r$single_offset_point, "sq in"), ci_txt(r$single_offset_lo95, r$single_offset_hi95, "sq in"),
+             if (isTRUE(r$sign_agrees_single_offset)) "agrees with" else "DIFFERS from"))
+    }
+    so_ag <- prim[comp_rows & prim$estimand %in% GEOM, ]
+    record("SENS-HEIGHT-SINGLE signs", sprintf("%d of %d geometric components agree in sign with the primary",
+                                              sum(so_ag$sign_agrees_single_offset, na.rm = TRUE), nrow(so_ag)))
   }
   if (!is.null(dec$panel)) {
     for (k in c("delta_buffer", "delta_abs")) record(sprintf("CH1-A14 panel minus primary, area %s", k),

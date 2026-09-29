@@ -1,0 +1,13 @@
+{
+  "_fixture": "The top-level keys of data/interim/dim_batter_season/calibration.json as W3.4 wrote them for the D-P4-04 follow-up, copied by value for tests/ch1/test_ch1_sprint.R, which never reads data/. The nested noncohort_evidence block is left out.",
+  "convention": "H = h_roster_in + offset_in for a batter inside the ABS-measured cohort (h_abs_in not null), and H = h_roster_in + offset_noncohort_in for a batter outside it, one value in every season 2022-2026. Both offsets are added to roster height, in inches. offset_noncohort_in is negative because roster listings outside the cohort run tall. offset_in is D-R0-02's; offset_noncohort_in is D-P4-04's, pooled over 2022-2024 by R/ch1/03_heights.R (W3.4). The age-adjusted value is reported, not used.",
+  "offset_in": 0.002207836934348754,
+  "offset_noncohort_in": -0.347001907612934,
+  "offset_noncohort_se_in": 0.154932037582476,
+  "offset_noncohort_age_adjusted_in": -0.267869967706533,
+  "offset_noncohort_age_adjusted_se_in": 0.165639363103956,
+  "sd_in": 0.2909163011515103,
+  "n_overlap": 658,
+  "min_diff_in": -0.4999999925233709,
+  "max_diff_in": 0.49606298317755204
+}

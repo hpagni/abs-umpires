@@ -1,8 +1,10 @@
 # W6.7, the Chapter 1 result for the abstract. Owner W6, fleet phase 05, the ch1-fits lane.
 #
 # R/ch1/27_abstract_ch1.R writes D_BUF, D_ABS, D_PRE, D_PLANE_TOP, D_PLANE_BOT, A_CORR and A_PUB from
-# committed CSVs, each with its 95% interval and source row, appends the pre-registered headline
-# sentence and D-P4-04's sign-agreement row to headline.csv, and regenerates docs/numbers.json with
+# committed CSVs, each with its 95% interval and source row, and N_CHAL, the Methods sentence's
+# count of challenged pitches, from the overall row of W3.8's out/ch1/tab/T2_zone_gate.csv. It
+# appends the pre-registered headline sentence and D-P4-04's sign-agreement row, worded from
+# T4's height_cohort_flag, to headline.csv, and regenerates docs/numbers.json with
 # tools/comms/export_numbers.R. CALL and BREAK_YEAR stay the owner's.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`

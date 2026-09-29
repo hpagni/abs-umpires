@@ -154,15 +154,71 @@ tbh <- arrow::arrow_table(data.frame(a = 1))
 tbh$metadata$w37_height <- "H = h_roster_in + o, o = 0.002000000000 in"
 arrow::write_parquet(tbh, tfile)
 ctx_h <- list(table = tfile)
-ph <- apply_heights(hd, "primary", list(offset_in = 0.002, offset_noncohort_in = -0.35), ctx_h)
+cal_syn <- list(offset_in = 0.002, offset_noncohort_in = -0.35, convention = CAL_CONVENTION)
+ph <- apply_heights(hd, "primary", cal_syn, ctx_h)
 check("primary: non-cohort rows move by the D-P4-04 offset, cohort rows keep theirs",
       isTRUE(all.equal(ph$H, c(74.002, 71.65, 70.002, 75.65))) &&
         isTRUE(all.equal(ph$d, signed_edge_in(hd$x_mid, hd$z_mid, abs_top_ft(ph$H), abs_bot_ft(ph$H)))),
       paste(ph$H, collapse = ", "))
 err <- tryCatch({apply_heights(hd, "primary", list(offset_in = 0.002), ctx_h); "no error"}, error = function(e) conditionMessage(e))
 check("primary refuses without D-P4-04's offset", grepl("offset_noncohort_in", err), substr(err, 1, 80))
-pa <- apply_heights(hd, "abs", list(offset_in = 0.002), ctx_h)
-check("abs arm: P1 rows on H_abs", nrow(pa) == 2L && identical(pa$H, c(74.1, 69.8)), paste(pa$H, collapse = ", "))
+pa <- apply_heights(hd, "abs_cohort", list(offset_in = 0.002), ctx_h)
+check("abs_cohort arm: P1 rows on H_abs", nrow(pa) == 2L && identical(pa$H, c(74.1, 69.8)), paste(pa$H, collapse = ", "))
+# SENS-HEIGHT-SINGLE, and the owner's override, with the D-P4-04 key present and without it
+ps <- apply_heights(hd, "single_offset", cal_syn, ctx_h)
+ps0 <- apply_heights(hd, "single_offset", list(offset_in = 0.002), ctx_h)
+check("single_offset: every batter roster + offset_in, whether or not offset_noncohort_in is in the file",
+      isTRUE(all.equal(ps$H, hd$H)) && isTRUE(all.equal(ps0$H, hd$H)) && isTRUE(all.equal(ps$d, hd$d)) &&
+        identical(attr(ps, "height_rule_key"), "single_offset"), paste(ps$H, collapse = ", "))
+check("--height-rule: primary by default, single_offset on the owner's override, anything else refused",
+      identical(primary_height_rule(list()), "primary") &&
+        identical(primary_height_rule(list(`height-rule` = "single-offset")), "single_offset") &&
+        identical(fit_height_rule("single_offset", list()), "single_offset") &&
+        identical(fit_height_rule("abs_cohort", list(`height-rule` = "single-offset")), "abs_cohort") &&
+        identical(fit_height_rule("panel", list(`height-rule` = "single-offset")), "single_offset") &&
+        grepl("takes primary or single-offset", tryCatch(primary_height_rule(list(`height-rule` = "single")),
+                                                         error = function(e) conditionMessage(e))), "")
+err_rule <- tryCatch({apply_heights(hd, "abs", cal_syn, ctx_h); "no error"}, error = function(e) conditionMessage(e))
+check("apply_heights names its rule: an unknown rule is refused", grepl("must be one of", err_rule), substr(err_rule, 1, 80))
+
+# The real calibration file's keys, copied by value into tests/ch1/fixtures/calibration_d_p4_04.json
+# (this test reads nothing under data/). Its convention: both offsets ADDED to roster height.
+fx <- file.path(ROOT, "tests", "ch1", "fixtures", "calibration_d_p4_04.json")
+cal_real <- check_calibration(fromJSON(fx), fx)
+check("the fixture's convention string is the one the reader expects", identical(cal_real$convention, CAL_CONVENTION),
+      substr(cal_real$convention, 1, 60))
+check("the real non-cohort offset is negative: listings outside the cohort run tall", cal_real$offset_noncohort_in < 0,
+      sprintf("offset_noncohort_in %.15f in", cal_real$offset_noncohort_in))
+rfile <- file.path(TMP, "h_real.parquet")
+tbr <- arrow::arrow_table(data.frame(a = 1))
+tbr$metadata$w37_height <- sprintf("H = h_roster_in + o, o = %.12f in (DECISIONS.md D-R0-02); H_abs = h_abs_in",
+                                   cal_real$offset_in)
+arrow::write_parquet(tbr, rfile)
+# Two batters, each listed at 74 in: one inside the ABS-measured cohort (measured 74.2 in), one
+# outside it. The table stores H = roster + offset_in for both, as W3.7 does.
+hr_df <- data.frame(x_mid = c(0.1, -0.2), z_mid = c(3.3, 1.7), H_abs = c(74.2, NA))
+hr_df$H <- 74 + cal_real$offset_in
+hr_df$d <- signed_edge_in(hr_df$x_mid, hr_df$z_mid, abs_top_ft(hr_df$H), abs_bot_ft(hr_df$H))
+hr_df$d_abs <- ifelse(is.na(hr_df$H_abs), NA,
+                      signed_edge_in(hr_df$x_mid, hr_df$z_mid, abs_top_ft(hr_df$H_abs), abs_bot_ft(hr_df$H_abs)))
+pr <- apply_heights(hr_df, "primary", cal_real, list(table = rfile))
+want <- c(74 + 0.002207836934348754, 74 - 0.347001907612934)
+check("primary on the real keys: cohort batter 74 + 0.0022078 in, non-cohort batter 74 - 0.3470019 in, to 1e-9 in",
+      max(abs(pr$H - want)) < 1e-9, sprintf("H %.12f and %.12f; max error %.1e in", pr$H[1], pr$H[2], max(abs(pr$H - want))))
+sr <- apply_heights(hr_df, "single_offset", cal_real, list(table = rfile))
+check("single_offset on the real keys: both batters 74 + 0.0022078 in, to 1e-9 in",
+      max(abs(sr$H - (74 + 0.002207836934348754))) < 1e-9, sprintf("H %.12f and %.12f", sr$H[1], sr$H[2]))
+refused <- function(cal) {
+  tryCatch({check_calibration(cal, "fixture"); "read"}, error = function(e) conditionMessage(e))
+}
+flipped <- cal_real
+flipped$convention <- sub("H = h_roster_in + offset_noncohort_in", "H = h_roster_in - offset_noncohort_in",
+                          cal_real$convention, fixed = TRUE)
+no_conv <- cal_real[setdiff(names(cal_real), "convention")]
+check("the reader refuses a file with no convention string, or another one",
+      grepl("no \"convention\" string", refused(no_conv)) && grepl("not the one this code applies", refused(flipped)) &&
+        identical(refused(list(offset_in = 0.002)), "read"),
+      paste(substr(refused(no_conv), 1, 50), "|", substr(refused(flipped), 1, 50)))
 
 ## 9. rows other steps share
 hf <- file.path(TMP, "headline.csv")
@@ -289,9 +345,9 @@ if (!identical(as.integer(anc), 0L)) {
 }
 
 ## 14. W6.7's sentences, both directions and both readings
-rw <- function(p, lo, hi, ap = NA, alo = NA, ahi = NA, ag = NA) {
+rw <- function(p, lo, hi, ap = NA, alo = NA, ahi = NA, ag = NA, flag = NA) {
   data.frame(point = p, lo95 = lo, hi95 = hi, abs_cohort_point = ap, abs_cohort_lo95 = alo, abs_cohort_hi95 = ahi,
-             sign_agrees_abs_cohort = ag)
+             sign_agrees_abs_cohort = ag, height_cohort_flag = flag)
 }
 s_c <- headline_sentence(rw(-12.34, -15, -9.5), rw(-4.44, -6, -2.1), rw(-6.66, -9, -4.2), causal = TRUE)
 check("causal template: contraction, magnitudes in its direction", identical(s_c, paste(
@@ -301,10 +357,18 @@ check("causal template: contraction, magnitudes in its direction", identical(s_c
 s_d <- headline_sentence(rw(3.2, 1.1, 5.3), rw(-0.4, -2, 1.3), rw(2.5, 0.2, 4.4), causal = FALSE)
 check("descriptive reading: expansion, no cause named", grepl("expanded", s_d) && grepl("-0.4 (95% CI -2.0 to 1.3) falls in", s_d, fixed = TRUE) &&
         !grepl("caus|attributable", s_d), s_d)
-c_ok <- cohort_sentence(rw(-4, -6, -2, -3.5, -6.1, -0.9, TRUE), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE))
-c_no <- cohort_sentence(rw(-4, -6, -2, 0.7, -1.9, 3.3, FALSE), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE))
-check("D-P4-04 sentence: agreement, and the sensitivity reading when a sign differs",
-      grepl("agrees in sign on both components", c_ok) && grepl("sensitive to the height cohort", c_no), c_no)
+check("D-P4-04 flag: agree only when both components agree; sensitive otherwise; not evaluated without the arm",
+      identical(height_cohort_flag(c(TRUE, TRUE)), "agree") &&
+        identical(height_cohort_flag(c(TRUE, FALSE)), "primary is sensitive to the height cohort") &&
+        identical(height_cohort_flag(c(FALSE, FALSE)), "primary is sensitive to the height cohort") &&
+        identical(height_cohort_flag(c(TRUE, NA)), CLAUSE_NOT_EVALUATED) && identical(height_cohort_flag(logical(0)), CLAUSE_NOT_EVALUATED),
+      "")
+c_ok <- cohort_sentence(rw(-4, -6, -2, -3.5, -6.1, -0.9, TRUE, "agree"), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE, "agree"))
+c_no <- cohort_sentence(rw(-4, -6, -2, 0.7, -1.9, 3.3, FALSE, CLAUSE_SENSITIVE), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE, CLAUSE_SENSITIVE))
+c_na <- tryCatch(cohort_sentence(rw(-4, -6, -2), rw(-6, -9, -4)), error = function(e) conditionMessage(e))
+check("D-P4-04 sentence follows W3.16's flag, and W6.7 refuses without it",
+      grepl("agrees in sign on both components", c_ok) && grepl("sensitive to the height cohort", c_no) &&
+        grepl("height_cohort_flag is missing", c_na), c_no)
 
 unlink(TMP, recursive = TRUE)
 finish("tests/ch1/test_ch1_sprint.R")

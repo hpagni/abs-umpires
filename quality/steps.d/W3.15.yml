@@ -4,7 +4,9 @@
 # by g-computation to the 2024 reference mix, for a 72-inch batter: top_in, bot_in, half_width_in,
 # area_sqin by marching squares, shadow_rate over the D-P4-09 band |d - 1.45| <= 3 in, and
 # count_bias. Every interval comes from W3.14's 1,000 Vc draws. T3 and the per-draw estimand table
-# are written under a lock, so the fits may run as separate processes.
+# are written under a lock, so the fits may run as separate processes. T3's arm column names each
+# fit's arm: primary, SENS-B1-UNDERSMOOTH, ABS-measured arm, SENS-HEIGHT-SINGLE, CH1-A14 balanced
+# panel, CH1-A5 binned logistic. The verify command fails on a missing arm or another label.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
 # succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12), and writes a

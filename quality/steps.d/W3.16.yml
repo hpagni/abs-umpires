@@ -2,10 +2,15 @@
 #
 # R/ch1/23_decomposition.R computes g, the precision-weighted 2022-2024 slope, and delta_buffer,
 # delta_abs and delta_total on W3.15's joint draws, with the identity residual as a column and
-# share_abs only under CH1-A9's rule. Beside the primary: the ABS-measured arm and D-P4-04's sign
-# agreement, the CH1-A14 panel, the CH1-A5 binned logistic, and SENS-B1-UNDERSMOOTH's top edge
-# (annex 8.7), and annex 8.7's unmet recovery clauses beside the top edge and the half-width
-# (D-R0-04). Its headline row is descriptive.
+# share_abs only under CH1-A9's rule. Beside the primary: the ABS-measured arm with D-P4-04's
+# sign-agreement clause, read on the area's buffer and ABS components and written to the
+# height_cohort_flag column ("agree" or "primary is sensitive to the height cohort"),
+# SENS-HEIGHT-SINGLE with its signs (reported, no clause), the CH1-A14 panel, the CH1-A5 binned
+# logistic, SENS-B1-UNDERSMOOTH's top edge (annex 8.7), and annex 8.7's unmet recovery clauses
+# beside the top edge and the half-width (D-R0-04). Every arm's full decomposition is in
+# T4_decomposition_arms.csv under its label. Its headline row is descriptive. The verify command
+# fails on a missing arm, a missing flag column, a flag that the area rows do not give, or
+# another label.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
 # succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12), and writes a

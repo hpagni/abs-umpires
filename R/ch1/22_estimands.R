@@ -2,8 +2,11 @@
 # R/ch1/22_estimands.R - SOP W3.15, the estimands on the standardised grid.
 #
 #   Rscript R/ch1/22_estimands.R --table data/marts/ch1_called.parquet --out out
-#   Rscript R/ch1/22_estimands.R --table <table> --out <root> --fits main,abs_cohort,panel,undersmooth,binned
+#   Rscript R/ch1/22_estimands.R --table <table> --out <root> --fits main,undersmooth,abs_cohort,single_offset,panel,binned
 #
+# Every fit is its own arm in T3, named in the arm column (ARM_LABEL): the primary, the
+# ABS-measured arm, SENS-HEIGHT-SINGLE, SENS-B1-UNDERSMOOTH, the CH1-A14 panel and the CH1-A5
+# binned logistic.
 # The undersmooth fit (SENS-B1-UNDERSMOOTH, annex 8.7) contributes top_in only: the annex reports
 # its top-edge estimate and interval beside the primary's, and nothing else from it.
 #
@@ -18,8 +21,8 @@
 # edge glm's own covariance, for the CH1-A5 comparison and its own pre-trend weights.
 #
 # WRITES, under --out:
-#   ch1/tab/T3_estimands.csv                 one row per fit, season and estimand: point, 95% and
-#                                            90% intervals, the estimator named
+#   ch1/tab/T3_estimands.csv                 one row per fit, season and estimand: the arm, point,
+#                                            95% and 90% intervals, the estimator named
 #   ch1/model/estimand_draws_<fit>.csv       one row per draw, one column per season x estimand;
 #                                            W3.16 and W3.21 read their intervals from these
 #
@@ -34,11 +37,14 @@ ROOT <- local({
 setwd(ROOT)
 source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
 
-BAM_FITS <- c("main", "abs_cohort", "panel", "undersmooth")
-SAMPLE_OF <- c(main = "P0, roster + cohort-specific offset", abs_cohort = "P1, H_abs",
-               panel = "P0 balanced umpire panel, roster + cohort-specific offset",
-               binned = "P0, roster + cohort-specific offset",
-               undersmooth = "P0, roster + cohort-specific offset")
+BAM_FITS <- setdiff(FIT_ARMS, "binned")
+# The sample each fit is read on, named by its height rule.
+RULE_SAMPLE <- c(primary = "P0, roster + cohort-specific offset (D-P4-04)",
+                 single_offset = "P0, roster + D-R0-02's one offset for every batter",
+                 abs_cohort = "P1, H_abs")
+sample_of <- function(name, rule) {
+  paste0(if (name == "panel") "balanced umpire panel of " else "", RULE_SAMPLE[[rule]])
+}
 BAM_LABEL <- "bam, frozen specification (annex 2); 95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter"
 US_LABEL <- paste("bam, frozen specification with the season by-term at k = 24, SENS-B1-UNDERSMOOTH (annex 8.7);",
                   "95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter")
@@ -46,31 +52,36 @@ US_LABEL <- paste("bam, frozen specification with the season by-term at k = 24, 
 ests_of <- function(name) if (name == "undersmooth") UNDERSMOOTH_ESTIMANDS else ESTIMANDS
 BIN_LABEL <- "binned logistic (annex 5), CH1-A5 secondary; interval from 1,000 draws of each edge glm's N(beta, vcov); 2024 count and stand mix"
 
+# Each fit's rows under the rule W3.14 fitted it with; the rule rides along as an attribute,
+# which subsetting a data frame drops, so it is set on the result.
 fit_rows <- function(ctx, name, d, cal, opt) {
-  allow_single <- identical(opt_get(opt, "height-rule"), "single-offset")
-  if (name == "abs_cohort") return(surface_rows(apply_heights(d, "abs", cal, ctx)))
-  prim <- apply_heights(d, "primary", cal, ctx, allow_single)
-  if (name == "panel") prim <- prim[prim$umpire_hp_id %in% panel_umpires(prim), ]
-  surface_rows(prim)
+  rk <- fit_height_rule(name, opt)
+  rows <- apply_heights(d, rk, cal, ctx)
+  if (name == "panel") rows <- rows[rows$umpire_hp_id %in% panel_umpires(rows), ]
+  out <- surface_rows(rows)
+  attr(out, "height_rule_key") <- rk
+  out
 }
 
 receipt_matches <- function(ctx, name, rows) {
   rp <- file.path(ctx$paths$models, sprintf("surface_%s", name), "provenance.json")
   if (!file.exists(rp)) die("no W3.14 receipt at ", rp)
   r <- fromJSON(rp)
+  rk <- attr(rows, "height_rule_key")
   check(sprintf("%s: sample rebuilt as W3.14 fitted it", name),
-        r$n_rows == nrow(rows) && identical(r$table_sha256, sha256_file(ctx$table)),
-        sprintf("%s rows now, %s in the receipt; table sha256 %s", comma(nrow(rows)), comma(r$n_rows),
+        r$n_rows == nrow(rows) && identical(r$table_sha256, sha256_file(ctx$table)) && identical(r$height_rule_key, rk),
+        sprintf("%s rows now, %s in the receipt; height rule %s now, %s in the receipt; table sha256 %s", comma(nrow(rows)),
+                comma(r$n_rows), rk, format(r$height_rule_key),
                 if (identical(r$table_sha256, sha256_file(ctx$table))) "unchanged" else "CHANGED"))
 }
 
-t3_rows <- function(name, point, draws, estimator, n_rows) {
+t3_rows <- function(name, point, draws, estimator, n_rows, sample) {
   out <- list()
   for (s in SEASON_LEVELS) for (e in colnames(point)) {
     v <- draws[, paste(s, e, sep = "_")]
     i95 <- qint(v, 0.95); i90 <- qint(v, 0.90)
     out[[length(out) + 1L]] <- data.frame(
-      fit = name, sample = SAMPLE_OF[[name]], season = as.integer(s), regime = REGIME_OF[[s]], estimand = e,
+      fit = name, arm = ARM_LABEL[[name]], sample = sample, season = as.integer(s), regime = REGIME_OF[[s]], estimand = e,
       units = ESTIMAND_UNITS[[e]], point = point[s, e], lo95 = i95[1], hi95 = i95[2], lo90 = i90[1], hi90 = i90[2],
       n_draws = nrow(draws), n_complete = sum(is.finite(v)), estimator = estimator, n_rows_fit = n_rows,
       stringsAsFactors = FALSE)
@@ -143,7 +154,8 @@ main <- function() {
       res <- bam_estimands(ctx, name, rows)
       est_label <- if (name == "undersmooth") US_LABEL else BAM_LABEL
     }
-    t3[[name]] <- t3_rows(name, res$point, res$draws, est_label, res$n_rows)
+    rk <- attr(rows, "height_rule_key")
+    t3[[name]] <- t3_rows(name, res$point, res$draws, est_label, res$n_rows, sample_of(name, rk))
     write_csv_plain(data.frame(draw = seq_len(nrow(res$draws)), res$draws, check.names = FALSE),
                     file.path(ctx$paths$model, sprintf("estimand_draws_%s.csv", name)))
   }

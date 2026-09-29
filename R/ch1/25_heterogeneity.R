@@ -71,7 +71,7 @@ main <- function() {
   p <- ctx$paths
   cal <- read_calibration(ctx, opt)
   d <- load_table(ctx)
-  prim <- apply_heights(d, "primary", cal, ctx, identical(opt_get(opt, "height-rule"), "single-offset"))
+  prim <- apply_heights(d, primary_height_rule(opt), cal, ctx)
   prim$half <- game_halves(prim)
 
   # B1

@@ -29,9 +29,12 @@
 # estimand code, as the W3.12 harness did, and checks each interval against it.
 #
 # HEIGHTS. Batters active in 2025 or 2026 carry a measured height (the cohort, H_abs); their
-# roster height is round(true height). Other batters are listed 0.35 in tall. The table's H is
-# roster + 0.002 in, as W3.7 stores it; the calibration file carries 0.002 in for the cohort and
-# -0.35 in outside it, so the loader's D-P4-04 rule removes the listing bias.
+# roster height is round(true height). Other batters are listed LIST_BIAS = 0.35 in tall. The
+# table's H is roster + 0.002 in, as W3.7 stores it. The calibration file follows the real file's
+# convention (R/lib/ch1_fits.R CAL_CONVENTION, the same string): both offsets are ADDED to roster
+# height, so it carries offset_in 0.002 and offset_noncohort_in = -LIST_BIAS = -0.35 in, and the
+# loader's primary rule gives a batter outside the cohort roster - 0.35 in, his true height up to
+# rounding. SENS-HEIGHT-SINGLE (roster + 0.002 in for every batter) leaves the bias in.
 
 args <- commandArgs(trailingOnly = TRUE)
 ROOT <- local({
@@ -56,7 +59,9 @@ EFF_PG <- c(FF = 0, "SI/FC" = -0.05, BRK = 0.10, OFFSP = 0.02)
 EFF_VELO <- 0.015
 SD_LEVEL <- 0.10; SD_UMP_EDGE <- 0.15; SD_UMP_SEASON <- 0.08; SD_RESID <- 0.08
 TAU_BUF <- 0.25; TAU_ABS <- 0.25
-O_COHORT <- 0.002; O_NONCOHORT <- -0.35; LIST_BIAS <- 0.35
+LIST_BIAS <- 0.35     # listed minus true height outside the cohort, in: listings run tall
+O_COHORT <- 0.002
+O_NONCOHORT <- -LIST_BIAS   # added to roster height, so negative when listings run tall
 SCALES <- list(
   dry  = list(full = 20L, retire = 4L, join = 4L, part = 2L, gpu = 17L, gpu_part = 6L, ppg = 80L, batters = 420L),
   tiny = list(full = 8L, retire = 2L, join = 2L, part = 1L, gpu = 15L, gpu_part = 4L, ppg = 45L, batters = 160L))
@@ -199,8 +204,10 @@ make_table <- function(dir, scale, seed) {
   tb$metadata$w37_height <- sprintf("H = h_roster_in + o, o = %.12f in (synthetic)", O_COHORT)
   tb$metadata$synthetic <- sprintf("R/ch1/29_synthetic_table.R, scale %s, seed %d", scale, seed)
   arrow::write_parquet(tb, path)
-  write_json_file(list(offset_in = O_COHORT, offset_noncohort_in = O_NONCOHORT, synthetic = TRUE,
-                       note = "synthetic: cohort offset as W3.7 stores it; non-cohort offset of D-P4-04"),
+  write_json_file(list(convention = CAL_CONVENTION, offset_in = O_COHORT, offset_noncohort_in = O_NONCOHORT,
+                       synthetic = TRUE,
+                       note = sprintf("synthetic: listings outside the cohort run %.2f in tall; both offsets are added to roster height",
+                                      LIST_BIAS)),
                   file.path(dir, "ch1_synth.calibration.json"))
   offs <- do.call(rbind, off)
   truth <- list(seed = seed, scale = scale, n_rows = nrow(df), alpha = ALPHA, slope = SLOPE,
@@ -270,7 +277,9 @@ score_run <- function(opt) {
   if (file.exists(arms_path)) {
     arms <- read_csv_plain(arms_path)
     for (f in unique(arms$fit)) {
-      th_f <- if (f == "abs_cohort") truth_thetas(ctx, cal, "abs") else th
+      # Each arm's truth on its own sample and height rule; the geometric truths do not depend
+      # on either, the shadow rate and count bias read the arm's own reference pitches.
+      th_f <- if (f %in% c("abs_cohort", "single_offset")) truth_thetas(ctx, cal, f) else th
       sc <- rbind(sc, score_rows(arms[arms$fit == f, ], th_f, f))
     }
   }
@@ -290,6 +299,17 @@ score_run <- function(opt) {
       record(sprintf("%s %s", if (isTRUE(r$covered)) "covered" else "MISSED", lab), det)
     }
   }
+  # D-P4-04's clause. Every batter shares the generating zone, so the ABS-measured arm's true
+  # components have the primary's signs, and W3.16's flag must read "agree".
+  t4 <- prim[prim$estimand == CLAUSE_ESTIMAND & prim$component %in% c("delta_buffer", "delta_abs"), ]
+  tr_sign <- sign(decompose(matrix(th[, CLAUSE_ESTIMAND], nrow = 1L),
+                            as.numeric(strsplit(t4$weights_2022_2023_2024[1], ";")[[1]]))[, c("delta_buffer", "delta_abs")])
+  check("D-P4-04 flag reads agree, as the generating truth implies", identical(unique(prim$height_cohort_flag), CLAUSE_AGREE),
+        sprintf("height_cohort_flag %s; true area signs %s; ABS-measured arm %s", paste(unique(prim$height_cohort_flag), collapse = "/"),
+                paste(unlist(tr_sign), collapse = ", "), paste(sprintf("%+.2f", t4$abs_cohort_point), collapse = ", ")))
+  so_rows <- prim$component %in% c("delta_buffer", "delta_abs") & prim$estimand %in% GEOM
+  record("SENS-HEIGHT-SINGLE signs against the primary", sprintf("%d of %d geometric components agree",
+                                                               sum(prim$sign_agrees_single_offset[so_rows], na.rm = TRUE), sum(so_rows)))
   prim_rows <- sc$fit == "primary" & sc$component %in% c("g", "delta_buffer", "delta_abs")
   record("primary coverage", sprintf("%d of %d intervals (g, buffer, ABS over six estimands) cover the truth",
                                      sum(sc$covered[prim_rows]), sum(prim_rows)))

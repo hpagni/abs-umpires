@@ -179,7 +179,7 @@ main <- function() {
   p <- ctx$paths
   cal <- read_calibration(ctx, opt)
   d <- load_table(ctx, seasons = c(2024L, 2025L), extra = c("x_front", "z_front"))
-  prim <- apply_heights(d, "primary", cal, ctx, identical(opt_get(opt, "height-rule"), "single-offset"))
+  prim <- apply_heights(d, primary_height_rule(opt), cal, ctx)
   hr <- attr(prim, "height_rule")
   all25 <- prim[prim$season == 2025L, ]
   fr_all <- front_coords(ctx, opt, all25)

@@ -22,14 +22,22 @@
 #      row. Only such a table runs before the tag, and a synthetic run may not write inside
 #      the repository, where GD-01, GD-12 and the number gate read.
 #
-# THE HEIGHT RULE (DECISIONS.md D-R0-02 and D-P4-04). The primary cohort is every P0 pitch
-# with batter height = roster height + an offset that depends on the cohort: the D-R0-02
-# offset inside the ABS-measured cohort (rows with a measured height H_abs) and the pooled
-# 2022-2024 offset of D-P4-04 outside it. The analysis table stores H with the one D-R0-02
-# offset, so the loader moves the non-cohort rows by (noncohort - cohort) and recomputes zn,
-# d and edge with R/lib/zone.R. The robustness arm is the ABS-measured cohort, P1, on H_abs
-# (D-R0-02), and D-P4-04 requires it to agree in sign with the primary on the buffer and ABS
-# components.
+# THE HEIGHT RULES (DECISIONS.md D-R0-02 and D-P4-04, PREREGISTRATION.md section 7). The
+# calibration file's "convention" string is the one source of the sign: both offsets are ADDED
+# to roster height, H = h_roster_in + offset_in inside the ABS-measured cohort (rows with a
+# measured height H_abs) and H = h_roster_in + offset_noncohort_in outside it. The non-cohort
+# offset is negative because listings outside the cohort run tall. The analysis table stores
+# H = h_roster_in + offset_in on every row, so apply_heights() takes roster height back as
+# H - offset_in, adds the offset its rule names, and recomputes zn, d and edge with
+# R/lib/zone.R. Three rules, each a pre-registered arm:
+#   primary        D-R0-02 refined by D-P4-04: the cohort offset inside, the non-cohort offset
+#                  outside, on every P0 pitch
+#   single_offset  SENS-HEIGHT-SINGLE: offset_in for every P0 batter, the rule as the owner
+#                  first answered D-R0-02
+#   abs_cohort     the ABS-measured arm: P1 on H_abs. D-P4-04 requires it to agree in sign with
+#                  the primary on the buffer and ABS components.
+# --height-rule single-offset is the owner's override of D-P4-04 (section 14, item 14): the
+# primary fits then run the single_offset rule.
 
 suppressPackageStartupMessages({
   library(arrow)
@@ -98,6 +106,26 @@ FROZEN_FORMULA_TEXT <- paste(
 # its place.
 UNDERSMOOTH_SEASON_K <- 24L
 UNDERSMOOTH_ESTIMANDS <- "top_in"
+
+# The W3.14 fits in run order, and the label each arm carries in T3 and T4. SENS-HEIGHT-SINGLE,
+# SENS-B1-UNDERSMOOTH and the ABS-measured arm are the names PREREGISTRATION.md section 7 and
+# annex 8.7 give them. tests/ch1/check_ch1_outputs.R fails on a missing arm or another label.
+FIT_ARMS <- c("main", "undersmooth", "abs_cohort", "single_offset", "panel", "binned")
+ARM_LABEL <- c(main = "primary", undersmooth = "SENS-B1-UNDERSMOOTH", abs_cohort = "ABS-measured arm",
+               single_offset = "SENS-HEIGHT-SINGLE", panel = "CH1-A14 balanced panel",
+               binned = "CH1-A5 binned logistic")
+
+# The height rules apply_heights() knows, and the convention string of the calibration file,
+# word for word as R/ch1/03_heights.R (W3.4) writes it. read_calibration() refuses a file whose
+# string is missing or differs, so a change of sign stops every fit instead of passing silently.
+HEIGHT_RULES <- c("primary", "single_offset", "abs_cohort")
+CAL_CONVENTION <- paste(
+  "H = h_roster_in + offset_in for a batter inside the ABS-measured cohort (h_abs_in not null),",
+  "and H = h_roster_in + offset_noncohort_in for a batter outside it, one value in every season",
+  "2022-2026. Both offsets are added to roster height, in inches. offset_noncohort_in is negative",
+  "because roster listings outside the cohort run tall. offset_in is D-R0-02's; offset_noncohort_in",
+  "is D-P4-04's, pooled over 2022-2024 by R/ch1/03_heights.R (W3.4). The age-adjusted value is",
+  "reported, not used.")
 
 ## --- the run harness ---------------------------------------------------------------------
 
@@ -367,8 +395,9 @@ table_offset <- function(path) {
 }
 
 # The offsets file. D-R0-02's offset_in is the cohort offset; D-P4-04's offset_noncohort_in
-# is written by W3.4's lane (R/ch1/03_heights.R). Default: data/interim/dim_batter_season/
-# calibration.json for a real table, <table stem>.calibration.json for a synthetic one.
+# is written by W3.4's lane (R/ch1/03_heights.R) with the convention string. Default:
+# data/interim/dim_batter_season/calibration.json for a real table, <table stem>.calibration.json
+# for a synthetic one.
 read_calibration <- function(ctx, opt) {
   p <- opt_get(opt, "calibration")
   if (is.null(p)) {
@@ -376,53 +405,126 @@ read_calibration <- function(ctx, opt) {
          else file.path(ROOT, "data", "interim", "dim_batter_season", "calibration.json")
   }
   if (!file.exists(p)) die("no height calibration at ", p)
-  cal <- fromJSON(p)
+  cal <- check_calibration(fromJSON(p), p)
   cal$path <- normalizePath(p)
   cal
 }
 
-# rule "primary": roster + cohort-specific offset on every P0 row (D-R0-02, D-P4-04).
-# rule "abs":     the ABS-measured cohort P1 on H_abs (the D-R0-02 robustness arm).
-# allow_single:   the owner's override of D-P4-04 (--height-rule single-offset); recorded.
-apply_heights <- function(df, rule, cal, ctx, allow_single = FALSE) {
-  o_tab <- table_offset(ctx$table)
+# The file must state its sign. A file that carries offset_noncohort_in must carry the
+# convention string, and the string must be CAL_CONVENTION exactly; otherwise nothing runs. A
+# file from before D-P4-04 (offset_in alone, no convention) is read, so that the owner's
+# override and the ABS-measured arm still run on it; the primary rule then refuses in
+# apply_heights().
+check_calibration <- function(cal, path) {
+  one_number <- function(x) is.numeric(x) && length(x) == 1L && is.finite(x)
+  if (!one_number(cal$offset_in)) die(path, ": offset_in, D-R0-02's cohort offset, is not one finite number")
+  has_nc <- !is.null(cal$offset_noncohort_in)
+  has_cv <- !is.null(cal$convention)
+  if (has_nc && !one_number(cal$offset_noncohort_in)) {
+    die(path, ": offset_noncohort_in, D-P4-04's non-cohort offset, is not one finite number")
+  }
+  if (has_nc && !has_cv) {
+    die(path, " carries offset_noncohort_in but no \"convention\" string, so the file does not say whether ",
+        "the offset is added to roster height or taken from it. R/ch1/03_heights.R writes both; no fit runs until it does.")
+  }
+  if (has_cv && !identical(cal$convention, CAL_CONVENTION)) {
+    die(path, ": the \"convention\" string is not the one this code applies (both offsets ADDED to roster height, ",
+        "R/lib/ch1_fits.R CAL_CONVENTION). The file says: ", paste(cal$convention, collapse = " "))
+  }
+  if (has_cv && !has_nc) die(path, " states D-P4-04's convention but carries no offset_noncohort_in")
+  cal
+}
+
+# The rule of the primary fits: D-P4-04's, or SENS-HEIGHT-SINGLE's on the owner's override
+# (--height-rule single-offset, PREREGISTRATION.md section 14, item 14). It works whether or
+# not the calibration file carries offset_noncohort_in.
+primary_height_rule <- function(opt) {
+  v <- opt_get(opt, "height-rule", "primary")
+  if (identical(v, "primary")) return("primary")
+  if (identical(v, "single-offset")) {
+    record("OWNER OVERRIDE of D-P4-04", "--height-rule single-offset: the primary fits run SENS-HEIGHT-SINGLE's rule")
+    return("single_offset")
+  }
+  die("--height-rule takes primary or single-offset, not ", v)
+}
+
+# The rule each W3.14 fit uses. The two height arms keep their own rule under the override.
+fit_height_rule <- function(name, opt) {
+  switch(name, abs_cohort = "abs_cohort", single_offset = "single_offset", primary_height_rule(opt))
+}
+
+# apply_heights(df, rule, cal, ctx): rule is one of HEIGHT_RULES, always named by the caller.
+#   primary        H = roster + offset_in inside the cohort, roster + offset_noncohort_in outside
+#   single_offset  H = roster + offset_in for every batter; offset_noncohort_in is not read
+#   abs_cohort     P1 rows only, H = H_abs
+# roster = H - offset_in, since the table stores H = h_roster_in + offset_in (its w37_height
+# metadata must carry the same offset). The rule and its offsets are attached as attributes.
+apply_heights <- function(df, rule, cal, ctx) {
+  if (!(is.character(rule) && length(rule) == 1L && rule %in% HEIGHT_RULES)) {
+    die("apply_heights: the height rule must be one of ", paste(HEIGHT_RULES, collapse = ", "), ", not ", format(rule))
+  }
   in_cohort <- !is.na(df$H_abs)
-  if (rule == "abs") {
+  if (rule == "abs_cohort") {
     df <- df[in_cohort, , drop = FALSE]
     H1 <- df$H_abs
     d1 <- signed_edge_in(df$x_mid, df$z_mid, abs_top_ft(H1), abs_bot_ft(H1))
     check("P1 d_abs reproduced from H_abs", max(abs(d1 - df$d_abs)) < 1e-9,
           sprintf("max |d - d_abs| %.2e in over %s rows", max(abs(d1 - df$d_abs)), comma(nrow(df))))
-    rule_text <- "ABS-measured cohort P1, H = H_abs (D-R0-02 robustness arm)"
+    rule_text <- "ABS-measured arm: P1, H = H_abs (D-R0-02)"
   } else {
+    o_tab <- table_offset(ctx$table)
     if (!is.finite(o_tab) || abs(o_tab - cal$offset_in) > 1e-9) {
       die(sprintf("the table's offset (%s) is not the calibration's cohort offset %.12f", format(o_tab), cal$offset_in))
     }
-    H1 <- df$H
-    o_nc <- cal$offset_noncohort_in
-    if (!is.null(o_nc) && is.finite(o_nc)) {
-      H1[!in_cohort] <- df$H[!in_cohort] - cal$offset_in + o_nc
-      rule_text <- sprintf("roster + offset: %.4f in inside the ABS-measured cohort, %.4f in outside it (D-R0-02, D-P4-04)",
-                           cal$offset_in, o_nc)
-    } else if (allow_single) {
-      rule_text <- sprintf("roster + the one D-R0-02 offset %.4f in; D-P4-04 NOT applied (owner override, DEV-48)",
-                           cal$offset_in)
+    h_roster <- df$H - cal$offset_in
+    if (rule == "primary") {
+      if (is.null(cal$offset_noncohort_in)) {
+        die("D-P4-04's non-cohort offset (offset_noncohort_in) is not in ", cal$path,
+            ". W3.4's lane writes it. Pass --height-rule single-offset only on the owner's override of D-P4-04.")
+      }
+      offset <- ifelse(in_cohort, cal$offset_in, cal$offset_noncohort_in)
+      rule_text <- sprintf(paste("primary: roster %+.4f in inside the ABS-measured cohort, roster %+.4f in outside it,",
+                                 "both added to roster height (D-R0-02, D-P4-04)"), cal$offset_in, cal$offset_noncohort_in)
+      same_d <- in_cohort
     } else {
-      die("D-P4-04's non-cohort offset (offset_noncohort_in) is not in ", cal$path,
-          ". W3.4's lane writes it. Pass --height-rule single-offset only on the owner's override of D-P4-04.")
+      offset <- rep(cal$offset_in, nrow(df))
+      rule_text <- sprintf("SENS-HEIGHT-SINGLE: roster %+.4f in for every batter, D-R0-02's one offset (D-P4-04 not applied)",
+                           cal$offset_in)
+      same_d <- rep(TRUE, nrow(df))
     }
+    H1 <- h_roster + offset
     d1 <- signed_edge_in(df$x_mid, df$z_mid, abs_top_ft(H1), abs_bot_ft(H1))
-    dev_c <- if (any(in_cohort)) max(abs(d1[in_cohort] - df$d[in_cohort])) else 0
-    check("cohort rows reproduce the table's d", dev_c < 1e-9, sprintf("max |d - table d| %.2e in", dev_c))
+    # Rows whose offset is the table's own must keep the table's d.
+    dev <- if (any(same_d)) max(abs(d1[same_d] - df$d[same_d])) else 0
+    check(sprintf("%s: %s the table's d", rule, if (rule == "primary") "cohort rows reproduce" else "every row reproduces"),
+          dev < 1e-9, sprintf("max |d - table d| %.2e in", dev))
   }
   df$H <- H1
   df$zn <- z_norm(df$z_mid, H1)
   df$d <- d1
   df$edge <- nearest_edge(df$x_mid, df$z_mid, abs_top_ft(H1), abs_bot_ft(H1))
   attr(df, "height_rule") <- rule_text
+  attr(df, "height_rule_key") <- rule
   record(sprintf("height rule %s", rule), sprintf("%s; %s rows, %s in the cohort", rule_text,
                                                  comma(nrow(df)), comma(sum(!is.na(df$H_abs)))))
   df
+}
+
+# scripts/ch1_sprint.sh's preconditions on the calibration file and the analysis table, checked
+# before any fit. Returns one line: "ok: ..." or the reason to refuse.
+sprint_preflight <- function(table, cal_path) {
+  if (!file.exists(cal_path)) return(sprintf("no calibration file at %s", cal_path))
+  cal <- tryCatch(check_calibration(fromJSON(cal_path), cal_path), error = function(e) conditionMessage(e))
+  if (is.character(cal)) return(cal)
+  if (is.null(cal$offset_noncohort_in)) return(sprintf("%s carries no offset_noncohort_in (D-P4-04)", cal_path))
+  if (!file.exists(table)) return(sprintf("no analysis table at %s", table))
+  lo <- last_open_date()
+  mx <- arrow::open_dataset(table) |> summarise(m = max(official_date)) |> collect()
+  mx <- as.Date(mx$m)
+  if (length(mx) != 1L || is.na(mx)) return(sprintf("%s has no official date", table))
+  if (mx > lo) return(sprintf("%s holds official dates after the last open day %s", table, format(lo)))
+  sprintf("ok: %s carries offset_in %+.6f, offset_noncohort_in %+.6f and the expected convention; %s ends on %s, last open day %s",
+          cal_path, cal$offset_in, cal$offset_noncohort_in, table, format(mx), format(lo))
 }
 
 ## --- samples ------------------------------------------------------------------------------------

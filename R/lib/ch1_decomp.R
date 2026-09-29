@@ -213,14 +213,30 @@ headline_sentence <- function(tot, buf, ab, causal) {
           num_txt(sg * buf$point, "sq in"), iv(buf), verb[1], num_txt(sg * ab$point, "sq in"), iv(ab), verb[2])
 }
 
-# D-P4-04's clause: the ABS-measured arm must agree in sign with the primary on the buffer and
-# ABS components, or the primary is reported as sensitive to the height cohort.
+# D-P4-04, part 3: the ABS-measured arm must agree in sign with the primary on the buffer and ABS
+# components, or the primary is reported as sensitive to the height cohort. W3.16 reads it on
+# the area (CLAUSE_ESTIMAND) and writes the verdict to T4's height_cohort_flag column, one of
+# the two strings below; W6.7 reads that column and nothing else to decide the wording.
+CLAUSE_ESTIMAND <- "area_sqin"
+CLAUSE_AGREE <- "agree"
+CLAUSE_SENSITIVE <- "primary is sensitive to the height cohort"
+CLAUSE_NOT_EVALUATED <- "not evaluated: the ABS-measured arm is missing"
+height_cohort_flag <- function(agree) {
+  agree <- as.logical(agree)
+  if (length(agree) != 2L || anyNA(agree)) return(CLAUSE_NOT_EVALUATED)
+  if (all(agree)) CLAUSE_AGREE else CLAUSE_SENSITIVE
+}
+
+# W6.7's sentence for the clause, from the flag W3.16 wrote. buf and ab are T4's area rows.
 cohort_sentence <- function(buf, ab) {
-  agree <- as.logical(c(buf$sign_agrees_abs_cohort, ab$sign_agrees_abs_cohort))
+  flag <- unique(c(buf$height_cohort_flag, ab$height_cohort_flag))
+  if (length(flag) != 1L || !flag %in% c(CLAUSE_AGREE, CLAUSE_SENSITIVE)) {
+    die("T4's height_cohort_flag is missing or reads ", paste(format(flag), collapse = " / "),
+        "; D-P4-04's clause needs W3.16's verdict")
+  }
   arm <- function(x) sprintf("%s sq in (%s)", num_txt(x$abs_cohort_point, "sq in"),
                              ci_txt(x$abs_cohort_lo95, x$abs_cohort_hi95, "sq in"))
-  if (anyNA(agree)) return("The ABS-measured-height arm was not fitted, so D-P4-04's sign-agreement clause is not evaluated.")
-  if (all(agree)) {
+  if (identical(flag, CLAUSE_AGREE)) {
     return(sprintf("The ABS-measured-height arm agrees in sign on both components: %s in 2025 and %s in 2026 (D-P4-04).",
                    arm(buf), arm(ab)))
   }
