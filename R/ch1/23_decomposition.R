@@ -23,6 +23,9 @@
 #   panel_*       the CH1-A14 balanced umpire panel, with panel minus primary as a number
 #   binned_*      the CH1-A5 cross-check: the binned logistic's own decomposition, inside the bam
 #                 95% interval and within 0.15 in (edges) or 3 sq in (area)
+#   undersmooth_* SENS-B1-UNDERSMOOTH (annex 8.7): the top edge from the fit with the season
+#                 by-term at k = 24, on the top_in rows only, beside the primary and never in
+#                 its place
 #
 # WRITES, under --out:
 #   ch1/tab/T4_decomposition.csv       the primary, one row per estimand and component
@@ -43,7 +46,9 @@ A5_TOL <- c(top_in = 0.15, bot_in = 0.15, half_width_in = 0.15, area_sqin = 3)  
 EST_LABEL <- c(main = "bam primary: P0, roster + cohort-specific offset",
                abs_cohort = "bam ABS-measured arm: P1, H_abs",
                panel = "bam balanced umpire panel (CH1-A14)",
-               binned = "binned logistic (annex 5, CH1-A5)")
+               binned = "binned logistic (annex 5, CH1-A5)",
+               undersmooth = "bam SENS-B1-UNDERSMOOTH: P0, season by-term k = 24 (annex 8.7)")
+ARMS <- c("abs_cohort", "panel", "binned", "undersmooth")
 
 decompose_fit <- function(ctx, t3, fit) {
   f <- file.path(ctx$paths$model, sprintf("estimand_draws_%s.csv", fit))
@@ -70,8 +75,7 @@ main <- function() {
   ctx <- start_run("W3.16", opt, "R/ch1/23_decomposition.R")
   p <- ctx$paths
   t3 <- read_csv_plain(file.path(p$tab, "T3_estimands.csv"))
-  dec <- lapply(setNames(c("main", "abs_cohort", "panel", "binned"), c("main", "abs_cohort", "panel", "binned")),
-                function(f) decompose_fit(ctx, t3, f))
+  dec <- lapply(setNames(c("main", ARMS), c("main", ARMS)), function(f) decompose_fit(ctx, t3, f))
   if (is.null(dec$main)) die("no W3.15 draws for the primary fit")
   prim <- dec$main
   resid <- max(abs(unlist(lapply(Filter(Negate(is.null), dec), function(x) x$identity_residual))))
@@ -99,8 +103,11 @@ main <- function() {
   prim$ch1_a5_tolerance <- ifelse(comp_rows & prim$estimand %in% names(A5_TOL), A5_TOL[prim$estimand], NA)
   prim$ch1_a5_within <- ifelse(is.na(prim$ch1_a5_tolerance), NA,
                                prim$binned_inside_bam95 & abs(prim$binned_minus_bam) <= prim$ch1_a5_tolerance)
+  us <- side("undersmooth", c("point", "lo95", "hi95"))
+  prim$undersmooth_point <- us[, 1]; prim$undersmooth_lo95 <- us[, 2]; prim$undersmooth_hi95 <- us[, 3]
+  prim$undersmooth_minus_primary <- prim$undersmooth_point - prim$point
   write_csv_plain(prim, file.path(p$tab, "T4_decomposition.csv"))
-  arms <- do.call(rbind, dec[c("abs_cohort", "panel", "binned")])
+  arms <- do.call(rbind, dec[ARMS])
   if (!is.null(arms)) write_csv_plain(arms, file.path(p$tab, "T4_decomposition_arms.csv"))
 
   # the pre-registered readings, printed; none of them changes a number
@@ -139,6 +146,14 @@ main <- function() {
     b <- prim[!is.na(prim$ch1_a5_within), ]
     record("CH1-A5 binned logistic against bam", sprintf("%d of %d quantities within tolerance and inside the bam 95%% interval%s",
            sum(b$ch1_a5_within), nrow(b), if (all(b$ch1_a5_within)) "" else "; the rest are a limitation, reported as such"))
+  }
+  if (!is.null(dec$undersmooth)) {
+    for (k in c("delta_buffer", "delta_abs")) {
+      r <- prim[prim$estimand == "top_in" & prim$component == k, ]
+      record(sprintf("SENS-B1-UNDERSMOOTH top_in %s", k),
+             sprintf("season k = 24: %s in (%s); primary, k = 18: %s in (%s)", num_txt(r$undersmooth_point, "in"),
+                     ci_txt(r$undersmooth_lo95, r$undersmooth_hi95, "in"), num_txt(r$point, "in"), ci_txt(r$lo95, r$hi95, "in")))
+    }
   }
 
   # W3.16's headline row: the two components, descriptive. W3.21 has not read CH1-A3 yet, so

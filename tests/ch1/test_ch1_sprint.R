@@ -30,6 +30,14 @@ check("single: no season terms, no s(umpire_season)", !grepl("season", fs) && gr
 check("half: half, half_o and s(umpire_half) replace the season terms",
       grepl("cs ~ half +", fh, fixed = TRUE) && grepl("by = half_o", fh, fixed = TRUE) &&
         grepl("s(umpire_half", fh, fixed = TRUE) && !grepl("season", fh), fh)
+fu <- spec_formula("undersmooth")
+check("undersmooth: the frozen text with the season by-term alone at k = 24 (annex 8.7)",
+      identical(norm(fu), norm(sub("k = c(18,18), by = season_o)", "k = c(24,24), by = season_o)", FROZEN_FORMULA_TEXT, fixed = TRUE))) &&
+        !identical(norm(fu), norm(FROZEN_FORMULA_TEXT)) && lengths(regmatches(fu, gregexpr("k = c(24,24)", fu, fixed = TRUE))) == 2L &&
+        grepl("k = c(12,12), by = count_class_o", fu, fixed = TRUE) && identical(make_spec("undersmooth")$period, "season"), fu)
+md87 <- paste(md, collapse = " ")
+check("annex 8.7 pre-registers SENS-B1-UNDERSMOOTH at season k = 24", grepl("SENS-B1-UNDERSMOOTH", md87, fixed = TRUE) &&
+        grepl("season by-term at k = 24 instead of 18", md87, fixed = TRUE), "docs/prereg/ch1.md")
 check("grid is 301 x 276", length(XG) == 301L && length(ZG) == 276L, sprintf("%d x %d", length(XG), length(ZG)))
 check("zn = 0.4025 lies between the two middle rows", ZG[J_MID_LO] < ZN_MID && ZN_MID < ZG[J_MID_HI],
       sprintf("%.3f < 0.4025 < %.3f", ZG[J_MID_LO], ZG[J_MID_HI]))

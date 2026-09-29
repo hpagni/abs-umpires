@@ -3,7 +3,8 @@
 # R/ch1/23_decomposition.R computes g, the precision-weighted 2022-2024 slope, and delta_buffer,
 # delta_abs and delta_total on W3.15's joint draws, with the identity residual as a column and
 # share_abs only under CH1-A9's rule. Beside the primary: the ABS-measured arm and D-P4-04's sign
-# agreement, the CH1-A14 panel, and the CH1-A5 binned logistic. Its headline row is descriptive.
+# agreement, the CH1-A14 panel, the CH1-A5 binned logistic, and SENS-B1-UNDERSMOOTH's top edge
+# (annex 8.7). Its headline row is descriptive.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
 # succeeds and the fit code is committed (GD-12), and writes a provenance receipt under

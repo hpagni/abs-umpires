@@ -6,7 +6,9 @@
 #           season and is dropped. This is the W3.12 recovery harness's generating formula.
 #           W3.17 fits 2025 with it, once on each plate plane.
 #   half    the frozen specification with the season replaced by the half-season, for P2.
-# Every other term is the frozen text, so the three cannot drift apart.
+#   undersmooth  the frozen specification with the season by-term at k = 24, SENS-B1-UNDERSMOOTH
+#           (annex 8.7). Every other term and k is the frozen text.
+# Every other term is the frozen text, so the four cannot drift apart.
 #
 # THE ESTIMANDS (SOP W3.14), for a 72-inch batter on the 301 x 276 grid, each season's surface
 # standardised by g-computation to the 2024 reference mix, random effects at zero:
@@ -31,7 +33,7 @@
 # estimate evaluates F_c exactly. The draws read F_c from a table on a 5e-4 logit grid with
 # linear interpolation, whose error is below 1e-8 in probability; mix_table() measures it.
 
-SPEC_KINDS <- c("main", "single", "half")
+SPEC_KINDS <- c("main", "single", "half", "undersmooth")
 
 sub_once <- function(pattern, replacement, x) {
   y <- sub(pattern, replacement, x, fixed = TRUE)
@@ -53,15 +55,17 @@ spec_formula <- function(kind) {
       f <- sub_once("by = season_o)", "by = half_o)", f)
       sub_once("s(umpire_season, ", "s(umpire_half, ", f)
     },
+    undersmooth = sub_once("k = c(18,18), by = season_o)",
+                           sprintf("k = c(%d,%d), by = season_o)", UNDERSMOOTH_SEASON_K, UNDERSMOOTH_SEASON_K), f),
     die("unknown spec ", kind))
 }
 
 make_spec <- function(kind, levels = NULL) {
   stopifnot(kind %in% SPEC_KINDS)
-  period <- switch(kind, main = "season", single = NULL, half = "half")
-  lv <- if (!is.null(levels)) levels else switch(kind, main = SEASON_LEVELS, single = NULL,
+  period <- switch(kind, main = , undersmooth = "season", single = NULL, half = "half")
+  lv <- if (!is.null(levels)) levels else switch(kind, main = , undersmooth = SEASON_LEVELS, single = NULL,
                                                   half = c("first", "second"))
-  re_var <- switch(kind, main = c("umpire_hp_id", "umpire_season"), single = "umpire_hp_id",
+  re_var <- switch(kind, main = , undersmooth = c("umpire_hp_id", "umpire_season"), single = "umpire_hp_id",
                    half = c("umpire_hp_id", "umpire_half"))
   list(kind = kind, formula = spec_formula(kind), period = period, levels = lv,
        re_terms = sprintf("s(%s)", re_var), re_vars = re_var, dummies = NULL)
@@ -88,7 +92,7 @@ code_period <- function(df, spec, value = NULL) {
 # The fit frame: covariates coded, the period coded, the random-effect factors built.
 fit_frame <- function(df, spec) {
   df <- code_covariates(df)
-  if (spec$kind == "main") df$umpire_season <- paste(df$umpire_hp_id, df$season, sep = ":")
+  if (spec$kind %in% c("main", "undersmooth")) df$umpire_season <- paste(df$umpire_hp_id, df$season, sep = ":")
   if (spec$kind == "half") df$umpire_half <- paste(df$umpire_hp_id, df$half, sep = ":")
   df <- code_period(df, spec)
   for (v in spec$re_vars) df[[v]] <- factor(as.character(df[[v]]))
@@ -405,7 +409,9 @@ three_ball_mix <- function(ref) {
 # The estimands of one surface (season or half), at the point estimate and for every draw.
 #   ref   the 2024 reference pitches of this fit's sample, on the fit's own height rule
 #   geom_only  TRUE for W3.17 and P2, which need the four geometric estimands only
-surface_estimands <- function(m, spec, mix, level, ref, B = NULL, geom_only = FALSE) {
+#   edges_only TRUE for SENS-B1-UNDERSMOOTH: the draws cover top_in, bot_in and half_width_in,
+#              with no area draws; the point still carries all four geometric estimands
+surface_estimands <- function(m, spec, mix, level, ref, B = NULL, geom_only = FALSE, edges_only = FALSE) {
   s <- std_surface(m, spec, mix, level)
   met <- edge_metrics(s)
   point <- met
@@ -413,11 +419,16 @@ surface_estimands <- function(m, spec, mix, level, ref, B = NULL, geom_only = FA
   diag <- list()
   if (!is.null(B)) {
     de <- draw_edges(m, spec, mix, level, met, B)
-    da <- draw_area(m, spec, mix, level, unname(qlogis(s$grid)), B)
-    draws <- cbind(de, area_sqin = as.vector(da))
-    diag <- list(n_band = attr(da, "n_band"), n_full_grid_draws = attr(da, "n_full_grid"))
+    if (edges_only) {
+      draws <- de
+      diag <- list(n_band = 0L, n_full_grid_draws = 0L)
+    } else {
+      da <- draw_area(m, spec, mix, level, unname(qlogis(s$grid)), B)
+      draws <- cbind(de, area_sqin = as.vector(da))
+      diag <- list(n_band = attr(da, "n_band"), n_full_grid_draws = attr(da, "n_full_grid"))
+    }
   }
-  if (!geom_only) {
+  if (!geom_only && !edges_only) {
     w3 <- three_ball_mix(ref)
     sh <- ref[shadow_band(ref$d), , drop = FALSE]
     cb <- ref[ref$d >= -1.5 & ref$d < 1.5, , drop = FALSE]

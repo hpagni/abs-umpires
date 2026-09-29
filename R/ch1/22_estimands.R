@@ -2,7 +2,10 @@
 # R/ch1/22_estimands.R - SOP W3.15, the estimands on the standardised grid.
 #
 #   Rscript R/ch1/22_estimands.R --table data/marts/ch1_called.parquet --out out
-#   Rscript R/ch1/22_estimands.R --table <table> --out <root> --fits main,abs_cohort,panel,binned
+#   Rscript R/ch1/22_estimands.R --table <table> --out <root> --fits main,abs_cohort,panel,undersmooth,binned
+#
+# The undersmooth fit (SENS-B1-UNDERSMOOTH, annex 8.7) contributes top_in only: the annex reports
+# its top-edge estimate and interval beside the primary's, and nothing else from it.
 #
 # For each fit W3.14 wrote, each season 2022 to 2026 is evaluated on the 301 x 276 grid
 # (x_mid -1.5 to 1.5 ft by 0.01, zn 0.15 to 0.70 by 0.002), standardised by g-computation to the
@@ -31,11 +34,16 @@ ROOT <- local({
 setwd(ROOT)
 source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
 
-BAM_FITS <- c("main", "abs_cohort", "panel")
+BAM_FITS <- c("main", "abs_cohort", "panel", "undersmooth")
 SAMPLE_OF <- c(main = "P0, roster + cohort-specific offset", abs_cohort = "P1, H_abs",
                panel = "P0 balanced umpire panel, roster + cohort-specific offset",
-               binned = "P0, roster + cohort-specific offset")
+               binned = "P0, roster + cohort-specific offset",
+               undersmooth = "P0, roster + cohort-specific offset")
 BAM_LABEL <- "bam, frozen specification (annex 2); 95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter"
+US_LABEL <- paste("bam, frozen specification with the season by-term at k = 24, SENS-B1-UNDERSMOOTH (annex 8.7);",
+                  "95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter")
+# The estimands each bam fit reports: all six, except the undersmoothed arm's top edge (annex 8.7).
+ests_of <- function(name) if (name == "undersmooth") UNDERSMOOTH_ESTIMANDS else ESTIMANDS
 BIN_LABEL <- "binned logistic (annex 5), CH1-A5 secondary; interval from 1,000 draws of each edge glm's N(beta, vcov); 2024 count and stand mix"
 
 fit_rows <- function(ctx, name, d, cal, opt) {
@@ -82,20 +90,22 @@ bam_estimands <- function(ctx, name, rows) {
   mix <- ref_mix(obj$m, obj$spec, ref, REF_SEASON)
   record(sprintf("%s: reference mix", name), sprintf("%s 2024 pitches, %d count x handedness cells, median velocity %.1f mph",
                                                      comma(nrow(ref)), length(mix$cells), mix$velo_ref))
-  point <- matrix(NA_real_, length(SEASON_LEVELS), length(ESTIMANDS), dimnames = list(SEASON_LEVELS, ESTIMANDS))
+  ests <- ests_of(name)
+  point <- matrix(NA_real_, length(SEASON_LEVELS), length(ests), dimnames = list(SEASON_LEVELS, ests))
   draws <- list()
   for (s in SEASON_LEVELS) {
     t0 <- proc.time()
-    est <- surface_estimands(obj$m, obj$spec, mix, s, ref, cd)
-    point[s, ] <- est$point[ESTIMANDS]
-    dm <- est$draws[, ESTIMANDS, drop = FALSE]
-    colnames(dm) <- paste(s, ESTIMANDS, sep = "_")
+    est <- surface_estimands(obj$m, obj$spec, mix, s, ref, cd, edges_only = all(ests %in% c("top_in", "bot_in", "half_width_in")))
+    point[s, ] <- est$point[ests]
+    dm <- est$draws[, ests, drop = FALSE]
+    n_ok <- sum(stats::complete.cases(dm))
+    colnames(dm) <- paste(s, ests, sep = "_")
     draws[[s]] <- dm
-    share <- est$diag$n_complete / nrow(cd)
+    share <- n_ok / nrow(cd)
     check(sprintf("%s %s: >= %.0f%% of draws complete", name, s, 100 * MIN_COMPLETE_SHARE), share >= MIN_COMPLETE_SHARE,
-          sprintf("%d of %d; %d band points, %d draws re-read on the full grid; %.0f s", est$diag$n_complete, nrow(cd),
+          sprintf("%d of %d; %d band points, %d draws re-read on the full grid; %.0f s", n_ok, nrow(cd),
                   est$diag$n_band, est$diag$n_full_grid_draws, (proc.time() - t0)[["elapsed"]]))
-    record(sprintf("%s %s point", name, s), paste(sprintf("%s %.3f", ESTIMANDS, point[s, ]), collapse = ", "))
+    record(sprintf("%s %s point", name, s), paste(sprintf("%s %.3f", ests, point[s, ]), collapse = ", "))
   }
   check(sprintf("%s: every point estimate finite", name), all(is.finite(point)), "a closed 50% contour in every season")
   list(point = point, draws = do.call(cbind, draws), n_rows = obj$n_rows)
@@ -118,7 +128,8 @@ binned_block <- function(ctx, rows, n) {
 main <- function() {
   opt <- parse_cli(commandArgs(trailingOnly = TRUE))
   ctx <- start_run("W3.15", opt, "R/ch1/22_estimands.R")
-  fits <- strsplit(opt_get(opt, "fits", "main,abs_cohort,panel,binned"), ",")[[1]]
+  fits <- strsplit(opt_get(opt, "fits", paste(c(BAM_FITS, "binned"), collapse = ",")), ",")[[1]]
+  if (!all(fits %in% c(BAM_FITS, "binned"))) die("unknown fit in --fits: ", paste(setdiff(fits, c(BAM_FITS, "binned")), collapse = ","))
   cal <- read_calibration(ctx, opt)
   d <- load_table(ctx)
   t3 <- list()
@@ -130,7 +141,7 @@ main <- function() {
     } else {
       receipt_matches(ctx, name, rows)
       res <- bam_estimands(ctx, name, rows)
-      est_label <- BAM_LABEL
+      est_label <- if (name == "undersmooth") US_LABEL else BAM_LABEL
     }
     t3[[name]] <- t3_rows(name, res$point, res$draws, est_label, res$n_rows)
     write_csv_plain(data.frame(draw = seq_len(nrow(res$draws)), res$draws, check.names = FALSE),

@@ -2,7 +2,7 @@
 # R/ch1/20_surfaces.R - SOP W3.14, the Chapter 1 called-strike surfaces.
 #
 #   Rscript R/ch1/20_surfaces.R --table data/marts/ch1_called.parquet --out out
-#   Rscript R/ch1/20_surfaces.R --table <table> --out <root> --fits main,abs_cohort,panel,binned
+#   Rscript R/ch1/20_surfaces.R --table <table> --out <root> --fits main,abs_cohort,panel,binned,undersmooth
 #
 # WHAT IT FITS. The frozen specification of docs/prereg/ch1.md section 2, with mgcv::bam(family =
 # binomial, discrete = TRUE, method = "fREML"), on the open window 2022-01-01 to the last open
@@ -11,6 +11,8 @@
 #   abs_cohort  P1 on H_abs, the D-R0-02 robustness arm, for D-P4-04's sign-agreement clause
 #   panel       the CH1-A14 balanced umpire panel: >= 15 home-plate games in every season
 #   binned      the binned logistic of annex section 5, the CH1-A5 secondary estimator
+#   undersmooth SENS-B1-UNDERSMOOTH (annex 8.7, D-R0-04): main's rows, the season by-term at
+#               k = 24 and every other k as frozen; W3.16 reports its top edge beside the primary
 # Season enters as a five-level factor with 2022 as the reference, and s(umpire_hp_id) and
 # s(umpire_season) carry the umpire effects. The smooth is on the re-projected mid-plane pair,
 # x_mid and zn, never on the raw plate_x and plate_z: Statcast publishes those at the front of
@@ -47,16 +49,16 @@ ROOT <- local({
 setwd(ROOT)
 source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
 
-ALL_FITS <- c("main", "abs_cohort", "panel", "binned")
+ALL_FITS <- c("main", "abs_cohort", "panel", "binned", "undersmooth")
 
 # The one read: the analysis table, open rows only, through the loader's scan filter.
 surface_frame <- function(ctx) {
   load_table(ctx)
 }
 
-fit_one <- function(ctx, name, rows, height_rule) {
+fit_one <- function(ctx, name, rows, height_rule, kind = "main") {
   p <- ctx$paths
-  spec <- make_spec("main")
+  spec <- make_spec(kind)
   ff <- fit_frame(rows, spec)
   ft <- fit_surface(ff, spec)
   check(sprintf("%s: bam converged", name), ft$converged,
@@ -96,6 +98,10 @@ fit_surfaces <- function(ctx, opt) {
   prim <- apply_heights(d, "primary", cal, ctx, allow_single)
   hr <- attr(prim, "height_rule")
   if ("main" %in% fits) fit_one(ctx, "main", surface_rows(prim), hr)
+  if ("undersmooth" %in% fits) {
+    fit_one(ctx, "undersmooth", surface_rows(prim),
+            sprintf("%s; SENS-B1-UNDERSMOOTH, season by-term k = %d", hr, UNDERSMOOTH_SEASON_K), kind = "undersmooth")
+  }
   if ("panel" %in% fits) {
     u <- panel_umpires(prim)
     record("CH1-A14 balanced panel", sprintf("%d umpires with >= %d home-plate games in each of %s (%d at the freeze)",

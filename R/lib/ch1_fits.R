@@ -91,6 +91,12 @@ FROZEN_FORMULA_TEXT <- paste(
   "+ s(velo, k = 10)",
   '+ s(umpire_hp_id, bs = "re")',
   '+ s(umpire_season, bs = "re")')
+# SENS-B1-UNDERSMOOTH, pre-registered in annex 8.7 (D-R0-04): W3.14 refits the surfaces with the
+# season by-term at k = 24, the next rung of annex section 3's season ladder, and every other k
+# as frozen. W3.15 reads the top edge off it and W3.16 reports it beside the primary, never in
+# its place.
+UNDERSMOOTH_SEASON_K <- 24L
+UNDERSMOOTH_ESTIMANDS <- "top_in"
 
 ## --- the run harness ---------------------------------------------------------------------
 

@@ -24,7 +24,7 @@
 diff --git a/R/ch1/20_surfaces.R b/R/ch1/20_surfaces.R
 --- a/R/ch1/20_surfaces.R
 +++ b/R/ch1/20_surfaces.R
-@@ -89,6 +89,7 @@ fit_one <- function(ctx, name, rows, height_rule) {
+@@ -91,6 +91,7 @@ fit_one <- function(ctx, name, rows, height_rule, kind = "main") {
 
  fit_surfaces <- function(ctx, opt) {
    d <- surface_frame(ctx)

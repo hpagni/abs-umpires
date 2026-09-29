@@ -3,7 +3,8 @@
 # R/ch1/20_surfaces.R fits the frozen specification of docs/prereg/ch1.md section 2 with
 # mgcv::bam(discrete = TRUE, method = "fREML") on the open window, |d| <= 8 in, less the four games
 # without ABS hardware: the primary cohort (roster + cohort-specific offset, D-R0-02 and D-P4-04),
-# the ABS-measured arm, the CH1-A14 balanced panel, and the binned logistic of annex section 5. Each
+# the ABS-measured arm, the CH1-A14 balanced panel, the binned logistic of annex section 5, and
+# SENS-B1-UNDERSMOOTH, the season by-term at k = 24 (annex 8.7, D-R0-04). Each
 # bam fit writes a 1,000 x coefficients matrix of draws from N(beta, Vc) (annex 8.7, DEV-60) that
 # every later interval reads; nothing refits for an interval.
 #

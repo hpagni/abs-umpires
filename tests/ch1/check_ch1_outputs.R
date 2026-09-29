@@ -5,14 +5,15 @@
 #   Rscript tests/ch1/check_ch1_outputs.R --out <dry-run root>/out --step all --synthetic
 #
 # It reads the outputs a step wrote, refits nothing, and re-derives what can be re-derived:
-#   W3.14  every fit has its object, its 1,000 Vc draws and a receipt with the SOP section 1.4
-#          keys; the union receipt sits beside the objects (GD-01); on real outputs every
-#          receipt's git_sha descends from prereg-v1 (GD-12) and no max_official_date passes the
-#          last open day
-#   W3.15  T3 has five seasons and six estimands for the primary fit, and every interval equals
-#          the quantiles of its draws column
+#   W3.14  every fit, SENS-B1-UNDERSMOOTH's included, has its object, its 1,000 Vc draws and a
+#          receipt with the SOP section 1.4 keys; the union receipt sits beside the objects
+#          (GD-01); on real outputs every receipt's git_sha descends from prereg-v1 (GD-12) and
+#          no max_official_date passes the last open day
+#   W3.15  T3 has five seasons and six estimands for the primary fit and the top edge alone for
+#          SENS-B1-UNDERSMOOTH, and every interval equals the quantiles of its draws column
 #   W3.16  T4 re-derived from T3 and the draws to 1e-9; the identity residual under 1e-9; the
-#          share reported only under the CH1-A9 rule; W3.16's headline row present
+#          share reported only under the CH1-A9 rule; SENS-B1-UNDERSMOOTH beside the top edge;
+#          W3.16's headline row present
 #   W3.17  top, bottom, width and area rows, each with a 95% interval (CH1-A13); one quantity named
 #          as the one the component was subtracted from; T9 present; the figure and its CSV
 #   W3.18  T6 and umpire_eb.csv present, no per-umpire column, CH1-A6 stated, MT-05 on real fits
@@ -49,7 +50,7 @@ receipts <- function() {
 }
 
 chk_w314 <- function() {
-  for (fit in c("main", "abs_cohort", "panel")) {
+  for (fit in c("main", "abs_cohort", "panel", "undersmooth")) {
     has(file.path(P$model, sprintf("surface_%s.rds", fit)))
     f <- file.path(P$model, sprintf("draws_vc_%s.rds", fit))
     if (has(f)) {
@@ -86,6 +87,9 @@ chk_w315 <- function() {
   m <- t3[t3$fit == "main", ]
   check("T3 primary: five seasons x six estimands", nrow(m) == 30L && setequal(m$season, SEASONS) &&
           setequal(m$estimand, ESTIMANDS), sprintf("%d rows", nrow(m)))
+  u <- t3[t3$fit == "undersmooth", ]
+  check("T3 SENS-B1-UNDERSMOOTH: the top edge in five seasons, nothing else (annex 8.7)",
+        nrow(u) == 5L && setequal(u$season, SEASONS) && all(u$estimand == UNDERSMOOTH_ESTIMANDS), sprintf("%d rows", nrow(u)))
   for (fit in unique(t3$fit)) {
     dr <- csv(file.path(P$model, sprintf("estimand_draws_%s.csv", fit)))
     if (is.null(dr)) { check(sprintf("draws for %s", fit), FALSE, "absent"); next }
@@ -117,6 +121,10 @@ chk_w316 <- function() {
       identical(res$reported, as.logical(got$reported[match(res$component, got$component)]))
   }
   check("T4 re-derived from T3 and the W3.15 draws", ok, "points, intervals and the CH1-A9 share rule")
+  us <- t4[t4$component %in% c("delta_buffer", "delta_abs"), ]
+  check("SENS-B1-UNDERSMOOTH beside the primary on the top edge only (annex 8.7)",
+        all(c("undersmooth_point", "undersmooth_lo95", "undersmooth_hi95") %in% names(t4)) &&
+          all(is.finite(us$undersmooth_lo95[us$estimand == "top_in"])) && all(is.na(us$undersmooth_point[us$estimand != "top_in"])), "")
   has(file.path(P$models, "ch1_W3_16", "provenance.json"))
   hl <- csv(file.path(P$tables, "headline.csv"))
   check("headline.csv carries W3.16's row", !is.null(hl) && "CH1_W316" %in% hl$id, "")
@@ -145,7 +153,7 @@ chk_w318 <- function() {
   if (!has(file.path(P$tab, "T6_heterogeneity.csv")) || !has(file.path(P$tab, "umpire_eb.csv"))) return()
   check("no per-umpire column in the published tables", !any(c("umpire_hp_id", "umpire") %in% c(names(t6), names(eb))), "")
   check("CH1-A6 stated", all(nzchar(t6$ch1_a6)), unique(t6$ch1_a6))
-  if (REAL) for (k in c("sop", "ue_us")) {
+  if (REAL) for (k in names(B2_FITS)) {
     r <- t6[t6$fit == k & t6$quantity == "tau_abs", ]
     check(sprintf("MT-05 %s", k), nrow(r) == 1L && isTRUE(as.logical(r$mt05_pass)), "")
   }
