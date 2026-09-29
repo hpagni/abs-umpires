@@ -167,7 +167,14 @@ The D-13 fork turns on DT-30, the ABS-measured share of called pitches, publishe
 
 The 2022 share is below the 0.60 trigger. The fork's roster-height branch is the one taken, and D-R0-02 applies it to all five seasons.
 
-**Exclusions.** Each is a row in `out/ch1/tab/T1_sample.csv`: `game_type != "R"`; the postseason, held out of the primary as a separate pre-registered secondary; `automatic_ball`, `pitchout`, `hit_by_pitch` and blank-coordinate rows; pitches thrown by position players. `blocked_ball` is kept as a genuine ball call. The surface fit uses `|d| ≤ 8.0 in` on the harmonised zone. The shadow band `|d| ≤ 3.0 in` is a reporting region and a sensitivity factor, not a filter.
+**Exclusions.** Each is a row in `out/ch1/tab/T1_sample.csv`: `game_type != "R"`; the postseason, held out of the primary as a separate pre-registered secondary; `automatic_ball`, `pitchout`, `hit_by_pitch` and blank-coordinate rows; pitches thrown by position players. `blocked_ball` is kept as a genuine ball call. The surface fit uses `|d| ≤ 8.0 in` on the harmonised zone. Neither shadow band below is a filter.
+
+**Two shadow bands.** `d` is the signed distance in inches from the ball's centre to the edge of the harmonised zone, negative inside. `d − 1.45` is the same distance from the nearest part of the ball, so under D-14 a pitch is in the zone when `d − 1.45 < 0`. Two bands 3.0 in wide on each side are in use:
+
+- The shadow-rate band, `|d − 1.45| ≤ 3.0 in`, on the radius-adjusted signed edge distance (D-P4-09). It covers ball-centre `d` from −1.55 to 4.45 in. W3.15's `shadow_rate` reads it, and so do P1's shadow-rate test (CH1-A3), CH1-A10's sealed-set calibration and the sensitivity grid's shadow-band factor of 2, 3 or 4 in. Where a SOP quote in section 8 writes `|d| ≤ 3.0 in` for the shadow rate, this is the band it means.
+- The B1 band, `|d| ≤ 3.0 in` on the ball-centre `d` (`docs/prereg/ch1.md` section 8.1). W3.18's stage B1 estimates each umpire's offsets on it. The D-60 power curve, its SBC and the CH1-A6 thresholds of `docs/prereg/ch1.md` section 8.5 were built on it. The raw band rows of `out/ch1/tab/T1_sample.csv` use it too.
+
+The two differ because D-P4-09 moved the shadow rate to the radius-adjusted distance, the one D-14 and SOP W3.6's overturn count use. The power curve was built on the ball-centre band, and the thresholds of `docs/prereg/ch1.md` section 8.5 hold for the estimator the curve measured. So B1 keeps that band. Moving it would leave CH1-A6 with thresholds from a different design, which `docs/prereg/ch1.md` section 8.4 did not derive.
 
 **Four games without ABS hardware.** Games 823669, 823745, 825093 and 825094 were played at neutral sites with no ABS hardware (D-P2-01). They were played on 2026-04-25, 2026-04-26, 2026-08-13 and 2026-08-23. They join neither the 2026 regime nor a control regime, and every Chapter 1 estimate excludes them. They are also the four dates of D-P3-10, which carry the 1,144 of 688,686 MLB 2026 rows that break the 0.535 / 0.27 zone rule. D-P3-10 asked for this exclusion to be stated here with its dates and row count. At the freeze the Chapter 1 analysis table still holds their 621 called pitches (section 14, item 3).
 
@@ -233,9 +240,13 @@ No per-umpire table is published: the power curve does not reach the reliability
 
 **P3 is read net of each season's published rule (D-P4-29).** The SOP row above stays verbatim and says the machine zone does not move. On raw area it has already moved 35.77 sq in between the 2023 and 2024 AAA seasons, because the published zone definition changed. The top of the zone went from 51.0% to 53.5% of batter height. Read raw, P3 would fail by rule. The pre-registered P3 claim is this: after removing the change each season's published rule implies, the machine zone does not move. Rule-net area is the machine-day contour area minus the area of that season's published zone for the same batters. The decision rule is the one P1 uses for area, with its tolerance. Two one-sided equivalence tests pass when the 90% interval on the season-to-season change in rule-net area lies entirely inside ±3 sq in.
 
+**P3 and P4 in the sprint.** P3 does not run in the SSAC abstract sprint, SOP phase 1. It needs the AAA arm, which SOP W3.20 blocks on D-11, D-12 and D-57, and the AAA pull that W3.9 waits for (DEV-55). Until the arm runs, P3 is reported as "not run". P4 has no pre-registered numeric threshold. Its called-strike rates beyond 6 in on the ball-centre `d`, outside and inside, are tabulated per season with Wilson 95% intervals, and no verdict is drawn from them.
+
 **Pre-registered consequence.** SOP W3.21 requires this sentence here verbatim:
 
 > if P1 or P2 fails, the three-regime decomposition is reported as **descriptive**, the causal language is removed from every artifact, and the failure is the headline finding.
+
+The consequence turns on P1 and P2 alone. P3 not run, or a P4 rate that moves, does not trigger it.
 
 **The sensitivity grid.** SOP W3.22 defines the multiverse that CH1-A9 reads. Its cells, verbatim:
 

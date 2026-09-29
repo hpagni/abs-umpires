@@ -1415,3 +1415,21 @@ throwaway repository.
 What stays open. History was not rewritten. The address remains in every commit from cd44758,
 and from 74b995a for `DECISIONS.md`, up to the commit that carries this entry. The owner
 decides whether history is scrubbed.
+
+## DEV-T2: W3.15, W3.18 and W3.21, the two shadow bands, the W3.18 link, and P3 and P4
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-T2. Provisional id.
+OWNER-VISIBLE.
+
+What the SOP said. W3.15 computes `shadow_rate` over `|d| ≤ 3.0 in`. W3.18 takes the link
+`g_{e,r}(d)` "from the pooled surface". W3.21 lists P3, "machine zone does not move", and P4,
+"rate ≈ 0 or 1 and stable", beside P1 and P2.
+
+What was done instead. The pre-registration names two bands. W3.15's shadow rate, P1,
+CH1-A10 and the sensitivity grid read `|d − 1.45| ≤ 3.0 in` (D-P4-09). W3.18's B1, the D-60
+curve, its SBC and CH1-A6 read `|d| ≤ 3.0 in` on the ball-centre d. The W3.18 link is
+`glm(cs ~ ns(d, 6), binomial)` per edge and regime on |d| ≤ 8 in, pooled over umpires: the form
+the curve and the SBC were built on, not the W3.14 `bam` surface. P3 does not run in the
+sprint and is reported as "not run" until the AAA arm runs (DEV-55). P4 carries no numeric
+threshold and no verdict. The consequence of a placebo failure turns on P1 and P2 alone.

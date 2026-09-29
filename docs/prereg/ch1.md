@@ -190,7 +190,7 @@ It was run twice: the first run on 2026-09-25, the second from 2026-09-25 to 202
 
 ### 8.1 What was simulated
 
-The design is every real called pitch of 2022–2026 in the shadow band, |d| ≤ 3.0 in: 498,055 pitches from 114 umpires in 12,060 games. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
+The design is every real called pitch of 2022–2026 in the B1 band, |d| ≤ 3.0 in on the ball-centre d: 498,055 pitches from 114 umpires in 12,060 games. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
 
 Two inputs come from 2022–2024 calls, and from nothing later:
 
@@ -201,6 +201,8 @@ The generating offset of umpire u in season s at edge e is the sum of those four
 
 The same link serves all five seasons. The SOP measured 1.405 logit per inch on 2026-09-15; the 2022–2024 link is flatter. So the per-cell standard errors in the curve are, if anything, larger than 2025 and 2026 will give.
 
+**Two shadow bands.** d is the signed distance from the ball's centre to the zone edge, negative inside, and d − 1.45 is the radius-adjusted signed edge distance of D-14. The B1 band above, |d| ≤ 3.0 in on the ball-centre d, is the band of the design, the SBC and the CH1-A6 thresholds, and W3.18's stage B1 uses it. W3.15's `shadow_rate`, and with it placebo P1, reads a different band: D-P4-09's |d − 1.45| ≤ 3.0 in, which covers ball-centre d from −1.55 to 4.45 in. D-P4-09 moved the shadow rate there. B1 stays on the band the curve was built on, because the CH1-A6 thresholds hold for the estimator the curve measured. `PREREGISTRATION.md` section 7 names both.
+
 ### 8.2 The estimator the curve measures
 
 The whole SOP W3.18 estimator runs on each simulated league.
@@ -208,6 +210,8 @@ The whole SOP W3.18 estimator runs on each simulated league.
 - B1: for each umpire-season-edge, δ maximises the binomial likelihood of y ~ g_e(d − δ) over [−4, 4] in by 0.01 in. The SE is the profile half-width where the log likelihood falls by 0.5. B2 keeps cells with at least 30 pitches whose δ is not at the grid bound.
 - B2: the SOP formula and priors, with two changes made before the tag: the prior on the three `edge:abs_step` coefficients is `normal(0, 0.30)` (section 8.8), and the sampler settings are the ones below. Seed 20260922. Regime enters as two step contrasts, `buf_step` (1 in 2025 and 2026) and `abs_step` (1 in 2026). This is the SOP's `edge:regime` and `(1 + regime | umpire_hp_id)` re-coded, so the nine edge-by-regime means are unchanged. The `abs_step` slope is each umpire's 2025-to-2026 response, and its SD is τ. W3.18 uses this coding, so the thresholds below apply to the fit it runs. The re-coding is not neutral for the prior: section 8.8.
 - B3: each umpire-season's plate games are split odd and even by game index, and B1 runs on each half. The per-umpire response is 2026 minus 2025, centred per edge and pooled over edges by precision. It is correlated across halves and Spearman-Brown corrected. MT-07 makes the variance-components reliability the gating value. For the response it is 1 minus the mean posterior variance of the umpire's `abs_step` over the posterior mean of τ².
+
+**The W3.18 link, pre-registered.** SOP W3.18 says to "take the fitted link `g_{e,r}(d)` from the pooled surface". W3.18 reads that as one link per edge and regime: `glm(cs ~ ns(d, 6), binomial)` on that edge's pitches of that regime with |d| ≤ 8 in, pooled over umpires. It is the form of the calibration link of section 8.1, and the power curve and the SBC were built on that link, so the CH1-A6 thresholds apply to a B1 that uses it. The W3.14 `bam` surface does not serve as the link. It is a surface in (x_mid, zn) with umpire and count terms, and the curve never measured B1 against it. In the curve one link, fitted on 2022–2024, served every season. At W3.18 each regime has its own link, so δ is an umpire's offset from his regime's league link. B2's league steps then sit near zero, and τ, the SD of the umpires' responses, is unchanged.
 
 The curve measures two estimators on the same simulated leagues. `sop` is B2 as above. `ue_us` adds `(1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)`, the two nuisance terms the calibration found. A rule written in the script before any `ue_us` seed ran chose which one sets CH1-A6. It is `sop` if its 95% interval for τ covers the true τ in at least 13 of 15 seeds. Failing that it is `ue_us` on the same test, and failing both, neither.
 

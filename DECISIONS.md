@@ -2665,3 +2665,42 @@ history is left alone.
 What the owner decides. The address remains in git history, in every commit from cd44758
 for FORM-FIELDS and from 74b995a for DECISIONS.md, up to the commit that carries this entry.
 Scrubbing it rewrites every public sha after 74b995a. Whether to do that is his call.
+
+### D-T2 APPLIED UNDER D-R0-03, OWNER-VISIBLE: Chapter 1 names its two shadow bands, pre-registers the W3.18 link, and says what P3 and P4 carry
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`, from the Chapter 1 fit-code
+review. Status: **applied under D-R0-03's delegation, not an owner answer.** The deviation is
+DEV-T2. Provisional id. OWNER-VISIBLE because the second item fixes a reading of SOP W3.18 that
+its text leaves open. The height paragraphs are untouched.
+
+**The two shadow bands.** `PREREGISTRATION.md` section 7 wrote "the shadow band `|d| ≤ 3.0 in`"
+without saying which d. Two bands are in use, both checked against the code before the text
+was written:
+
+- `shadow_band()` in `R/lib/ch1_fits.R` on `phase05/ch1-fits` is `|d − 1.45| ≤ 3.0 in`, the
+  radius-adjusted signed edge distance of D-P4-09. `R/lib/ch1_estimands.R` computes W3.15's
+  `shadow_rate` on it, and `R/ch1/26_placebos.R` reads P1's shadow-rate test from W3.15's draws.
+- `b1_band()` is `|d| ≤ 3.0 in` on the ball-centre d. `R/ch1/25_heterogeneity.R` runs B1 on it.
+  `R/ch1/21_synthetic.R` on `main` builds the D-60 design on the same band, 498,055 pitches.
+
+Applied: root section 7 gains a paragraph that defines d and d − 1.45, names both bands, says
+which estimand reads which, and says why they differ. Annex 8.1 names its design band as the
+B1 band and gains a short paragraph that points to it. Two readings are fixed that no code
+holds yet, because W3.22 and W3.23 are not built: the sensitivity grid's shadow-band factor
+and CH1-A10's sealed-set calibration read the shadow-rate band.
+
+**The W3.18 link.** SOP W3.18 says to "take the fitted link `g_{e,r}(d)` from the pooled
+surface". `fit_links()` in `R/lib/ch1_hetero.R` on `phase05/ch1-fits` fits
+`glm(cs ~ ns(d, 6), binomial)` per edge and regime on that regime's |d| ≤ 8 in pitches,
+pooled over umpires. `fit_links()` in `R/ch1/21_synthetic.R` on `main` fits the same form per
+edge on 2022–2024, the W3.12 calibration link of annex 8.1. The power curve simulated calls
+from it and B1 read them through it, and the SBC's analytic SEs come from it. Applied: annex
+8.2 pre-registers that reading, with the reason that the CH1-A6 thresholds apply to a B1 that
+uses the link the curve was built on. The W3.14 `bam` surface, the other reading of "pooled
+surface", is not the link.
+
+**P3 and P4.** The existing text stated P3 net of each season's rule (D-P4-29) and the AAA
+arm's blockers. It did not say that P3 does not run in the SSAC sprint, that P4 has no numeric
+threshold, or that the consequence of a placebo failure turns on P1 and P2 alone. Applied:
+root section 8 says all three, in line with the header of `R/ch1/26_placebos.R`. The verbatim
+SOP rows and the verbatim consequence are unchanged.
