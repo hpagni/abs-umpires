@@ -36,6 +36,11 @@
 
 set -uo pipefail
 
+# PATH. Under launchd the shell carries no ~/.local/bin, where uv lives. ops/
+# nightly.sh exports the same line before it calls this script; it is repeated
+# here so that `make inseason` from a bare shell finds uv too.
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 

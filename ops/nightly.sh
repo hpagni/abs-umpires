@@ -36,6 +36,14 @@
 
 set -uo pipefail
 
+# PATH. launchd starts the agent with /usr/bin:/bin:/usr/sbin:/sbin, and the
+# plist's `zsh -lc` reads ~/.zprofile but not ~/.zshrc, so uv in ~/.local/bin
+# was not on it: the scheduled runs of 2026-09-24 and 2026-09-25 stopped at
+# "uv: command not found" in ops/inseason.sh. The toolchain directories are
+# named here instead, the way ops/env-setup.sh names them, and exported so
+# every script this one calls inherits them.
+export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 2
 

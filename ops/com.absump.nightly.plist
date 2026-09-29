@@ -18,8 +18,10 @@
   two days several times a day, and the point of 03:30 is that yesterday is
   complete by then. Kickstart it by hand to run it early.
 
-  No path here names a user. The job runs a login shell, so $HOME and the
-  toolchain on PATH come from the account that loads it.
+  No path here names a user. The job runs a login shell, so $HOME comes from
+  the account that loads it. A login shell does not read ~/.zshrc, so uv's
+  directory is not on its PATH; ops/nightly.sh puts the toolchain on PATH
+  itself.
 
   Install, as the owner, on this machine:
 
