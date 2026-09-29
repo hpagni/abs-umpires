@@ -44,7 +44,8 @@ if [ -n "$TAG" ] && [ "$OUT" = "$root" ]; then
 fi
 mkdir -p "$OUT/abstract" "$OUT/out/tables" "$OUT/submissions/ssac2027"
 
-echo "abstract: ledger $LEDGER, variant $VARIANT, output root ${OUT#"$root"/}${TAG:+, tag $TAG}"
+rel_out=${OUT#"$root"}; rel_out=${rel_out#/}
+echo "abstract: ledger $LEDGER, variant $VARIANT, output root ${rel_out:-.}${TAG:+, tag $TAG}"
 
 # The wide sentence says the plan preceded estimation. A vacuous pass (no receipt, no
 # tag) proves nothing, so it needs at least one fit receipt, all descending from the
@@ -65,8 +66,6 @@ fi
 Rscript tools/comms/build_exhibits.R --ledger "$LEDGER" ${TAG:+--tag "$TAG"} \
   --abstract-dir "$OUT/abstract" --tables-dir "$OUT/out/tables"
 ex=$?
-[ "$ex" -eq 0 ] || { echo "abstract: build_exhibits exited $ex; stopping"; exit "$ex"; }
-inline_words=$(wc -w < "$OUT/abstract/table1$(sfx).inline.md" | tr -d ' ')
 
 # Two fills from the same ledger: the body as pasted with the table uploaded, and the
 # body for a form with no upload field, which must also hold the inline table.
@@ -78,7 +77,9 @@ fill() {
 }
 fill "" 0
 rc=$?
+[ "$ex" -eq 0 ] || { echo "abstract: build_exhibits exited $ex; stopping"; exit "$ex"; }
 [ "$rc" -eq 0 ] || { echo "abstract: fill_slots exited $rc; stopping"; exit "$rc"; }
+inline_words=$(wc -w < "$OUT/abstract/table1$(sfx).inline.md" | tr -d ' ')
 fill ".inline-table" "$inline_words"
 rc_inline=$?
 [ "$rc_inline" -le 1 ] || [ "$rc_inline" -eq 3 ] || { echo "abstract: fill_slots (inline table) exited $rc_inline"; exit 2; }
