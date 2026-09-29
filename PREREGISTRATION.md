@@ -231,6 +231,8 @@ No per-umpire table is published: the power curve does not reach the reliability
 > | P3 | AAA full-ABS days across seasons | null | machine zone does not move |
 > | P4 | Pitches with `|d| > 6 in` | null | rate ≈ 0 or 1 and stable; movement indicates tracking drift |
 
+**P3 is read net of each season's published rule (D-P4-29).** The SOP row above stays verbatim and says the machine zone does not move. On raw area it has already moved 35.77 sq in between the 2023 and 2024 AAA seasons, because the published zone definition changed. The top of the zone went from 51.0% to 53.5% of batter height. Read raw, P3 would fail by rule. The pre-registered P3 claim is this: after removing the change each season's published rule implies, the machine zone does not move. Rule-net area is the machine-day contour area minus the area of that season's published zone for the same batters. The decision rule is the one P1 uses for area, with its tolerance. Two one-sided equivalence tests pass when the 90% interval on the season-to-season change in rule-net area lies entirely inside ±3 sq in.
+
 **Pre-registered consequence.** SOP W3.21 requires this sentence here verbatim:
 
 > if P1 or P2 fails, the three-regime decomposition is reported as **descriptive**, the causal language is removed from every artifact, and the failure is the headline finding.

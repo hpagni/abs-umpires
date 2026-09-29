@@ -2362,20 +2362,35 @@ W3.11's own verify is green. Its phase verdict fails only because the shared `ma
 target also runs W3.12's artefacts. The shared target is the one the SOP names. A green W3.11
 beside a red W3.12 would read as a partial chapter-1 pass, so the two are not decoupled.
 
-### D-P4-29 RECORDED, NOT APPLIED: two pre-tag text items keep their recommended defaults
+### D-P4-29 APPLIED UNDER D-R0-03: two pre-tag text items take their recommended defaults
 
 Recorded by the mechanical lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
-`logs/decisions-pending/mechanical.md`. Status: **recorded with a default. Neither is applied,
-and both touch the text of the pre-registration.**
+`logs/decisions-pending/mechanical.md`. Applied on 2026-09-29 (Europe/Madrid), before the
+prereg-v1 tag. Status: **applied default under D-R0-03's delegation, not an owner answer.**
+Both touch the text of the pre-registration. Because the tag is not cut, both are edits in
+place and not deviations.
 
 - P3 in `PREREGISTRATION.md` (the H-table row "machine zone does not move"). Default: state P3
   net of each season's published rule, because the raw area has already moved 35.77 sq in by
-  rule. The row was unchanged on 2026-09-29.
+  rule. Applied: the SOP W3.21 table is a verbatim quote, so its row stays, and a paragraph
+  under it restates P3. After removing the change each season's published rule implies, the
+  machine zone does not move. Rule-net area is the machine-day contour area minus the area of
+  that season's published zone. The decision rule is P1's area arm: the 90% interval on the
+  change lies inside ±3 sq in. The paragraph gives the 35.77 sq in and the 51.0% to 53.5%
+  zone-top change as the reason. `docs/prereg/ch1.md` does not define P3, no acceptance
+  criterion reads it, and no script or test evaluates it, because W3.21 is not built. W3.9's
+  S4 clause is a data check at 2 sq in, not P3, and D-P4-21 keeps its reading.
 - `docs/prereg/ch2.md` section 7.1 computes the H2a split-half over challengers, while its
   threshold line and SOP 9.3 say catchers. Default: follow SOP 9.3 unless the annex owner shows
-  that the SOP means challengers. The section was unchanged on 2026-09-29.
+  that the SOP means challengers. Applied: SOP 9.3 names catchers, and only SOP W4.12's generic
+  estimator says challengers, so the SOP does not show that it means challengers. The
+  computation line now reads catchers with ≥20 challenges and gives the reason in one
+  sentence. The threshold line and the H2a quote in `PREREGISTRATION.md` already read catchers
+  and are unchanged. W4.12's all-challenger split-half is reported beside it and does not gate.
+  No script or test computes the split-half yet, and W4.1's verify reads only the threshold
+  line.
 
-Both change pre-registered text, so after the tag either becomes a DEVIATIONS entry.
+Either change made after the tag would have been a DEVIATIONS entry.
 
 ### D-P4-30 APPLIED UNDER D-R0-03, OWNER-VISIBLE: the W3.12 recovery intervals come from `Vc`, not `Vp`
 

@@ -199,7 +199,7 @@ The thresholds are SOP section 9.3, unchanged. Each names the tests that check i
 - Threshold: `P(sd_challenger > 0.10 logit | data) ≥ 0.80`, and split-half Spearman-Brown ≥0.40 for catchers with ≥20 challenges.
 - Checked by: MT-05 on the M1 fit; MT-07 for the split-half; MT-03 for the recovery that gives a rank its meaning.
 - If it fails (annex default): accuracy is reported as not rankable in one season. The leaderboard keeps shrunken estimates with 95% intervals and carries no accuracy rank.
-- The split-half uses the chronological challenge index, with `r_SB = 2r/(1+r)` over challengers with ≥20 challenges. Section 10, item 5 records an ordering fault in that index.
+- The split-half uses the chronological challenge index within each catcher, with `r_SB = 2r/(1+r)` over catchers with ≥20 challenges. It follows SOP section 9.3 and not W4.12's all-challenger wording, because section 9.3 is the done-criterion that gates H2a and it names catchers (D-P4-29). SOP W4.12's split-half over all challengers with ≥20 challenges is reported beside it and does not gate H2a. Section 10, item 5 records an ordering fault in that index.
 
 ### 7.2 CH2-H2b, willingness is rankable
 
