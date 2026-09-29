@@ -1,0 +1,17 @@
+# W7.24, number traceability: tools/comms/export_numbers.R writes docs/numbers.json.
+# Owner W7; fleet phase 06 seeds it for the abstract and phase 12 owns it from then on.
+# Registered 2026-09-29, Madrid.
+#
+# The exporter carries every entry from a committed CSV under out/ with its file and row
+# (W6.7 abstract_slots_ch1.csv, W6.9 abstract_slots_ch2.csv, W6.8 umpire_eb_summary.csv,
+# W3.16 T4_decomposition.csv, W3.17 T4_plane_component.csv) and keeps the W6.3 and W6.4
+# entries byte for byte. It rounds once, by tools/comms/abstract_slots.json, and writes
+# the printed strings beside each value, so WR-07 sees what the abstract prints. The
+# verify regenerates in memory and fails if docs/numbers.json would change, which is how
+# a hand edit is caught, then runs the number gate. app/data/*.rds is read from phase 12.
+- id: W7.24
+  title: "Number traceability, docs/numbers.json from out/"
+  verify: "Rscript tools/comms/export_numbers.R --check && uv run --locked python quality/check_numbers.py"
+  expect_exit: 0
+  owner: W7
+  needs: tools/comms/export_numbers.R, tools/comms/abstract_slots.json, docs/numbers.json, quality/check_numbers.py
