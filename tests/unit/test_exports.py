@@ -229,16 +229,69 @@ def scan_file(path: Path) -> list[Table]:
     return [Table(rel, "other", (), -1, f"not a table format ({suffix or 'no suffix'})")]
 
 
+# out/dev/ holds local development artefacts: synthetic designs, recovery replicates and
+# benchmark fits. .gitignore excludes the whole tree, so git can never publish a file
+# there. The gate skips a file under out/dev/ only when it is untracked and git ignores
+# it. A tracked file under out/dev/, and every file elsewhere under out/, is still read.
+DEV_DIR = "out/dev/"
+
+
+def ignored_dev_files() -> set[str]:
+    """Untracked files under out/dev/ that .gitignore excludes, as repo-relative paths."""
+    git = shutil.which("git")
+    if git is None or not (REPO_ROOT / ".git").exists():
+        return set()
+    proc = subprocess.run(
+        [
+            git,
+            "-C",
+            str(REPO_ROOT),
+            "ls-files",
+            "-z",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "--",
+            DEV_DIR,
+        ],
+        capture_output=True,
+        check=True,
+    )
+    return {p for p in proc.stdout.decode("utf-8").split("\0") if p}
+
+
 def scan_out() -> list[Table]:
-    """Every file under out/, in path order."""
+    """Every file under out/, in path order, less the ignored local files under out/dev/."""
     if not OUT_DIR.is_dir():
         return []
+    skip = ignored_dev_files()
     tables: list[Table] = []
     for path in sorted(OUT_DIR.rglob("*")):
         if not path.is_file() or path.name == ".gitkeep":
             continue
+        if rel_path(path) in skip:
+            continue
         tables.extend(scan_file(path))
     return tables
+
+
+def test_out_dev_is_ignored_and_untracked() -> None:
+    """The out/dev/ skip holds only while git ignores that tree and tracks nothing in it."""
+    git = shutil.which("git")
+    if git is None or not (REPO_ROOT / ".git").exists():
+        pytest.skip("not a git checkout")
+    probe = subprocess.run(
+        [git, "-C", str(REPO_ROOT), "check-ignore", "-q", "--no-index", DEV_DIR + "probe.parquet"],
+        check=False,
+    )
+    assert probe.returncode == 0, ".gitignore does not exclude out/dev/"
+    tracked = subprocess.run(
+        [git, "-C", str(REPO_ROOT), "ls-files", "--", DEV_DIR],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert not tracked, f"git tracks files under out/dev/: {tracked[:5]}"
 
 
 # ---------------------------------------------------------------------------

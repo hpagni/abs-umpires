@@ -20,6 +20,9 @@ RUNLOG.md
 # Generated model and table artifacts. out/ itself is tracked; only the heavy
 # formats under it are not.
 out/**/*.parquet
+# Local development artefacts (synthetic designs, recovery replicates, benchmark fits).
+# tests/unit/test_exports.py skips this tree only while it is ignored and untracked.
+out/dev/
 out/models/**/*.rds
 out/models/**/*.npz
 
