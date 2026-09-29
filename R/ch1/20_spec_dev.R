@@ -11,6 +11,13 @@
 #                                          out/dev/ch1_spec/. Writes nothing under the
 #                                          repository. Exit 1 on any FAIL. This is the
 #                                          registered verify command.
+#   Rscript R/ch1/20_spec_dev.R --check-noncohort
+#                                          the frozen specification and the rung above it
+#                                          refitted under DECISIONS.md D-P4-04's height
+#                                          rule, sample d8nc (below), and their k.check
+#                                          compared with the build's. Writes only under
+#                                          out/dev/ch1_spec/noncohort/. Exit 1 if a group
+#                                          is no longer stable at the frozen k.
 #   Rscript R/ch1/20_spec_dev.R --fit <variant> --outdir <dir>
 #   Rscript R/ch1/20_spec_dev.R --bench-sop <rows> --outdir <dir>
 #                                          workers. The build and check modes start them,
@@ -71,6 +78,13 @@
 #    rate, the ABS rulebook zone as a two-rate classifier, the pooled surface of
 #    W3.4, the binned logistic, and the specification.
 #
+# THE HEIGHT RULE. The build ran on the table's H, roster height plus the one
+# D-R0-02 offset. Sample d8nc applies D-P4-04 instead: a batter outside the
+# ABS-measured cohort (H_abs NA) gets H = H - offset_in + offset_noncohort_in from
+# data/interim/dim_batter_season/calibration.json, zn and d are recomputed with
+# R/lib/zone.R, and |d| <= 8.0 in is applied to the new d. The arrow read keeps
+# |d| <= 8.0 in plus NC_READ_MARGIN_IN, which exceeds the largest edge move.
+#
 # WHAT IT READS. data/marts/ch1_called.parquet (W3.7) through one arrow scan whose
 # filter keeps seasons 2022, 2023 and 2024. No 2025 or 2026 row reaches R. The
 # loader asserts the seasons, the last official date, the regime and the analysis
@@ -109,6 +123,8 @@ MODE <- if (length(args) == 0L) {
   "build"
 } else if (identical(args, "--check")) {
   "check"
+} else if (identical(args, "--check-noncohort")) {
+  "check_nc"
 } else if ("--fit" %in% args && "--outdir" %in% args && length(args) == 4L) {
   "fit"
 } else if ("--bench-sop" %in% args && "--outdir" %in% args && length(args) == 4L) {
@@ -177,6 +193,8 @@ FIT_SUFFIXES  <- c("rds", "npz", "stanfit", "qs", "pkl")
 OUT_DIR   <- file.path(ROOT, "out", "dev", "ch1_spec")
 PREREG_MD <- file.path(ROOT, "docs", "prereg", "ch1.md")
 T1_FILE   <- file.path(ROOT, "out", "ch1", "tab", "T1_sample.csv")
+CAL_FILE  <- file.path(ROOT, "data", "interim", "dim_batter_season", "calibration.json")
+NC_READ_MARGIN_IN <- 0.5                    # sample d8nc: the read band is |d| <= 8.5 in
 
 stopifnot(length(XG) == 301L, length(ZG) == 276L, N_BINS == 32L,
           all(DEV_SEASONS %in% 2022:2024))
@@ -227,15 +245,16 @@ mart_path <- function() {
 # 2022-2024 and the band; 2025 and 2026 rows are dropped by the scanner and never
 # reach R. The guard then asserts what arrived before anything is fitted.
 
-load_dev <- function(sample = c("d8", "p1_d8")) {
+load_dev <- function(sample = c("d8", "p1_d8", "d8nc")) {
   sample <- match.arg(sample)
   cols <- c("pitch_uid", "game_pk", "official_date", "season", "regime", "analysis_set",
             "umpire_hp_id", "umpire_season", "stand", "count_class", "pitch_group",
             "velo", "x_mid", "z_mid", "H", "zn", "d", "edge", "cs", "H_abs", "d_abs")
+  band <- if (sample == "d8nc") D_BAND_IN + NC_READ_MARGIN_IN else D_BAND_IN
   ds <- arrow::open_dataset(mart_path())
   q <- ds |> filter(season %in% !!DEV_SEASONS)
-  q <- if (sample == "d8") {
-    q |> filter(abs(d) <= !!D_BAND_IN)
+  q <- if (sample %in% c("d8", "d8nc")) {
+    q |> filter(abs(d) <= !!band)
   } else {
     q |> filter(!is.na(H_abs), abs(d_abs) <= !!D_BAND_IN)
   }
@@ -258,6 +277,23 @@ load_dev <- function(sample = c("d8", "p1_d8")) {
     # The robustness arm: the same pitches, ABS-measured height (DECISIONS.md D-R0-02).
     df$zn <- z_norm(df$z_mid, df$H_abs)
     df$d <- df$d_abs
+  }
+  if (sample == "d8nc") {
+    # DECISIONS.md D-P4-04: outside the cohort, roster height plus the pooled
+    # non-cohort offset. Cohort rows keep the table's H, zn and d.
+    cal <- fromJSON(CAL_FILE)
+    if (is.null(cal$offset_noncohort_in)) stop("no offset_noncohort_in in ", CAL_FILE, call. = FALSE)
+    dh <- cal$offset_noncohort_in - cal$offset_in
+    if (ABS_TOP_FRAC * abs(dh) >= NC_READ_MARGIN_IN) {
+      stop("the D-P4-04 edge move exceeds the read margin", call. = FALSE)
+    }
+    nc <- is.na(df$H_abs)
+    df$H[nc] <- df$H[nc] + dh
+    df$zn[nc] <- z_norm(df$z_mid[nc], df$H[nc])
+    df$d[nc] <- signed_edge_in(df$x_mid[nc], df$z_mid[nc], abs_top_ft(df$H[nc]), abs_bot_ft(df$H[nc]))
+    df$edge[nc] <- nearest_edge(df$x_mid[nc], df$z_mid[nc], abs_top_ft(df$H[nc]), abs_bot_ft(df$H[nc]))
+    df <- df[abs(df$d) <= D_BAND_IN, , drop = FALSE]
+    rownames(df) <- NULL
   }
   df$regime <- NULL
   df$analysis_set <- NULL
@@ -308,7 +344,7 @@ vname <- function(k, coding = "ordered", sample = "d8") {
           substr(coding, 1L, 3L), sample)
 }
 parse_vname <- function(name) {
-  m <- regmatches(name, regexec("^k(\\d+)-(\\d+)-(\\d+)-(\\d+)_(ord|uno)_(d8|p1_d8|train80|scale5)$", name))[[1]]
+  m <- regmatches(name, regexec("^k(\\d+)-(\\d+)-(\\d+)-(\\d+)_(ord|uno)_(d8|p1_d8|d8nc|train80|scale5)$", name))[[1]]
   if (length(m) != 7L) stop("not a variant name: ", name, call. = FALSE)
   list(k = setNames(as.integer(m[2:5]), GROUPS),
        coding = if (m[6] == "ord") "ordered" else "unordered", sample = m[7])
@@ -519,7 +555,7 @@ score <- function(y, p) {
 run_fit <- function(name, outdir) {
   v <- parse_vname(name)
   dir.create(file.path(outdir, "fits"), recursive = TRUE, showWarnings = FALSE)
-  src <- load_dev(if (v$sample == "p1_d8") "p1_d8" else "d8")
+  src <- load_dev(if (v$sample %in% c("p1_d8", "d8nc")) v$sample else "d8")
   df <- src$df
   res <- list(name = name, k = as.list(v$k), coding = v$coding, sample = v$sample,
               guard = list(seasons = src$guard$seasons, max_official_date = format(src$guard$max_date),
@@ -566,7 +602,7 @@ run_fit <- function(name, outdir) {
                   warnings = as.list(table(f$warn)))
   kt <- kcheck_table(m)
   res$kcheck <- kt
-  if (v$sample %in% c("d8", "p1_d8")) {
+  if (v$sample %in% c("d8", "p1_d8", "d8nc")) {
     mix <- reference_mix(m, df)
     dir.create(file.path(outdir, "grids"), showWarnings = FALSE)
     met <- list()
@@ -746,6 +782,69 @@ record("development sample", sprintf("%s rows, |d| <= %.1f in: %s", comma(nrow(d
 self_src <- readLines(SELF, warn = FALSE)
 n_reads <- sum(grepl("open_dataset\\(", self_src) & !grepl("^\\s*#", self_src))
 check("one read path", n_reads == 1L, sprintf("%d open_dataset call outside comments", n_reads))
+
+## --- D-P4-04: the frozen k under the non-cohort offset ------------------------------------
+
+if (MODE == "check_nc") {
+  frozen <- fromJSON(file.path(OUT_DIR, "frozen_spec.json"), simplifyVector = TRUE)
+  k_frozen <- unlist(frozen$k)[GROUPS]
+  k_up <- unlist(frozen$k_up)[GROUPS]
+  nc_src <- load_dev("d8nc")
+  n_nc <- as.list(table(nc_src$df$season))
+  record("sample d8nc", sprintf("%s rows, |d| <= %.1f in under D-P4-04: %s (single offset: %s)",
+                                comma(nrow(nc_src$df)), D_BAND_IN,
+                                paste(names(n_nc), comma(unlist(n_nc)), collapse = ", "),
+                                paste(names(n_by_season), comma(unlist(n_by_season)), collapse = ", ")))
+  check("d8nc guard: seasons and last date", identical(nc_src$guard$seasons, DEV_SEASONS) &&
+          nc_src$guard$max_date <= DEV_LAST_DATE,
+        sprintf("seasons %s, last date %s", paste(nc_src$guard$seasons, collapse = " "),
+                format(nc_src$guard$max_date)))
+  rm(nc_src)
+  nc_dir <- file.path(OUT_DIR, "noncohort")
+  dir.create(nc_dir, recursive = TRUE, showWarnings = FALSE)
+  names_nc <- c(vname(k_frozen, sample = "d8nc"), vname(k_up, sample = "d8nc"))
+  times <- run_jobs(lapply(names_nc, fit_job), nc_dir)
+  a <- read_fit(nc_dir, names_nc[1])
+  b <- read_fit(nc_dir, names_nc[2])
+  check("d8nc refits completed", !is.null(a) && !is.null(b), paste(names_nc, collapse = " "))
+  if (is.null(a) || is.null(b)) finish()
+  for (r in list(a, b)) {
+    check(sprintf("no 2025 or 2026 row: %s", r$name),
+          all(r$guard$seasons %in% DEV_SEASONS) && as.Date(r$guard$max_official_date) <= DEV_LAST_DATE,
+          sprintf("seasons %s, last date %s, %s rows fitted", paste(r$guard$seasons, collapse = " "),
+                  r$guard$max_official_date, comma(r$n_fit)))
+  }
+  for (g in GROUPS) {
+    ch <- max_group_change(a, b, g)
+    check(sprintf("d8nc k stable at the frozen rung: %s", g), ch < KI_STABLE,
+          sprintf("k %d -> %d, max |k-index change| %.4f < %.2f", k_frozen[[g]], k_up[[g]], ch, KI_STABLE))
+  }
+  ks <- read.csv(file.path(OUT_DIR, "k_sweep.csv"), stringsAsFactors = FALSE)
+  base <- ks[ks$variant == vname(k_frozen), ]
+  cmp <- merge(base[, c("term", "k_prime", "k_index")],
+               a$kcheck[, c("term", "edf", "k_index", "p_value")], by = "term",
+               suffixes = c("_single", "_d8nc"), sort = FALSE)
+  cmp$change <- cmp$k_index_d8nc - cmp$k_index_single
+  write.csv(cmp, file.path(nc_dir, "kcheck_vs_single.csv"), row.names = FALSE)
+  for (i in seq_len(nrow(cmp))) {
+    record(sprintf("k.check d8nc %s", cmp$term[i]),
+           sprintf("k' %d, edf %.1f, k-index %.3f (single offset %.3f), p %.4f", as.integer(cmp$k_prime[i]),
+                   cmp$edf[i], cmp$k_index_d8nc[i], cmp$k_index_single[i], cmp$p_value[i]))
+  }
+  te <- grepl("^te\\(", cmp$term)
+  record("largest k-index change from the single offset",
+         sprintf("%.4f over every term; te() k-index range %.3f to %.3f under D-P4-04",
+                 max(abs(cmp$change), na.rm = TRUE), min(cmp$k_index_d8nc[te]), max(cmp$k_index_d8nc[te])))
+  if (!is.null(a$dry_run)) {
+    record("2023 minus 2022 dry run under D-P4-04",
+           sprintf("top %+.3f in, bot %+.3f in, half-width %+.3f in, area %+.2f sq in",
+                   a$dry_run$delta$top_in, a$dry_run$delta$bot_in, a$dry_run$delta$half_width_in,
+                   a$dry_run$delta$area_sqin))
+  }
+  record("d8nc refit cost", sprintf("%s %.0f s wall; %s %.0f s wall", a$name, times[[a$name]]$real_s,
+                                    b$name, times[[b$name]]$real_s))
+  finish()
+}
 
 ## --- build -------------------------------------------------------------------------------
 

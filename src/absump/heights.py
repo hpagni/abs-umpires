@@ -26,6 +26,11 @@ WHAT THIS MODULE WRITES
     data/interim/dim_batter_season/level=<mlb|aaa>/season=<yyyy>/part-000.parquet
     data/interim/dim_batter_season/calibration.json      the offset, its SD, the cohort
     data/interim/dim_batter_season/summary.json          per-season coverage, DT-30 input
+
+calibration.json also carries DECISIONS.md D-P4-04's non-cohort offset. W3.4
+(`R/ch1/03_heights.R`) computes it and writes it through `merge_noncohort`, the
+keys in `NONCOHORT_KEYS`. A rebuild here carries those keys forward unchanged,
+and W3.4's check recomputes them, so a stale value fails there and not silently.
     data/interim/dim_batter_season/_cache/feed_roster.parquet
 
 Every write is content-compared before it lands, so a second run leaves the tree
@@ -730,9 +735,49 @@ def build(*, offline: bool = False, rebuild_feeds: bool = False) -> dict[str, An
         "offline": offline,
         "last_open_date": paths.LAST_OPEN_DATE.isoformat(),
     }
+    cal = _carry_noncohort(cal, dim_dir() / "calibration.json")
     _write_json_if_changed(dim_dir() / "calibration.json", cal)
     _write_json_if_changed(dim_dir() / "summary.json", summary)
     return {"calibration": cal, "summary": summary}
+
+
+#: DECISIONS.md D-P4-04. The keys W3.4 owns in calibration.json. This module
+#: never computes them: it carries them across its own rebuild and merges them
+#: in when W3.4 asks.
+NONCOHORT_KEYS = (
+    "convention",
+    "offset_noncohort_in",
+    "offset_noncohort_se_in",
+    "offset_noncohort_age_adjusted_in",
+    "offset_noncohort_age_adjusted_se_in",
+    "noncohort_evidence",
+)
+
+
+def _carry_noncohort(cal: dict[str, Any], path: Path) -> dict[str, Any]:
+    """`cal` plus the D-P4-04 keys already in `path`, so a W2.7 rebuild keeps them."""
+    if not path.exists():
+        return cal
+    old = json.loads(path.read_text())
+    return {**cal, **{k: old[k] for k in NONCOHORT_KEYS if k in old}}
+
+
+def merge_noncohort(payload: dict[str, Any], path: Path | None = None) -> bool:
+    """Write W3.4's D-P4-04 keys into calibration.json. Every other key is kept.
+
+    `payload` must hold exactly `NONCOHORT_KEYS`, and the file must already hold
+    W2.7's calibration. Returns True when the file changed.
+    """
+    path = path or dim_dir() / "calibration.json"
+    if set(payload) != set(NONCOHORT_KEYS):
+        raise ValueError(f"D-P4-04 payload keys {sorted(payload)} are not {sorted(NONCOHORT_KEYS)}")
+    if not path.exists():
+        raise FileNotFoundError(f"{path} is absent; run python -m absump.heights --build")
+    old = json.loads(path.read_text())
+    if "offset_in" not in old:
+        raise ValueError(f"{path} carries no W2.7 offset_in; it is not a calibration file")
+    kept = {k: v for k, v in old.items() if k not in NONCOHORT_KEYS}
+    return _write_json_if_changed(path, {**kept, **payload})
 
 
 def season_summary(frame: pl.DataFrame) -> dict[str, Any]:
@@ -852,7 +897,16 @@ def _main(argv: list[str]) -> int:
     parser.add_argument("--report", action="store_true", help="print summary.json")
     parser.add_argument("--offline", action="store_true", help="skip the people endpoint (tier 2)")
     parser.add_argument("--rebuild-feeds", action="store_true", help="re-read every GUMBO feed")
+    parser.add_argument(
+        "--merge-noncohort",
+        metavar="JSON",
+        help="merge W3.4's D-P4-04 keys from this file into calibration.json",
+    )
     args = parser.parse_args(argv)
+    if args.merge_noncohort:
+        changed = merge_noncohort(json.loads(Path(args.merge_noncohort).read_text()))
+        print(f"calibration.json {'updated' if changed else 'unchanged'}: D-P4-04 keys merged")
+        return 0
     if not (args.build or args.check or args.report):
         parser.print_help()
         return 2

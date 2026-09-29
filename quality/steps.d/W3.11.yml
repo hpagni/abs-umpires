@@ -11,6 +11,13 @@
 # GD-04 then scans the script. `needs` names the analysis table and the build's
 # out/dev files, which never enter git, so a clean clone reads MISSING rather
 # than FAIL.
+#
+# The build's out/dev record holds 687,496 rows, from before D-P4-08, so the
+# row-count clause of --check fails until W3.11 is rebuilt (DEV-68).
+# --check-noncohort, added 2026-09-29 for DECISIONS.md D-P4-04, refits the same
+# two rungs under the non-cohort height offset and compares their k.check with
+# the build's. It is a disclosed diagnostic (docs/prereg/ch1.md section 1.2),
+# not this step's verify. Measured 2026-09-29: 687,366 rows, every group stable.
 - id: W3.11
   title: "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
   verify: "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R"

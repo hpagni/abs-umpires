@@ -1771,6 +1771,48 @@ clause belongs to the pre-registration lane, in `PREREGISTRATION.md` and
 
 What would reopen it: the owner's override.
 
+**Follow-up, 2026-09-29 (Europe/Madrid), by W3.4's lane: implemented.** Status unchanged:
+applied default under D-R0-03's delegation, OWNER-VISIBLE. Hudson Pagni has not answered it.
+
+`R/ch1/03_heights.R` computes the non-cohort offset and writes it into
+`data/interim/dim_batter_season/calibration.json`: **offset_noncohort_in = −0.347 in, SE
+0.155 in.** It is added to roster height for every batter outside the ABS-measured cohort,
+one value in every season from 2022 to 2026. The cohort keeps offset_in, 0.0022 in. The
+file's `convention` string states the sign, and every key it held before is unchanged.
+
+| season | batters outside the cohort | batters inside | listed minus true, in | SE, in |
+|---|---:|---:|---:|---:|
+| 2022 | 270 | 272 | 0.475 | 0.248 |
+| 2023 | 204 | 335 | 0.255 | 0.269 |
+| 2024 | 132 | 389 | 0.276 | 0.295 |
+
+The method is section G's, and it reproduces the verifier's figures in the table above. It
+reads 2022-2024 `sz_top` and heights only, and no call. The inverse-variance mean of the
+three seasons is 0.347 in, 2.2 SE from zero, and the offset is its negative. The three
+seasons share batters, so that SE is too small.
+
+Raw or age-adjusted. The record does not choose: this entry and the verifier's log report
+both. The primary is the unadjusted estimate, the fit with fewer modelling choices. The
+age-adjusted value, −0.268 in (SE 0.166 in), is reported beside it in `docs/prereg/ch1.md`
+section 1.1 and in the calibration file.
+
+The analysis table keeps H with the one D-R0-02 offset. The Chapter 1 fit code moves the
+rows outside the cohort at fit time, so no mart is rebuilt.
+
+Part 3's clause is in `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1,
+verbatim. Both name two arms beside the primary: D-R0-02's ABS-measured arm, and
+SENS-HEIGHT-SINGLE, roster height plus 0.0022 in for every batter. Steps before the tag that
+ran under the single offset are listed in `docs/prereg/ch1.md` section 1.2 and in DEV-68.
+DEV-48 is closed.
+
+The owner may override this default before the tag, and SENS-HEIGHT-SINGLE's rule then
+becomes primary. The fit code on branch `phase05/ch1-fits` carries the override flag,
+`--height-rule single-offset`. Its `apply_heights` uses `offset_noncohort_in` whenever the
+calibration file holds the key, and the flag takes effect only when the key is absent. So an
+override today means removing the D-P4-04 keys from the file and passing the flag. The
+SENS-HEIGHT-SINGLE arm needs `apply_heights` to honour the flag with the key present. That
+change belongs to the fit lane, before W3.14 runs.
+
 ### D-P4-05 APPLIED UNDER D-R0-03: `<<N_CALLED>>` reports P0, the sample the primary cohort covers in full
 
 Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the

@@ -682,14 +682,25 @@
 # shares exactly, contour cells within 2e-4. It also asserts one roster offset,
 # 100% roster+offset coverage, fits on the pre-buffer regime only, closed
 # contours, and that prereg-v1, once tagged, carries the table byte for byte.
-# About 50 s. `needs` names the warehouse directory, as W3.2 does, so a clean
-# clone reads MISSING rather than FAIL.
+#
+# DECISIONS.md D-P4-04, added 2026-09-29. The same run recomputes the offset for
+# batters outside the ABS-measured cohort from 2022-2024 sz_top (median per
+# batter-season, OLS on height and a cohort indicator, three seasons pooled by
+# inverse variance). It reads no call and no 2025 or 2026 pitch, and asserts so.
+# It fails unless data/interim/dim_batter_season/calibration.json carries
+# offset_noncohort_in and its companions, reproducing within 1e-9 in; offset_in
+# is still D-R0-02's 0.0022 in; and docs/prereg/ch1.md states the pooled value,
+# its SE, the age-adjusted value and the what-it-moves table row for row. Build
+# mode writes the keys through absump.heights.merge_noncohort. Measured
+# 2026-09-29: the offset is -0.347 in, SE 0.155 in; about 50 s. `needs` names the
+# warehouse directory, as W3.2 does, so a clean clone reads MISSING rather than
+# FAIL.
 - id: W3.4
   title: "Height harmonisation, DT-30 coverage table and the D-13 fork"
   verify: "Rscript R/ch1/03_heights.R --check"
   expect_exit: 0
   owner: W3
-  needs: R/ch1/03_heights.R, out/tables/height_coverage.csv, warehouse
+  needs: R/ch1/03_heights.R, out/tables/height_coverage.csv, warehouse, data/interim/dim_batter_season/calibration.json, docs/prereg/ch1.md
 
 # W3.5, regimes, sample and exclusions. Owner W3, fleet phase 04.
 #
@@ -854,6 +865,13 @@
 # GD-04 then scans the script. `needs` names the analysis table and the build's
 # out/dev files, which never enter git, so a clean clone reads MISSING rather
 # than FAIL.
+#
+# The build's out/dev record holds 687,496 rows, from before D-P4-08, so the
+# row-count clause of --check fails until W3.11 is rebuilt (DEV-68).
+# --check-noncohort, added 2026-09-29 for DECISIONS.md D-P4-04, refits the same
+# two rungs under the non-cohort height offset and compares their k.check with
+# the build's. It is a disclosed diagnostic (docs/prereg/ch1.md section 1.2),
+# not this step's verify. Measured 2026-09-29: 687,366 rows, every group stable.
 - id: W3.11
   title: "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
   verify: "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R"

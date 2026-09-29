@@ -1094,8 +1094,8 @@ the same branch.
 ## DEV-48: W3.4 and D-R0-02, the roster offset is calibrated separately outside the ABS-measured cohort, and a sign-agreement clause is added
 
 Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator, from the W3.4 stat verifier.
-Status: OPEN, OWNER-VISIBLE. Applied under D-R0-03's delegation, not as an owner answer. The
-decision is D-P4-04.
+Status: CLOSED 2026-09-29 by implementation, still OWNER-VISIBLE. Applied under D-R0-03's
+delegation, not as an owner answer. The decision is D-P4-04 and its follow-up of 2026-09-29.
 
 What the SOP said. W3.4 and D-13 use one roster offset, measured in 2026 on batters who carry
 both heights. D-R0-02 set it at 0.0022 in, SD 0.2909 in, over 658 batters.
@@ -1115,6 +1115,14 @@ What closes it: the pooled offset in `R/ch1/03_heights.R` and the clause in the
 pre-registration, both before the tag, or the owner's override.
 
 Evidence: `logs/evidence/W3.4.verify-stat.log`, sections G and I.
+
+How it closed, 2026-09-29. `R/ch1/03_heights.R` computes the pooled offset and writes it into
+`data/interim/dim_batter_season/calibration.json`: −0.347 in (SE 0.155 in), added to roster
+height outside the cohort in every season. Its check recomputes the value, and
+`tests/data/test_heights.py` recomputes it again in Python. The clause and the two arms, the
+ABS-measured arm and SENS-HEIGHT-SINGLE, are in `PREREGISTRATION.md` section 7 and
+`docs/prereg/ch1.md` section 1.1. The steps that ran before under the single offset are DEV-68.
+The owner may still override D-P4-04 before the tag.
 
 ## DEV-49: W3.5, the shadow band is read on the radius-adjusted signed edge distance, and the expected sizes are restated as measured
 
@@ -1389,3 +1397,47 @@ not met, with cause and consequence, in section 8.7. Top-edge results carry two 
 intervals slightly too narrow, and a design underpowered to declare no change. The sensitivity
 arm SENS-B1-UNDERSMOOTH refits with the season by-term at k = 24 and is reported beside the
 primary. The model test pins the three values and prints each as NOT MET, DISCLOSED UNDER D-R0-04.
+
+## DEV-68: W3.4, W3.5, W3.11, W3.12 and MT-01, steps before the tag ran under the single height offset
+
+Raised 2026-09-29 (Europe/Madrid) by W3.4's lane, when D-P4-04 was implemented (DEV-48).
+Status: CLOSED 2026-09-29 by disclosure in `docs/prereg/ch1.md` section 1.2. OWNER-VISIBLE with
+D-P4-04. Applied under D-R0-03's delegation, not as an owner answer.
+
+What the plan says. Under D-P4-04 a batter outside the ABS-measured cohort has roster height
+minus 0.347 in, in every season. A pre-registered computation would use that rule.
+
+What was done instead. Seven computations before the tag read such a batter's zn or d under
+D-R0-02's one offset, 0.0022 in:
+
+1. W3.11, the specification development of `docs/prereg/ch1.md` sections 1 to 7.
+2. W3.12(c), the power curve: its design, its link and its variance components.
+3. W3.12(a), the injected-effect recovery on the 2024 rows.
+4. W3.12(b), the SBC on the design's cells.
+5. MT-01's prior predictive, section 8.8.
+6. W3.4's selection effect in `out/tables/height_coverage.csv`.
+7. W3.5's band counts and raw shadow-band rates in `out/ch1/tab/T1_sample.csv`.
+
+W3.11's k.check was re-run under D-P4-04 on 2026-09-29, on 687,366 rows. Every group stays
+stable at the frozen k, with a largest k-index change of 0.0007 against the 0.01 rule, so no k
+changes. The `te()` k-indices read 0.964 to 0.972, against 0.956 to 0.962. The other six were not
+re-run. The W3.12 simulations measure the estimator on simulated calls. The rule moves the zone
+top of a batter outside the cohort by 0.187 in and the bottom by 0.094 in, and it does not
+change the estimator. The recovery, SBC and power-curve values D-R0-04 disclosed stand as run.
+MT-01's boundary, s = 0.3013 against the 0.30 chosen, stands under the single offset. W3.4's
+selection effect holds one height rule fixed by definition. W3.5's counts are descriptive, and
+the fit code recomputes d under D-P4-04 when it fits.
+
+Unaffected, read from the code: P0 and P1, the join, the challenge counts, the DT-21 zone gate,
+whose 10,168 challenged pitches all come from batters inside the cohort, and DT-30. Every
+frozen number that depends on the height outside the cohort describes one of the seven steps as
+it ran, such as the 498,055-pitch design, and it stays as run. No frozen number changed.
+
+Found on the way. W3.11's record predates D-P4-08. `out/dev/ch1_spec/frozen_spec.json` holds
+687,496 development rows, and the analysis table now gives 687,485. `PREREGISTRATION.md`
+section 4 said W3.11 ran on 687,485, and section 7 said every build was re-run on the new P0.
+Both sentences are corrected. W3.11's registered check asserts the two counts are equal, so it
+fails until W3.11 is rebuilt.
+
+What closes it: nothing further before the tag. A later re-run of a listed step under D-P4-04 is
+its own dated entry.

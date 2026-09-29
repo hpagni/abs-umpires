@@ -68,7 +68,7 @@ The three regimes follow from it.
 
 Every model fitted before this tag used 2022–2024 calls, simulated calls, or no outcome at all:
 
-- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,485 called pitches from 2022–2024 (`docs/prereg/ch1.md` sections 1 to 7).
+- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,496 called pitches from 2022–2024, before D-P4-08 and under the single height offset (`docs/prereg/ch1.md` sections 1 to 7). The frozen specification and the rung above it were refitted under D-P4-04 on 687,366 (`docs/prereg/ch1.md` section 1.2).
 - SOP W3.4 fitted pooled contours for 2022, 2023 and 2024 to size the surviving-batter effect. Its 2025 and 2026 rows in `out/tables/height_coverage.csv` read `not_fitted_before_prereg`.
 - SOP W3.12 fitted the link and the nuisance variance components on 2022–2024 calls only. Its power curve, SBC and recovery fits use simulated calls (`docs/prereg/ch1.md` section 8).
 - SOP W4.7 sampled M1's prior only, with `sample_prior = "only"`, and never read the outcome (`docs/prereg/ch2.md` section 6).
@@ -149,11 +149,31 @@ Each sealed analysis runs once and never twice: SOP W3.23, W4.17 and the W5.11 s
 - P0 is every called pitch with `game_type == 'R'`, official date 2022-01-01 to 2026-09-21, and non-null re-projected coordinates. It holds 1,830,231 rows at the freeze.
 - P1 is P0 restricted to the ABS-measured-height cohort. It holds 1,487,927 rows at the freeze.
 
-Both counts follow D-P4-08: a pitch thrown by a position player leaves P0, and a pitcher is judged by the role he held in the season he pitched, not by his position today. The one pitcher that rule moves is player 621433, an outfielder in 2022 and 2023 who is a pitcher today. His 36 pitches in those two seasons, 32 in 2022 and 4 in 2023, stayed in P0 under the earlier rule and leave it now. Before the change P0 held 1,830,267 rows and P1 1,487,942. The 2022–2024 development sample moved from 687,496 to 687,485 pitches, and the W3.12 design from 498,059 to 498,055. Every Chapter 1 build before the tag was re-run on the new P0 (`docs/prereg/ch1.md`).
+Both counts follow D-P4-08: a pitch thrown by a position player leaves P0, and a pitcher is judged by the role he held in the season he pitched, not by his position today. The one pitcher that rule moves is player 621433, an outfielder in 2022 and 2023 who is a pitcher today. His 36 pitches in those two seasons, 32 in 2022 and 4 in 2023, stayed in P0 under the earlier rule and leave it now. Before the change P0 held 1,830,267 rows and P1 1,487,942. The 2022–2024 development sample moved from 687,496 to 687,485 pitches, and the W3.12 design from 498,059 to 498,055. Every Chapter 1 build before the tag was re-run on the new P0 except SOP W3.11's, whose record stays on 687,496 (`docs/prereg/ch1.md` section 1).
 
 `out/ch1/tab/T1_sample.csv` carries both, season by season, with one row per exclusion.
 
-**The height rule.** The owner's answer D-R0-02 makes roster height plus the calibration offset the primary batter height, in all five seasons. The primary sample is therefore P0. The ABS-measured height is a pre-registered robustness arm, on P1. This departs from the SOP's D-13 text, which made measured height the headline. The owner's answer replaces that text before the tag.
+**The height rule.** The owner's answer D-R0-02 makes roster height plus a calibration offset the primary batter height, in all five seasons. The primary sample is therefore P0. This departs from the SOP's D-13 text, which made measured height the headline. The owner's answer replaces that text before the tag.
+
+DECISIONS.md D-P4-04 refines the offset. It is an applied default the owner may override before this tag (section 14, item 14). Inside the ABS-measured cohort, roster height is the measured height rounded to the inch, so D-R0-02's 2026 calibration measures only rounding there. The rule has two offsets, both added to roster height:
+
+- inside the cohort, 0.0022 in, D-R0-02's calibration over 658 batters;
+- outside the cohort, −0.347 in (SE 0.155 in), one value for every season.
+
+The second value pools 2022, 2023 and 2024 by inverse variance. Each season compares the zone top Hawk-Eye set before ABS with height, and no call is read. `docs/prereg/ch1.md` section 1.1 gives the estimate, and `R/ch1/03_heights.R` computes it. The evidence for the listing bias is indirect, and the pooled estimate is 2.2 standard errors from zero. The offset is season-invariant, so by itself it cannot create a difference between regimes.
+
+Two pre-registered arms are reported beside the primary:
+
+- the ABS-measured arm: P1, with the measured height (D-R0-02), which the listing bias cannot reach;
+- SENS-HEIGHT-SINGLE: P0, with roster height plus 0.0022 in for every batter, the rule as the owner first answered it.
+
+**The sign-agreement clause.** DECISIONS.md D-P4-04, part 3, verbatim:
+
+> The ABS-measured-only robustness arm, which this bias cannot reach, must agree in sign with the primary on the buffer and ABS components. Otherwise the primary is reported as sensitive to the height cohort.
+
+The components are `Δ_buffer` and `Δ_ABS` of section 8.
+
+**Steps before this tag that ran under the single offset.** The W3.11 development fits, the W3.12 power curve, recovery and SBC, MT-01's prior predictive, W3.4's selection effect and W3.5's band counts gave batters outside the cohort D-R0-02's one offset. `docs/prereg/ch1.md` section 1.2 lists each with its decision (DEV-68). W3.11's k.check was re-run under D-P4-04. The others were not re-run, and the values D-R0-04 disclosed stand as run. P0, P1, the join, the challenge counts, DT-21 and DT-30 read no height outside the cohort and are unchanged.
 
 The D-13 fork turns on DT-30, the ABS-measured share of called pitches, published before this tag (CH1-A12):
 
@@ -668,3 +688,4 @@ Every test id this document names is the SOP's. Their definitions follow, quoted
 11. **Owner sign-off.** SOP section 9.1 closes a prose artifact with a dated owner line in `DECISIONS.md`. It has not been given.
 12. **The Chapter 1 annex covers SOP W3.11 and W3.12 only.** Sections 7, 8 and 12 of this document carry the rest of the Chapter 1 plan from the SOP text.
 13. **D-67 and the fits before the tag.** The 2022–2024 specification fits and the simulated fits of section 4 ran before this tag. Whether they break D-67's ordering, and so whether the abstract may use the wider sentence, is the owner's call.
+14. **The height offset outside the ABS-measured cohort is an applied default.** DECISIONS.md D-P4-04 was applied under the owner's delegation, D-R0-03, and it is OWNER-VISIBLE. The owner may override it before this tag. SENS-HEIGHT-SINGLE's rule is then the primary rule.

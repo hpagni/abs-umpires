@@ -37,9 +37,10 @@ W3.3 checked the D-14 rule against Savant's own `edge_dist_calc`. The error is 5
 
 ## 2. One height rule, and the D-13 fork
 
-Three heights are in use.
+Four height rules are in use.
 
-- **Chapter 1 primary.** H is roster height plus the calibration offset, 0.0022 in, in all five seasons. This is the owner's answer D-R0-02 of 2026-09-24. The sample is P0, 1,830,231 called pitches.
+- **Chapter 1 primary.** H is roster height plus an offset, in all five seasons. This is the owner's answer D-R0-02 of 2026-09-24. D-P4-04 gives the offset two values: 0.0022 in inside the ABS-measured cohort, and −0.347 in outside it, one value for every season (`docs/prereg/ch1.md` section 1.1). The sample is P0, 1,830,231 called pitches.
+- **SENS-HEIGHT-SINGLE.** H is roster height plus 0.0022 in for every batter, the rule as D-R0-02 first stated it. It is a pre-registered arm on P0.
 - **Chapter 1 robustness arm.** H is the ABS-measured height, `sz_top * 12 / 0.535`. For 2022-2025 it is back-linked from the batter's 2026 appearance. The sample is P1, 1,487,927 called pitches.
 - **ABS itself.** The 2026 system scores each pitch on the measured height. The W3.8 gate uses measured height for that reason.
 
@@ -84,7 +85,7 @@ The band is `|e| <= 0.5 in`, where `e = signed_edge_in - 1.45`.
 
 | consumer | where | plane | height | edge rule |
 |---|---|---|---|---|
-| Chapter 1, primary fit | `data/marts/ch1_called.parquet`: `d`, `top_ft`, `bot_ft`, `zn` | mid | roster + 0.0022 in | D-14, r = 1.45 in |
+| Chapter 1, primary fit | `data/marts/ch1_called.parquet`: `d`, `top_ft`, `bot_ft`, `zn`, stored with roster + 0.0022 in; the fit code moves rows outside the cohort to roster − 0.347 in and recomputes them | mid | roster + 0.0022 in inside the cohort, roster − 0.347 in outside it (D-P4-04) | D-14, r = 1.45 in |
 | Chapter 1, robustness arm | same file: `d_abs`, `H_abs` | mid | ABS-measured | D-14, r = 1.45 in |
 | W3.8 gate | `out/ch1/tab/T2_zone_gate.csv` | mid | ABS-measured | D-14, r = 1.45 in |
 | Chapter 2 | `fct_challenge`: `edge_dist_calc`, `m_signed_in` | mid | published 2026 zone, which is ABS-measured | D-14, r = 1.45 in |

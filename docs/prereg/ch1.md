@@ -20,7 +20,89 @@ What the development saw, in full:
 - Earlier steps published 2022–2024 numbers before the tag. W3.4 wrote pooled contour areas per season to `out/tables/height_coverage.csv`. W3.5 wrote raw shadow-band called-strike rates to `out/ch1/tab/T1_sample.csv`.
 - No quantity for 2025 or 2026 was estimated.
 
-Batter height is roster height plus the calibration offset, the primary cohort under DECISIONS.md D-R0-02. The ABS-measured cohort was fitted once, as a sensitivity row in section 7.
+Batter height in every development fit is roster height plus the one calibration offset of DECISIONS.md D-R0-02. D-P4-04 refined that rule before the tag. Section 1.1 states the rule the primary analysis uses, and section 1.2 lists the steps that ran under the single offset. The ABS-measured cohort was fitted once, as a sensitivity row in section 7.
+
+### 1.1 The height rule: D-R0-02, refined by D-P4-04
+
+The primary batter height is roster height plus an offset, in every season from 2022 to 2026 (D-R0-02). DECISIONS.md D-P4-04 gives the offset one value inside the ABS-measured cohort and one outside it:
+
+- Inside the cohort, H = roster height + 0.0022 in. This is D-R0-02's calibration: the mean of measured minus roster height over the 658 batters who carry both in 2026, SD 0.2909 in.
+- Outside the cohort, H = roster height − 0.347 in (SE 0.155 in). One value serves every season.
+
+Both offsets are added to roster height. `data/interim/dim_batter_season/calibration.json` holds them as `offset_in` and `offset_noncohort_in`, with a `convention` string that says so. `R/ch1/03_heights.R` (SOP W3.4) computes the second value, and its `--check` recomputes it from the inputs.
+
+Why the cohort's offset cannot serve outside it. Inside the cohort, roster height is the measured height rounded to the inch, for 658 of 658 batters. D-R0-02's offset therefore measures rounding. It cannot see a listing error outside the cohort, where no measured height exists.
+
+The estimate uses 2022–2024 only and reads no call. For each season, every batter-season with at least 200 pitches carrying `sz_top` gives its median `sz_top`, the zone top that Hawk-Eye set before ABS. One least-squares fit regresses it on height and on an indicator for batters outside the cohort. Height is measured inside the cohort and listed outside it. Listed minus true height outside the cohort is minus the indicator's coefficient over the height slope. Its SE is the coefficient's SE over the slope. The three seasons are pooled by inverse variance, and the offset is minus the pooled value. The method is the W3.4 stat verifier's (`logs/evidence/W3.4.verify-stat.log`, section G), and it reproduces the verifier's per-season values.
+
+| season | batters outside the cohort | batters inside | listed minus true, in | SE, in | age-adjusted, in | SE, in |
+|---|---:|---:|---:|---:|---:|---:|
+| 2022 | 270 | 272 | 0.475 | 0.248 | 0.388 | 0.264 |
+| 2023 | 204 | 335 | 0.255 | 0.269 | 0.177 | 0.291 |
+| 2024 | 132 | 389 | 0.276 | 0.295 | 0.205 | 0.312 |
+| pooled | 606 batter-seasons | | 0.347 | 0.155 | 0.268 | 0.166 |
+
+The age-adjusted fit adds the batter-season mean of Statcast's `age_bat` as a third covariate. It gives an offset of −0.268 in (SE 0.166 in). It is reported and not used. D-P4-04 and the verifier's log report both estimates and choose neither, so the primary takes the fit with fewer modelling choices.
+
+What the evidence supports, stated plainly. It is indirect: it infers height from where the zone top was set, not from a measurement. The pooled bias sits 2.2 standard errors from zero. The 606 batter-seasons are 328 batters, and the three seasons share them, so the pooled SE, which treats the seasons as independent, is too small.
+
+The offset is one value for every season, so it cannot by itself create a difference between regimes. Its weight in a season's pooled zone scales with that season's share of called pitches from batters outside the cohort, and that share falls from 2022 to 2025. The table gives the size of the correction. For those batters the zone top moves by 53.5% and the bottom by 27% of the height change, −0.349 in, which is the non-cohort offset minus the cohort offset.
+
+| season | called pitches | from batters outside the cohort | share | zone top shift for those batters, in | zone bottom shift, in |
+|---|---:|---:|---:|---:|---:|
+| 2022 | 367,145 | 149,286 | 0.4066 | -0.187 | -0.094 |
+| 2023 | 374,523 | 102,459 | 0.2736 | -0.187 | -0.094 |
+| 2024 | 367,017 | 64,129 | 0.1747 | -0.187 | -0.094 |
+| 2025 | 368,925 | 27,693 | 0.0751 | -0.187 | -0.094 |
+
+In 2026, 2 of 358,461 called pitches come from batters outside the cohort (DT-30). The zone moves down in feet. In the normalised coordinate zn = z × 12 / H, the same pitches move up, so a fitted contour read for a 72-inch batter moves the other way.
+
+**Two arms beside the primary, both pre-registered.**
+
+- The ABS-measured arm: P1, with the measured height `H_abs` (D-R0-02). The listing bias cannot reach it.
+- SENS-HEIGHT-SINGLE: P0, with roster height plus D-R0-02's 0.0022 in for every batter. This is the rule as the owner first answered it. It is reported beside the primary, never in its place.
+
+**The sign-agreement clause.** DECISIONS.md D-P4-04, part 3, verbatim:
+
+> The ABS-measured-only robustness arm, which this bias cannot reach, must agree in sign with the primary on the buffer and ABS components. Otherwise the primary is reported as sensitive to the height cohort.
+
+The buffer and ABS components are `Δ_buffer` and `Δ_ABS` of `PREREGISTRATION.md` section 8.
+
+### 1.2 Steps before the tag that ran under the single offset
+
+Every Chapter 1 step before D-P4-04 was implemented gave a batter outside the cohort roster height plus D-R0-02's one offset. The table lists each step whose input held such a batter's zn or d, and what was done. The deviation is DEV-68.
+
+| step | input under the single offset | decision |
+|---|---|---|
+| W3.11, sections 1 to 7 | zn and d of 2022–2024, 687,496 rows | k.check re-run under D-P4-04, below. The rest is not re-run. |
+| W3.12(c), the power curve | the design's d, 2022–2026; the link and the variance components, fitted on 2022–2024 | not re-run |
+| W3.12(a), recovery | zn and d of the 2024 rows | not re-run |
+| W3.12(b), SBC | the design's d | not re-run |
+| MT-01's prior predictive, section 8.8 | the link and the 2022–2024 band | not re-run |
+| W3.4, the selection effect in `out/tables/height_coverage.csv` | the all-batter arm, 2022–2024 | not re-run |
+| W3.5, the band rows of `out/ch1/tab/T1_sample.csv`, d within 8.0 in and 3.0 in, and the raw shadow-band rates | d, 2022–2026 | not re-run |
+
+W3.11's k.check, re-run on 2026-09-29. `Rscript R/ch1/20_spec_dev.R --check-noncohort` refits the frozen specification and the rung above it on the development sample under D-P4-04. That sample holds 687,366 rows: 2022 226,513; 2023 233,551; 2024 227,302. The same table under the single offset holds 687,485.
+
+- Every group stays stable at the frozen k. The largest k-index change between the frozen fit and the rung above it is 0.0007, against the 0.01 rule. No k changes.
+- The `te()` k-indices read 0.964 to 0.972, against 0.956 to 0.962 in section 3, each with a permutation p-value below 0.01. The reading of section 3 stands: residual structure, not a basis that is too small.
+- `s(velo)` reads 0.986 with p = 0.025, against 0.996 and 0.2675. Its k-index does not move from k 10 to k 20.
+- The two runs differ in more than the height rule. D-P4-08 moved 11 rows, and k.check draws its 20,000-row sub-sample from a different row set.
+- The 2023-minus-2022 dry run of section 5 moves from −0.172 to −0.199 in at the top edge, and from −9.89 to −10.26 sq in in area. No acceptance criterion reads that contrast.
+
+The comparison is in `out/dev/ch1_spec/noncohort/`, which is not committed.
+
+Why the W3.12 simulations are not re-run. They measure the estimator's operating characteristics on simulated calls. The height rule moves the zone of a minority of batters by the amounts in section 1.1, and it does not change the estimator. The 150 recovery replicates, the SBC and the power curve take hours, and the values DECISIONS.md D-R0-04 disclosed stay as run. MT-01's margin is thin: the prior's boundary is s = 0.3013 against the 0.30 chosen. Its inputs would move under D-P4-04 and were not recomputed, so that margin stands under the single offset.
+
+Why W3.4 and W3.5 are not re-run. The selection effect holds one height rule fixed across its two arms, which is how SOP W3.4 defines it. The W3.4 stat verifier sized a D-P4-04 correction on it (DECISIONS.md D-P4-04). The T1 rows are descriptive counts on the analysis table's d. The Chapter 1 fit code recomputes d under D-P4-04 at fit time and reports its own row counts.
+
+Not affected, checked by reading how each is computed:
+
+- P0 and P1. P0 filters on game type, date, call type, coordinates and the pitcher's role, never on height. P1 is P0's rows with a measured height.
+- The join and the challenge counts, which read no height.
+- The DT-21 zone gate. It reads measured heights, and all 10,168 challenged pitches come from batters inside the cohort. Its roster-height row, 10,043 of 10,168, therefore uses the cohort offset, which D-P4-04 leaves unchanged.
+- DT-30, which counts called pitches by cohort, not by height.
+- The analysis table. It stores H with D-R0-02's one offset, and the fit code moves the rows outside the cohort at fit time. No mart is rebuilt.
 
 ## 2. The frozen specification
 
