@@ -1,0 +1,5 @@
+# SSAC 2027 review window: OPEN. Stamped 2026-09-29T14:34:41+02:00 (Europe/Madrid).
+# While this file exists, WR-19 (quality/prose_lint.py, tools/comms/check_blind.py) fails on any
+# file reachable from the repository root that names the author (D-69). Delete it on the day
+# SSAC announces finalists, which un-blinds the repository (W7).
+state: open

@@ -113,13 +113,67 @@ PORTFOLIO = "docs/portfolio/abs-umpires.md"
 RESUME = "docs/resume/entry.html"
 ABSTRACT = "abstract/ssac2027_abstract.md"
 RESULT_FILES = (MEMO, README, PORTFOLIO, RESUME, ABSTRACT)  # rule 5
-ATTRIBUTION_FILES = RESULT_FILES  # rule 8
+# W9.13: rule 5 also reads the filled abstract and the pasted text, with or without a
+# dry-run tag such as .SYNTHETIC. The abstract rules key on a file's role, abstract/ or
+# submissions/ssac2027/, wherever that folder sits, so the dry run's copies under
+# out/dev/ are linted exactly as the real ones are.
+ROLE = r"(?:^|/)"
+RESULT_FILLED = re.compile(
+    ROLE + r"abstract/ssac2027_abstract\.(?:[A-Z]+\.)?filled\.md$"
+    r"|" + ROLE + r"submissions/ssac2027/submitted-abstract(?:\.[A-Z]+)?(?:\.inline-table)?\.txt$"
+)
+ATTRIBUTION_FILES = (MEMO, README, PORTFOLIO, RESUME, ABSTRACT)  # rule 8
 PRIOR_ART_FILES = (MEMO, README, PORTFOLIO)  # rule 9
 DIRECTION_FILES = (README, PORTFOLIO)  # rule 11
 FIRST_PERSON_FILES = (MEMO,)  # rule 7, WR-10
 PREREG_PATHS = ("PREREGISTRATION.md", "docs/prereg/")  # rule 2 exemption
 P8_PREFIX = "docs/p8/"
 WR19_REACH = ("README.md", "LICENSE", "CITATION.cff", "docs/", "app/", ".github/")
+
+# W9.13 (fleet phase 06) puts the rest of the SOP 6.6 pack in service here, so
+# there is still one linter. quality/wr-scope.md is the scope table for them.
+# WR-15: the SOP's own grep, applied to every file whose text is submitted.
+WR15_FILES = re.compile(
+    ROLE + r"abstract/(?:ssac2027_abstract[^/]*\.md|variants/[^/]+\.md|table1[^/]*\.md"
+    r"|figure1[^/]*\.alt\.txt)$|" + ROLE + r"submissions/ssac2027/submitted-abstract[^/]*\.txt$"
+)
+# WR-20's SOP scope names abstract/. The abstract keeps that rule wherever its folder
+# sits (the dry run's copies under out/dev/), and so does the text pasted into the form.
+WR20_ROLE = re.compile(ROLE + r"abstract/|" + ROLE + r"submissions/ssac2027/submitted-abstract")
+# The two plain-text files of the submission are prose. A folder walk reads them beside
+# .md and .html; every other .txt (the number lists under docs/) is data, not prose.
+SUBMITTED_TXT = re.compile(
+    ROLE
+    + r"abstract/figure1[^/]*\.alt\.txt$|"
+    + ROLE
+    + r"submissions/ssac2027/submitted-abstract[^/]*\.txt$"
+)
+WR15_TERMS = re.compile(r"(?i)hudson|pagni|ucla|github\.com|hpagni|abs-umpires")
+# WR-19: the SOP names hudson, pagni, hudpag, hudsonpagni.com and a UCLA
+# affiliation string. Matched as words, so the repository handle is not a hit;
+# WR-15 lists that handle separately, for the abstract only.
+WR19_TERMS = re.compile(
+    r"(?i)\bhudson\b|\bpagni\b|\bhudpag|hudsonpagni\.com|\bucla\b"
+    r"|university of california,? los angeles"
+)
+WR19_TREE = ("LICENSE", "CITATION.cff", "app", ".github")  # not prose, read whole
+# WR-18: the SSAC abstract has four fixed sections, so its named limitation is a
+# sentence inside the Conclusion, not a fifth heading.
+WR18_ABSTRACT = re.compile(
+    ROLE + r"abstract/(?:ssac2027_abstract[^/]*\.md|variants/[^/]+\.md)$"
+    r"|" + ROLE + r"submissions/ssac2027/submitted-abstract[^/]*\.txt$"
+)
+WR18_LIMIT = re.compile(r"(?i)\blimit(?:s|ed|ation|ations)?\b|\bcannot\b|\bcaveat")
+WR18_CONCLUSION = re.compile(r"(?im)^\s*(?:#{1,6}\s*|\*\*)?conclusions?\b[.:*]*")
+WR18_HEADING = re.compile(r"(?im)^\s*(?:#{1,6}\s*|\*\*)?(?:introduction|methods|results)\b")
+MD_IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)")
+HTML_IMG = re.compile(r"(?is)<img\b([^>]*)>")
+IMG_ALT = re.compile(r"""(?is)\balt\s*=\s*(?:"([^"]*)"|'([^']*)')""")
+MIN_ALT = 40  # WR-14: "every <img> has >=40 characters of alt text"
+LOCAL_LINK = re.compile(r"\]\(([^)\s#]+)|\bhref\s*=\s*[\"']([^\"'#]+)")
+RESUME_LI = re.compile(r"(?is)<li\b[^>]*>(.*?)</li>")
+MEMO_PDF = "docs/memo/memo.pdf"
+P8_HEADING = re.compile(r"(?im)^\s*(?:#{1,6}\s*|<h\d[^>]*>\s*)how this differs from rsi2bot")
 
 MAX_WORDS_RULE1 = 34  # rule 1: "one claim per sentence (<=34 words"
 MAX_MEDIAN_RULE1 = 22  # rule 1: "file median <=22"
@@ -280,6 +334,12 @@ NOT_A_RESULT_AFTER = re.compile(
     r"(?i)^\s*(?:called-strike\s+)?(?:contour|quantile|percentile|threshold|level|interval|"
     r"credible|confidence|cutoff|probability)\b"
 )
+# W9.13: a fraction that defines the zone is a rule-book constant, not a result,
+# as in "fixed 53.5 and 27 percent height fractions" (the 2026 Statcast zone).
+DEFINING_FRACTION = re.compile(
+    r"(?i)^\s*(?:and\s+\d+(?:\.\d+)?\s+)?(?:percent|%)?\s*(?:of\s+)?(?:batter\s+)?"
+    r"height\s+fractions?\b"
+)
 BOUND = re.compile(r"95%|90%|\[|±|\bn\s*=\s*\d")
 PERCENT = re.compile(r"(?<![\w.])\d+(?:\.\d+)?\s?%")
 DENOMINATOR = re.compile(r"(?i)\bn\s*=|\bof\b|\bout of\b|/|\bper\b|\bamong\b|\bacross\b|\bin\s+\d")
@@ -337,6 +397,14 @@ LABELS = {
     "wr05": "WR-05",
     "wr06": "WR-06",
     "wr08": "WR-08",
+    "wr13": "WR-13",
+    "wr14": "WR-14",
+    "wr15": "WR-15",
+    "wr16": "WR-16",
+    "wr17": "WR-17",
+    "wr18": "WR-18",
+    "wr19": "WR-19",
+    "wr20": "WR-20",
     "read": "read",
 }
 
@@ -796,13 +864,16 @@ def scan_text(relpath: str, text: str, ctx: Context):
                     "wr04",
                     "'significantly' with no p-value, interval or effect size in the sentence",
                 )
-            if in_set(relpath, RESULT_FILES) and not BOUND.search(sentence):
+            if (in_set(relpath, RESULT_FILES) or RESULT_FILLED.search(relpath)) and not (
+                BOUND.search(sentence)
+            ):
                 for m in RESULT_NUMBER.finditer(sentence):
                     before = sentence[max(0, m.start() - 12) : m.start()]
                     after = sentence[m.end() : m.end() + 40]
                     if not (
                         NOT_A_RESULT_BEFORE.search(before)
                         or ("%" in m.group(0) and NOT_A_RESULT_AFTER.search(after))
+                        or DEFINING_FRACTION.search(after)
                     ):
                         add(
                             first,
@@ -859,7 +930,248 @@ def scan_text(relpath: str, text: str, ctx: Context):
                 )
             elif DIRECTION.lower() not in plain.lower():
                 add(0, "r11", "direction sentence missing: " + DIRECTION)
+    for line, check, message in wr_file_checks(relpath, text, ctx, notes):
+        add(line, check, message)
     return out, notes
+
+
+# ------------------------------------------------------------------ WR-13 to WR-20
+
+
+def _line_hits(text: str, pattern):
+    """(line number, matched text) for every line the pattern hits, once per line."""
+    return [
+        (i, m.group(0))
+        for i, line in enumerate(text.split("\n"), start=1)
+        for m in [pattern.search(line)]
+        if m
+    ]
+
+
+def _wr20():
+    """quality/checks/wr20.py, W7.4's WR-20 engine, imported rather than copied."""
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), "checks")
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import wr20
+
+    return wr20
+
+
+def _conclusion(text: str):
+    """The Conclusion section of an abstract: its first line number and its text."""
+    m = WR18_CONCLUSION.search(text)
+    if not m:
+        return None, ""
+    rest = text[m.end() :]
+    nxt = WR18_HEADING.search(rest)
+    return text[: m.start()].count("\n") + 1, rest[: nxt.start()] if nxt else rest
+
+
+def wr_file_checks(relpath: str, text: str, ctx, notes: list):
+    """WR-14, WR-15, WR-18, WR-19 and WR-20 on one file. Yields (line, check, message)."""
+    for i, line in enumerate(text.split("\n"), start=1):
+        for m in MD_IMAGE.finditer(line):
+            if len(m.group(1).strip()) < MIN_ALT:
+                yield i, "wr14", f"image {m.group(2)!r} has {len(m.group(1).strip())} characters "
+                f"of alt text; WR-14 asks for {MIN_ALT}"
+        for m in HTML_IMG.finditer(line):
+            alt = IMG_ALT.search(m.group(1))
+            n = len((alt.group(1) or alt.group(2) or "").strip()) if alt else 0
+            if n < MIN_ALT:
+                yield i, "wr14", f"<img> has {n} characters of alt text; WR-14 asks for {MIN_ALT}"
+    if WR15_FILES.search(relpath):
+        for i, hit in _line_hits(text, WR15_TERMS):
+            yield i, "wr15", f"blind review: {hit!r} identifies the author or the repository"
+    if WR18_ABSTRACT.search(relpath):
+        at, body = _conclusion(text)
+        if at is None:
+            yield 0, "wr18", "no Conclusion section, so no limitation sentence"
+        elif "<<CALL>>" in body:
+            notes.append(
+                f"{relpath}: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's "
+                "sentence, so the limitation sentence is checked on the filled text"
+            )
+        elif not WR18_LIMIT.search(body):
+            yield (
+                at,
+                "wr18",
+                (
+                    "the Conclusion names no limitation (limit, limitation, cannot, caveat); "
+                    "SSAC fixes four sections, so it is a sentence here, not a heading"
+                ),
+            )
+    if ctx.review_open and in_set(relpath, WR19_REACH):
+        for i, hit in _line_hits(text, WR19_TERMS):
+            yield i, "wr19", f"{hit!r} names the author while {REVIEW_LOCK} marks the window open"
+    wr20 = _wr20()
+    if wr20.in_scope(relpath) or WR20_ROLE.search(relpath):
+        for line, sentence in wr20.scan_text(relpath, text)[1]:
+            yield line, "wr20", f"'buffer' and 'two inches' without 'outside': {sentence[:90]!r}"
+
+
+def _tracked(root: str):
+    """Files git ships, or None outside a git checkout."""
+    import subprocess
+
+    try:
+        res = subprocess.run(
+            ["git", "-C", root, "ls-files", "-z"], capture_output=True, check=True, timeout=30
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return {p for p in res.stdout.decode("utf-8", "replace").split("\0") if p}
+
+
+def _read(full: str):
+    try:
+        with open(full, encoding="utf-8") as fh:
+            return fh.read()
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def tree_checks(root: str, files, ctx):
+    """Default-scope checks that read files the prose walk does not. Returns (findings, notes)."""
+    found, notes = [], []
+    tracked = _tracked(root)
+
+    def exists(relpath):
+        full = os.path.join(root, relpath)
+        return os.path.isfile(full) and (tracked is None or relpath in tracked)
+
+    # WR-14 on the figure's alt file, and WR-15 on the plain-text files of the
+    # submission, which the prose walk (.md and .html) does not open.
+    listing = []
+    for folder in ("abstract", "submissions/ssac2027"):
+        base = os.path.join(root, folder)
+        listing += (
+            [f"{folder}/{n}" for n in sorted(os.listdir(base))] if os.path.isdir(base) else []
+        )
+    for relpath in listing:
+        if re.match(r"^abstract/figure1[^/]*\.png$", relpath):
+            alt = relpath[: -len(".png")] + ".alt.txt"
+            n = len((_read(os.path.join(root, alt)) or "").strip())
+            if n < MIN_ALT:
+                found.append(
+                    Finding(
+                        alt,
+                        0,
+                        "wr14",
+                        f"{relpath} has {n} characters of alt text here; WR-14 asks for {MIN_ALT}",
+                    )
+                )
+        if relpath.endswith(".txt") and WR15_FILES.search(relpath):
+            for i, hit in _line_hits(_read(os.path.join(root, relpath)) or "", WR15_TERMS):
+                found.append(Finding(relpath, i, "wr15", f"blind review: {hit!r}"))
+
+    # WR-19: files that are not prose, and every file one link away.
+    if ctx.review_open:
+        reach = []
+        for item in WR19_TREE:
+            full = os.path.join(root, item)
+            if os.path.isfile(full):
+                reach.append(item)
+            for base, dirs, names in os.walk(full) if os.path.isdir(full) else []:
+                dirs.sort()
+                reach += [rel(os.path.join(base, n), root) for n in sorted(names)]
+        seen = {rel(f, root) for f in files}
+        for full in files:
+            src = rel(full, root)
+            if not in_set(src, WR19_REACH):
+                continue
+            for m in LOCAL_LINK.finditer(_read(full) or ""):
+                target = m.group(1) or m.group(2)
+                if re.match(r"[a-z][a-z0-9+.-]*:", target, re.I) or target.startswith("/"):
+                    continue
+                hop = os.path.normpath(os.path.join(os.path.dirname(src), target))
+                if not hop.startswith("..") and exists(hop):
+                    reach.append(hop)
+        for relpath in sorted(set(reach) - seen):
+            if in_set(relpath, WR19_REACH) and relpath.endswith(PROSE_EXT):
+                continue  # already read by the prose walk
+            for i, hit in _line_hits(_read(os.path.join(root, relpath)) or "", WR19_TERMS):
+                found.append(
+                    Finding(
+                        relpath,
+                        i,
+                        "wr19",
+                        f"{hit!r} names the author, one hop "
+                        f"from the repository root, while {REVIEW_LOCK} exists",
+                    )
+                )
+    else:
+        notes.append(f"WR-19: not run; {REVIEW_LOCK} is absent, so the review window is closed")
+
+    # WR-10, WR-13, WR-16 and WR-17 target W7 and W8 artifacts. Absent: SKIP, said aloud.
+    if not os.path.isfile(os.path.join(root, MEMO)):
+        notes.append(f"WR-10: SKIP (target {MEMO} not built until W7)")
+        notes.append(f"WR-18: SKIP for the memo (target {MEMO} not built until W7)")
+    else:
+        memo = _read(os.path.join(root, MEMO)) or ""
+        if not re.search(r"(?is)<h\d[^>]*>[^<]*limitation", memo):
+            found.append(Finding(MEMO, 0, "wr18", "no heading naming the limitations"))
+    pdf = os.path.join(root, MEMO_PDF)
+    if not os.path.isfile(pdf):
+        notes.append(f"WR-13: SKIP (target {MEMO_PDF} not built until W7)")
+    else:
+        import logging
+
+        err = None
+        logging.disable(logging.CRITICAL)  # pypdf logs a warning per malformed byte
+        try:
+            from pypdf import PdfReader
+
+            pages = len(PdfReader(pdf).pages)
+        except Exception as exc:
+            pages, err = -1, exc
+        finally:
+            logging.disable(logging.NOTSET)
+        if pages != 2:
+            found.append(
+                Finding(
+                    MEMO_PDF,
+                    0,
+                    "wr13",
+                    f"memo has {pages} page(s), "
+                    f"WR-13 asks for exactly 2" + (f" ({err})" if pages < 0 else ""),
+                )
+            )
+        notes.append("WR-13: page count read with pypdf; the 9.5pt floor is W7.22's fitter")
+    resume = _read(os.path.join(root, RESUME))
+    if resume is None:
+        notes.append(f"WR-16: SKIP (target {RESUME} not built until W7)")
+    else:
+        for m in RESUME_LI.finditer(resume):
+            bullet = re.sub(r"<[^>]+>", " ", m.group(1))
+            at = resume[: m.start()].count("\n") + 1
+            nums = re.findall(r"\d+(?:[.,]\d+)?", bullet)
+            if count_words(bullet) > MAX_WORDS_RULE1 or len(nums) < 2 or not BOUND.search(bullet):
+                found.append(
+                    Finding(
+                        RESUME,
+                        at,
+                        "wr16",
+                        "a resume bullet needs at most 34 words, two numerals and a bound",
+                    )
+                )
+        notes.append("WR-16: the named method in each bullet is a hand check")
+    p8 = os.path.join(root, P8_PREFIX)
+    texts = [
+        _read(os.path.join(b, n)) or ""
+        for b, _, ns in (os.walk(p8) if os.path.isdir(p8) else [])
+        for n in ns
+        if n.lower().endswith(PROSE_EXT)
+    ]
+    if not texts:
+        notes.append(f"WR-17: SKIP (no write-up under {P8_PREFIX} until W8); the P8 ban list runs")
+    else:
+        if not any(P8_HEADING.search(t) for t in texts):
+            found.append(
+                Finding(P8_PREFIX, 0, "wr17", 'no "How this differs from rsi2bot" heading')
+            )
+        notes.append("WR-17: the three differentiators under that heading are a hand check")
+    return found, notes
 
 
 # ------------------------------------------------------------------ files
@@ -892,7 +1204,10 @@ def targets(root: str, paths):
             for base, dirs, files in os.walk(full):
                 dirs[:] = sorted(d for d in dirs if not d.startswith("."))
                 out.extend(
-                    os.path.join(base, f) for f in sorted(files) if f.lower().endswith(PROSE_EXT)
+                    os.path.join(base, f)
+                    for f in sorted(files)
+                    if f.lower().endswith(PROSE_EXT)
+                    or SUBMITTED_TXT.search(rel(os.path.join(base, f), root))
                 )
         elif not skip_missing:
             findings.append(Finding(rel(full, root), 0, "r10-missing", "named file does not exist"))
@@ -917,6 +1232,15 @@ def run(root: str, paths, ship: bool):
         found, file_notes = scan_text(relpath, text, ctx)
         findings.extend(found)
         notes.extend(file_notes)
+    if source == "default scope":
+        found, tree_notes = tree_checks(root, files, ctx)
+        findings.extend(found)
+        notes.extend(tree_notes)
+    else:
+        notes.append(
+            "WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default "
+            "scope only, so this path-limited run covers the per-file rules"
+        )
     return files, findings, notes, source
 
 
@@ -926,8 +1250,8 @@ def summary(files, findings, source, ship) -> str:
     ship_part = "rules 8, 9, 11 run (--ship)" if ship else "rules 8, 9, 11 not run (no --ship)"
     return (
         f"prose-lint: {len(files)} file(s) from the {source}, {errors} violation(s), "
-        f"{warns} warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10 "
-        f"and the P8 ban list; {ship_part}; "
+        f"{warns} warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, "
+        f"WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; {ship_part}; "
         f"rule 6 and WR-07 are quality/check_numbers.py."
     )
 
@@ -950,7 +1274,15 @@ rule 11    rule 11           --ship; README, portfolio; yields to WR-19 while th
 WR-04      WR-04             every file: 'significantly' with no p-value, interval or effect size
 WR-05      WR-05             every file: novelty claim with no citation on the line or the next
 WR-06      WR-06 (warn)      every file: percentage with no denominator
-WR-08      WR-08 (warn)      every file: passive voice in over 20% of sentences"""
+WR-08      WR-08 (warn)      every file: passive voice in over 20% of sentences
+WR-13      WR-13             docs/memo/memo.pdf: exactly two pages; SKIP until W7 builds it
+WR-14      WR-14             every file: image alt text under 40 characters; figure1 alt file
+WR-15      WR-15             submitted abstract files: the SOP grep, author and repository
+WR-16      WR-16             docs/resume/entry.html bullets; SKIP until W7 builds it
+WR-17      WR-17             docs/p8/: the rsi2bot heading; SKIP until W8 builds it
+WR-18      WR-18             abstract: a limitation sentence in the Conclusion; memo: a heading
+WR-19      WR-19             while quality/review-window.lock exists: root reach plus one link hop
+WR-20      WR-20             quality/checks/wr20.py scope: buffer and two inches without outside"""
 
 
 # ------------------------------------------------------------------ self-test
@@ -1399,7 +1731,193 @@ def _cases():
             False,
             False,
         ),
+        # W9.13: a zone-defining fraction is not a result; a filled abstract is a result file.
+        (
+            "defining height fraction",
+            "abstract/ssac2027_abstract.md",
+            "Statcast uses fixed 53.5 and 27 percent height fractions.",
+            set(),
+            {"r5"},
+            False,
+            False,
+        ),
+        (
+            "filled abstract result with no bound",
+            "abstract/ssac2027_abstract.filled.md",
+            "The zone shrank by 9.1 square inches.",
+            {"r5"},
+            set(),
+            False,
+            False,
+        ),
+        # W9.13: the abstract rules key on the folder's role, so a dry-run copy is linted too.
+        (
+            "role path: WR-15 on a dry-run copy of the filled abstract",
+            "out/dev/x/abstract/ssac2027_abstract.SYNTHETIC.filled.md",
+            "## Methods\n\nHudson fit a model.\n",
+            {"wr15"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "role path: WR-20 on a dry-run copy of the abstract",
+            "out/dev/x/abstract/ssac2027_abstract.md",
+            "The buffer was two inches wide.",
+            {"wr20"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "role path: WR-20 on the pasted text",
+            "submissions/ssac2027/submitted-abstract.txt",
+            "The buffer was two inches wide.",
+            {"wr20"},
+            set(),
+            False,
+            False,
+        ),
+        # W9.13: WR-14, WR-15, WR-18, WR-19 and WR-20 on one file each.
+        ("alt text short", "docs/a.md", "![A zone.](fig.png)", {"wr14"}, set(), False, False),
+        (
+            "alt text long",
+            "docs/a.md",
+            "![The called zone by regime, with 95% intervals per edge.](fig.png)",
+            set(),
+            {"wr14"},
+            False,
+            False,
+        ),
+        (
+            "img tag no alt",
+            "docs/a.html",
+            '<p><img src="f.png"></p>',
+            {"wr14"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "abstract names repo",
+            "abstract/ssac2027_abstract.md",
+            "# T\n\nCode is on github.com.\n",
+            {"wr15"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "form survey is not the abstract",
+            "abstract/FORM-FIELDS.md",
+            "Sign in as the author at github.com.\n",
+            set(),
+            {"wr15"},
+            False,
+            False,
+        ),
+        (
+            "conclusion without limitation",
+            "abstract/ssac2027_abstract.filled.md",
+            "# T\n\n## Results\n\nThe zone moved.\n\n## Conclusion\n\nThe zone moved.\n",
+            {"wr18"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "conclusion with limitation",
+            "abstract/ssac2027_abstract.filled.md",
+            "# T\n\n## Conclusion\n\nOne season limits the buffer estimate.\n",
+            set(),
+            {"wr18"},
+            False,
+            False,
+        ),
+        (
+            "conclusion pending the owner",
+            "abstract/ssac2027_abstract.md",
+            "# T\n\n## Conclusion\n\n<<CALL>> The zone moved.\n",
+            set(),
+            {"wr18"},
+            False,
+            False,
+        ),
+        (
+            "author named, window open",
+            "docs/a.md",
+            "Written by Hudson.\n",
+            {"wr19"},
+            set(),
+            False,
+            True,
+        ),
+        (
+            "repo handle is not the name",
+            "docs/a.md",
+            "See hpagni/abs-umpires for the code.\n",
+            set(),
+            {"wr19"},
+            False,
+            True,
+        ),
+        ("author named, window closed", "docs/a.md", "Hudson.\n", set(), {"wr19"}, False, False),
+        (
+            "buffer without outside",
+            "abstract/x.md",
+            "The buffer was two inches.\n",
+            {"wr20"},
+            set(),
+            False,
+            False,
+        ),
+        (
+            "buffer with outside",
+            "abstract/x.md",
+            "The buffer was two inches outside the edge.\n",
+            set(),
+            {"wr20"},
+            False,
+            False,
+        ),
     ]
+
+
+def _tree_selftest(tmp: str, bans, failures: list, covered: set):
+    """WR-13, WR-16, WR-17, WR-19 one hop and the figure alt file, on a scratch tree."""
+    for d in ("abstract", "docs/memo", "docs/resume", "docs/p8", "quality"):
+        os.makedirs(os.path.join(tmp, d), exist_ok=True)
+    files = {
+        "abstract/figure1.png": "png",
+        "abstract/figure1.alt.txt": "too short",
+        "docs/memo/memo.pdf": "not a pdf",
+        "docs/memo/memo.html": "<h2>Results</h2>",
+        "docs/resume/entry.html": "<ul><li>Built a model.</li></ul>",
+        "docs/p8/a.md": "# P8\n",
+        "docs/index.md": "See [the notes](../NOTES.md).\n",
+        "NOTES.md": "Hudson wrote this.\n",
+        "LICENSE": "Copyright the authors.\n",
+        REVIEW_LOCK: "open\n",
+    }
+    for relpath, text in files.items():
+        with open(os.path.join(tmp, relpath), "w", encoding="utf-8") as fh:
+            fh.write(text)
+    ctx = Context(tmp, bans, review_open=True)
+    found, _ = tree_checks(tmp, [os.path.join(tmp, "docs/index.md")], ctx)
+    got = {(f.check, f.path) for f in found}
+    want = {
+        ("wr13", MEMO_PDF),
+        ("wr14", "abstract/figure1.alt.txt"),
+        ("wr16", RESUME),
+        ("wr17", P8_PREFIX),
+        ("wr18", MEMO),
+        ("wr19", "NOTES.md"),
+    }
+    covered |= {c for c, _ in want}
+    for check, path in sorted(want - got):
+        failures.append(f"tree fixture: expected {check} on {path}, got {sorted(got)}")
+    if ("wr19", "LICENSE") in got:
+        failures.append("tree fixture: WR-19 fired on a LICENSE that names no one")
 
 
 def _module_docstring_ok(ctx):
@@ -1547,6 +2065,9 @@ def selftest(root: str = ROOT) -> int:
             if saved is not None:
                 os.environ["ABS_PROSE_FILES"] = saved
         covered.add("r10-missing")
+        tree = os.path.join(tmp, "tree")
+        os.makedirs(tree)
+        _tree_selftest(tree, base.bans, failures, covered)
         want = {"good": 0, "bad": 1, "missing": 1, "usage": 2, "env": 0}
         if codes != want:
             failures.append(f"command line: exit codes {codes}, expected {want}")

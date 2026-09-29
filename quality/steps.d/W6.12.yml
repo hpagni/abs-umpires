@@ -1,0 +1,15 @@
+# W6.12, the SSAC submission package. Owner W6, fleet phase 06 (abstract lane).
+# Registered 2026-09-29, Madrid. The form submit is the owner's: it is sign-in gated.
+#
+# quality/w612_check.sh runs the SOP word counter verbatim on
+# submissions/ssac2027/submitted-abstract.txt and on the no-upload copy (both must fit
+# until abstract/FORM-FIELDS.md answers the upload question), the blind-review grep, the
+# SSAC format, and the prose and number gates. It checks the package, never the form.
+# The step closes when the archive agent commits the confirmation, the receipt and the
+# exact submitted text and tags ssac2027-abstract-submitted.
+- id: W6.12
+  title: "SSAC submission package and paste sheet; the submit is owner-only"
+  verify: "bash quality/w612_check.sh"
+  expect_exit: 0
+  owner: W6
+  needs: abstract/owner-calls.json, submissions/ssac2027/submitted-abstract.txt, submissions/ssac2027/paste-sheet.md

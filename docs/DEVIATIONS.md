@@ -1441,3 +1441,102 @@ fails until W3.11 is rebuilt.
 
 What closes it: nothing further before the tag. A later re-run of a listed step under D-P4-04 is
 its own dated entry.
+
+## DEV-69: W6.1 and W2.3, the owner's personal address leaves the tracked files
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry for the tracked
+files; OPEN for git history, which the owner decides. Applied under D-R0-03's delegation, not
+as an owner answer. The decision is D-P4-38.
+
+What happened. `abstract/FORM-FIELDS.md` carried the owner's personal Gmail address three
+times from cd44758. `DECISIONS.md` carried it on one line from 74b995a, in a probe URL and in
+the header that probe produced. The repository is public.
+
+What was done instead. Both files now carry a phrase or a placeholder, and the owner's name
+and university stay. `tests/guard/test_no_owner_address.py` fails when a tracked file carries
+an address at gmail.com or the owner's handle, outside the lockfiles, the pattern definitions
+and quoted `prose_lint.py` command lines. It proves itself on violations planted in a
+throwaway repository.
+
+What stays open. History was not rewritten. The address remains in every commit from cd44758,
+and from 74b995a for `DECISIONS.md`, up to the commit that carries this entry. The owner
+decides whether history is scrubbed.
+
+## DEV-70: W3.15, W3.18 and W3.21, the two shadow bands, the W3.18 link, and P3 and P4
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-39.
+OWNER-VISIBLE.
+
+What the SOP said. W3.15 computes `shadow_rate` over `|d| ≤ 3.0 in`. W3.18 takes the link
+`g_{e,r}(d)` "from the pooled surface". W3.21 lists P3, "machine zone does not move", and P4,
+"rate ≈ 0 or 1 and stable", beside P1 and P2.
+
+What was done instead. The pre-registration names two bands. W3.15's shadow rate, P1,
+CH1-A10 and the sensitivity grid read `|d − 1.45| ≤ 3.0 in` (D-P4-09). W3.18's B1, the D-60
+curve, its SBC and CH1-A6 read `|d| ≤ 3.0 in` on the ball-centre d. The W3.18 link is
+`glm(cs ~ ns(d, 6), binomial)` per edge and regime on |d| ≤ 8 in, pooled over umpires: the form
+the curve and the SBC were built on, not the W3.14 `bam` surface. P3 does not run in the
+sprint and is reported as "not run" until the AAA arm runs (DEV-55). P4 carries no numeric
+threshold and no verdict. The consequence of a placebo failure turns on P1 and P2 alone.
+
+## DEV-71: W4.10, W4.12 and W4.13, M1 carries the MT-05 escalation rule
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-40.
+OWNER-VISIBLE.
+
+What the SOP said. W4.10 fits 4 chains × 2,000 iterations. MT-05 holds on every reported fit.
+
+What was done instead. `docs/prereg/ch2.md` section 4.2 registers DEV-63's rule for every M1
+fit. A fit short only on R-hat or ESS, with no divergence, no tree-depth hit and E-BFMI ≥ 0.2,
+is re-run from the same seed with its draws a chain doubled, at most twice. Otherwise it is
+reported as failed. Every attempt is recorded. The scripts' flag is `--doublings 2`.
+
+## DEV-72: W4.7 and W4.10, `leverage_tercile` is registered as a rule, not as cut points
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until the cut points are computed and recorded
+here. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-41.
+OWNER-VISIBLE.
+
+What the SOP said. M1 and M2 enter `leverage_tercile`, binned to match the prior art's card.
+The annex promised the cut points before the tag.
+
+What was done instead. No win-probability surface exists, and the pinned card carries tercile
+labels, not cut points, so the values cannot be written before the tag. `docs/prereg/ch2.md`
+section 4.3 registers the rule: the stake `g_j` from W5's count-composed cube, over every MLB
+2026 row of `v_opportunity_open` through 2026-09-21, cut at its unweighted 1/3 and 2/3
+quantiles. The cut points are computed once, before any M1 fit, and M1 does not run until then.
+
+What closes it: a dated entry here with c1 and c2, the surface they came from and the row count.
+
+## DEV-73: W4.10, W4.12 and W4.14, four Chapter 2 code choices are pre-registered
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-42.
+
+What the SOP said. W4.12 splits each challenger's challenges by chronological index. W4.10 sets
+`seed = 20260922`, and `config/seeds.yml` sets a Chapter 2 chain seed of 424242. SOP 9.3 gates
+CH2-H2a on catchers with ≥20 challenges. W4.14 reads a catcher framing file.
+
+What was done instead. The annex registers what the code does. CH2-H2a reads the index rebuilt
+by official date, game number, `game_pk`, at-bat and pitch, not the W4.5 index with its 29-row
+doubleheader fault. A challenger's role is the role of most of his challenges, a tie going to
+his first. M1's seed is 20260922. W4.14's framing file must count games through 2026-09-21 at
+the latest, none is built, and W4.14 waits for one. The Savant expected-rate file's pull date is
+left to the owner (D-P4-42).
+
+## DEV-74: W4.11, three M2 items stay open after the tag
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W4.11 runs. Recorded under D-R0-03's
+delegation, not as an owner answer. The decision is D-P4-43.
+
+What the SOP said. W4.11's formula, CH2-H2b's `sd_tau > 0.20 probit`, and the role-rate gate of
+SOP 9.3.
+
+What stays open. The formula has no `m:role` term, so each role's σ comes only through
+shrunken slopes. CH2-H2b's threshold is written on the probit scale while `tau_i` is in inches.
+The role-rate gate has no test id. `docs/prereg/ch2.md` section 11 lists all three.
+
+What closes it: a dated entry here for each item, before W4.11 runs. None touches M1 or the
+sprint.

@@ -52,7 +52,8 @@ if [ -z "$TAG" ]; then
   exit 1
 fi
 
-if [ ! -d .git ]; then
+# W7.10: a git worktree has a .git FILE, not a directory, so ask git itself.
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "SEAL-ORDER FAIL: $root is not a git repository, so no ordering can be proven" >&2
   exit 1
 fi

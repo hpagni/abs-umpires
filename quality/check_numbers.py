@@ -46,8 +46,12 @@ digits in claim sentences. Whether a sentence is a claim is a reading judgement,
 a number above nine written as a word prints a `warn` line for the hand check before
 each submission. It does not change the exit code.
 
-    uv run --locked python quality/check_numbers.py [path ...]
+    uv run --locked python quality/check_numbers.py [--ledger FILE] [path ...]
     uv run --locked python quality/check_numbers.py --selftest
+
+--ledger FILE reads that file in place of docs/numbers.json (W9.13). The abstract
+dry run passes its SYNTHETIC ledger, and the RP-08 cold build passes the ledger it
+rebuilt. The other two sources are always the repository's own.
 
 Exit 0 when every number traces and every source line is well formed, 1 on an
 untraced number or a bad source, 2 on a usage error or a path that does not exist.
@@ -321,20 +325,26 @@ def list_numbers(path: str, rel: str):
     return values, problems
 
 
-def ledger_values(root: str = ROOT):
-    """(values, notes, problems) from the three sources under `root`."""
+def ledger_values(root: str = ROOT, ledger: str | None = None):
+    """(values, notes, problems) from the three sources under `root`.
+
+    `ledger` replaces docs/numbers.json when given (W9.13, --ledger).
+    """
     values: set = set()
     notes: list = []
     problems: list = []
-    path = os.path.join(root, LEDGER)
+    name = ledger or LEDGER
+    path = name if os.path.isabs(name) else os.path.join(root, name)
     if os.path.exists(path):
         try:
             with open(path, encoding="utf-8") as fh:
                 values |= ledger_numbers(json.load(fh))
         except (OSError, ValueError) as exc:
-            problems.append((LEDGER, 0, f"the ledger does not parse as JSON: {exc}"))
+            problems.append((name, 0, f"the ledger does not parse as JSON: {exc}"))
     else:
-        notes.append(f"{LEDGER} is absent, so no generated number can be traced")
+        notes.append(f"{name} is absent, so no generated number can be traced")
+    if ledger:
+        notes.append(f"ledger: {name} in place of {LEDGER}")
     for rel in (PRIOR_ART, ALLOW):
         path = os.path.join(root, rel)
         if not os.path.exists(path):
@@ -390,14 +400,14 @@ def targets(paths, root: str = ROOT, explicit: bool = True):
     return sorted(set(out)), missing
 
 
-def run(args, root: str = ROOT, emit=print) -> int:
+def run(args, root: str = ROOT, emit=print, ledger: str | None = None) -> int:
     """The gate itself, on `args` or the default scope under `root`."""
     files, missing = targets(args or list(DEFAULT_SCOPE), root, explicit=bool(args))
     if missing:
         for rel in missing:
             emit(f"check_numbers: {rel} does not exist")
         return 2
-    values, notes, problems = ledger_values(root)
+    values, notes, problems = ledger_values(root, ledger)
     for note in notes:
         emit(f"check_numbers: {note}")
     for rel, lineno, message in problems:
@@ -580,6 +590,17 @@ def selftest() -> int:
             fh.write("And 3.14 more.\n")
         if run([], tmp, quiet) != 1:
             failures.append("an untraced number in abstract/a.txt did not fail the default scope")
+        # W9.13, --ledger: the named ledger replaces docs/numbers.json, it is not added to it.
+        alt = os.path.join(tmp, "alt.SYNTHETIC.json")
+        with open(alt, "w", encoding="utf-8") as fh:
+            json.dump({"entries": [{"slot": "X", "value": 3.14}, {"slot": "Y", "value": 1200}]}, fh)
+        only = [os.path.join("abstract", "a.txt")]
+        if run(only, tmp, quiet, ledger=alt) != 0:
+            failures.append("--ledger did not trace a number that only the named ledger holds")
+        with open(alt, "w", encoding="utf-8") as fh:
+            json.dump({"entries": [{"slot": "X", "value": 3.14}]}, fh)
+        if run(only, tmp, quiet, ledger=alt) != 1:
+            failures.append("--ledger still read docs/numbers.json beside the named ledger")
     for line in failures:
         print(f"check_numbers selftest: {line}")
     count = len(_CASES) + 10
@@ -591,12 +612,21 @@ def main(argv) -> int:
     args = argv[1:]
     if args == ["--selftest"]:
         return selftest()
+    ledger = None
+    if args[:1] == ["--ledger"]:
+        if len(args) < 2:
+            print("check_numbers: --ledger needs a file", file=sys.stderr)
+            return 2
+        ledger, args = args[1], args[2:]
     if any(a.startswith("-") for a in args):
-        print("usage: python quality/check_numbers.py [path ...] | --selftest", file=sys.stderr)
+        print(
+            "usage: python quality/check_numbers.py [--ledger FILE] [path ...] | --selftest",
+            file=sys.stderr,
+        )
         return 2
     if selftest() != 0:
         return 1
-    return run(args)
+    return run(args, ledger=ledger)
 
 
 if __name__ == "__main__":

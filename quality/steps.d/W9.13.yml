@@ -1,0 +1,15 @@
+# W9.13, prose lint: the W7.1-W7.5 stack in service and the WR-01..WR-20 pack. Owner W9,
+# fleet phase 06 (abstract lane). SOP W9.13 and section 6.6. Registered 2026-09-29, Madrid.
+#
+# One linter (SOP 2.8). quality/prose_lint.py carries W7's rules 1 to 11 and the WR pack
+# as quality/wr-scope.md scopes it; ops/lint_prose.sh now runs it instead of its own copy
+# of the ban list. quality/check_numbers.py is the one number gate (WR-07) and takes
+# --ledger for the dry run. The four rules whose targets W7 and W8 build (WR-10, WR-13,
+# WR-16, WR-17) print SKIP with the path they looked for. The verify runs all four gates
+# every time, so one failure does not hide another.
+- id: W9.13
+  title: "Prose lint: the W7 linter stack in service over abstract/, the WR-01..WR-20 pack"
+  verify: "uv run --locked python quality/prose_lint.py --selftest; a=$?; make lint-prose; b=$?; uv run --locked python quality/check_numbers.py; c=$?; uv run --locked python tools/comms/check_blind.py; d=$?; [ $a -eq 0 ] && [ $b -eq 0 ] && [ $c -eq 0 ] && [ $d -eq 0 ]"
+  expect_exit: 0
+  owner: W9
+  needs: quality/prose_lint.py, quality/check_numbers.py, quality/checks/wr20.py, quality/banned.txt, quality/wr-scope.md, tools/comms/check_blind.py, docs/numbers.json, docs/priorart-numbers.txt, docs/numbers-allow.txt

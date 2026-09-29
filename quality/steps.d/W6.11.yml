@@ -1,0 +1,16 @@
+# W6.11, RP-08 clean-clone reproduction and the numbers freeze. Owner W6, fleet phase 06
+# (abstract lane). Registered 2026-09-29, Madrid.
+#
+# ops/coldbuild.sh clones origin into /tmp/coldbuild, bootstraps (uv sync --locked,
+# renv::restore), links data/ read only, empties the clone's ledger, runs make warehouse
+# and make all, re-exports, and compares every abstract slot and table cell with
+# docs/numbers.json into out/tables/coldbuild_compare.csv. It refuses to start before
+# prereg-v1 is on origin (GD-12). ops/coldbuild.sh --freeze tags numbers-frozen-ssac2027
+# behind six guards. The verify, quality/rp08.sh, reads that evidence and fails when the
+# ledger changed after the cold build.
+- id: W6.11
+  title: "Clean-clone reproduction RP-08 and the numbers-frozen-ssac2027 freeze"
+  verify: "bash quality/rp08.sh"
+  expect_exit: 0
+  owner: W6
+  needs: out/tables/coldbuild_compare.csv, out/tables/coldbuild_compare.json, ops/coldbuild.sh

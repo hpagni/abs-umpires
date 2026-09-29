@@ -1,0 +1,46 @@
+{
+  "_what": "How each SSAC abstract slot is printed. Read by tools/comms/export_numbers.R, which writes the printed strings into docs/numbers.json, and by tools/comms/fill_slots.R, which pastes them. Rounding happens once, in the exporter, so the number gate sees in the ledger exactly what the abstract prints.",
+  "_kinds": "count: an integer, printed with thousands commas, no interval. estimate: a point and a 95% interval, printed 'P (95% CI L to H)'. range: a published range, printed 'L to H'. owner: a sentence or a year the owner writes at review R1; no agent fills it.",
+  "_orient": "signed prints the estimate as the model reports it: a negative area is a loss. contraction prints it negated, with the bounds swapped, so a loss reads as a positive number in a sentence about 'the contraction', as in the SOP's worked example '9.1 (95% CI 6.4 to 11.8)'. Only D_BUF and D_ABS sit in a sentence that names the contraction, in all three variants, so only they are printed that way. D_PRE has its own sentence, 'The 2022-to-2024 pre-trend is <<D_PRE>> square inches per year', which does not name the contraction, so it is printed signed.",
+  "_ledger_slot": "ledger_slot names the ledger entry a slot prints when the two names differ. N_CALLED and N_GAMES print P0, the Chapter 1 primary sample (D-R0-02, D-P4-05, DEV-47), which export_numbers.R carries from W3.5's T1_sample.csv as N_CALLED_P0 and N_GAMES_P0. The ledger's own N_CALLED and N_GAMES are W6.4's ABS-measured-cohort counts; W6.4's --check owns them, and the abstract does not print them.",
+  "_digits": "digits sets decimals by units; a slot's own digits overrides it. A_PUB is printed whole, as Clemens published it (8 to 22), signed like A_CORR beside it.",
+  "_owner_review": "Orientation, digits and suffixes are presentation choices fixed before any real number exists. Review R1 may change them here, never in the abstract text.",
+  "digits": {
+    "sq in": 1,
+    "sq in per season": 1,
+    "in": 2,
+    "reliability": 2,
+    "counts": 0
+  },
+  "slots": {
+    "N_CALLED": {"kind": "count", "units": "counts", "section": "Methods", "ledger_slot": "N_CALLED_P0"},
+    "N_GAMES": {"kind": "count", "units": "counts", "section": "Methods", "ledger_slot": "N_GAMES_P0"},
+    "N_CHAL": {"kind": "count", "units": "counts", "section": "Methods"},
+    "D_BUF": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "D_ABS": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "D_PRE": {"kind": "estimate", "orient": "signed", "units": "sq in per season", "section": "Results"},
+    "D_PLANE_TOP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
+    "D_PLANE_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
+    "A_CORR": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Results"},
+    "A_PUB": {"kind": "range", "orient": "signed", "units": "sq in", "digits": 0, "suffix": " square inches", "section": "Results"},
+    "SD_UMP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
+    "REL_UMP": {"kind": "estimate", "orient": "signed", "units": "reliability", "section": "Results"},
+    "N_UMP": {"kind": "count", "units": "counts", "section": "Results"},
+    "CALL": {"kind": "owner", "reserve_words": 25, "section": "Conclusion"},
+    "BREAK_YEAR": {"kind": "owner", "reserve_words": 1, "section": "Conclusion"}
+  },
+  "table1": {
+    "rows": [
+      ["PRE", "Pre-trend, per season, 2022-2024"],
+      ["BUF", "Buffer change, 2025"],
+      ["ABS", "Challenge system, 2026"],
+      ["PLANE", "Plate-plane shift, 2025"]
+    ],
+    "cols": [
+      ["TOP", "Top edge, in", "in"],
+      ["BOT", "Bottom edge, in", "in"],
+      ["HW", "Half-width, in", "in"],
+      ["AREA", "Area, sq in", "sq in"]
+    ]
+  }
+}
