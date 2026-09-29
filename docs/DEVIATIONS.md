@@ -1576,3 +1576,33 @@ What closes it. The fit lane adds SENS-HEIGHT-SINGLE as a named fit, one that ap
 single offset while the key is present, before W3.14 runs. The override flag stays for the
 owner's override of D-P4-04. A dated entry here records the change. This lane did not touch
 that branch.
+
+2026-09-30 (Europe/Madrid): the fit lane has implemented this on `phase05/ch1-fits` at 617a75d.
+SENS-HEIGHT-SINGLE is a named fit, and the override flag works with the key present or absent.
+This entry stays OPEN and closes when that branch merges into `main` after the tag.
+
+## DEV-76: W6.10, the abstract's opening cites two published estimates of the 2026 change
+
+Raised 2026-09-30 (Europe/Madrid). Status: CLOSED 2026-09-30 by this entry. Pre-tag. Applied
+under D-R0-03's delegation, not as an owner answer. The decision is D-P4-46.
+
+What the SOP said. SOP-final's abstract draft opens: "The only published estimate of the
+2025-to-2026 change in the called strike zone (Clemens, FanGraphs, 28 April 2026) puts the loss
+at 8 to 22 square inches. It compares 2026 with 2025, and 2025 was itself a treated season."
+Its fifth sentence reads "A two-season contrast cannot separate the challenge system from the
+grading change that preceded it."
+
+What was done instead. The 2026-09-29 prior-art recheck found a second estimate. Lee, Han, Lee
+and Ko (arXiv 2609.25525, 2026-09-22) fold 2025 into an untreated 2015-2025 trend. Baseball
+America (2026-09-22) shows the 2025 zone smaller than any season since 2015. So the first
+sentence was false. In all three variants the Introduction now opens: "Published estimates of
+the 2025-to-2026 zone change either take 2025 as the baseline (Clemens, FanGraphs, 28 April
+2026) or fold 2025 into an untreated 2015-2025 trend (Lee et al., arXiv, 22 September 2026)."
+The second sentence names the Baseball America series and says it gives no cause. The fifth
+now reads "Neither design can separate the challenge system from the grading change that
+preceded it", which covers the trend as well as the two-season contrast. To stay inside the
+470-word cap, the sentence on 2025's record-low shadow-zone strike rate was cut. The
+Introduction is 99 words, as before, and the three filled drafts count 464, 469 and 460 words,
+as before. The inline citation `quality/w610_check.sh` requires is kept. Methods, Results and
+Conclusion are unchanged. `ops/abstract_dryrun.sh` plants its WR-09 em dash in "but names no
+cause", because the phrase it used is gone.

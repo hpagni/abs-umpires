@@ -173,6 +173,10 @@ Two pre-registered arms are reported beside the primary:
 
 The components are `Δ_buffer` and `Δ_ABS` of section 8.
 
+**How the clause is decided.** DECISIONS.md D-P4-04, follow-up of 2026-09-30, states what the fit code on `phase05/ch1-fits` does (`R/lib/ch1_decomp.R`, `R/ch1/23_decomposition.R`, W3.16). The deciding estimand is area: the buffer and ABS components of the change in the area inside the 50% contour, in square inches. Both components must agree in sign. The code compares the two arms' point estimates only and reads neither interval. So a component whose 95% interval includes zero is decided by its point estimate, like any other. A point estimate of exactly zero in one arm and not in the other counts as a disagreement. The verdict goes to the column `height_cohort_flag`, one value on every row: "agree" or "primary is sensitive to the height cohort". If either arm lacks an area component, the flag reads "not evaluated: the ABS-measured arm is missing" and W3.16's check fails. Each edge's signs are shown row by row beside the verdict, with no clause of their own.
+
+SENS-HEIGHT-SINGLE is fitted in W3.14 and carried through W3.15 and W3.16 only. It is reported beside the primary, with its signs, and has no clause of its own.
+
 **Steps before this tag that ran under the single offset.** The W3.11 development fits, the W3.12 power curve, recovery and SBC, MT-01's prior predictive, W3.4's selection effect and W3.5's band counts gave batters outside the cohort D-R0-02's one offset. `docs/prereg/ch1.md` section 1.2 lists each with its decision (DEV-68). W3.11's k.check was re-run under D-P4-04. The others were not re-run, and the values D-R0-04 disclosed stand as run. P0, P1, the join, the challenge counts, DT-21 and DT-30 read no height outside the cohort and are unchanged.
 
 The D-13 fork turns on DT-30, the ABS-measured share of called pitches, published before this tag (CH1-A12):

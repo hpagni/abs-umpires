@@ -1813,6 +1813,27 @@ override today means removing the D-P4-04 keys from the file and passing the fla
 SENS-HEIGHT-SINGLE arm needs `apply_heights` to honour the flag with the key present. That
 change belongs to the fit lane, before W3.14 runs.
 
+**Follow-up, 2026-09-30 (Europe/Madrid), by the docs lane: the clause's estimand, and the
+override.** Status: applied under D-R0-03's delegation, OWNER-VISIBLE. Hudson Pagni has not
+answered it.
+
+Part 3 did not say which estimand decides it. The fit code on `phase05/ch1-fits` decides it on
+the area, in `height_cohort_flag()` in `R/lib/ch1_decomp.R`, called by
+`R/ch1/23_decomposition.R` (W3.16). Both area components, buffer and ABS, must agree in sign
+between the ABS-measured arm and the primary. The code compares point estimates only and reads
+neither interval. A component whose 95% interval includes zero is therefore decided by its
+point estimate, and an exact zero in one arm against a non-zero in the other counts as a
+disagreement. The verdict is the column `height_cohort_flag`, "agree" or "primary is sensitive
+to the height cohort". A missing arm writes "not evaluated: the ABS-measured arm is missing",
+and W3.16's check fails. Each edge's signs are shown beside it with no clause of their own.
+SENS-HEIGHT-SINGLE is fitted in W3.14 and carried through W3.15 and W3.16 only, reported beside
+the primary with no clause. `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1
+now state all of this, as the code will run it.
+
+The fit lane has implemented the override on `phase05/ch1-fits` at 617a75d: the flag works with
+the key present or absent, and SENS-HEIGHT-SINGLE is a named fit. DEV-75 closes when that branch
+merges into `main` after the tag.
+
 ### D-P4-05 APPLIED UNDER D-R0-03: `<<N_CALLED>>` reports P0, the sample the primary cohort covers in full
 
 Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
@@ -2935,3 +2956,57 @@ read in `10_build_analysis_table.R` changed. The prior predictive, rerun from it
 wrote the same JSON bar four fields: the source string, the code hash, the stamp and the wall
 time. `quality/warehouse_contract.yml` and `docs/warehouse.md` carry the reason, and W9.4's
 gate now expects five open views.
+
+### D-P4-46 APPLIED UNDER D-R0-03: the prior-art ledger re-verified on 2026-09-29, two novelty claims withdrawn
+
+Applied on 2026-09-30 (Europe/Madrid) on the branch `phase01/public`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-76, for the abstract's
+Introduction, whose first sentence SOP-final prints. No hypothesis, estimand, threshold or
+acceptance criterion changes.
+
+**Scope.** A read-only recheck of `docs/prior-art.md` in two rounds on 2026-09-29: 94 searches
+and 22 sources read independently. Round 2 supersedes round 1 where they differ. Its notes stay
+outside the repository, under `research/`, as D-03 requires. No figure computed on a game after
+2026-09-21 was copied. Where a source publishes one, the ledger names the source and its method
+only.
+
+**The five verdicts.**
+
+1. C1, the three-regime split with an untreated pre-2025 baseline and intervals, is still
+   unpublished. The nearest work is Lee, Han, Lee and Ko, arXiv 2609.25525, v1, 2026-09-22.
+   It re-projects 2015-2026 to mid-plate and tests each edge against a 2015-2025 trend, so
+   2025 sits inside the untreated trend. It never mentions the grading change.
+2. C2, a first estimate of the 2024-to-2025 change in inches or square inches, is
+   **withdrawn**. Cooper (Baseball America, 2026-09-22) and arXiv 2609.25525 (Figure 3)
+   publish it. The project claims only the interval on that step and its attribution.
+3. C3, umpire heterogeneity of the response, stays as written, with its close neighbours now
+   cited. Random slopes with shrinkage are not new as a method.
+4. C4, the plate-plane correction, is **withdrawn** as a claim and kept as a method step.
+   Three sources apply it. Clemens (2026-04-28, 2026-05-12) and CalledThird (2026-04-23) do
+   not.
+5. C5, the Triple-A arm, is reworded. Using the within-week alternation is not new (Cooper,
+   Baseball America, 2024-06-19, game-level rates). Using it to estimate the umpire-called
+   zone is.
+
+**What changed.** `docs/prior-art.md`: the header, a paragraph on the limits of the recheck,
+sections 1, 2.10 (new), 3, 4, 6.1 to 6.4, 7 and 8. Section 7's "may not claim" list grows from
+five items to thirteen. Section 6.4 now cites `docs/harmonized_zone.md` for the plane fact;
+`docs/data-contract.md` does not mention the plane. The README's baseline sentence now cites
+Clemens and Lee et al., and so does the abstract's opening in all three variants. The phrases
+"every published estimate" and "the only published estimate" (Clemens, FanGraphs, 2026-04-28)
+are gone. The abstract keeps its word counts: DEV-76 has the detail.
+`PREREGISTRATION.md` and `docs/prereg/` carried no novelty statement the recheck contradicts.
+
+**The plane, tested.** No test checked which plane the published coordinates sit on; the DT-11
+tests trust `plane_source`. `tests/data/test_plate_plane.py`, registered under W3.10, anchors
+each pitch's path at its release point and carries it to both planes. It writes
+`out/tables/plate_plane_check.csv`, and `docs/harmonized_zone.md` section 9 quotes it. The
+median gap in z to the plane `plane_source` names is 0.030 in in every season from 2022 to 2026.
+To the other plane it is 0.938 to 0.952 in. So the pair is on the front plane through 2025 and
+on the middle in 2026. The check covers the project's own Statcast Search pull of 2026-09-22 and
+2026-09-23. Cowshal (2026-09-05) reports a 2024 game at mid-plate on another Savant endpoint,
+which the test does not reach.
+
+**Left for the owner.** Round 2 notes that the public repository is the top search result for
+this question and carries the author's handle. Whether that suits SSAC's blind review is his
+decision before 2026-10-01.

@@ -103,7 +103,7 @@ plant wr03-sop-sentence "$F" "(95% CI 15.0 to 25.0). The 2022-to-2024 pre-trend 
   "uv run --locked python quality/prose_lint.py {}" "WR-03"
 plant wr18-no-limitation "$F" "and its limitation is that no real number exists" "and it states no weakness since no real number exists" \
   "uv run --locked python quality/prose_lint.py {}" "WR-18"
-plant wr09-em-dash "$F" "and 2025 was itself" "and 2025 — itself" \
+plant wr09-em-dash "$F" "but names no cause" "but — names no cause" \
   "uv run --locked python quality/prose_lint.py {}" "WR-09"
 
 hdr "4b. the cut ladder, in SOP order, on the main variant at lower caps"
