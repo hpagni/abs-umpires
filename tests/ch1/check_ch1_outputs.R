@@ -125,6 +125,9 @@ chk_w316 <- function() {
   check("SENS-B1-UNDERSMOOTH beside the primary on the top edge only (annex 8.7)",
         all(c("undersmooth_point", "undersmooth_lo95", "undersmooth_hi95") %in% names(t4)) &&
           all(is.finite(us$undersmooth_lo95[us$estimand == "top_in"])) && all(is.na(us$undersmooth_point[us$estimand != "top_in"])), "")
+  rd <- if ("recovery_disclosure" %in% names(t4)) t4$recovery_disclosure else rep(NA_character_, nrow(t4))
+  check("annex 8.7's unmet recovery clauses disclosed on the top_in and half_width_in rows (D-R0-04)",
+        all(nzchar(rd[t4$estimand %in% names(RECOVERY_NOTE)]) & !is.na(rd[t4$estimand %in% names(RECOVERY_NOTE)])), "")
   has(file.path(P$models, "ch1_W3_16", "provenance.json"))
   hl <- csv(file.path(P$tables, "headline.csv"))
   check("headline.csv carries W3.16's row", !is.null(hl) && "CH1_W316" %in% hl$id, "")

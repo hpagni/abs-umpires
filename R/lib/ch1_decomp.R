@@ -16,6 +16,17 @@
 COMPONENTS <- c("g", "delta_buffer", "delta_abs", "delta_total", "sum_components", "share_abs")
 IDENTITY_TOL <- 1e-9
 
+# Annex 8.7 and D-R0-04: three recovery clauses were not met, and the owner's answer is to
+# disclose them beside the intervals they qualify. The counts are the annex's table, from the
+# synthetic recovery; nothing here is estimated. tests/ch1/test_ch1_sprint.R checks the annex still
+# carries them. W3.16 writes them to T4's recovery_disclosure column.
+RECOVERY_NOTE <- c(
+  top_in = paste("annex 8.7, D-R0-04: in the synthetic recovery the top edge's 95% interval covered the truth in",
+                 "91 of 100 injected replicates (bound 93), and its null 90% interval lay inside +/-0.10 in in 44 of",
+                 "50 (bound 47), so an equivalence reading of the top edge is underpowered"),
+  half_width_in = paste("annex 8.7, D-R0-04: in the synthetic recovery the half-width's null 90% interval covered zero",
+                        "in 42 of 50 replicates (bound 43)"))
+
 pretrend_weights <- function(draws_pre) {
   v <- apply(draws_pre, 2, stats::var, na.rm = TRUE)
   if (any(!is.finite(v)) || any(v <= 0)) die("a pre-trend season has no draw variance")

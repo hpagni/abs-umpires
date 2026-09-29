@@ -26,6 +26,8 @@
 #   undersmooth_* SENS-B1-UNDERSMOOTH (annex 8.7): the top edge from the fit with the season
 #                 by-term at k = 24, on the top_in rows only, beside the primary and never in
 #                 its place
+#   recovery_disclosure  on the top_in and half_width_in rows, the recovery clauses annex 8.7
+#                 reports as not met, disclosed beside the intervals they qualify (D-R0-04)
 #
 # WRITES, under --out:
 #   ch1/tab/T4_decomposition.csv       the primary, one row per estimand and component
@@ -106,6 +108,7 @@ main <- function() {
   us <- side("undersmooth", c("point", "lo95", "hi95"))
   prim$undersmooth_point <- us[, 1]; prim$undersmooth_lo95 <- us[, 2]; prim$undersmooth_hi95 <- us[, 3]
   prim$undersmooth_minus_primary <- prim$undersmooth_point - prim$point
+  prim$recovery_disclosure <- ifelse(prim$estimand %in% names(RECOVERY_NOTE), unname(RECOVERY_NOTE[prim$estimand]), "")
   write_csv_plain(prim, file.path(p$tab, "T4_decomposition.csv"))
   arms <- do.call(rbind, dec[ARMS])
   if (!is.null(arms)) write_csv_plain(arms, file.path(p$tab, "T4_decomposition_arms.csv"))

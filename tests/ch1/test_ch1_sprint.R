@@ -38,6 +38,12 @@ check("undersmooth: the frozen text with the season by-term alone at k = 24 (ann
 md87 <- paste(md, collapse = " ")
 check("annex 8.7 pre-registers SENS-B1-UNDERSMOOTH at season k = 24", grepl("SENS-B1-UNDERSMOOTH", md87, fixed = TRUE) &&
         grepl("season by-term at k = 24 instead of 18", md87, fixed = TRUE), "docs/prereg/ch1.md")
+tab87 <- md[grepl("^\\| (CH1-A7|MT-04): .*\\*\\*not met\\*\\*", md)]
+check("W3.16's recovery disclosure carries the annex 8.7 rows that are not met (D-R0-04)",
+      length(tab87) == 3L && any(grepl("\\| top \\| 91 of 100 \\|", tab87)) && any(grepl("\\| top \\| 44 of 50", tab87)) &&
+        any(grepl("\\| half-width \\| 42 of 50 \\|", tab87)) && grepl("91 of 100", RECOVERY_NOTE[["top_in"]], fixed = TRUE) &&
+        grepl("44 of 50", RECOVERY_NOTE[["top_in"]], fixed = TRUE) &&
+        grepl("42 of 50", RECOVERY_NOTE[["half_width_in"]], fixed = TRUE), paste(length(tab87), "rows not met"))
 check("grid is 301 x 276", length(XG) == 301L && length(ZG) == 276L, sprintf("%d x %d", length(XG), length(ZG)))
 check("zn = 0.4025 lies between the two middle rows", ZG[J_MID_LO] < ZN_MID && ZN_MID < ZG[J_MID_HI],
       sprintf("%.3f < 0.4025 < %.3f", ZG[J_MID_LO], ZG[J_MID_HI]))
