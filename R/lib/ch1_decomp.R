@@ -181,3 +181,38 @@ num_txt <- function(x, units) {
   sub("^-(0(\\.0+)?)$", "\\1", s)
 }
 ci_txt <- function(lo, hi, units) sprintf("95%% CI %s to %s", num_txt(lo, units), num_txt(hi, units))
+
+# W6.7's headline, the template of SOP W3.14-W3.17: "Of the N square inches by which the called
+# zone contracted between 2024 and 2026, X (95% CI a-b) is attributable to the 2025 grading-buffer
+# cut and Y (95% CI c-d) to the ABS challenge system." N carries its own interval. An expansion
+# reads "expanded", and every number is signed in the direction of the total change, so the
+# sentence reads correctly either way and X + Y + 2g = N. causal = FALSE, when P1 or P2 failed,
+# swaps the attribution for the seasons (PREREGISTRATION.md section 8). tot, buf and ab are the
+# area_sqin rows of T4 for delta_total, delta_buffer and delta_abs.
+headline_sentence <- function(tot, buf, ab, causal) {
+  sg <- if (tot$point <= 0) -1 else 1
+  iv <- function(x) {
+    v <- sort(c(sg * x$lo95, sg * x$hi95))
+    ci_txt(v[1], v[2], "sq in")
+  }
+  verb <- if (causal) c("is attributable to the 2025 grading-buffer cut", "to the ABS challenge system")
+          else c("falls in the 2025 buffer season", "in the 2026 ABS season")
+  sprintf("Of the %s square inches (%s) by which the called zone %s between 2024 and 2026, %s (%s) %s and %s (%s) %s.",
+          num_txt(sg * tot$point, "sq in"), iv(tot), if (sg < 0) "contracted" else "expanded",
+          num_txt(sg * buf$point, "sq in"), iv(buf), verb[1], num_txt(sg * ab$point, "sq in"), iv(ab), verb[2])
+}
+
+# D-P4-04's clause: the ABS-measured arm must agree in sign with the primary on the buffer and
+# ABS components, or the primary is reported as sensitive to the height cohort.
+cohort_sentence <- function(buf, ab) {
+  agree <- as.logical(c(buf$sign_agrees_abs_cohort, ab$sign_agrees_abs_cohort))
+  arm <- function(x) sprintf("%s sq in (%s)", num_txt(x$abs_cohort_point, "sq in"),
+                             ci_txt(x$abs_cohort_lo95, x$abs_cohort_hi95, "sq in"))
+  if (anyNA(agree)) return("The ABS-measured-height arm was not fitted, so D-P4-04's sign-agreement clause is not evaluated.")
+  if (all(agree)) {
+    return(sprintf("The ABS-measured-height arm agrees in sign on both components: %s in 2025 and %s in 2026 (D-P4-04).",
+                   arm(buf), arm(ab)))
+  }
+  sprintf(paste("The ABS-measured-height arm gives %s in 2025 and %s in 2026, against the primary in sign.",
+                "The primary is therefore reported as sensitive to the height cohort (D-P4-04)."), arm(buf), arm(ab))
+}

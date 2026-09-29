@@ -91,17 +91,7 @@ main <- function() {
   record("P1 and P2", sprintf("P1 %s, P2 %s: the decomposition is %s", v1, v2, if (as_prereg) "read as pre-registered" else "DESCRIPTIVE"))
   r <- function(k) t4[i4(k), ]
   tot <- r("delta_total"); buf <- r("delta_buffer"); ab <- r("delta_abs")
-  # The template reads "contracted"; an expansion reads "expanded", and every number is signed in
-  # the direction of the total change, so X + Y + 2g sums to N either way.
-  sg <- if (tot$point <= 0) -1 else 1
-  dirn <- function(x) sg * x
-  iv <- function(x) { v <- sort(c(dirn(x$lo95), dirn(x$hi95))); ci_txt(v[1], v[2], "sq in") }
-  verb <- if (as_prereg) c("is attributable to the 2025 grading-buffer cut", "to the ABS challenge system")
-          else c("falls in the 2025 buffer season", "in the 2026 ABS season")
-  sentence <- sprintf("Of the %s square inches (%s) by which the called zone %s between 2024 and 2026, %s (%s) %s and %s (%s) %s.",
-                      num_txt(dirn(tot$point), "sq in"), iv(tot), if (sg < 0) "contracted" else "expanded",
-                      num_txt(dirn(buf$point), "sq in"), iv(buf), verb[1],
-                      num_txt(dirn(ab$point), "sq in"), iv(ab), verb[2])
+  sentence <- headline_sentence(tot, buf, ab, causal = as_prereg)
   f_hl <- file.path(p$tables, "headline.csv")
   hl <- data.frame(id = "CH1_W67", step = "W6.7", chapter = "1", sentence = sentence, estimand = "area_sqin delta_abs",
                    point = ab$point, lo95 = ab$lo95, hi95 = ab$hi95, units = "sq in", estimator = ab$estimator,
@@ -111,18 +101,7 @@ main <- function() {
 
   # D-P4-04: the ABS-measured arm must agree in sign with the primary on both components.
   agree <- as.logical(c(buf$sign_agrees_abs_cohort, ab$sign_agrees_abs_cohort))
-  arm <- function(x) sprintf("%s sq in (%s)", num_txt(x$abs_cohort_point, "sq in"),
-                             ci_txt(x$abs_cohort_lo95, x$abs_cohort_hi95, "sq in"))
-  cohort <- if (anyNA(agree)) {
-    "The ABS-measured-height arm was not fitted, so D-P4-04's sign-agreement clause is not evaluated."
-  } else if (all(agree)) {
-    sprintf("The ABS-measured-height arm agrees in sign on both components: %s in 2025 and %s in 2026 (D-P4-04).",
-            arm(buf), arm(ab))
-  } else {
-    sprintf(paste("The ABS-measured-height arm gives %s in 2025 and %s in 2026, against the primary in sign.",
-                  "The primary is therefore reported as sensitive to the height cohort (D-P4-04)."),
-            arm(buf), arm(ab))
-  }
+  cohort <- cohort_sentence(buf, ab)
   hc <- data.frame(id = "CH1_W67_COHORT", step = "W6.7", chapter = "1", sentence = cohort,
                    estimand = "area_sqin delta_buffer and delta_abs, ABS-measured arm",
                    point = ab$abs_cohort_point, lo95 = ab$abs_cohort_lo95, hi95 = ab$abs_cohort_hi95, units = "sq in",

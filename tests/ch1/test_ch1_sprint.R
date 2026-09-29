@@ -249,5 +249,23 @@ if (!identical(as.integer(anc), 0L)) {
         identical(attr(out_na, "status"), 4L) && any(grepl("REFUSED W3.16: real data, and GD-12", out_na)), tail(out_na, 1))
 }
 
+## 14. W6.7's sentences, both directions and both readings
+rw <- function(p, lo, hi, ap = NA, alo = NA, ahi = NA, ag = NA) {
+  data.frame(point = p, lo95 = lo, hi95 = hi, abs_cohort_point = ap, abs_cohort_lo95 = alo, abs_cohort_hi95 = ahi,
+             sign_agrees_abs_cohort = ag)
+}
+s_c <- headline_sentence(rw(-12.34, -15, -9.5), rw(-4.44, -6, -2.1), rw(-6.66, -9, -4.2), causal = TRUE)
+check("causal template: contraction, magnitudes in its direction", identical(s_c, paste(
+  "Of the 12.3 square inches (95% CI 9.5 to 15.0) by which the called zone contracted between 2024 and 2026,",
+  "4.4 (95% CI 2.1 to 6.0) is attributable to the 2025 grading-buffer cut and 6.7 (95% CI 4.2 to 9.0) to the ABS challenge system.")),
+  s_c)
+s_d <- headline_sentence(rw(3.2, 1.1, 5.3), rw(-0.4, -2, 1.3), rw(2.5, 0.2, 4.4), causal = FALSE)
+check("descriptive reading: expansion, no cause named", grepl("expanded", s_d) && grepl("-0.4 (95% CI -2.0 to 1.3) falls in", s_d, fixed = TRUE) &&
+        !grepl("caus|attributable", s_d), s_d)
+c_ok <- cohort_sentence(rw(-4, -6, -2, -3.5, -6.1, -0.9, TRUE), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE))
+c_no <- cohort_sentence(rw(-4, -6, -2, 0.7, -1.9, 3.3, FALSE), rw(-6, -9, -4, -5.2, -8.8, -1.6, TRUE))
+check("D-P4-04 sentence: agreement, and the sensitivity reading when a sign differs",
+      grepl("agrees in sign on both components", c_ok) && grepl("sensitive to the height cohort", c_no), c_no)
+
 unlink(TMP, recursive = TRUE)
 finish("tests/ch1/test_ch1_sprint.R")

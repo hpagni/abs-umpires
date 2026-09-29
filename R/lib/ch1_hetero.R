@@ -73,9 +73,12 @@ fit_links <- function(rows) {
     lp[, k] <- predict(m, data.frame(d = u))
     d50 <- u[which.min(abs(lp[, k]))]
     j50 <- which.min(abs(u - d50))
+    iu <- which(abs(u) <= 7 + 1e-9)
+    up <- which(diff(lp[iu, k]) >= 0)
     info[[k]] <- list(n_fit = nrow(s), d50_in = d50,
-                      slope_at_d50_logit_per_in = -(lp[j50 + 10L, k] - lp[j50 - 10L, k]) / (20 * U_STEP),
-                      monotone_on_pm7 = all(diff(lp[abs(u) <= 7 + 1e-9, k]) < 0))
+                      slope_at_d50_logit_per_in = unname(-(lp[j50 + 10L, k] - lp[j50 - 10L, k]) / (20 * U_STEP)),
+                      monotone_on_pm7 = length(up) == 0L,
+                      nonmonotone_u_in = if (length(up)) range(u[iu][up]) else NULL)
   }
   list(u = u, lp = lp, info = info)
 }

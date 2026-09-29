@@ -161,7 +161,7 @@ plot_dz <- function(tab, path) {
     geom_text(aes(x = p05_dz_in, label = format(n, big.mark = ",")), hjust = 1.15, size = 2.2, colour = ink2) +
     scale_x_continuous(expand = expansion(mult = c(0.22, 0.04))) +
     labs(title = "Front-to-middle dz by pitch type, 2025",
-         subtitle = "Dot: median. Thick bar: middle 50%. Thin bar: middle 90%. Left: pitches.",
+         subtitle = "Dot: median. Thick bar: middle 50%. Thin bar: middle 90%. Number: pitches.",
          x = "dz, in (z at mid-plate minus z at the front)", y = NULL) +
     theme_minimal(base_size = 8) +
     theme(plot.background = element_rect(fill = surface, colour = NA), panel.grid.major.y = element_blank(),
