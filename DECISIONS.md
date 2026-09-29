@@ -2415,6 +2415,9 @@ null replicates were relaunched with the same seeds. The first 4 reproduced the 
 estimates exactly. The orchestrator owns the re-run and gates W3.12 after it. Section 8.7 keeps
 the `@@RECOVERY@@` marker until then.
 
+Note added 2026-09-29, not the owner's words: the re-run finished, and all 150 point estimates
+equal the Vp run's. Three recovery clauses still fail under Vc. The owner's answer is D-R0-04.
+
 ### D-P4-31 APPLIED UNDER D-R0-03, OWNER-VISIBLE: M1's `Intercept` prior is `normal(0, 1.9)`, and the W4.7 gate reads both links again
 
 Applied by the stats lane on 2026-09-25 (Europe/Madrid). Reconstructed on 2026-09-29. Status:
@@ -2538,3 +2541,70 @@ The default. `.gitignore` excludes `out/dev/`. The gate skips a file there only 
 it untracked and ignored. A tracked file under `out/dev/`, and every file elsewhere under
 `out/`, is read as before. A new test fails if `out/dev/` stops being ignored or gains a tracked
 file. No row limit or column rule changed. Nothing under `out/dev/` was moved.
+
+## Owner answer, 2026-09-29 (Madrid): binding, taken before the prereg-v1 tag
+
+### D-R0-04 OWNER ANSWER, W3.12 recovery: three clauses fail, all three are disclosed, and the tag goes ahead
+
+Owner: Hudson Pagni, 2026-09-29, answered by 19:27 (Europe/Madrid). Status: **binding owner
+answer**, applied. This is the owner speaking, not an applied default. The deviation is DEV-67.
+
+**The question, as put:** "Three recovery clauses fail, not one. How should the pre-registration handle them?"
+
+He was told plainly that an earlier statement of one failing clause was wrong. The three
+failing clauses, as shown to him:
+
+1. Top edge, injected. The 95% interval covers the truth in 91 of 100, against at least 93. The
+   cause is a bias of 0.0155 in toward zero.
+2. Top edge, CH1-A7 null equivalence. The 90% interval lies inside ±0.10 in in 44 of 50, against
+   at least 47. The cause is interval width, a precision limit.
+3. Half-width, MT-04. The null 90% interval covers zero in 42 of 50, against at least 43. It is
+   one replicate short.
+
+He was told that a larger basis reduces the bias but widens the intervals. So it helps (1) and
+hurts (2), and no single method change fixes all three. The three options:
+
+- (a) "Disclose all three and tag". All three are recorded as not met, with cause and
+  consequence. The bounds and the method stay as written. Top-edge results carry two caveats:
+  the intervals are slightly too narrow for coverage, and the study is underpowered to declare
+  "no change" at the top edge. The larger-basis fit is a named sensitivity arm. The tag follows
+  the SBC.
+- (b) "Fix the method first". A larger basis, the 150 replicates re-run, and the tag slips.
+- (c) "Disclose, tag, and drop the top-edge equivalence claim".
+
+**The answer: (a), "Disclose all three and tag".** He did not choose (c). The top-edge
+equivalence test stays in the analysis as written, with its caveat.
+
+How the question came to be asked twice. At about 19:16 the owner was asked about one clause
+only, top-edge coverage. His options then were to disclose and tag, or to fix the method first
+by raising the basis dimension and re-running 150 replicates. The third was to restate the bound
+on a binomial basis, which the orchestrator advised against. He answered "Disclose it and tag."
+That count was wrong. The orchestrator had read the log's `within_tol` row, which tests each
+point estimate against ±0.10 in, as the CH1-A7 interval test. An agent recounting from the 150
+per-replicate files found the two further failures before anything was written. The owner was
+then asked again with all three, and the answer above supersedes the first.
+
+The facts beside it, re-derived from `out/dev/ch1_synth/recovery/inject/` and `null/`, 100 and
+50 replicates, every interval from Vc:
+
+- 10 of the 12 CH1-A7 clauses of `docs/prereg/ch1.md` 8.7 are met. The two not met are (1) and (2).
+- `tests/model/test_mt_ch1_03_recovery.py` counts 13 MT-03 and MT-04 clauses. 12 are met, and
+  (3) is not. The MT-03 coverage is 0.91, 0.98 and 0.97, inside [0.80, 0.98].
+- The top-edge estimate is biased 0.0155 in toward zero. That is consistent with shrinkage of a
+  penalised smooth on an abrupt shift. Vc is a variance correction and cannot remove a bias.
+- The top-edge estimates have an SD of 0.0384 in against a mean posterior SD of 0.0421 in. The
+  width is about right, and the misses come from the bias.
+- (1) One-sided exact binomial, P(X ≤ 91 | n = 100, p = 0.95) = 0.0631. So 91 of 100 is not
+  distinguishable from nominal 95% coverage at 0.05. A calibrated method would miss the bound of
+  93 with probability P(X ≤ 92) = 0.1280, about one time in eight.
+- (2) P(X ≤ 44 | n = 50, p = 0.93) = 0.1350. The design returns "equivalent" for a true zero in
+  88% of null replicates. The null SD of the top-edge estimate is 0.0309 in.
+- (3) P(X ≤ 42 | n = 50, p = 0.90) = 0.1221. The same quantity's null 95% interval covers zero
+  in 47 of 50.
+- Each clause is reported as not met, whatever these probabilities say.
+
+What follows. `docs/prereg/ch1.md` 8.7 carries every clause with its measured value, its bound
+and its result, and the three consequences. The pre-registered sensitivity arm
+SENS-B1-UNDERSMOOTH refits with the season by-term's k at 24 instead of 18.
+`tests/model/test_mt_ch1_03_recovery.py` pins the three values at 91, 44 and 42. It prints NOT
+MET, DISCLOSED UNDER D-R0-04 for each on every run.

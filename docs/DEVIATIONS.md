@@ -1359,3 +1359,25 @@ What the SOP said. No file under `out/` may mix the game and pitch grain or exce
 What was done instead. `.gitignore` excludes `out/dev/`, which holds local development
 artefacts that are never committed. The gate skips a file there only when git reports it
 untracked and ignored. A test pins that `out/dev/` stays ignored and holds no tracked file.
+
+## DEV-67: W3.12(a), three recovery clauses are not met, and all three are disclosed
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED BY OWNER ANSWER, 2026-09-29. The decision is
+D-R0-04, the owner's own answer, not an applied default.
+
+What the SOP said. CH1-A7, MT-03 and MT-04 set the recovery bounds that `docs/prereg/ch1.md`
+8.7 pre-registers. A replicate set that misses one fails W3.12(a).
+
+What happened. The 100 injected and 50 null replicates under Vc miss three clauses:
+
+1. Top edge, injected 95% coverage: 91 of 100, against at least 93. The cause is a bias of
+   0.0155 in toward zero.
+2. Top edge, CH1-A7 null equivalence: the 90% interval lies inside ±0.10 in in 44 of 50,
+   against at least 47. The cause is interval width, a precision limit.
+3. Half-width, MT-04: the null 90% interval covers zero in 42 of 50, against at least 43.
+
+What was done instead. Nothing in the method or the bounds changed. All three are reported as
+not met, with cause and consequence, in section 8.7. Top-edge results carry two caveats:
+intervals slightly too narrow, and a design underpowered to declare no change. The sensitivity
+arm SENS-B1-UNDERSMOOTH refits with the season by-term at k = 24 and is reported beside the
+primary. The model test pins the three values and prints each as NOT MET, DISCLOSED UNDER D-R0-04.

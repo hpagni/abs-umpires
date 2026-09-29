@@ -1006,6 +1006,44 @@ REC_TOL_IN   <- 0.10
 REC_COVER_MIN_SHARE <- 0.93                 # 93 of 100
 REC_FPR_MAX  <- 0.07
 REC_DRAWS    <- 1000L
+# Three recovery clauses are not met under Vc and are disclosed under the owner's answer
+# DECISIONS.md D-R0-04 (DEV-67). The bounds and the method are unchanged. For each, --check
+# pins the measured value exactly, requires the pre-registration to still state the bound and
+# D-R0-04 and the not-met row of docs/prereg/ch1.md 8.7 to exist, and prints NOT MET every run.
+# Every other clause is checked against its bound, as in tests/model/test_mt_ch1_03_recovery.py.
+REC_DISCLOSED <- list(
+  list(clause = "coverage95", q = "top_in", value = 91L, bound = 93L, doc = PREREG_MD,
+       sentence = "- each shift's 95% interval covers the truth in at least 93 of 100;",
+       row = paste0("| CH1-A7: 95% interval covers the truth, injected | top | 91 of 100 ",
+                    "| at least 93 of 100 | **not met** |")),
+  list(clause = "ch1_a7_equivalence", q = "top_in", value = 44L, bound = 47L, doc = PREREG_MD,
+       sentence = paste0("- CH1-A7's equivalence form: in at least 93% of the null replicates, ",
+                         "each shift's 90% interval lies inside ±0.10 in."),
+       row = paste0("| CH1-A7: null 90% interval inside ±0.10 in | top | 44 of 50, 88% ",
+                    "| at least 93%, 47 of 50 | **not met** |")),
+  list(clause = "mt04_null90_covers_zero", q = "half_width_in", value = 42L, bound = 43L,
+       doc = PREREG_ROOT,
+       sentence = paste0("> MT-04 null injection: the decision rule fires in ≤5 of 50 and the ",
+                         "90% interval covers zero in ≥43 of 50."),
+       row = paste0("| MT-04: null 90% interval covers zero | half-width | 42 of 50 ",
+                    "| at least 43 of 50 | **not met** |")))
+rec_disclosed <- function(clause, q) {
+  for (d in REC_DISCLOSED) if (d$clause == clause && d$q == q) return(d)
+  NULL
+}
+check_disclosed <- function(label, d, k) {
+  txt <- function(p) paste(readLines(p, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  dec <- txt(file.path(ROOT, "DECISIONS.md"))
+  ann <- txt(PREREG_MD)
+  s87 <- substr(ann, regexpr("### 8.7 ", ann, fixed = TRUE), regexpr("### 8.8 ", ann, fixed = TRUE))
+  cat(sprintf("NOT MET, DISCLOSED UNDER D-R0-04: %s %s, measured %d, bound %d\n",
+              d$clause, d$q, as.integer(k), d$bound))
+  check(sprintf("%s: disclosed, D-R0-04", label),
+        k == d$value && k < d$bound && grepl(d$sentence, txt(d$doc), fixed = TRUE) &&
+          grepl("### D-R0-04 OWNER ANSWER, W3.12 recovery", dec, fixed = TRUE) &&
+          grepl(d$row, s87, fixed = TRUE),
+        sprintf("measured %d, disclosed %d, bound %d", as.integer(k), d$value, d$bound))
+}
 # The interval covariance, changed before the tag (docs/prereg/ch1.md 8.7). The first full run,
 # 2026-09-25, drew from N(beta, Vp). Vp conditions on the estimated smoothing parameters, and that
 # run's top_in 95% interval covered the truth in 91 of 100 against the pre-registered 93, with a
@@ -1692,15 +1730,29 @@ if (MODE == "--check") {
     for (q in names(INJ_IN)) {
       check(sprintf("recovery bias within 0.10 in: %s", q), abs(rc$inject$bias[[q]]) <= REC_TOL_IN,
             sprintf("mean bias %.3f in", rc$inject$bias[[q]]))
-      check(sprintf("recovery 95%% coverage >= 93/100: %s", q),
-            rc$inject$covers[[q]] >= ceiling(REC_COVER_MIN_SHARE * rc$inject$n),
-            sprintf("%d of %d", rc$inject$covers[[q]], rc$inject$n))
+      d <- rec_disclosed("coverage95", q)
+      if (!is.null(d)) {
+        check_disclosed(sprintf("recovery 95%% coverage >= 93/100: %s", q), d, rc$inject$covers[[q]])
+      } else {
+        check(sprintf("recovery 95%% coverage >= 93/100: %s", q),
+              rc$inject$covers[[q]] >= ceiling(REC_COVER_MIN_SHARE * rc$inject$n),
+              sprintf("%d of %d", rc$inject$covers[[q]], rc$inject$n))
+      }
       check(sprintf("null false-positive rate <= 7%%: %s", q),
             rc$null$excludes_zero[[q]] / rc$null$n <= REC_FPR_MAX,
             sprintf("%d of %d", rc$null$excludes_zero[[q]], rc$null$n))
-      check(sprintf("null 90%% interval inside +/-0.10 in (CH1-A7): %s", q),
-            rc$null$equivalent[[q]] >= ceiling(REC_COVER_MIN_SHARE * rc$null$n),
-            sprintf("%d of %d", rc$null$equivalent[[q]], rc$null$n))
+      d <- rec_disclosed("ch1_a7_equivalence", q)
+      if (!is.null(d)) {
+        check_disclosed(sprintf("null 90%% interval inside +/-0.10 in (CH1-A7): %s", q), d,
+                        rc$null$equivalent[[q]])
+      } else {
+        check(sprintf("null 90%% interval inside +/-0.10 in (CH1-A7): %s", q),
+              rc$null$equivalent[[q]] >= ceiling(REC_COVER_MIN_SHARE * rc$null$n),
+              sprintf("%d of %d", rc$null$equivalent[[q]], rc$null$n))
+      }
+      d <- rec_disclosed("mt04_null90_covers_zero", q)
+      if (!is.null(d)) check_disclosed(sprintf("null 90%% interval covers zero >= 43/50 (MT-04): %s", q), d,
+                                       c90[[q]])
     }
   }
   finish()

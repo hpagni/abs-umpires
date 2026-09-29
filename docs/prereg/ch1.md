@@ -293,9 +293,48 @@ One replicate of each kind ran as a pilot, before the 90% interval was added to 
 
 **The interval method, changed before the tag.** The first full run, on 2026-09-25, drew each replicate's intervals from N(β, Vp). Vp treats the estimated smoothing parameters as known. That run failed four of the twelve clauses above. The top edge's 95% interval covered the truth in 91 of 100 replicates. The null 95% interval excluded zero for the bottom edge in 4 of 50 and for the half-width in 6 of 50. The top edge's null 90% interval lay inside ±0.10 in in 45 of 50. The half-width's null sampling SD was 1.30 times its posterior SD, with a 95% interval of 1.09 to 1.62.
 
-The intervals now come from Vc, `mgcv`'s covariance corrected for smoothing-parameter uncertainty (Wood, Pya and Säfken, 2016). The SOP's fitter exposes it. `bam(discrete = TRUE, method = "fREML")` returns Vc = Vp + J V_ρ Jᵀ, where J is the derivative of the coefficients with respect to the log smoothing parameters and V_ρ is the inverse Hessian of the fREML criterion. It leaves out the second-order term that `gam(method = "REML")` adds. So no parametric bootstrap was needed. W3.15's 1,000 draws use the same Vc. The 150 replicates were run again with the same seeds and the same fits: every point estimate is unchanged, and only the intervals differ. No bound was changed.
+The intervals now come from Vc, `mgcv`'s covariance corrected for smoothing-parameter uncertainty (Wood, Pya and Säfken, 2016). The SOP's fitter exposes it. `bam(discrete = TRUE, method = "fREML")` returns Vc = Vp + J V_ρ Jᵀ, where J is the derivative of the coefficients with respect to the log smoothing parameters and V_ρ is the inverse Hessian of the fREML criterion. It leaves out the second-order term that `gam(method = "REML")` adds. So no parametric bootstrap was needed. W3.15's 1,000 draws use the same Vc. The 150 replicates were run again with the same seeds and the same fits. All 150 point estimates equal the Vp run's, so only the intervals differ. No bound was changed.
 
-@@RECOVERY@@
+**The result under Vc.** The run finished on 2026-09-29. The truth is −0.5991 in at the top (injected −0.60), +0.2989 in at the bottom (+0.30) and −0.1027 in for the half-width (−0.10). Over the 100 injected replicates the mean error is +0.0155, −0.0064 and +0.0089 in. The mean absolute error is 0.0329, 0.0212 and 0.0173 in. The table holds every clause `tests/model/test_mt_ch1_03_recovery.py` asserts, recounted from the per-replicate files.
+
+| clause | quantity | measured | bound | result |
+|---|---|---:|---|---|
+| CH1-A7: mean error, injected | top | +0.0155 in | within ±0.10 in | met |
+| CH1-A7: mean error, injected | bottom | −0.0064 in | within ±0.10 in | met |
+| CH1-A7: mean error, injected | half-width | +0.0089 in | within ±0.10 in | met |
+| CH1-A7: 95% interval covers the truth, injected | top | 91 of 100 | at least 93 of 100 | **not met** |
+| CH1-A7: 95% interval covers the truth, injected | bottom | 98 of 100 | at least 93 of 100 | met |
+| CH1-A7: 95% interval covers the truth, injected | half-width | 97 of 100 | at least 93 of 100 | met |
+| CH1-A7: null 95% interval excludes zero | top | 3 of 50, 6% | at most 7% | met |
+| CH1-A7: null 95% interval excludes zero | bottom | 3 of 50, 6% | at most 7% | met |
+| CH1-A7: null 95% interval excludes zero | half-width | 3 of 50, 6% | at most 7% | met |
+| CH1-A7: null 90% interval inside ±0.10 in | top | 44 of 50, 88% | at least 93%, 47 of 50 | **not met** |
+| CH1-A7: null 90% interval inside ±0.10 in | bottom | 50 of 50 | at least 93%, 47 of 50 | met |
+| CH1-A7: null 90% interval inside ±0.10 in | half-width | 50 of 50 | at least 93%, 47 of 50 | met |
+| MT-03: 95% coverage, injected | top | 0.91 | in [0.80, 0.98] | met |
+| MT-03: 95% coverage, injected | bottom | 0.98 | in [0.80, 0.98] | met |
+| MT-03: 95% coverage, injected | half-width | 0.97 | in [0.80, 0.98] | met |
+| MT-03: mean absolute error, injected | top | 0.0329 in | at most 0.15 in | met |
+| MT-03: mean absolute error, injected | bottom | 0.0212 in | at most 0.15 in | met |
+| MT-03: mean absolute error, injected | half-width | 0.0173 in | at most 0.15 in | met |
+| MT-03: mean absolute error of τ, 15 `sop` seeds of section 8.3 | τ | 0.0364 in | at most 0.10 in | met |
+| MT-04: the rule fires, null | top | 3 of 50 | at most 5 of 50 | met |
+| MT-04: the rule fires, null | bottom | 3 of 50 | at most 5 of 50 | met |
+| MT-04: the rule fires, null | half-width | 3 of 50 | at most 5 of 50 | met |
+| MT-04: null 90% interval covers zero | top | 45 of 50 | at least 43 of 50 | met |
+| MT-04: null 90% interval covers zero | bottom | 46 of 50 | at least 43 of 50 | met |
+| MT-04: null 90% interval covers zero | half-width | 42 of 50 | at least 43 of 50 | **not met** |
+| power: 95% interval excludes zero, injected | top, bottom, half-width | 100, 100, 100 of 100 | 100 of 100 | met |
+
+The rule that fires under MT-04 is the zero-effect rule, a 95% interval that excludes zero. 10 of the 12 CH1-A7 clauses are met, and 12 of the 13 MT-03 and MT-04 clauses. The owner's answer on the three not met is DECISIONS.md D-R0-04: disclose all three and tag, with the bounds and the method as written (DEV-67).
+
+**What is not met, and what follows.**
+
+- The top edge's 95% interval covers the truth in 91 of 100. The estimate is biased 0.0155 in toward zero, consistent with a penalised smooth shrinking an abrupt shift. Vc corrects the variance and cannot remove a bias. The estimates' SD, 0.0384 in, is close to the mean posterior SD, 0.0421 in. A one-sided exact binomial test gives P(X ≤ 91 | n = 100, p = 0.95) = 0.0631, and a calibrated method falls below 93 with probability 0.1280. The clause is not met regardless. Consequence: every Chapter 1 top-edge interval is read as slightly too narrow, and every top-edge statement carries that caveat.
+- The top edge's null 90% interval lies inside ±0.10 in in 44 of 50. The cause is width, a precision limit: the null SD of the top-edge estimate is 0.0309 in. Consequence: a top-edge equivalence result from the primary fit is read knowing that the design returns "equivalent" for a true zero in 88% of replicates, short of the 93% asked for. The study is underpowered to declare no change at the top edge. The equivalence test stays in the analysis as written.
+- The half-width's null 90% interval covers zero in 42 of 50, one replicate below its bound. The same quantity's null 95% interval covers zero in 47 of 50, and its null 95% interval excludes zero in 3 of 50. P(X ≤ 42 | n = 50, p = 0.90) = 0.1221. Consequence: the half-width's 90% interval is reported with that shortfall stated beside it.
+
+**SENS-B1-UNDERSMOOTH, pre-registered.** W3.14 refits the surfaces with the season by-term at k = 24 instead of 18. Every other k stays at section 3's values. It reports the top-edge estimate and interval beside the primary's. The season by-term carries the shift between seasons, and in the recovery fit it carries the whole injected deformation. 24 is the next rung on section 3's season ladder, where 18 to 24 was stable, largest k-index change 0.0010. On 2022–2024 that rung moved the 2023-minus-2022 top-edge change by 0.001 in (section 7). A larger basis is expected to trade bias for width. So the arm cannot rescue the equivalence clause, and it is reported beside the primary, never in place of it. The primary analysis is unchanged.
 
 SBC. Parameters are drawn from the B2 prior and δ is drawn from the B2 likelihood at the real design: 1,367 umpire-season-edge cells, each with its analytic SE at its real pitch locations. B2 is refitted, and the rank of each true value among 199 thinned draws is binned into 10 bins. Pre-registered acceptance, CH1-A8 and MT-02, over 200 replicates:
 
