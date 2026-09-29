@@ -9,7 +9,7 @@
 # every later interval reads; nothing refits for an interval.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
-# succeeds and the fit code is committed (GD-12). Each fit writes out/models/<fit>/provenance.json,
+# succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12). Each fit writes out/models/<fit>/provenance.json,
 # and out/ch1/model/provenance.json unions them with one git_sha, the earliest fit commit. The
 # verify command re-reads what the step wrote with tests/ch1/check_ch1_outputs.R --step W3.14 and
 # refits nothing; GD-04 then scans the script and the four shared libraries. `needs` names the

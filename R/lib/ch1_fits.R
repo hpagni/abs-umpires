@@ -14,9 +14,10 @@
 #      scan, so no later row reaches R, and asserts it afterwards. The day comes from
 #      absump.paths.LAST_OPEN_DATE. No held-out date is written in this file (GD-04).
 #   2. GD-12. A run on real data refuses to start unless
-#      `git merge-base --is-ancestor <prereg tag> HEAD` succeeds and the fit code is
-#      committed, so every receipt names a commit that descends from the tag. The tag name
-#      comes from config/seal.yml.
+#      `git merge-base --is-ancestor <prereg tag> HEAD` succeeds, origin carries the tag at
+#      the same commit (D-67: pushed before the first fit), and the fit code is committed, so
+#      every receipt names a commit that descends from the public tag. The tag name comes
+#      from config/seal.yml.
 #   3. The synthetic marker. A synthetic table carries the column is_synthetic, TRUE on every
 #      row. Only such a table runs before the tag, and a synthetic run may not write inside
 #      the repository, where GD-01, GD-12 and the number gate read.
@@ -218,13 +219,35 @@ git_head <- function() {
   if (h$status != 0L) NA_character_ else h$out[1]
 }
 
-# GD-12: `git merge-base --is-ancestor <tag> HEAD` must exit 0.
+# D-67: the tag is pushed before the first fit of any kind, so a fit must descend from the PUSHED
+# tag (SOP GD-02 and GD-12; ops/check_seal_order.sh reads the same after the run). The remote's
+# tag, peeled to its commit, must be the local tag's commit. GIT_TERMINAL_PROMPT=0 makes a missing
+# credential fail at once. With no answer from origin the guard fails closed.
+tag_pushed <- function(tag) {
+  loc <- git_out(c("rev-parse", "--verify", "--quiet", shQuote(sprintf("refs/tags/%s^{commit}", tag))))
+  if (loc$status != 0L) return(list(ok = FALSE, detail = sprintf("no local tag %s", tag)))
+  old <- Sys.getenv("GIT_TERMINAL_PROMPT", unset = NA)
+  Sys.setenv(GIT_TERMINAL_PROMPT = "0")
+  on.exit(if (is.na(old)) Sys.unsetenv("GIT_TERMINAL_PROMPT") else Sys.setenv(GIT_TERMINAL_PROMPT = old), add = TRUE)
+  ref <- sprintf("refs/tags/%s", tag)
+  rem <- git_out(c("ls-remote", "--tags", "origin", shQuote(ref), shQuote(paste0(ref, "^{}"))))
+  if (rem$status != 0L) return(list(ok = FALSE, detail = sprintf("git ls-remote origin exited %d", rem$status)))
+  f <- strsplit(rem$out[grepl("\t", rem$out, fixed = TRUE)], "\t", fixed = TRUE)
+  sha <- vapply(f, `[`, "", 1L); name <- vapply(f, `[`, "", 2L)
+  peeled <- if (paste0(ref, "^{}") %in% name) sha[name == paste0(ref, "^{}")] else sha[name == ref]
+  ok <- length(peeled) == 1L && identical(peeled, loc$out[1])
+  list(ok = ok, detail = if (ok) sprintf("%s is on origin at %s", tag, substr(peeled, 1, 12))
+                         else sprintf("%s is not on origin at the local commit %s", tag, substr(loc$out[1], 1, 12)))
+}
+
+# GD-12: `git merge-base --is-ancestor <tag> HEAD` must exit 0, and the tag must be on origin.
 gd12_ancestry <- function() {
   tag <- prereg_tag()
   a <- git_out(c("merge-base", "--is-ancestor", tag, "HEAD"))
-  list(ok = a$status == 0L, tag = tag, head = git_head(),
-       detail = sprintf("git merge-base --is-ancestor %s HEAD exited %d at HEAD %s", tag, a$status,
-                        substr(git_head(), 1, 12)))
+  anc <- sprintf("git merge-base --is-ancestor %s HEAD exited %d at HEAD %s", tag, a$status, substr(git_head(), 1, 12))
+  if (a$status != 0L) return(list(ok = FALSE, tag = tag, head = git_head(), detail = anc))
+  pu <- tag_pushed(tag)
+  list(ok = isTRUE(pu$ok), tag = tag, head = git_head(), detail = paste0(anc, "; ", pu$detail))
 }
 
 table_is_synthetic <- function(path) {
@@ -271,7 +294,7 @@ start_run <- function(step, opt, script) {
       if (!is.null(opt[[k]])) refuse(step, sprintf("--%s is a dry-run setting; real data runs the pre-registered value", k))
     }
     gd <- gd12_ancestry()
-    if (!isTRUE(gd$ok)) refuse(step, sprintf("real data, and GD-12 ancestry failed (%s)", gd$detail))
+    if (!isTRUE(gd$ok)) refuse(step, sprintf("real data, and GD-12 failed (%s)", gd$detail))
     dirty <- git_out(c("status", "--porcelain", "--", "R/ch1", "R/lib", "tools/comms"))$out
     if (length(dirty) > 0L) {
       refuse(step, sprintf("real data, and the fit code is not committed, so git_sha would not name it: %s",

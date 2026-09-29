@@ -7,7 +7,7 @@
 # are written under a lock, so the fits may run as separate processes.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
-# succeeds and the fit code is committed (GD-12), and writes a provenance receipt under
+# succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12), and writes a provenance receipt under
 # out/models/. The verify command re-reads what the step wrote with
 # tests/ch1/check_ch1_outputs.R --step W3.15 and refits nothing; GD-04 then scans the script.
 # `needs` names the step's outputs, which exist only after the post-tag run, so before it the step

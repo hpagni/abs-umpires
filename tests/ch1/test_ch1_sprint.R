@@ -201,6 +201,25 @@ out_d <- suppressWarnings(system2("Rscript", c(file.path(ROOT, "R/ch1/20_surface
                               "--draws", "50"), stdout = TRUE, stderr = TRUE))
 check("a real table refuses a dry-run setting", identical(attr(out_d, "status"), 4L) && any(grepl("--draws", out_d)),
       tail(out_d, 1))
+# D-67: the tag must be on origin at the local commit. Throwaway repositories under TMP only.
+tp <- file.path(TMP, "tagrepo")
+dir.create(tp)
+gsys <- function(dir, ...) system2("git", c("-C", shQuote(dir), "-c", "user.name=t", "-c", "user.email=t@t", ...),
+                                   stdout = FALSE, stderr = FALSE)
+gsys(tp, "init", "-q", "-b", "main", "src")
+gsys(file.path(tp, "src"), "commit", "-q", "--allow-empty", "-m", "one")
+gsys(tp, "clone", "-q", "--bare", "src", "origin.git")
+gsys(tp, "clone", "-q", "origin.git", "work")
+root_saved <- ROOT
+ROOT <- file.path(tp, "work")
+t_none <- tag_pushed("prereg-v1")$ok
+gsys(ROOT, "tag", "-a", "prereg-v1", "-m", "t")
+t_local <- tag_pushed("prereg-v1")$ok
+gsys(ROOT, "push", "-q", "origin", "refs/tags/prereg-v1")
+t_pushed <- tag_pushed("prereg-v1")$ok
+ROOT <- root_saved
+check("D-67: no tag or an unpushed tag refuses; the tag on origin at the local commit passes",
+      identical(c(t_none, t_local, t_pushed), c(FALSE, FALSE, TRUE)), paste(t_none, t_local, t_pushed))
 
 ## 12. the ledger generator: model slots land before the W6.4 join slots, and a re-run is a no-op
 inp <- file.path(TMP, "inputs")
