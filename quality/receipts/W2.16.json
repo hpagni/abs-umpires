@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "d297b2960a1eae09fcb29a4ebd5743e68342aae7",
+  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.16.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.16",
-  "timestamp_madrid": "2026-09-29 23:42:18 CEST",
+  "timestamp_madrid": "2026-09-30 00:22:16 CEST",
   "title": "The challenge table and its reconciliation"
 }

@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python quality/prose_lint.py --selftest && uv run --locked python quality/prose_lint.py --list-rules >/dev/null && { ABS_PROSE_FILES= uv run --locked python quality/prose_lint.py 2>&1 || true; } | tail -n 1 | grep -q '^prose-lint: [0-9]* file(s) from the default scope'",
-  "duration_s": 0,
+  "duration_s": 1,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "d297b2960a1eae09fcb29a4ebd5743e68342aae7",
+  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W7.1.log",
   "owner": "W7",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W7.1",
-  "timestamp_madrid": "2026-09-29 23:59:19 CEST",
+  "timestamp_madrid": "2026-09-30 00:38:22 CEST",
   "title": "Writing standard: the linter and its self-test"
 }

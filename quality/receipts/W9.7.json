@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/guard -q && bash tests/guard/redteam_run.sh",
-  "duration_s": 369,
+  "duration_s": 372,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "d297b2960a1eae09fcb29a4ebd5743e68342aae7",
+  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.7.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.7",
-  "timestamp_madrid": "2026-09-30 00:08:11 CEST",
+  "timestamp_madrid": "2026-09-30 00:47:23 CEST",
   "title": "The sealed guard, four layers"
 }

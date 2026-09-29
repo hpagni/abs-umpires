@@ -16,7 +16,7 @@ number changes, so a re-run leaves the tree unchanged.
 | `main_intermediate.int_re288_state` | 288 |
 | `main_intermediate.int_regime` | 18,817 |
 | `main_marts.agg_closed_season_drift` | 28 |
-| `main_marts.agg_closed_season_rowcount` | 644 |
+| `main_marts.agg_closed_season_rowcount` | 700 |
 | `main_marts.dim_aaa_format` | 6,755 |
 | `main_marts.dim_batter_season` | 3,335 |
 | `main_marts.dim_game` | 18,817 |
