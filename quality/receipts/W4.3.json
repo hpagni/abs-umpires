@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "147c851c9484da74216cdb462b1b9e4f7c80370a",
+  "git_sha": "d297b2960a1eae09fcb29a4ebd5743e68342aae7",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W4.3.log",
   "owner": "W4",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W4.3",
-  "timestamp_madrid": "2026-09-29 22:59:14 CEST",
+  "timestamp_madrid": "2026-09-29 23:56:39 CEST",
   "title": "Leaderboard sweep, 28 views at 10 s spacing"
 }

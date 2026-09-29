@@ -16,7 +16,7 @@ number changes, so a re-run leaves the tree unchanged.
 | `main_intermediate.int_re288_state` | 288 |
 | `main_intermediate.int_regime` | 18,817 |
 | `main_marts.agg_closed_season_drift` | 28 |
-| `main_marts.agg_closed_season_rowcount` | 532 |
+| `main_marts.agg_closed_season_rowcount` | 644 |
 | `main_marts.dim_aaa_format` | 6,755 |
 | `main_marts.dim_batter_season` | 3,335 |
 | `main_marts.dim_game` | 18,817 |
@@ -34,6 +34,7 @@ number changes, so a re-run leaves the tree unchanged.
 | `main_marts.v_challenge_open` | 12,300 |
 | `main_marts.v_opportunity_open` | 716,922 |
 | `main_marts.v_pitch_open` | 3,546,608 |
+| `main_marts.v_umpire_game_open` | 18,754 |
 | `main_staging.seed_synthetic_pitches` | 200 |
 | `main_staging.stg_abs_challenges` | 12,300 |
 | `main_staging.stg_abs_leaderboard` | 0 |
@@ -174,7 +175,7 @@ places the real data is wider than the gate, with the reading taken in each.
 | DT-13 | height recovery < 1e-6 in | worst 3.240e-08 in on the ABS ratio |
 | DT-15 | overturns == sum usedSuccessful | 5490 reconstructed against 5490, on 10168 challenges |
 | DT-17 | each listed column >= 99.5% non-null | worst 99.939% on plate_x_mid, mlb 2022 |
-| DT-18 | 0 dupes on every declared key | 0 on 14 declared keys |
+| DT-18 | 0 dupes on every declared key | 0 on 15 declared keys |
 | DT-19 | 0 orphans | 0 on 5 declared references |
 | DT-20 | closed-season drift == 0 | 0 of 28 table-seasons drifted |
 | DT-23 | m agrees to 0.01 in on >= 99.9% of rows | 10168 of 10168 agree, worst gap 0.000e+00 in; the drawer is not pulled, so the second source is this module's Python |
