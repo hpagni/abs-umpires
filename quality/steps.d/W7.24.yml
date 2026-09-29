@@ -6,12 +6,19 @@
 # (W6.7 abstract_slots_ch1.csv, W6.9 abstract_slots_ch2.csv, W6.8 umpire_eb_summary.csv,
 # W3.16 T4_decomposition.csv, W3.17 T4_plane_component.csv) and keeps the W6.3 and W6.4
 # entries byte for byte. It rounds once, by tools/comms/abstract_slots.json, and writes
-# the printed strings beside each value, so WR-07 sees what the abstract prints. The
-# verify regenerates in memory and fails if docs/numbers.json would change, which is how
-# a hand edit is caught, then runs the number gate. app/data/*.rds is read from phase 12.
+# the printed strings beside each value, so WR-07 sees what the abstract prints. It also
+# carries the Methods counts, P0 and its games from W3.5's T1_sample.csv and the scored
+# challenges from W3.8's T2_zone_gate.csv, as N_CALLED_P0, N_GAMES_P0 and N_CHAL (D-P4-05,
+# DEV-47), and puts every new entry before W6.4's join slots so W6.3's and W6.4's byte
+# checks stay green. Outside --synthetic it refuses a fit-result input with exit 4 unless
+# HEAD descends from prereg-v1 (GD-12). The verify regenerates in memory and fails if
+# docs/numbers.json would change, which is how a hand edit is caught, runs the number
+# gate, and runs tests/unit/test_abstract_ledger.py, which proves the byte order against
+# W6.3's and W6.4's own renderers, the P0 mapping and the GD-12 refusal on SYNTHETIC
+# inputs. app/data/*.rds is read from phase 12.
 - id: W7.24
   title: "Number traceability, docs/numbers.json from out/"
-  verify: "Rscript tools/comms/export_numbers.R --check && uv run --locked python quality/check_numbers.py"
+  verify: "Rscript tools/comms/export_numbers.R --check && uv run --locked python quality/check_numbers.py && uv run --locked pytest tests/unit/test_abstract_ledger.py -q"
   expect_exit: 0
   owner: W7
-  needs: tools/comms/export_numbers.R, tools/comms/abstract_slots.json, docs/numbers.json, quality/check_numbers.py
+  needs: tools/comms/export_numbers.R, tools/comms/abstract_slots.json, docs/numbers.json, quality/check_numbers.py, out/ch1/tab/T1_sample.csv, out/ch1/tab/T2_zone_gate.csv, tests/unit/test_abstract_ledger.py

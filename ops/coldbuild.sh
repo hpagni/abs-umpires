@@ -12,7 +12,9 @@
 # RP-08 as the SOP writes it: git clone ... /tmp/coldbuild && uv sync --locked &&
 # Rscript -e 'renv::restore(prompt=FALSE)' && make warehouse && make all. The clone has
 # no data/ (gitignored); it gets a symlink to this checkout's data/, read only by
-# convention, and builds its own warehouse from it. Nothing is copied from out/.
+# convention, and builds its own warehouse from it. Nothing is copied from out/, and the
+# exporter's committed inputs (export_numbers.R --list-inputs) are deleted in the clone,
+# so ABS_COLDBUILD_TARGETS must rebuild every one of them or the compare fails.
 #
 # Before the build the clone's docs/numbers.json is emptied to a skeleton, so every
 # number the compare finds in the rebuilt ledger was produced in the clone, not carried.
@@ -130,6 +132,12 @@ if [ -n "$synth" ]; then
 else
   [ -d "$root/data" ] || die "no data/ in $root to link"
   ln -s "$root/data" "$DIR/data"
+  # The exporter's inputs are committed CSVs under out/. Left in the clone they would be
+  # carried, not rebuilt, and the compare would pass on git's copy. Delete them, so each
+  # number the compare finds was made by the targets below.
+  inputs=$(Rscript tools/comms/export_numbers.R --list-inputs) || die "export_numbers --list-inputs failed"
+  for f in $inputs; do rm -f "$f"; done
+  say "deleted the exporter's inputs in the clone: $(printf '%s ' $inputs)"
   for t in ${ABS_COLDBUILD_TARGETS:-warehouse all}; do
     say "make $t"
     make "$t" || die "make $t failed in the clone"
@@ -145,8 +153,10 @@ uv run --locked python - "$repo_ledger" "$out_ledger" "$compare" "$REF" <<'PY'
 import csv, hashlib, json, sys
 repo_p, cold_p, out_p, ref = sys.argv[1:5]
 spec = json.load(open("tools/comms/abstract_slots.json", encoding="utf-8"))
-slots = [k for k, v in spec["slots"].items() if v["kind"] != "owner"]
-slots += [f"T1_{r[0]}_{c[0]}" for r in spec["table1"]["rows"] for c in spec["table1"]["cols"]]
+# (row label, ledger entry): an abstract slot reads its ledger_slot when it has one.
+slots = [(k if "ledger_slot" not in v else f"{k} ({v['ledger_slot']})", v.get("ledger_slot", k))
+         for k, v in spec["slots"].items() if v["kind"] != "owner"]
+slots += [(s, s) for s in (f"T1_{r[0]}_{c[0]}" for r in spec["table1"]["rows"] for c in spec["table1"]["cols"])]
 def load(p):
     return {e["slot"]: e for e in json.load(open(p, encoding="utf-8")).get("entries", []) if "slot" in e}
 def shown(e):
@@ -157,7 +167,7 @@ def shown(e):
     pr = e.get("print_contraction") or e["print"]
     return " ".join(str(pr.get(k, "")) for k in ("point", "lo95", "hi95")).strip()
 repo, cold = load(repo_p), load(cold_p)
-rows = [(s, shown(repo.get(s)), shown(cold.get(s))) for s in slots]
+rows = [(s, shown(repo.get(k)), shown(cold.get(k))) for s, k in slots]
 rows = [(s, a, b, bool(a) and a == b) for s, a, b in rows]
 with open(out_p, "w", newline="", encoding="utf-8") as fh:
     w = csv.writer(fh, lineterminator="\n")

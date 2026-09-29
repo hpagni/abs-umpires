@@ -76,11 +76,13 @@ cell_text <- function(d) {
 
 # The interval method is the Chapter 1 pre-registration's, docs/prereg/ch1.md: 1,000
 # draws from N(beta, Vc), mgcv's covariance corrected for smoothing-parameter
-# uncertainty. The standardisation is the same file's: the 2024 mix of count class and
-# batter side, read for a 72-inch batter.
+# uncertainty. The standardisation is the primary bam's, SOP W3.14 as PREREGISTRATION.md
+# section 8 quotes it: g-computation to the 2024 distribution of count, handedness, pitch
+# group and velocity, read for a 72-inch batter. (The 2024 mix of count class and stand
+# alone is the binned secondary estimator's, docs/prereg/ch1.md section 5.)
 CAPTION <- paste(
   "Table 1. Change in the 50 percent contour by component, for a 72-inch batter at the",
-  "2024 mix of count and batter side. Each cell is a point estimate [95% interval] from",
+  "2024 mix of count, batter side, pitch type and velocity. Each cell is a point estimate [95% interval] from",
   "1,000 coefficient draws that include smoothing-parameter uncertainty. A positive value",
   "moves an edge up or outward, or enlarges the area."
 )

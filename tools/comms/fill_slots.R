@@ -1,7 +1,16 @@
 # tools/comms/fill_slots.R -- SOP W6.10. Fills the SSAC abstract template from the ledger.
 #
-# The template is abstract/ssac2027_abstract.md, the SOP W6 text verbatim, with slots
-# written <<NAME>>. D-66 adds two variants under abstract/variants/: null-buffer, for a
+# The template is abstract/ssac2027_abstract.md, the SOP W6 text with slots written <<NAME>>
+# and two departures, both listed for the owner in the R1 agenda:
+#   1. Results: the SOP's first sentence is 40 words filled, over WR-03, so the pre-trend
+#      is its own sentence, "The 2022-to-2024 pre-trend is <<D_PRE>> square inches per
+#      year", printed signed because it no longer names the contraction.
+#   2. Methods: D-R0-02 makes roster height plus a calibration offset primary in all five
+#      seasons, and D-P4-05 and DEV-47 make <<N_CALLED>> report P0. The SOP's "from
+#      batters with an ABS-measured height" and "from ABS-measured batter height" describe
+#      the robustness arm, so the first is dropped and the second reads "from roster
+#      height calibrated to ABS-measured height" (docs/harmonized_zone.md, finding F2).
+# D-66 adds two variants under abstract/variants/: null-buffer, for a
 # buffer component whose interval covers zero, and sign-reversal, for a plane correction
 # that enlarges the published contraction instead of explaining part of it (R-44). Each
 # edge keeps its own signed number in all three, so a flipped edge reads correctly.
@@ -10,7 +19,9 @@
 # Every number comes from docs/numbers.json, as the string tools/comms/export_numbers.R
 # printed there. This script does no arithmetic and no rounding, so the number gate
 # (quality/check_numbers.py) finds every printed number in the ledger. How each slot is
-# printed is tools/comms/abstract_slots.json.
+# printed is tools/comms/abstract_slots.json, and so is the ledger entry a slot reads when
+# the names differ: N_CALLED and N_GAMES print P0's counts, N_CALLED_P0 and N_GAMES_P0
+# (D-R0-02, D-P4-05, DEV-47), not W6.4's ABS-measured-cohort N_CALLED and N_GAMES.
 #
 # CALL and BREAK_YEAR are the owner's. They come only from the owner's file,
 # abstract/owner-calls.json, {"CALL": "<one or more sentences>", "BREAK_YEAR": "<year>"}.
@@ -134,9 +145,11 @@ main <- function(args) {
       }
       value <- trimws(v)
     } else {
-      e <- by_slot[[slot]]
+      # ledger_slot: N_CALLED and N_GAMES print P0's counts (abstract_slots.json).
+      key <- s$ledger_slot %||% slot
+      e <- by_slot[[key]]
       if (is.null(e)) {
-        missing <- c(missing, slot)
+        missing <- c(missing, if (identical(key, slot)) slot else paste0(slot, " (ledger ", key, ")"))
         next
       }
       value <- render(slot, s, e)

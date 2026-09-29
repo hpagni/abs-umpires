@@ -69,7 +69,7 @@ def candidates(buf, abs_):
             "The 2025 grading change left no change these intervals can resolve; the "
             f"zone {verb[abs_]} in 2026, when the challenge system arrived."
         )
-    if buf == "flat" or abs_ == "flat":
+    if buf == "flat" and abs_ == "flat":  # only then does "neither" describe both intervals
         out.append(
             "Neither regime change moved the called zone by more than these intervals "
             "resolve, so the published contraction is not yet attributable to either."
@@ -154,7 +154,11 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
         "## (d) The Conclusion: CALL and BREAK_YEAR",
         "",
         f"D_BUF reads {buf or 'absent'} and D_ABS reads {abs_ or 'absent'} on their 95% intervals.",
-        "Causal wording needs CH1-A3, the placebo gate, to have passed. Candidate readings:",
+        "Causal wording needs placebos P1 (CH1-A3) and P2 to have passed; read both verdicts",
+        "in out/ch1/tab/T5_placebos.csv. PREREGISTRATION.md section 8: if P1 or P2 fails,",
+        "the decomposition is reported as descriptive, causal language is removed from every",
+        'artifact, and the failure is the headline finding. That covers "accounts for" in',
+        "Results in all three variants, not only CALL. Candidate readings:",
         "",
     ]
     for c in candidates(buf, abs_):
@@ -169,6 +173,13 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
         "  CALL can carry it, or a limitation sentence can replace the held-out sentence.",
         "- Checklist rule 8 asks for the MLB attribution string on any artifact with MLB",
         "  numbers. It costs 7 words; the phase 06 gate does not require it in the abstract.",
+        "- The template departs from the SOP text twice. Results: the pre-trend is its own",
+        "  sentence, printed signed with its units, because the SOP sentence is over WR-03",
+        "  when filled. Methods: it says roster height calibrated to ABS-measured height and",
+        "  counts P0, as D-R0-02, D-P4-05 and DEV-47 require (docs/harmonized_zone.md F2).",
+        "- docs/harmonized_zone.md F1: the zone the W3.8 gate scored uses measured height, and",
+        "  the Chapter 1 primary uses roster height. Decide whether the Methods validation",
+        "  sentence says so.",
         "- Any slot the ledger lacks is listed below; each needs a producer, not a typed number.",
         "",
     ]

@@ -26,7 +26,8 @@
 #   ABS_TAG              a dry-run tag inserted into every output file name
 #
 # Exit 0 drafted (owner slots may still be pending); 1 a ledger slot is missing; 3 over
-# the 470-word cap after the SOP cut ladder; 2 anything else.
+# the 470-word cap after the SOP cut ladder; 4 refused by GD-12 (a real run from a commit
+# that does not descend from prereg-v1); 2 anything else.
 set -uo pipefail
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root" || exit 2
@@ -41,6 +42,21 @@ case "$OUT" in /*) ;; *) OUT="$root/$OUT" ;; esac
 if [ -n "$TAG" ] && [ "$OUT" = "$root" ]; then
   echo "abstract: ABS_TAG marks a dry run; set ABS_OUTDIR so its files stay out of abstract/"
   exit 2
+fi
+# GD-12. Real numbers go into the abstract only from a commit that descends from the
+# pre-registration tag (config/seal.yml), the rule every real fit entry point enforces. Only
+# a dry run is exempt: ABS_TAG set and a ledger export_numbers.R marked _synthetic.
+is_synth=$(python3 -c 'import json,sys; print("_synthetic" in json.load(open(sys.argv[1])))' "$LEDGER" 2>/dev/null)
+if [ -n "$TAG" ] && [ "$is_synth" = "True" ]; then
+  echo "abstract: dry run on a SYNTHETIC ledger; GD-12 ancestry is not required"
+else
+  prereg=$(sed -n 's/^prereg_tag:[[:space:]]*"\{0,1\}\([^"#]*\)"\{0,1\}.*/\1/p' config/seal.yml | tr -d ' "' | head -1)
+  if ! git merge-base --is-ancestor "${prereg:-prereg-v1}" HEAD 2>/dev/null; then
+    echo "abstract: REFUSED (GD-12): HEAD $(git rev-parse --short HEAD) does not descend from ${prereg:-prereg-v1}."
+    echo "abstract: real numbers are filled only after the pre-registration tag; the dry run is bash ops/abstract_dryrun.sh"
+    exit 4
+  fi
+  echo "abstract: GD-12 ok, HEAD descends from $prereg"
 fi
 mkdir -p "$OUT/abstract" "$OUT/out/tables" "$OUT/submissions/ssac2027"
 

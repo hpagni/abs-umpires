@@ -6,7 +6,10 @@
 # carries SYNTHETIC in its name. It:
 #   1. writes round-number result CSVs (tools/comms/synthetic_abstract_inputs.py)
 #   2. exports them to numbers.SYNTHETIC.json from an empty base (export_numbers.R)
-#   3. runs quality/w610_check.sh and quality/w612_check.sh on each D-66 variant
+#   3. runs quality/w610_check.sh and quality/w612_check.sh on each D-66 variant; checks
+#      that every slot of the main variant prints its synthetic truth and no decoy (3b);
+#      before prereg-v1, requires export_numbers.R and scripts/abstract.sh to refuse a
+#      real run with exit 4 (3c, GD-12)
 #   4. proves each gate fires: it plants one fault per copy and requires a failure
 #   5. with --coldbuild, runs ops/coldbuild.sh --synthetic on a clone of HEAD, then
 #      plants a changed input and requires the compare to fail
@@ -39,6 +42,34 @@ for v in main null-buffer sign-reversal; do
     > "$D/$v.w612.log" 2>&1 || bad "w612_check on $v (see $D/$v.w612.log)"
   grep -E '^words:|^W6.12|^upload' "$D/$v.w612.log"
 done
+
+hdr "3b. synthetic recovery: every slot prints its truth, no decoy is printed"
+uv run --locked python tools/comms/synthetic_abstract_inputs.py \
+  --verify "$D/main/abstract/ssac2027_abstract.SYNTHETIC.filled.md" || bad "synthetic recovery on the main variant"
+
+hdr "3c. GD-12: the real entry points refuse while HEAD does not descend from the prereg tag"
+prereg=$(sed -n 's/^prereg_tag:[[:space:]]*"\{0,1\}\([^"#]*\)"\{0,1\}.*/\1/p' config/seal.yml | tr -d ' "' | head -1)
+if git merge-base --is-ancestor "$prereg" HEAD 2>/dev/null; then
+  echo "HEAD descends from $prereg; the refusal proof does not apply"
+else
+  mkdir -p "$D/gd12/in/out/tables"
+  cp "$D/in/out/tables/abstract_slots_ch1.SYNTHETIC.csv" "$D/gd12/in/out/tables/abstract_slots_ch1.csv"
+  Rscript tools/comms/export_numbers.R --inputs "$D/gd12/in" --base "$D/numbers-base.SYNTHETIC.json" \
+    --out "$D/gd12/numbers.json" > "$D/gd12/export.log" 2>&1
+  rc=$?
+  if [ "$rc" -eq 4 ] && grep -q "REFUSED (GD-12)" "$D/gd12/export.log"; then
+    echo "refused export_numbers.R on an unmarked fit-result input: exit $rc"
+  else
+    bad "export_numbers.R did not refuse a fit-result input before $prereg (exit $rc)"
+  fi
+  bash scripts/abstract.sh > "$D/gd12/abstract.log" 2>&1
+  rc=$?
+  if [ "$rc" -eq 4 ] && grep -q "REFUSED (GD-12)" "$D/gd12/abstract.log"; then
+    echo "refused scripts/abstract.sh (make abstract) on docs/numbers.json: exit $rc"
+  else
+    bad "scripts/abstract.sh did not refuse before $prereg (exit $rc)"
+  fi
+fi
 
 hdr "4. planted faults: each must be caught"
 M=$D/main

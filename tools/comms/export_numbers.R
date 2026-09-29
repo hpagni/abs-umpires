@@ -11,6 +11,22 @@
 #   out/ch1/tab/umpire_eb_summary.csv   W6.8, SD_UMP, REL_UMP and N_UMP
 #   out/ch1/tab/T4_decomposition.csv    W3.16, the table1 cells T1_{PRE,BUF,ABS}_*
 #   out/ch1/tab/T4_plane_component.csv  W3.17, the table1 cells T1_PLANE_*
+#   out/ch1/tab/T1_sample.csv           W3.5, N_CALLED_P0 (row P0) and N_GAMES_P0 (row
+#                                       Z_games), column total: the Methods counts
+#   out/ch1/tab/T2_zone_gate.csv        W3.8, N_CHAL (row overall, column n)
+# The Methods counts are P0's, the primary sample (D-R0-02, D-P4-05, DEV-47). The ledger's
+# N_CALLED and N_GAMES are W6.4's ABS-measured-cohort counts, which W6.4's --check owns, so
+# these are written under their own names and abstract_slots.json maps the slots to them.
+#
+# GD-12. The first five inputs are fit results. Outside --synthetic the exporter refuses to
+# read any of them unless `git merge-base --is-ancestor <prereg tag> HEAD` succeeds, the
+# tag named in config/seal.yml, so no pre-registration-era number reaches the ledger. T1
+# and T2 are sample counts and a gate score, committed before the tag, and are not gated.
+#
+# ORDER. W6.3 writes its feed slots first and W6.4 its join slots last, and each checks
+# the ledger byte for byte. A new entry therefore goes in before the first W6.4 entry, so
+# an export never moves another generator's bytes.
+#
 # The three slot files share one layout, the W6.7 contract:
 #   slot, point, lo95, hi95, units, estimator, source_csv, source_row
 # lo95 and hi95 are empty for a count. The two T4 tables are read by column role:
@@ -36,15 +52,18 @@
 # that this exporter does not read it yet. Phase 12 adds that reader with the app.
 #
 #   Rscript tools/comms/export_numbers.R [--inputs DIR] [--base FILE] [--out FILE]
-#                                        [--tag T] [--synthetic] [--check]
+#                                        [--tag T] [--synthetic] [--check] [--list-inputs]
 #
 # --inputs DIR reads the CSVs under DIR instead of the repository (the RP-08 cold build
 # and the synthetic dry run use it). --tag T reads each input with ".T" before its
 # extension, so the dry run's inputs carry SYNTHETIC in their names. --synthetic marks
 # every entry, refuses to write docs/numbers.json and refuses to start from it: a
 # synthetic ledger starts from an empty --base, so no real entry is carried into it.
-# --check regenerates in memory and exits 1 if --out would change.
-# Exit 0 written or unchanged, 1 drift under --check, 2 usage or input error.
+# --check regenerates in memory and exits 1 if --out would change. --list-inputs prints
+# the input paths, one per line, and exits; ops/coldbuild.sh deletes them in its clone so
+# each one has to be rebuilt there.
+# Exit 0 written or unchanged, 1 drift under --check, 2 usage or input error, 4 refused
+# by GD-12 (a fit-result input exists and HEAD does not descend from the prereg tag).
 
 suppressPackageStartupMessages(library(jsonlite))
 
@@ -222,9 +241,70 @@ read_cells <- function(path, rel, step, synthetic, plane) {
   unname(out)
 }
 
+# One count from a keyed table: the row whose `key` is `id`, the column `col`. A missing
+# row, a missing column or a non-count stops the export: a Methods count is never guessed.
+read_count <- function(df, rel, key, id, col, slot, what, step, synthetic) {
+  if (!all(c(key, col) %in% names(df))) stop(rel, ": needs the columns ", key, " and ", col)
+  i <- which(df[[key]] == id)
+  if (length(i) != 1L) stop(rel, ": expected one row with ", key, " = ", id, ", found ", length(i))
+  v <- num(df[[col]][i])
+  if (!is.finite(v) || v < 0 || v != round(v)) stop(rel, ": ", id, " ", col, " is not a count")
+  make_entry(slot, v, NA, NA, "counts", what, rel, i, step, synthetic)
+}
+
+# W3.5's T1_sample.csv: P0 and the games behind it, all five seasons.
+read_t1 <- function(path, rel, step, synthetic) {
+  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  list(
+    read_count(df, rel, "row_id", "P0", "total", "N_CALLED_P0",
+               "P0, the Chapter 1 primary sample: MLB regular-season called pitches, 2022 to 2026-09-21 (D-P4-05)",
+               step, synthetic),
+    read_count(df, rel, "row_id", "Z_games", "total", "N_GAMES_P0",
+               "games with at least one P0 pitch", step, synthetic)
+  )
+}
+
+# W3.8's T2_zone_gate.csv: the challenged pitches the zone was scored against.
+read_t2 <- function(path, rel, step, synthetic) {
+  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  list(read_count(df, rel, "row_id", "overall", "n", "N_CHAL",
+                  "MLB 2026 challenged pitches the zone-truth gate scored, overall row", step, synthetic))
+}
+
+# ------------------------------------------------------------------ GD-12
+
+prereg_tag <- function() {
+  l <- grep("^prereg_tag:", readLines(file.path(ROOT, "config", "seal.yml"), warn = FALSE), value = TRUE)
+  if (length(l) != 1L) stop("config/seal.yml names no prereg_tag")
+  gsub('[" ]', "", sub("#.*$", "", sub("^prereg_tag:", "", l)))
+}
+
+# `git merge-base --is-ancestor <tag> HEAD` must exit 0, as in R/lib/ch1_fits.R.
+gd12_ancestry <- function() {
+  tag <- prereg_tag()
+  st <- suppressWarnings(system2("git", c("-C", shQuote(ROOT), "merge-base", "--is-ancestor",
+                                          shQuote(tag), "HEAD"), stdout = FALSE, stderr = FALSE))
+  list(ok = identical(as.integer(st), 0L), tag = tag, status = as.integer(st))
+}
+
 # ------------------------------------------------------------------ main
 
+# path, producing step, reader kind, fit result (gated by GD-12)
+SOURCES <- list(
+  list("out/tables/abstract_slots_ch1.csv", "W6.7", "slots", TRUE),
+  list("out/tables/abstract_slots_ch2.csv", "W6.9", "slots", TRUE),
+  list("out/ch1/tab/umpire_eb_summary.csv", "W6.8", "slots", TRUE),
+  list("out/ch1/tab/T4_decomposition.csv", "W3.16", "cells", TRUE),
+  list("out/ch1/tab/T4_plane_component.csv", "W3.17", "plane", TRUE),
+  list("out/ch1/tab/T1_sample.csv", "W3.5", "t1", FALSE),
+  list("out/ch1/tab/T2_zone_gate.csv", "W3.8", "t2", FALSE)
+)
+
 main <- function(args) {
+  if ("--list-inputs" %in% args) {
+    cat(vapply(SOURCES, `[[`, "", 1), sep = "\n")
+    return(0L)
+  }
   inputs <- normalizePath(opt(args, "--inputs", ROOT), mustWork = TRUE)
   base_path <- opt(args, "--base", file.path(ROOT, "docs", "numbers.json"))
   out_path <- opt(args, "--out", base_path)
@@ -254,31 +334,48 @@ main <- function(args) {
     message("export_numbers: ", base_path, " has no entries list")
     return(2L)
   }
-  sources <- list(
-    list("out/tables/abstract_slots_ch1.csv", "W6.7", "slots"),
-    list("out/tables/abstract_slots_ch2.csv", "W6.9", "slots"),
-    list("out/ch1/tab/umpire_eb_summary.csv", "W6.8", "slots"),
-    list("out/ch1/tab/T4_decomposition.csv", "W3.16", "cells"),
-    list("out/ch1/tab/T4_plane_component.csv", "W3.17", "plane")
-  )
+  present <- vapply(SOURCES, function(s) file.exists(file.path(inputs, in_name(s[[1]]))), TRUE)
+  fit_inputs <- present & vapply(SOURCES, `[[`, TRUE, 4)
+  if (!synthetic && any(fit_inputs)) {
+    g <- gd12_ancestry()
+    if (!g$ok) {
+      message(sprintf(paste0("export_numbers: REFUSED (GD-12): %s exist(s), and `git merge-base ",
+                             "--is-ancestor %s HEAD` exited %d. No fit result enters the ledger ",
+                             "from a commit that does not descend from the pre-registration tag."),
+                      paste(vapply(SOURCES[fit_inputs], `[[`, "", 1), collapse = ", "), g$tag, g$status))
+      return(4L)
+    }
+    cat(sprintf("export_numbers: GD-12 ok, HEAD descends from %s\n", g$tag))
+  }
   fresh <- list()
-  for (s in sources) {
+  for (k in seq_along(SOURCES)) {
+    s <- SOURCES[[k]]
     path <- file.path(inputs, in_name(s[[1]]))
-    if (!file.exists(path)) {
+    if (!present[k]) {
       cat(sprintf("export_numbers: absent %s (%s not run yet)\n", in_name(s[[1]]), s[[2]]))
       next
     }
-    got <- if (s[[3]] == "slots") read_slots(path, in_name(s[[1]]), s[[2]], synthetic)
-           else read_cells(path, in_name(s[[1]]), s[[2]], synthetic, s[[3]] == "plane")
+    got <- switch(s[[3]],
+      slots = read_slots(path, in_name(s[[1]]), s[[2]], synthetic),
+      t1 = read_t1(path, in_name(s[[1]]), s[[2]], synthetic),
+      t2 = read_t2(path, in_name(s[[1]]), s[[2]], synthetic),
+      read_cells(path, in_name(s[[1]]), s[[2]], synthetic, s[[3]] == "plane"))
     cat(sprintf("export_numbers: read %s, %d entr%s\n", in_name(s[[1]]), length(got),
                 if (length(got) == 1) "y" else "ies"))
     for (e in got) fresh[[e$slot]] <- e
   }
   entries <- base$entries
-  slots <- vapply(entries, function(e) e$slot %||% "", "")
   for (k in names(fresh)) {
+    slots <- vapply(entries, function(e) e$slot %||% "", "")
     at <- match(k, slots)
-    if (is.na(at)) entries[[length(entries) + 1]] <- fresh[[k]] else entries[[at]] <- fresh[[k]]
+    if (!is.na(at)) {
+      entries[[at]] <- fresh[[k]]
+      next
+    }
+    # A new entry goes in before W6.4's join slots, which W6.4 keeps last (ORDER above).
+    join <- which(vapply(entries, function(e) identical(e$carried_by, "W6.4"), TRUE))
+    at <- if (length(join)) join[1] else length(entries) + 1L
+    entries <- append(entries, list(fresh[[k]]), after = at - 1L)
   }
   base$entries <- entries
   if (synthetic) {
