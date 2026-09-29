@@ -185,7 +185,7 @@ Verifier evidence: `logs/evidence/verify-verify-throttle-chokepoint.log`. Verdic
 - Chokepoint guard REFUTED. Thirty realistic bypasses were planted in isolated temp trees and linted; no request was sent. `ops/lint_http.sh` caught three. It misses `subprocess.run(["curl", ...])` and `system2("curl", c(...))`, because PATTERN requires the literal `curl ` with a trailing space. It misses `httpx.post`, `from httpx import get`, `from requests import get`, `http.client`, `aiohttp` and a raw socket. It misses every library that fetches for you. These are polars `read_csv` on an https URL, `pandas.read_json` on a URL, duckdb `httpfs`, `pyarrow.fs`, `arrow::read_csv_arrow`, `jsonlite::fromJSON`, `read.csv(url())`, `download.file`, `httr::GET`, bare `request()` after `library(httr2)`, and `baseballr` fetch functions. The package baseballr 2.0.0 is installed and named in SOP line 255, so that last one is a live risk in W-chapters, not a hypothetical. It also scans only `src R tools notebooks`: `ops/`, `scripts/`, `dbt/`, `app/`, `sql/`, `quality/` and `tests/` are not looked at, and this project keeps 23 shell scripts under `ops/` and 17 under `scripts/`.
 - No live violation exists in the committed tree today. The chokepoint is intact as a fact about commit b4c297e. What fails is the guarantee.
 - The linter's own test is a tautology. `tests/unit/test_http_etiquette.py:519-527` plants exactly the six idioms that are literal members of PATTERN, all under directories the linter already scans. It proves the regex matches its own alphabet and cannot fail on any of the 27 misses.
-- Email posture, partly refuted. No header value contains `@`, and the User-Agent is not built from `git config user.email` -- verified by grep for `user.email`, `getpass`, `getuser`, `GIT_AUTHOR` and `gitconfig` across all code, no hits. But `get()` applies no check to the URL, and an offline MockTransport probe showed that `https://hudpag%40gmail.com:tok@statsapi.mlb.com/...` makes httpx add `Authorization: Basic aHVkcGFnQGdtYWlsLmNvbTp0b2s=`, which decodes to `hudpag@gmail.com:tok`. A query parameter carrying an address is also passed through. The `@` guard at `src/absump/http.py:244` and `R/lib/http.R:101` inspects `config["user_agent"]` only.
+- Email posture, partly refuted. No header value contains `@`, and the User-Agent is not built from `git config user.email` -- verified by grep for `user.email`, `getpass`, `getuser`, `GIT_AUTHOR` and `gitconfig` across all code, no hits. But `get()` applies no check to the URL, and an offline MockTransport probe showed that `https://someone%40example.invalid:tok@statsapi.mlb.com/...` makes httpx add `Authorization: Basic c29tZW9uZUBleGFtcGxlLmludmFsaWQ6dG9r`, which decodes to `someone@example.invalid:tok`. (The probe used the owner's own address. It was replaced by this placeholder on 2026-09-29 under DEV-T1.) A query parameter carrying an address is also passed through. The `@` guard at `src/absump/http.py:244` and `R/lib/http.R:101` inspects `config["user_agent"]` only.
 - 403-fatal, no-retry-on-4xx and the cache short-circuit STAND, and the tests are real. Five mutations to `src/absump/http.py` (403 made retryable, 404 added to the retry ladder, `_FATAL_STATUS` emptied, the cache short-circuit disabled, `_throttle` removed) each produced a named failing test. The file was restored byte-identical after every one.
 
 OWNER DECISION D-VERIFY-01, raised, not taken. Widening `ops/lint_http.sh` changes an acceptance criterion that SOP section 2.3 states verbatim ("greps `src/`, `R/`, `tools/` and `notebooks/` for `requests.`, `httpx.get`, `httpx.Client`, `urllib`, `curl ` and `httr2::request`"), so it is not a silent fix. Recommended default: keep the SOP's six idioms as the floor and add six things in one edit. They are (i) the scan set `ops scripts dbt app sql quality tests`; (ii) bare `curl`/`wget` without the trailing space; and (iii) `httpx\.`, `aiohttp`, `http\.client` and `socket\.create_connection` in place of the two `httpx.` spellings. Then (iv) `from +(requests|httpx) +import`, and (vi) a `baseballr` import outside `R/lib/http.R`. Rule (v) is an `https?://` literal in any `.py`, `.R`, `.sql` or `.sh` outside the two call sites, `config/`, `docs/` and `tests/`. It catches every fetch-for-you library at once without enumerating them. Then extend `tests/unit/test_http_etiquette.py` to plant bypasses the pattern does NOT already contain, so the test can fail. Second decision, same entry: whether `src/absump/http.py:get()` should reject a URL carrying userinfo or an `@` in the query. Recommended default: yes, raise `HttpError` on either, since no endpoint in this project authenticates that way and the-odds-api's key rides in a normal query parameter.
@@ -2622,3 +2622,46 @@ and its result, and the three consequences. The pre-registered sensitivity arm
 SENS-B1-UNDERSMOOTH refits with the season by-term's k at 24 instead of 18.
 `tests/model/test_mt_ch1_03_recovery.py` pins the three values at 91, 44 and 42. It prints NOT
 MET, DISCLOSED UNDER D-R0-04 for each on every run.
+
+## Pre-tag text fixes, 2026-09-29 (Madrid): provisional ids, branch pretag/text
+
+The ids that begin D-T below, and those that begin DEV-T in `docs/DEVIATIONS.md`, are provisional.
+They were written on the branch `pretag/text` while another lane took the next free D-P4 and
+DEV numbers on `main`. They are renumbered in one pass when the branch merges.
+
+**No entry below is an owner answer in his own words.** Each is applied under D-R0-03's
+delegation. The owner may override any of them, and an override becomes a DEVIATIONS entry.
+The tag is not cut, so each change to the pre-registration below is an edit in place.
+
+### D-T1 APPLIED UNDER D-R0-03: the owner's personal address leaves the tracked files, and a guard keeps it out
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-T1. Provisional id.
+
+The question. The repository is public. `abstract/FORM-FIELDS.md`, committed in cd44758 for
+SOP W6.1, carried the owner's personal Gmail address three times. A sweep of every tracked
+file found it once more, in `DECISIONS.md` since 74b995a. There the W1.7 / W2.3 verification
+entry used it in a probe URL, URL-encoded, then in base64 and decoded.
+
+The default applied. The address is replaced in the tracked files, a guard keeps it out, and
+history is left alone.
+
+- `abstract/FORM-FIELDS.md`: the sign-in lines name "the owner's Google account", and the
+  author block reads "Email: entered by the owner at the form, not recorded here". The
+  owner's name and university stay, because the repository already makes both public.
+- `DECISIONS.md`, the W1.7 / W2.3 entry: the probe URL and its header use the placeholder
+  `someone@example.invalid`, with a note that the original probe used the owner's address.
+  The finding is unchanged.
+- `quality/wr-scope.md` no longer says that FORM-FIELDS names the account.
+- `tests/guard/test_no_owner_address.py`, collected by `make test-guard`, fails when a
+  tracked file carries an address at gmail.com, written with `@`, `%40` or `%2540`, or the
+  owner's handle in any case. It skips `renv.lock`, `uv.lock` and its own source. It lets
+  the handle stand only in the pattern definitions (`quality/prose_lint.py`,
+  `quality/w612_check.sh`, `quality/wr-scope.md`) on a line with no `@`. It also lets it
+  stand in `quality/steps.yml`, `quality/steps.d/` and `quality/receipts/` on a line that
+  quotes a `prose_lint.py` command. A second test plants eight files in a throwaway
+  repository and requires exactly the five violations to fire.
+
+What the owner decides. The address remains in git history, in every commit from cd44758
+for FORM-FIELDS and from 74b995a for DECISIONS.md, up to the commit that carries this entry.
+Scrubbing it rewrites every public sha after 74b995a. Whether to do that is his call.

@@ -38,12 +38,12 @@ Redirect chain, verified 2026-09-22:
 `curl -L` without a session returns **HTTP 401, 9,251 bytes**. That is expected and is not a
 broken link.
 
-Sign in first, as **hudpag@gmail.com**, then open the last URL in the chain. If the form
+Sign in first, with **the owner's Google account**, then open the last URL in the chain. If the form
 shows a different account in the top right, switch accounts before filling anything in.
 
 Confirm and record here:
 
-- [ ] Signed in as hudpag@gmail.com: yes / no
+- [ ] Signed in with the owner's Google account: yes / no
 - [ ] Form opened and readable: yes / no
 - [ ] Form title as shown on the page: `________________________`
 - [ ] Date and Madrid time this survey was done: `________________________`
@@ -134,7 +134,7 @@ If a field exists that is not listed here, add it to section 4.
    - Name: Hudson Pagni
    - Affiliation: UCLA
    - Status: undergraduate, class of June 2028
-   - Email: hudpag@gmail.com
+   - Email: entered by the owner at the form, not recorded here
    - Fields the form actually asks for: `________________________`
    - Whether it asks for co-authors, and how many rows it allows: `________________`
    - Whether it asks for a phone number, a mailing address, or a headshot: `________________`

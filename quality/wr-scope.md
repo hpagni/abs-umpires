@@ -68,7 +68,8 @@ blind, on these files only:
 - `submissions/ssac2027/submitted-abstract*.txt`
 
 `abstract/FORM-FIELDS.md` is the owner's survey of the form. It names the submitting
-account by design and is never pasted, so WR-15 does not read it. D-69 keeps it
+author by design and is never pasted, so WR-15 does not read it. It does not carry the
+account's email address, which `tests/guard/test_no_owner_address.py` keeps out of git. D-69 keeps it
 unlinked from every file WR-19 reads.
 
 ## WR-19: the words it matches

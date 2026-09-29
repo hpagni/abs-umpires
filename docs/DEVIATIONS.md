@@ -1389,3 +1389,29 @@ not met, with cause and consequence, in section 8.7. Top-edge results carry two 
 intervals slightly too narrow, and a design underpowered to declare no change. The sensitivity
 arm SENS-B1-UNDERSMOOTH refits with the season by-term at k = 24 and is reported beside the
 primary. The model test pins the three values and prints each as NOT MET, DISCLOSED UNDER D-R0-04.
+
+---
+
+Provisional ids. The entries that begin DEV-T below were written on the branch `pretag/text` while another
+lane took the next free DEV numbers on `main`. They are renumbered in one pass when the branch
+merges, together with the D-T entries in `DECISIONS.md`.
+
+## DEV-T1: W6.1 and W2.3, the owner's personal address leaves the tracked files
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry for the tracked
+files; OPEN for git history, which the owner decides. Applied under D-R0-03's delegation, not
+as an owner answer. The decision is D-T1. Provisional id.
+
+What happened. `abstract/FORM-FIELDS.md` carried the owner's personal Gmail address three
+times from cd44758. `DECISIONS.md` carried it on one line from 74b995a, in a probe URL and in
+the header that probe produced. The repository is public.
+
+What was done instead. Both files now carry a phrase or a placeholder, and the owner's name
+and university stay. `tests/guard/test_no_owner_address.py` fails when a tracked file carries
+an address at gmail.com or the owner's handle, outside the lockfiles, the pattern definitions
+and quoted `prose_lint.py` command lines. It proves itself on violations planted in a
+throwaway repository.
+
+What stays open. History was not rewritten. The address remains in every commit from cd44758,
+and from 74b995a for `DECISIONS.md`, up to the commit that carries this entry. The owner
+decides whether history is scrubbed.
