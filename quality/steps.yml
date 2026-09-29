@@ -845,12 +845,19 @@
 # moved 36 position-player pitches out of P0; it read 1,830,267 before). `needs` names the
 # script, the table, the analysis table and the warehouse directory, so a clean
 # clone reads MISSING rather than FAIL.
+#
+# D-P4-46 adds tests/data/test_plate_plane.py. The displacements above assume
+# the published pair sits at the front plane through 2025 and at the middle
+# from 2026. The test checks that against each pitch's own path, anchored at its
+# release point, for every open MLB pitch 2022 to 2026, and writes
+# out/tables/plate_plane_check.csv. Measured 2026-09-29: 0.030 in from the named
+# plane in every season, 0.938 to 0.952 in from the other.
 - id: W3.10
   title: "Pitch-level plane displacements"
-  verify: "Rscript R/ch1/13_plane_displacement.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/13_plane_displacement.R"
+  verify: "Rscript R/ch1/13_plane_displacement.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/13_plane_displacement.R && uv run --locked pytest tests/data/test_plate_plane.py -q"
   expect_exit: 0
   owner: W3
-  needs: R/ch1/13_plane_displacement.R, data/interim/ch1/plane_displacement.csv, data/marts/ch1_called.parquet, warehouse
+  needs: R/ch1/13_plane_displacement.R, data/interim/ch1/plane_displacement.csv, data/marts/ch1_called.parquet, warehouse, tests/data/test_plate_plane.py
 
 # W3.11, specification development on 2022-2024 only. Owner W3, fleet phase 04.
 #

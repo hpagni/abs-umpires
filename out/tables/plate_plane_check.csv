@@ -1,0 +1,6 @@
+season,n_days,n_pitches,plane_named,plane_nearest,median_gap_z_front_in,median_gap_z_mid_in,median_gap_x_front_in,median_gap_x_mid_in
+2022,179,708116,front,front,0.030,0.948,0.030,0.246
+2023,182,717672,front,front,0.030,0.952,0.030,0.246
+2024,185,709227,front,front,0.030,0.946,0.030,0.249
+2025,184,709906,front,front,0.030,0.944,0.030,0.246
+2026,178,688686,mid,mid,0.938,0.030,0.239,0.030

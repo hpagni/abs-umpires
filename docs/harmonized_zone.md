@@ -121,3 +121,23 @@ The geometry agrees everywhere: one plane, one pair of height fractions, one edg
 W6.5 writes this page and nothing else. It adds no table, dbt model or test. The data-deliverable clauses of SOP section 9.1 (dbt model, `schema.yml`, `data_quality.csv`, a rebuild from scratch, `docs/warehouse.md`) belong to W3.4 and the warehouse steps that built the inputs. DT-30 is re-proved by the W6.5 verify command, which runs `Rscript R/ch1/03_heights.R --check`.
 
 The verify command registered in `quality/steps.yml` runs W3.4's and W3.8's check modes. It checks the D-14 constants in all three modules. It checks every row of the tables in sections 3 and 4 against the two CSVs. A change to either CSV that is not carried here fails it.
+
+## 9. Which plane the published coordinates are on
+
+Section 1 rests on SOP section 2.5: Statcast publishes `plate_x` and `plate_z` at the front of the plate through 2025 and at its middle from 2026. The DT-11 tests trust that sentence as `normalize_sc.plane_source` encodes it. `tests/data/test_plate_plane.py` checks it against the data (W3.10, D-P4-46).
+
+The check anchors each pitch's path at its release point, which the plate coordinates do not enter. It carries the path to both planes and takes the median gap to the published pair. It reads kinematic columns only, over every open MLB pitch from 2022 to 2026-09-21, and no call. The source is `out/tables/plate_plane_check.csv`, which the test writes.
+
+| season | days | pitches | named plane | nearer plane | gap in z, front | gap in z, middle | gap in x, front | gap in x, middle |
+|---|---|---|---|---|---|---|---|---|
+| 2022 | 179 | 708,116 | front | front | 0.030 in | 0.948 in | 0.030 in | 0.246 in |
+| 2023 | 182 | 717,672 | front | front | 0.030 in | 0.952 in | 0.030 in | 0.246 in |
+| 2024 | 185 | 709,227 | front | front | 0.030 in | 0.946 in | 0.030 in | 0.249 in |
+| 2025 | 184 | 709,906 | front | front | 0.030 in | 0.944 in | 0.030 in | 0.246 in |
+| 2026 | 178 | 688,686 | mid | mid | 0.938 in | 0.030 in | 0.239 in | 0.030 in |
+
+Each gap is a median absolute gap. In every season the published pair sits 0.030 in from the plane `plane_source` names and 0.938 to 0.952 in from the other in z. The test fails if the first reaches 0.10 in or the second falls to 0.50 in.
+
+The limit. The lake is the project's own Statcast Search pull of 2026-09-22 and 2026-09-23 (`docs/warehouse.md`). A public note (Cowshal, 2026-09-05) reports a 2024 game already at mid-plate on a different Savant endpoint. This check says nothing about that endpoint.
+
+This section is W3.10's, added after section 8 was written. W6.5's verify does not read it.
