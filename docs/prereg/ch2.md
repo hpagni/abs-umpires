@@ -4,7 +4,7 @@ This is the Chapter 2 annex to `PREREGISTRATION.md`, version 1.0. It is frozen b
 
 It comes from SOP step W4.1. The M1 and M2 formulas in sections 4 and 5 are the SOP's W4.10 and W4.11 text, copied byte for byte. Measured numbers come from `out/ch2/log/prior_predictive.json` (W4.7) and `data/interim/ch2/challenges.parquet` (W4.5). Published numbers from other work cite `docs/prior-art.md`.
 
-Section 10 lists eight items raised before the tag and says which are closed. The largest open one is the power curve: the five-seed grid of section 8 has not run. Section 11 lists three M2 items that stay open after the tag.
+Section 10 lists nine items raised before the tag and says which are closed. The largest open one is the power curve: the five-seed grid of section 8 has not run. Section 11 lists three M2 items that stay open after the tag.
 
 ## 1. What was seen before this annex
 
@@ -247,6 +247,7 @@ The thresholds are SOP section 9.3, unchanged. Each names the tests that check i
 - M1 is restricted to D-64's ex-ante covariates, so the comparison is like for like.
 - Method: Brier and log loss for M1, for `exp_rate_overturns` broadcast to each challenge, and for a role-only intercept baseline. A paired game-clustered bootstrap of 1,000 replicates.
 - Checked by: MT-06, with its three named baselines: the league base rate, Savant `exp_rate_overturns`, and the prior art's role-level σ model. MT-10 for disjoint folds.
+- Savant's input. `exp_rate_overturns` comes from the MLB 2026 batter, catcher and pitcher views of the Savant ABS leaderboard (SOP W2.11). W4.13 broadcasts it to each challenge, and W4.16 prints it with `runs_gained_per_chal`. A view is a season aggregate with no date parameter. It is admissible only if it was pulled before any game of 2026-09-22 was final and its challenges total the open set's drawer count, 10,167. The view used is named by its pull date and its sha256, and a view pulled later is refused because it counts sealed days. No admissible view is on disk. The baseline in `contracts/savant_absdata.yml`, dated 2026-09-22, records counts and holds no page. The three views in the raw cache were pulled on 2026-09-24 and count the first sealed day (`docs/DEVIATIONS.md` DEV-40). So W4.13 and W4.16, which both read the file, do not run until an admissible view exists or the owner records another route (section 10, item 9).
 - If it fails (SOP): the reportable finding is that Savant's public expectation is already as well calibrated as a hierarchical model.
 
 ### 7.6 Blocking reproduction gates, before any novelty claim
@@ -366,6 +367,7 @@ That protection is a passphrase on a single-user laptop, not a separation of dut
 6. **Seed conflict.** W4.10 sets `seed = 20260922`; `config/seeds.yml` sets `ch2_brms_chain_base: 424242`. Closed on 2026-09-29: M1's seed is 20260922 (section 4.2).
 7. **The role-rate reproduction gate has no test id.** Section 7.6. It stays open after the tag, with the two M2 items of section 11.
 8. **Owner sign-off.** SOP section 9.1 closes a prose artifact with a dated owner line in `DECISIONS.md`. It has not been given.
+9. **No admissible Savant view.** Section 7.5 registers the rule for Savant's `exp_rate_overturns`, and no view on disk meets it. A view pulled now counts sealed days, so none can be pulled for the open set. W4.13 and W4.16 do not run until the owner records a route in `docs/DEVIATIONS.md`. The rule stands whatever route is chosen.
 
 ## 11. Open after the tag, before W4.11
 

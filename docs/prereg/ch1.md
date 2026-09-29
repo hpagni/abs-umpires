@@ -92,6 +92,8 @@ W3.11's k.check, re-run on 2026-09-29. `Rscript R/ch1/20_spec_dev.R --check-nonc
 
 The comparison is in `out/dev/ch1_spec/noncohort/`, which is not committed.
 
+W3.11 was not rebuilt. A rebuild under D-P4-04 would change no k. It would rewrite the recorded figures of sections 1 and 3 to 7: the k-indices and the dry run above already differ from sections 3 and 5. The build's own rows are no longer all in the table, because D-P4-08 took 11 of them out, so the build cannot be refitted either. W3.11's registered check, `Rscript R/ch1/20_spec_dev.R --check`, therefore follows the disclosure since 2026-09-29. It asserts the build's record of 687,496 rows, the table's 687,485 under the single offset, and the k.check table of section 3 against the record. It then refits the frozen specification and the rung above it under D-P4-04 on 687,366 rows. It passes only if both reproduce the `--check-noncohort` record and every group stays stable. It prints the three counts with DEV-68.
+
 Why the W3.12 simulations are not re-run. They measure the estimator's operating characteristics on simulated calls. The height rule moves the zone of a minority of batters by the amounts in section 1.1, and it does not change the estimator. The 150 recovery replicates, the SBC and the power curve take hours, and the values DECISIONS.md D-R0-04 disclosed stay as run. MT-01's margin is thin: the prior's boundary is s = 0.3013 against the 0.30 chosen. Its inputs would move under D-P4-04 and were not recomputed, so that margin stands under the single offset.
 
 Why W3.4 and W3.5 are not re-run. The selection effect holds one height rule fixed across its two arms, which is how SOP W3.4 defines it. The W3.4 stat verifier sized a D-P4-04 correction on it (DECISIONS.md D-P4-04). The T1 rows are descriptive counts on the analysis table's d. The Chapter 1 fit code recomputes d under D-P4-04 at fit time and reports its own row counts.
@@ -262,7 +264,7 @@ Each row is one fit on 2022–2024. The last five columns are the 2023-minus-202
 
 No k change moves an edge change by more than 0.004 in or the area change by more than 0.01 sq in. The largest probability difference from a k change, 0.0138, comes from the main k at 32. The ABS-measured cohort moves the top-edge change by 0.055 in and the area change by 1.51 sq in. That cohort is a different set of batters with a different height rule, so the gap is a cohort effect, not a basis effect.
 
-No fitted model object from this step is saved. GD-01 fails on a fitted object under `out/` with no `provenance.json` beside it. GD-12 fails on any `provenance.json` before `prereg-v1` is pushed. `Rscript R/ch1/20_spec_dev.R --check` refits the frozen specification and the rung above it, and compares both with this file.
+No fitted model object from this step is saved. GD-01 fails on a fitted object under `out/` with no `provenance.json` beside it. GD-12 fails on any `provenance.json` before `prereg-v1` is pushed. `Rscript R/ch1/20_spec_dev.R --check` compares the build's record with this file. It then refits the frozen specification and the rung above it under D-P4-04 and compares both with the record of section 1.2.
 
 ## 8. Umpire heterogeneity: the D-60 power curve and the CH1-A6 thresholds
 

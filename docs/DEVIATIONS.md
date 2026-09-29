@@ -1442,6 +1442,15 @@ fails until W3.11 is rebuilt.
 What closes it: nothing further before the tag. A later re-run of a listed step under D-P4-04 is
 its own dated entry.
 
+Follow-up, 2026-09-29, W3.11's check. W3.11 was not rebuilt: a rebuild under D-P4-04 would
+rewrite the recorded figures of `docs/prereg/ch1.md` sections 1 and 3 to 7, and D-P4-08 took
+11 of the build's rows out of the table. `Rscript R/ch1/20_spec_dev.R --check` now follows this
+entry. It asserts the build's record of 687,496 rows and the table's 687,485 under the single
+offset, and holds the k.check table of section 3 to the record. It refits the frozen
+specification and the rung above it under D-P4-04 on 687,366 rows, requires the
+`--check-noncohort` record back and every group stable, and prints the three counts with this
+entry's id. A count that moves again fails the check. `docs/prereg/ch1.md` section 1.2 says so.
+
 ## DEV-69: W6.1 and W2.3, the owner's personal address leaves the tracked files
 
 Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry for the tracked
@@ -1526,6 +1535,13 @@ his first. M1's seed is 20260922. W4.14's framing file must count games through 
 the latest, none is built, and W4.14 waits for one. The Savant expected-rate file's pull date is
 left to the owner (D-P4-42).
 
+Follow-up, 2026-09-29, the Savant file. Status of this item: OPEN for the owner. No Savant
+leaderboard view on disk was pulled before the seal. The 2026-09-22 baseline of
+`contracts/savant_absdata.yml` is a record of counts with no page behind it, and the cached
+MLB 2026 views were fetched on 2026-09-24. `docs/prereg/ch2.md` section 7.5 registers the rule
+a view must meet, and section 10 item 9 records that W4.13 and W4.16 do not run until one does
+(D-P4-42, follow-up).
+
 ## DEV-74: W4.11, three M2 items stay open after the tag
 
 Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W4.11 runs. Recorded under D-R0-03's
@@ -1540,3 +1556,23 @@ The role-rate gate has no test id. `docs/prereg/ch2.md` section 11 lists all thr
 
 What closes it: a dated entry here for each item, before W4.11 runs. None touches M1 or the
 sprint.
+
+## DEV-75: W3.14 and W3.22, SENS-HEIGHT-SINGLE cannot be fitted by the fit code as it stands
+
+Raised 2026-09-29 (Europe/Madrid) by the merge lane. Status: OPEN until the fit lane closes it,
+before W3.14 runs. Recorded under D-R0-03's delegation, not as an owner answer. The decision is
+D-P4-04.
+
+What the plan says. `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1
+pre-register SENS-HEIGHT-SINGLE beside the primary: P0, with roster height plus 0.0022 in for
+every batter.
+
+What stands. On `phase05/ch1-fits`, `apply_heights()` in `R/lib/ch1_fits.R` applies
+`offset_noncohort_in` whenever the calibration file holds it. `--height-rule single-offset`
+takes effect only when the key is absent. W3.4's lane wrote the key on 2026-09-29, so the flag
+does nothing, and the arm cannot be fitted.
+
+What closes it. The fit lane adds SENS-HEIGHT-SINGLE as a named fit, one that applies the
+single offset while the key is present, before W3.14 runs. The override flag stays for the
+owner's override of D-P4-04. A dated entry here records the change. This lane did not touch
+that branch.

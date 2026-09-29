@@ -5,12 +5,17 @@
 #
 #   Rscript R/ch1/20_spec_dev.R            build: run the development wave, write the
 #                                          diagnostics under out/dev/ch1_spec/, report
-#   Rscript R/ch1/20_spec_dev.R --check    verify: reload the 2022-2024 sample, refit the
-#                                          frozen specification and the rung above it,
-#                                          and compare both with docs/prereg/ch1.md and
-#                                          out/dev/ch1_spec/. Writes nothing under the
+#   Rscript R/ch1/20_spec_dev.R --check    verify: reload the 2022-2024 sample, hold the
+#                                          build's record to BUILD_ROWS and the table to
+#                                          TABLE_ROWS, compare the record with
+#                                          docs/prereg/ch1.md, then refit the frozen
+#                                          specification and the rung above it under
+#                                          D-P4-04 and require the --check-noncohort
+#                                          record back. Writes nothing under the
 #                                          repository. Exit 1 on any FAIL. This is the
-#                                          registered verify command.
+#                                          registered verify command. Since D-P4-08 the
+#                                          build's own rows are not in the table, so the
+#                                          build is not refitted (DEV-68).
 #   Rscript R/ch1/20_spec_dev.R --check-noncohort
 #                                          the frozen specification and the rung above it
 #                                          refitted under DECISIONS.md D-P4-04's height
@@ -195,6 +200,12 @@ PREREG_MD <- file.path(ROOT, "docs", "prereg", "ch1.md")
 T1_FILE   <- file.path(ROOT, "out", "ch1", "tab", "T1_sample.csv")
 CAL_FILE  <- file.path(ROOT, "data", "interim", "dim_batter_season", "calibration.json")
 NC_READ_MARGIN_IN <- 0.5                    # sample d8nc: the read band is |d| <= 8.5 in
+
+# The development rows by season, 2022 to 2024, as docs/prereg/ch1.md sections 1 and 1.2
+# and DEV-68 state them. Check mode asserts each one exactly.
+BUILD_ROWS <- c(`2022` = 226578L, `2023` = 233595L, `2024` = 227323L)  # the build, 2026-09-25, before D-P4-08
+TABLE_ROWS <- c(`2022` = 226568L, `2023` = 233594L, `2024` = 227323L)  # the table since D-P4-08, single offset
+NC_ROWS    <- c(`2022` = 226513L, `2023` = 233551L, `2024` = 227302L)  # sample d8nc, under D-P4-04
 
 stopifnot(length(XG) == 301L, length(ZG) == 276L, N_BINS == 32L,
           all(DEV_SEASONS %in% 2022:2024))
@@ -1041,9 +1052,24 @@ if (length(failures) > 0L) finish()
 frozen <- fromJSON(frozen_file, simplifyVector = TRUE)
 k_frozen <- unlist(frozen$k)[GROUPS]
 k_up <- unlist(frozen$k_up)[GROUPS]
-check("development rows equal the build",
-      identical(as.integer(unlist(n_by_season)), as.integer(unlist(frozen$dev_rows_by_season))),
-      paste(comma(unlist(n_by_season)), collapse = " / "))
+# The row counts, as DEV-68 discloses them. The build ran on BUILD_ROWS, before D-P4-08 took
+# 11 of its rows out of the table, so it cannot be refitted from the table as it stands. The
+# check holds the record to BUILD_ROWS, the table to TABLE_ROWS, and refits under D-P4-04 on
+# NC_ROWS against the --check-noncohort record (below). A count that moves again fails here.
+by_season <- function(x) as.integer(unlist(x)[SEASON_LEVELS])
+check("the recorded build holds the rows of section 1",
+      identical(by_season(frozen$dev_rows_by_season), unname(BUILD_ROWS)) &&
+        identical(as.integer(frozen$dev_rows), sum(BUILD_ROWS)),
+      sprintf("%s rows: %s", comma(frozen$dev_rows),
+              paste(comma(by_season(frozen$dev_rows_by_season)), collapse = " / ")))
+check("the table under the single offset holds the disclosed rows",
+      identical(by_season(n_by_season), unname(TABLE_ROWS)),
+      sprintf("%s rows: %s", comma(sum(by_season(n_by_season))),
+              paste(comma(by_season(n_by_season)), collapse = " / ")))
+cat(sprintf(paste0("DISCLOSED development rows: the build record holds %s, from before D-P4-08 and under ",
+                   "the single offset; the table now gives %s under the single offset and %s under ",
+                   "D-P4-04 (DEV-68, docs/prereg/ch1.md section 1.2)\n"),
+            comma(sum(BUILD_ROWS)), comma(sum(TABLE_ROWS)), comma(sum(NC_ROWS))))
 
 md <- readLines(PREREG_MD, warn = FALSE)
 mdt <- paste(md, collapse = "\n")
@@ -1073,13 +1099,55 @@ for (nm in names(must_say)) check(sprintf("ch1.md states: %s", nm),
                                   grepl(tolower(must_say[[nm]]), tolower(mdt), fixed = TRUE),
                                   sprintf("\"%s\"", must_say[[nm]]))
 
-# Refit the frozen specification and the rung above it, in a temporary directory.
+# The k.check table in ch1.md, to 3 decimals, against the build's record of the frozen fit.
+ks <- read.csv(file.path(OUT_DIR, "k_sweep.csv"), stringsAsFactors = FALSE)
+kc_build <- ks[ks$variant == vname(k_frozen), ]
+check("the build's k.check record of the frozen fit", nrow(kc_build) > 0L, vname(k_frozen))
+for (i in seq_len(nrow(kc_build))) {
+  tr <- kc_build$term[i]
+  if (is.na(kc_build$k_index[i])) next
+  # The W3.11 k.check table is the earliest table in ch1.md that names the term.
+  row <- grep(paste0("| `", tr, "` |"), md, fixed = TRUE, value = TRUE)
+  ok <- FALSE
+  if (length(row) >= 1L) {
+    cells <- trimws(strsplit(row[1], "|", fixed = TRUE)[[1]])
+    ok <- any(cells == sprintf("%.3f", kc_build$k_index[i]))
+  }
+  check(sprintf("ch1.md k-index: %s", tr), ok, sprintf("%.3f", kc_build$k_index[i]))
+}
+
+# The --check-noncohort record: the frozen specification and the rung above it under
+# D-P4-04, written by Rscript R/ch1/20_spec_dev.R --check-noncohort on the table as it stands.
+nc_dir <- file.path(OUT_DIR, "noncohort")
+names_nc <- c(vname(k_frozen, sample = "d8nc"), vname(k_up, sample = "d8nc"))
+ra <- read_fit(nc_dir, names_nc[1])
+rb <- read_fit(nc_dir, names_nc[2])
+check("the --check-noncohort record is present", !is.null(ra) && !is.null(rb),
+      paste(file.path("out/dev/ch1_spec/noncohort/fits", paste0(names_nc, ".json")), collapse = " "))
+if (is.null(ra) || is.null(rb)) finish()
+for (r in list(ra, rb)) {
+  check(sprintf("record holds the D-P4-04 rows: %s", r$name),
+        identical(as.integer(r$n_fit), sum(NC_ROWS)) && all(r$guard$seasons %in% DEV_SEASONS) &&
+          as.Date(r$guard$max_official_date) <= DEV_LAST_DATE,
+        sprintf("%s rows fitted, seasons %s, last date %s", comma(r$n_fit),
+                paste(r$guard$seasons, collapse = " "), r$guard$max_official_date))
+}
+rec_ch <- vapply(GROUPS, function(g) max_group_change(ra, rb, g), numeric(1))
+for (g in GROUPS) {
+  check(sprintf("record stable at the frozen rung: %s", g), rec_ch[[g]] < KI_STABLE,
+        sprintf("k %d -> %d, max |k-index change| %.4f < %.2f", k_frozen[[g]], k_up[[g]], rec_ch[[g]], KI_STABLE))
+}
+nc_say <- c(comma(sum(BUILD_ROWS)), comma(sum(TABLE_ROWS)), comma(sum(NC_ROWS)),
+            sprintf("%.4f", max(rec_ch)), "DEV-68")
+for (x in nc_say) check(sprintf("ch1.md states: %s", x), grepl(x, mdt, fixed = TRUE), sprintf("\"%s\"", x))
+
+# Refit the same two rungs under D-P4-04, in a temporary directory, and require the record back.
 tmp <- tempfile("w311_check_")
 dir.create(tmp)
-times <- run_jobs(list(fit_job(vname(k_frozen)), fit_job(vname(k_up))), tmp)
-a <- read_fit(tmp, vname(k_frozen))
-b <- read_fit(tmp, vname(k_up))
-check("refits completed", !is.null(a) && !is.null(b), paste(vname(k_frozen), vname(k_up)))
+times <- run_jobs(lapply(names_nc, fit_job), tmp)
+a <- read_fit(tmp, names_nc[1])
+b <- read_fit(tmp, names_nc[2])
+check("refits completed", !is.null(a) && !is.null(b), paste(names_nc, collapse = " "))
 if (is.null(a) || is.null(b)) finish()
 for (r in list(a, b)) {
   check(sprintf("no 2025 or 2026 row: %s", r$name),
@@ -1088,34 +1156,21 @@ for (r in list(a, b)) {
         sprintf("seasons %s, last date %s, %s rows fitted", paste(r$guard$seasons, collapse = " "),
                 r$guard$max_official_date, comma(r$n_fit)))
 }
-ks <- read.csv(file.path(OUT_DIR, "k_sweep.csv"), stringsAsFactors = FALSE)
-for (r in list(a, b)) {
-  rec <- ks[ks$variant == r$name, ]
+for (pr in list(list(a, ra), list(b, rb))) {
+  r <- pr[[1]]
+  rec <- pr[[2]]$kcheck
   kt <- r$kcheck
   mt <- match(kt$term, rec$term)
   dki <- max(abs(kt$k_index - rec$k_index[mt]), na.rm = TRUE)
   dedf <- max(abs(kt$edf - rec$edf[mt]))
-  check(sprintf("refit reproduces the build: %s", r$name),
-        !anyNA(mt) && dki < 1e-6 && dedf < 1e-4,
-        sprintf("max |k-index change| %.2e, max |edf change| %.2e", dki, dedf))
+  check(sprintf("refit reproduces the record: %s", r$name),
+        !anyNA(mt) && identical(as.integer(r$n_fit), as.integer(pr[[2]]$n_fit)) && dki < 1e-6 && dedf < 1e-4,
+        sprintf("%s rows, max |k-index change| %.2e, max |edf change| %.2e", comma(r$n_fit), dki, dedf))
 }
 for (g in GROUPS) {
   ch <- max_group_change(a, b, g)
   check(sprintf("k stable at the frozen rung: %s", g), ch < KI_STABLE,
         sprintf("k %d -> %d, max |k-index change| %.4f < %.2f", k_frozen[[g]], k_up[[g]], ch, KI_STABLE))
-}
-# The k.check table in ch1.md, to 3 decimals.
-for (i in seq_len(nrow(a$kcheck))) {
-  tr <- a$kcheck$term[i]
-  if (is.na(a$kcheck$k_index[i])) next
-  # The W3.11 k.check table is the earliest table in ch1.md that names the term.
-  row <- grep(paste0("| `", tr, "` |"), md, fixed = TRUE, value = TRUE)
-  ok <- FALSE
-  if (length(row) >= 1L) {
-    cells <- trimws(strsplit(row[1], "|", fixed = TRUE)[[1]])
-    ok <- any(cells == sprintf("%.3f", a$kcheck$k_index[i]))
-  }
-  check(sprintf("ch1.md k-index: %s", tr), ok, sprintf("%.3f", a$kcheck$k_index[i]))
 }
 bad <- list.files(OUT_DIR, recursive = TRUE, all.files = TRUE,
                   pattern = paste0("(\\.(", paste(FIT_SUFFIXES, collapse = "|"), ")|provenance\\.json)$"))

@@ -2797,7 +2797,7 @@ does not run until then. Section 4.1's table and section 10 item 3 no longer pro
 before the tag. `R/ch2/10_m1_design.R` on `phase05/ch2-fits` already refuses to build the M1
 design without a `--leverage` file, so the code holds the precondition.
 
-### D-P4-42 APPLIED UNDER D-R0-03: four Chapter 2 code choices are recorded in the annex
+### D-P4-42 APPLIED UNDER D-R0-03, OWNER-VISIBLE: four Chapter 2 code choices are recorded in the annex, and no Savant view qualifies
 
 Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
 D-R0-03's delegation, not an owner answer.** The deviation is DEV-73. Each
@@ -2826,6 +2826,44 @@ pull date in `contracts/savant_absdata.yml`, which is 2026-09-22. That pull was 
 game of 2026-09-22 was final and counts exactly the 10,167 open challenges. A rule of "2026-09-21
 or earlier" would refuse the one baseline pull on disk. Choosing between the two is left to
 the owner. The annex states no rule for that file.
+
+**Follow-up, 2026-09-29 (Europe/Madrid), by the merge lane: the Savant view.** Status:
+**applied under D-R0-03's delegation, OWNER-VISIBLE.** Hudson Pagni has not answered it. The
+deviation is DEV-73.
+
+The claim checked. The paragraph above says the 2026-09-22 baseline pull was made before any
+game of that day was final, counts exactly the open challenges, and is on disk. The counts
+hold. The page is not on disk.
+
+- `contracts/savant_absdata.yml` sets `dt24.pull_date` to 2026-09-22 and records totals of
+  10,167 challenges, 5,490 overturns and 4,677 fails. 10,167 is the drawer's open-set count.
+  The feed's canonical count is 10,168 (D-P4-11). The one challenge between them is
+  825000:31:3, a strike that was not overturned, the review the drawer lacks.
+- The pull manifest, `data/raw/_manifest.csv`, holds no leaderboard row from 2026-09-22. Its
+  only MLB 2026 leaderboard rows are the seven views of the W4.3 sweep, fetched from
+  2026-09-24T01:42:35Z to 01:43:34Z. The batter, catcher and pitcher files in the raw cache
+  are those fetches. The manifest gives their sha256 as `0b778b433267...`, `1a3d599de153...`
+  and `222e257eed54...`.
+- The 2026-09-22 counts were transcribed from the SOP and never pulled by this repository.
+  W2.11's own log reads "none on disk", and `logs/evidence/refute-savant.log` says the same.
+  DEV-40 measured that the 2026-09-24 views grew by exactly the first sealed day.
+- The three cached files were not opened for this entry. Their fetch dates alone place them
+  after the seal.
+
+So no page on disk qualifies, and none can be pulled now: a view pulled today counts sealed
+days. `scripts/ch2_savant_expected.py` on `phase05/ch2-fits` refuses the three cached views,
+correctly, because they were fetched after the baseline date.
+
+The default applied. `docs/prereg/ch2.md` section 7.5 registers the rule. A view is
+admissible only if it was pulled before any game of 2026-09-22 was final and its challenges
+total 10,167. The view used is named by its pull date and its sha256, and a view pulled later
+is refused. Section 10 item 9 records that no admissible view exists, so W4.13 and W4.16,
+which both read the file, do not run until one does. `PREREGISTRATION.md` section 14 item 2
+points to it.
+
+What the owner decides. Whether CH2-H2e's Savant baseline and W4.16's Savant columns wait,
+take another open-set source, or are reported as not run is his call. Any of the three is a
+dated entry in `docs/DEVIATIONS.md`.
 
 ### D-P4-43 RECORDED: three M2 items stay open after the tag, until W4.11
 
