@@ -6,6 +6,7 @@
 #
 #   Rscript R/ch2/03_prior_predictive.R            sample, write out/ch2/log/prior_predictive.json
 #   Rscript R/ch2/03_prior_predictive.R --check    sample again, compare with the file, write nothing
+#   Rscript R/ch2/03_prior_predictive.R --derive   derive INTERCEPT_SD, write out/ch2/log/intercept_scale.json
 #
 # THE SOP TEXT, VERBATIM (W4.7):
 #   **W4.7 Prior predictive.** 1,000 draws, `sample_prior = "only"`. Gates: the league
@@ -28,23 +29,21 @@
 #     (1 | ump_id) + (1 | team_id)
 #   prior(normal(0, 1.5), class = "Intercept"), prior(normal(0, 1), class = "b"),
 #   prior(exponential(4), class = "sd")
+# The Intercept prior is the one departure: normal(0, INTERCEPT_SD), see THE RULE below.
 #
-# TWO LINKS, ONE GATED. The SOP disagrees with itself on the link. W4.10, D-30, D-55
-# and CH2-H2a put M1 on the logit link (D-55 moves M2 to probit and keeps M1 on logit).
-# W4.7's parenthetical and MT-01 say "on the probit scale". So the script samples the
-# prior twice, once per link, with everything else identical, and computes both gates in
-# both arms:
-#   arm "probit"  the scale MT-01 names. Its two gates are the Chapter 2 MT-01 verdict.
-#   arm "logit"   the link W4.10 will fit. Its two gates are computed the same way and
-#                 reported as the named sensitivity finding SENS-W4.7-LOGIT, with the
-#                 95% interval and the shortfall at each tail. They do not set the verdict.
-# THE RULE CHANGED AFTER THE FIRST DRAWS, AND SAYS SO. The rule written before any draw
-# required both gates in both arms. The first run, 2026-09-25, gave the logit arm a gate 1
-# interval of [0.1204, 0.8757], short of [0.10, 0.90] at both tails, while the probit arm
-# passed both gates. The same day the gate was narrowed to the arm MT-01 names, under the
-# owner's delegation D-R0-03, with no prior, seed, draw count or design changed. The
-# narrowing was made after the draws were seen. It is recorded as a deviation in
-# logs/decisions-pending/ch2-w47.md, and every logit number stays in the output.
+# TWO LINKS, BOTH GATED. The SOP disagrees with itself on the link. W4.10, D-30, D-55 and
+# CH2-H2a put M1 on the logit link (D-55 moves M2 to probit and keeps M1 on logit). W4.7's
+# parenthetical and MT-01 say "on the probit scale". So the script samples the prior on both
+# links, with everything else identical, and both arms' two gates set the verdict:
+#   arm "probit"  the scale MT-01 names;
+#   arm "logit"   the link W4.10 will fit.
+# THE RULE, AND ITS HISTORY. The rule written before any draw required both gates in both arms.
+# The first run, 2026-09-25, gave the logit arm a gate 1 interval of [0.1204, 0.8757] under the
+# SOP's normal(0, 1.5) Intercept prior, short of [0.10, 0.90] at both tails. That day the verdict
+# was narrowed to the probit arm after the draws were seen (D-P4-15). The narrowing is undone:
+# both arms gate again, and M1's Intercept prior is widened to INTERCEPT_SD below, derived by
+# `--derive` before the gated run. The SOP prior is sampled as the sensitivity arm
+# SENS-M1-INTERCEPT-SOP and reported, not gated (logs/decisions-pending/stats.md).
 #
 # THE TWO GATED QUANTITIES, DEFINED BEFORE ANY DRAW. Per prior draw d:
 #   league overturn rate   L_d = mean over the N challenges of y_rep[d, i], where y_rep
@@ -104,24 +103,27 @@
 # rate and S quantiles of the two routes are compared. --check fails if any compared
 # quantile differs by more than 0.04. This catches a coding error in either route.
 #
-# WHAT IT WRITES. out/ch2/log/prior_predictive.json: the SOP text, the rule, the design
-# summary, the gated arm, per arm the quantiles, the gates, the sampler diagnostics, the
-# cross-check, the sensitivity finding SENS-W4.7-LOGIT, and
-# the per-draw values of the two gated quantities (so a verifier can recompute every
-# quantile without R). --check writes nothing under the repository.
+# WHAT IT WRITES. out/ch2/log/prior_predictive.json, a list of one record (the W2.21 export
+# gate reads a json file under out/ only as a list of records): the SOP text, the rule and its
+# history, the design summary, the gated arms, per arm the quantiles, the gates, the sampler
+# diagnostics, the cross-check, the sensitivity arms and finding SENS-M1-INTERCEPT-SOP, the
+# Intercept derivation, and the per-draw values of the two gated quantities (so a verifier can
+# recompute every quantile without R). --derive writes out/ch2/log/intercept_scale.json, a
+# list of records, one per link and candidate scale. --check writes nothing under the repository.
 #
-# Exit 0 when every check passes and both gates pass in the probit arm, 1 when any of
-# those fails, 2 on a usage error. The logit arm's gates never change the exit code.
+# Exit 0 when every check passes and both gates pass in both arms, 1 when any of those fails,
+# 2 on a usage error. The sensitivity arm's gates never change the exit code.
 
 options(warn = 1, digits = 12)
 t_start <- Sys.time()
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) > 1 || (length(args) == 1 && !identical(args, "--check"))) {
-  cat("usage: Rscript R/ch2/03_prior_predictive.R [--check]\n", file = stderr())
+if (length(args) > 1 || (length(args) == 1 && !args %in% c("--check", "--derive"))) {
+  cat("usage: Rscript R/ch2/03_prior_predictive.R [--check | --derive]\n", file = stderr())
   quit(status = 2)
 }
 CHECK_ONLY <- identical(args, "--check")
+DERIVE     <- identical(args, "--derive")
 
 args_all <- commandArgs(trailingOnly = FALSE)
 file_arg <- grep("^--file=", args_all, value = TRUE)
@@ -136,7 +138,21 @@ suppressPackageStartupMessages({
 })
 
 FRAME    <- "data/interim/ch2/challenges.parquet"
-DUCKDB   <- "warehouse/abs.duckdb"
+# The warehouse path is minted once, in src/absump/paths.py, and read from there
+# relative to the repository root this script runs from.
+duckdb_from_python <- function() {
+  code <- "import os; from absump.paths import DUCKDB_PATH; print(os.path.relpath(DUCKDB_PATH))"
+  out <- suppressWarnings(system2("uv", c("run", "--locked", "python", "-c", shQuote(code)),
+                                  stdout = TRUE, stderr = TRUE))
+  status <- attr(out, "status")
+  if (is.null(status)) status <- 0L
+  if (status != 0L || length(out) == 0L) {
+    stop("could not read the warehouse path from absump.paths (exit ", status, "): ",
+         paste(out, collapse = " "), call. = FALSE)
+  }
+  trimws(out[length(out)])
+}
+DUCKDB   <- duckdb_from_python()
 OUT_JSON <- "out/ch2/log/prior_predictive.json"
 SEED     <- 20260922L
 N_EXPECT <- 10167L
@@ -146,8 +162,22 @@ WARMUP   <- 250L
 N_MC     <- 4000L
 MC_TOL   <- 0.04
 LINKS    <- c("probit", "logit")
-GATED    <- "probit"             # the arm MT-01 names; its two gates are the verdict
-SENS_ID  <- "SENS-W4.7-LOGIT"    # the named sensitivity finding for the logit arm
+GATED    <- LINKS                # both arms gate: the scale MT-01 names and the link W4.10 fits
+# M1's Intercept prior. SOP W4.10 writes normal(0, 1.5) on the centred Intercept. On the logit
+# link, the one W4.10 fits M1 on, that prior's league-rate 95% interval was [0.1204, 0.8757] on
+# 2026-09-25, short of [0.10, 0.90] at both tails. INTERCEPT_SD is the smallest multiple of 0.05
+# at which a DERIVE_DRAWS-draw direct Monte Carlo of M1's prior clears both W4.7 gates on both
+# links, each gated quantile inside its bound by two Monte Carlo standard errors of the gate's own
+# 1,000-draw quantile, so that the 1,000-draw gate reads the prior and not Monte Carlo noise.
+# `--derive` computes it and writes out/ch2/log/intercept_scale.json. The SOP's normal(0, 1.5) is
+# the pre-registered sensitivity arm SENS-M1-INTERCEPT-SOP: sampled and reported, never gated.
+INTERCEPT_SD     <- 1.9
+INTERCEPT_SD_SOP <- 1.5
+SENS_ID  <- "SENS-M1-INTERCEPT-SOP"
+DERIVE_JSON  <- "out/ch2/log/intercept_scale.json"
+DERIVE_DRAWS <- 40000L
+DERIVE_BOOT  <- 2000L
+DERIVE_GRID  <- round(seq(1.50, 2.20, by = 0.05), 2)
 DIGITS   <- 6L
 
 failures <- character(0)
@@ -264,9 +294,10 @@ f1 <- brms::bf(
     (1 | challenger_id) + (1 | opponent_id) + (1 | pitcher_id) +
     (1 | ump_id) + (1 | team_id)
 )
-pr <- c(prior(normal(0, 1.5), class = "Intercept"),
-        prior(normal(0, 1),   class = "b"),
-        prior(exponential(4), class = "sd"))
+prior_of <- function(isd) c(brms::set_prior(sprintf("normal(0, %s)", format(isd)), class = "Intercept"),
+                            prior(normal(0, 1),   class = "b"),
+                            prior(exponential(4), class = "sd"))
+pr <- prior_of(INTERCEPT_SD)
 
 q_of <- function(x, p) unname(stats::quantile(x, p, type = 7))
 summ <- function(x) {
@@ -288,22 +319,102 @@ gates_of <- function(L, S) {
          q90 = round(s90, DIGITS), pass = g2))
 }
 
-## --- 2. the prior, sampled by brms, once per link ----------------------------------------
+## --- the Intercept scale, derived (--derive) ------------------------------------------------
+# For each candidate scale on DERIVE_GRID and each link: DERIVE_DRAWS i.i.d. draws of M1's prior
+# on the centred design brms builds (the route the cross-check below uses), the W4.7 quantiles of
+# L and S, and each quantile's Monte Carlo standard error at the gate's own 1,000 draws, from
+# DERIVE_BOOT bootstrap samples of 1,000. The Intercept draw is scaled per candidate, so every
+# candidate reads the same b, sd and group draws. A scale clears when, on both links,
+# q025(L) + 2 se <= 0.10, q975(L) - 2 se >= 0.90, the median sits 2 se inside [0.35, 0.65] and
+# q90(S) + 2 se < 0.30. INTERCEPT_SD is the smallest scale that clears.
+derive_intercept_sd <- function() {
+  t0 <- Sys.time()
+  gvars <- c("challenger_id", "opponent_id", "pitcher_id", "ump_id", "team_id")
+  gidx <- lapply(gvars, function(g) as.integer(d[[g]]))
+  glev <- sapply(gvars, function(g) nlevels(d[[g]]))
+  rows <- list()
+  for (link in LINKS) {
+    inv <- if (link == "probit") stats::pnorm else stats::plogis
+    sdat <- brms::make_standata(f1, data = d, family = brms::bernoulli(link = link),
+                                prior = prior_of(INTERCEPT_SD_SOP), sample_prior = "only")
+    X <- sdat$X[, colnames(sdat$X) != "Intercept", drop = FALSE]
+    Xc <- sweep(X, 2, colMeans(X))
+    set.seed(SEED)
+    L <- matrix(NA_real_, DERIVE_DRAWS, length(DERIVE_GRID)); S <- L
+    for (s in seq_len(DERIVE_DRAWS)) {
+      za <- stats::rnorm(1)
+      b  <- stats::rnorm(ncol(Xc), 0, 1)
+      sg <- stats::rexp(length(gvars), 4)
+      eta0 <- as.vector(Xc %*% b)
+      r_ch <- NULL
+      for (k in seq_along(gvars)) {
+        r <- stats::rnorm(glev[k], 0, sg[k])
+        if (k == 1) r_ch <- r
+        eta0 <- eta0 + r[gidx[[k]]]
+      }
+      u <- stats::runif(length(eta0))
+      for (j in seq_along(DERIVE_GRID)) {
+        a <- DERIVE_GRID[j] * za
+        L[s, j] <- mean(u < inv(a + eta0))
+        S[s, j] <- stats::sd(inv(a + r_ch))
+      }
+    }
+    set.seed(SEED + 1L)
+    bi <- matrix(sample.int(DERIVE_DRAWS, DERIVE_BOOT * CHAINS * (ITER - WARMUP), replace = TRUE),
+                 nrow = CHAINS * (ITER - WARMUP))
+    for (j in seq_along(DERIVE_GRID)) {
+      qs <- function(ix) c(q_of(L[ix, j], 0.025), q_of(L[ix, j], 0.5), q_of(L[ix, j], 0.975), q_of(S[ix, j], 0.9))
+      q <- qs(seq_len(DERIVE_DRAWS))
+      se <- apply(apply(bi, 2, qs), 1, stats::sd)
+      raw <- q[1] <= 0.10 && q[3] >= 0.90 && q[2] >= 0.35 && q[2] <= 0.65 && q[4] < 0.30
+      ok <- q[1] + 2 * se[1] <= 0.10 && q[3] - 2 * se[3] >= 0.90 && q[2] - 2 * se[2] >= 0.35 &&
+        q[2] + 2 * se[2] <= 0.65 && q[4] + 2 * se[4] < 0.30
+      rows[[length(rows) + 1L]] <- list(
+        link = link, intercept_sd = DERIVE_GRID[j], draws = DERIVE_DRAWS,
+        league_rate_q025 = round(q[1], DIGITS), league_rate_q50 = round(q[2], DIGITS),
+        league_rate_q975 = round(q[3], DIGITS), between_sd_q90 = round(q[4], DIGITS),
+        se1000_q025 = round(se[1], DIGITS), se1000_q50 = round(se[2], DIGITS),
+        se1000_q975 = round(se[3], DIGITS), se1000_between_sd_q90 = round(se[4], DIGITS),
+        gates_hold = raw, gates_hold_by_two_se = ok)
+      cat(sprintf("DERIVE %-6s Intercept normal(0, %.2f): L q025 %.4f (se %.4f) q975 %.4f (se %.4f) median %.4f, S q90 %.4f; gates %s, by 2 se %s\n",
+                  link, DERIVE_GRID[j], q[1], se[1], q[3], se[3], q[2], q[4], raw, ok))
+    }
+  }
+  clears <- vapply(DERIVE_GRID, function(g) all(vapply(rows, function(r)
+    r$intercept_sd != g || isTRUE(r$gates_hold_by_two_se), TRUE)), TRUE)
+  chosen <- if (any(clears)) min(DERIVE_GRID[clears]) else NA_real_
+  rows <- lapply(rows, function(r) c(r, list(chosen = isTRUE(all.equal(r$intercept_sd, chosen)),
+                                              seed = SEED, rule = paste(
+    "smallest multiple of 0.05 at which both links clear both W4.7 gates with each gated",
+    "quantile inside its bound by two Monte Carlo standard errors of a 1,000-draw quantile"))))
+  dir.create(dirname(DERIVE_JSON), showWarnings = FALSE, recursive = TRUE)
+  jsonlite::write_json(rows, DERIVE_JSON, auto_unbox = TRUE, digits = NA, pretty = TRUE)
+  record("derived Intercept scale", sprintf("normal(0, %s); INTERCEPT_SD in this script is %s; %s, %.0f s",
+         format(chosen), format(INTERCEPT_SD), DERIVE_JSON, as.numeric(difftime(Sys.time(), t0, units = "secs"))))
+  check("INTERCEPT_SD equals the derivation", isTRUE(all.equal(chosen, INTERCEPT_SD)),
+        sprintf("derived %s, script %s", format(chosen), format(INTERCEPT_SD)))
+  finish()
+}
 
-arms <- list()
-for (link in LINKS) {
+## --- 2. the prior, sampled by brms, per link and per Intercept prior ----------------------
+
+# One arm: M1's prior with Intercept ~ normal(0, isd), sampled on one link. A gated arm's two
+# gates are checks; an ungated arm (the sensitivity arm) records them.
+sample_arm <- function(link, isd, gated) {
+  lab <- if (gated) link else sprintf("%s, Intercept normal(0, %s)", link, format(isd))
+  pr_arm <- prior_of(isd)
   t0 <- Sys.time()
   inv <- if (link == "probit") stats::pnorm else stats::plogis
   fam <- brms::bernoulli(link = link)
   fit <- suppressMessages(brms::brm(
-    f1, data = d, family = fam, prior = pr, sample_prior = "only",
+    f1, data = d, family = fam, prior = pr_arm, sample_prior = "only",
     chains = CHAINS, iter = ITER, warmup = WARMUP, cores = CHAINS, seed = SEED,
     backend = "cmdstanr", output_dir = tmp, refresh = 0, silent = 2
   ))
   t_fit <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
   dr <- posterior::as_draws_df(fit)
   n_draws <- nrow(dr)
-  check(sprintf("[%s] 1,000 prior draws", link), n_draws == 1000L, sprintf("%d", n_draws))
+  check(sprintf("[%s] 1,000 prior draws", lab), n_draws == 1000L, sprintf("%d", n_draws))
 
   set.seed(SEED)
   yrep <- brms::posterior_predict(fit)
@@ -313,7 +424,7 @@ for (link in LINKS) {
 
   rch <- as.matrix(posterior::subset_draws(posterior::as_draws_matrix(fit),
                                            variable = "^r_challenger_id\\[", regex = TRUE))
-  check(sprintf("[%s] one challenger effect per level", link),
+  check(sprintf("[%s] one challenger effect per level", lab),
         ncol(rch) == nlevels(d$challenger_id), sprintf("%d columns", ncol(rch)))
   icpt <- dr$Intercept
   S <- apply(inv(sweep(rch, 1, icpt, "+")), 1, stats::sd)
@@ -335,7 +446,7 @@ for (link in LINKS) {
   n_td  <- sum(np$Value[np$Parameter == "treedepth__"] >= 10)
 
   ## --- direct Monte Carlo on the same centred design -------------------------------------
-  sdat <- brms::make_standata(f1, data = d, family = fam, prior = pr, sample_prior = "only")
+  sdat <- brms::make_standata(f1, data = d, family = fam, prior = pr_arm, sample_prior = "only")
   X <- sdat$X[, colnames(sdat$X) != "Intercept", drop = FALSE]
   Xc <- sweep(X, 2, colMeans(X))
   set.seed(SEED)
@@ -344,7 +455,7 @@ for (link in LINKS) {
   gidx <- lapply(gvars, function(g) as.integer(d[[g]]))
   glev <- sapply(gvars, function(g) nlevels(d[[g]]))
   for (s in seq_len(N_MC)) {
-    a  <- stats::rnorm(1, 0, 1.5)
+    a  <- stats::rnorm(1, 0, isd)
     b  <- stats::rnorm(ncol(Xc), 0, 1)
     sg <- stats::rexp(length(gvars), 4)
     eta <- a + as.vector(Xc %*% b)
@@ -367,13 +478,15 @@ for (link in LINKS) {
   cmp_out <- lapply(cmp, function(v) list(brms = round(v[["brms"]], DIGITS), mc = round(v[["mc"]], DIGITS),
                                           abs_diff = round(abs(v[["brms"]] - v[["mc"]]), DIGITS)))
   max_diff <- max(sapply(cmp, function(v) abs(v[["brms"]] - v[["mc"]])))
-  check(sprintf("[%s] brms and direct Monte Carlo agree within %.2f", link, MC_TOL),
+  check(sprintf("[%s] brms and direct Monte Carlo agree within %.2f", lab, MC_TOL),
         max_diff <= MC_TOL, sprintf("largest difference %s", fmt(max_diff)))
 
   sd_ch <- dr[["sd_challenger_id__Intercept"]]
   g <- gates_of(L, S)
-  arms[[link]] <- list(
+  arm <- list(
     link = link,
+    intercept_prior = sprintf("normal(0, %s)", format(isd)),
+    gated = gated,
     draws = n_draws,
     league_rate = summ(L),
     league_rate_expected = summ(L_epr),
@@ -399,32 +512,39 @@ for (link in LINKS) {
       between_challenger_sd = round(S, DIGITS),
       sd_challenger = round(sd_ch, DIGITS))
   )
-  record(sprintf("[%s] league overturn rate", link),
+  record(sprintf("[%s] league overturn rate", lab),
          sprintf("median %s, 95%% interval [%s, %s]", fmt(q_of(L, .5)), fmt(q_of(L, .025)), fmt(q_of(L, .975))))
-  record(sprintf("[%s] between-challenger SD", link),
+  record(sprintf("[%s] between-challenger SD", lab),
          sprintf("median %s, q90 %s (full q90 %s, raw20 q90 %s)", fmt(q_of(S, .5)), fmt(q_of(S, .9)),
                  fmt(q_of(S_full, .9)), fmt(q_of(S_raw20, .9))))
-  record(sprintf("[%s] sd_challenger prior draws", link),
+  record(sprintf("[%s] sd_challenger prior draws", lab),
          sprintf("mean %s, q90 %s", fmt(mean(sd_ch)), fmt(q_of(sd_ch, .9))))
-  record(sprintf("[%s] sampler", link),
+  record(sprintf("[%s] sampler", lab),
          sprintf("%d divergent, %d treedepth hits, max R-hat %s, min ess_bulk %.0f, min ess_tail %.0f, %.1f s",
                  n_div, n_td, fmt(max(sm$rhat, na.rm = TRUE)), min(sm$ess_bulk, na.rm = TRUE),
                  min(sm$ess_tail, na.rm = TRUE), t_fit))
   g1_detail <- sprintf("95%% interval [%s, %s] must cover [0.10, 0.90]; median %s must be in [0.35, 0.65]",
                        fmt(q_of(L, .025)), fmt(q_of(L, .975)), fmt(q_of(L, .5)))
   g2_detail <- sprintf("q90 %s must be below 0.30", fmt(q_of(S, .9)))
-  if (link == GATED) {
-    check(sprintf("[%s] gate 1, league overturn rate", link), g$gate1_league_rate$pass, g1_detail)
-    check(sprintf("[%s] gate 2, between-challenger SD", link), g$gate2_between_challenger_sd$pass, g2_detail)
+  if (gated) {
+    check(sprintf("[%s] gate 1, league overturn rate", lab), g$gate1_league_rate$pass, g1_detail)
+    check(sprintf("[%s] gate 2, between-challenger SD", lab), g$gate2_between_challenger_sd$pass, g2_detail)
   } else {
-    record(sprintf("%s [%s] gate 1, not gated", SENS_ID, link),
+    record(sprintf("%s [%s] gate 1, not gated", SENS_ID, lab),
            sprintf("%s -- %s", if (g$gate1_league_rate$pass) "holds" else "does not hold", g1_detail))
-    record(sprintf("%s [%s] gate 2, not gated", SENS_ID, link),
+    record(sprintf("%s [%s] gate 2, not gated", SENS_ID, lab),
            sprintf("%s -- %s", if (g$gate2_between_challenger_sd$pass) "holds" else "does not hold", g2_detail))
   }
-  check(sprintf("[%s] sampler, 0 divergent transitions", link), n_div == 0, sprintf("%d", n_div))
+  check(sprintf("[%s] sampler, 0 divergent transitions", lab), n_div == 0, sprintf("%d", n_div))
   rm(fit, yrep, ep); gc(verbose = FALSE)
+  arm
 }
+
+if (DERIVE) derive_intercept_sd()
+arms <- list()
+for (link in LINKS) arms[[link]] <- sample_arm(link, INTERCEPT_SD, TRUE)
+sens_arms <- list()
+for (link in LINKS) sens_arms[[link]] <- sample_arm(link, INTERCEPT_SD_SOP, FALSE)
 
 ## --- 3. the record -------------------------------------------------------------------------
 
@@ -436,26 +556,40 @@ analytic <- list(
   logit_pp_at_p05 = list(mean = round(0.25 * 0.25, DIGITS), q90 = round(log(10) / 4 * 0.25, DIGITS)),
   note = "Delta-method slope of the inverse link at p = 0.5: dnorm(0) = 0.3989 for probit, 0.25 for logit."
 )
-verdict <- isTRUE(arms[[GATED]]$pass)
-lg <- arms[["logit"]]$gates$gate1_league_rate
-sensitivity <- list(list(
-  id = SENS_ID,
-  arm = "logit",
-  what = paste("M1's prior on the logit link, the link SOP W4.10 fits, read through the same two",
-               "W4.7 gates. Reported, not gated. No prior was changed to move it."),
-  gate1_interval95 = lg$interval95,
-  gate1_median = lg$median,
-  gate1_holds = lg$pass,
-  gate1_shortfall_lower = round(max(0, lg$interval95[1] - 0.10), DIGITS),
-  gate1_shortfall_upper = round(max(0, 0.90 - lg$interval95[2]), DIGITS),
-  gate2_q90 = arms[["logit"]]$gates$gate2_between_challenger_sd$q90,
-  gate2_holds = arms[["logit"]]$gates$gate2_between_challenger_sd$pass,
-  deviation = "logs/decisions-pending/ch2-w47.md"
-))
-record(sprintf("%s logit gate 1 interval", SENS_ID),
-       sprintf("[%s, %s], short of [0.10, 0.90] by %s at the lower tail and %s at the upper tail",
-               fmt(lg$interval95[1]), fmt(lg$interval95[2]),
-               fmt(sensitivity[[1]]$gate1_shortfall_lower), fmt(sensitivity[[1]]$gate1_shortfall_upper)))
+verdict <- all(vapply(arms[GATED], function(a) isTRUE(a$pass), TRUE))
+sensitivity <- lapply(LINKS, function(link) {
+  a <- sens_arms[[link]]
+  g1 <- a$gates$gate1_league_rate
+  g2 <- a$gates$gate2_between_challenger_sd
+  list(
+    id = SENS_ID,
+    arm = link,
+    intercept_prior = a$intercept_prior,
+    what = paste("M1's prior with the SOP W4.10 Intercept prior, read through the same two W4.7",
+                 "gates on this link. The pre-registered sensitivity arm: reported, not gated."),
+    gate1_interval95 = g1$interval95,
+    gate1_median = g1$median,
+    gate1_holds = g1$pass,
+    gate1_shortfall_lower = round(max(0, g1$interval95[1] - 0.10), DIGITS),
+    gate1_shortfall_upper = round(max(0, 0.90 - g1$interval95[2]), DIGITS),
+    gate2_q90 = g2$q90,
+    gate2_holds = g2$pass,
+    deviation = "logs/decisions-pending/stats.md")
+})
+for (f in sensitivity) record(sprintf("%s %s gate 1 interval", SENS_ID, f$arm),
+  sprintf("[%s, %s], short of [0.10, 0.90] by %s at the lower tail and %s at the upper tail",
+          fmt(f$gate1_interval95[1]), fmt(f$gate1_interval95[2]),
+          fmt(f$gate1_shortfall_lower), fmt(f$gate1_shortfall_upper)))
+derivation <- if (file.exists(DERIVE_JSON)) {
+  dj <- jsonlite::fromJSON(DERIVE_JSON, simplifyVector = FALSE)
+  list(source = DERIVE_JSON, rule = dj[[1]]$rule, draws = dj[[1]]$draws,
+       chosen = unique(vapply(Filter(function(r) isTRUE(r$chosen), dj), function(r) r$intercept_sd, 0)),
+       rows = lapply(dj, function(r) r[setdiff(names(r), c("rule", "seed", "draws"))]))
+} else list(source = DERIVE_JSON, note = "absent: run --derive")
+check("INTERCEPT_SD is the derived scale", identical(derivation$chosen, INTERCEPT_SD),
+      sprintf("%s in %s, %s here", paste(derivation$chosen, collapse = " "), DERIVE_JSON, format(INTERCEPT_SD)))
+n_b_columns <- sum(colnames(brms::make_standata(f1, data = d, family = brms::bernoulli("logit"), prior = pr,
+                                                 sample_prior = "only")$X) != "Intercept")
 res <- list(
   step = "W4.7",
   gate = "MT-01, Chapter 2 half",
@@ -467,19 +601,30 @@ res <- list(
   mt01_text = paste("MT-01 prior predictive (Ch1: implied shadow-zone called-strike rate in [0.10, 0.90]",
                     "for >=95% of draws, implied between-umpire SD of the top-edge shift < 3.0 in for",
                     ">=99%; Ch2: the two gates in W4.7, on the probit scale)."),
-  rule = paste("Both gates in the probit arm, the scale MT-01 names, set the verdict. The logit arm,",
-               "the link SOP W4.10 fits, is computed the same way and reported as sensitivity finding",
-               "SENS-W4.7-LOGIT. L = mean of the prior predictive outcome over the N challenges;",
-               "S = SD over challengers of inv_link(Intercept + r_challenger)."),
+  rule = paste("Both gates in both arms set the verdict: the probit arm, the scale MT-01 names, and the",
+               "logit arm, the link SOP W4.10 fits, each under M1's pre-registered Intercept prior",
+               sprintf("normal(0, %s).", format(INTERCEPT_SD)), "The SOP's normal(0, 1.5) is the sensitivity arm",
+               "SENS-M1-INTERCEPT-SOP, reported and not gated. L = mean of the prior predictive outcome",
+               "over the N challenges; S = SD over challengers of inv_link(Intercept + r_challenger)."),
   rule_before_draws = paste("Both gates in both arms. Arm probit is the scale MT-01 names; arm logit is the",
-                            "link SOP W4.10 fits. Written before any draw; replaced after the",
-                            "first draws, see logs/decisions-pending/ch2-w47.md."),
+                            "link SOP W4.10 fits. Written before any draw."),
+  rule_history = c(
+    "Before any draw: both gates in both arms, SOP priors.",
+    paste("After the first draws (D-P4-15): the verdict narrowed to the probit arm, the logit",
+          "arm reported as SENS-W4.7-LOGIT with gate 1 at [0.1204, 0.8757]."),
+    paste("Stats lane, before the tag: both arms gate again; M1's Intercept prior widened to",
+          sprintf("normal(0, %s)", format(INTERCEPT_SD)), "by the --derive rule; the SOP prior is the",
+          "sensitivity arm SENS-M1-INTERCEPT-SOP. logs/decisions-pending/stats.md.")),
   gated_arm = GATED,
   model = list(
     formula = paste("overturned ~ 1 + role + balls + strikes + inning_band + leverage_tercile +",
                     "tokens_own + tokens_opp + (1 | challenger_id) + (1 | opponent_id) +",
                     "(1 | pitcher_id) + (1 | ump_id) + (1 | team_id)"),
-    priors = c("normal(0, 1.5) on Intercept (centred)", "normal(0, 1) on b", "exponential(4) on sd"),
+    priors = c(sprintf("normal(0, %s) on Intercept (centred)", format(INTERCEPT_SD)), "normal(0, 1) on b",
+               "exponential(4) on sd"),
+    priors_sensitivity_arm = c(sprintf("normal(0, %s) on Intercept (centred)", format(INTERCEPT_SD_SOP)),
+                               "normal(0, 1) on b", "exponential(4) on sd"),
+    intercept_derivation = derivation,
     sample_prior = "only", backend = "cmdstanr",
     brms = as.character(utils::packageVersion("brms")),
     cmdstanr = as.character(utils::packageVersion("cmdstanr")),
@@ -489,7 +634,7 @@ res <- list(
                    "v_opportunity_open and plate umpire from dim_umpire_game, open rows only"),
     n = nrow(d),
     levels = as.list(n_levels),
-    n_b_columns = ncol(X),
+    n_b_columns = n_b_columns,
     challengers_with_20_or_more = sum(n_ch >= 20),
     role = as.list(table(d$role)),
     inning_band = as.list(table(d$inning_band)),
@@ -501,6 +646,7 @@ res <- list(
                                          "thirds (low, mid, high) by a permutation seeded at 20260922.")),
   analytic_sd_prior = analytic,
   arms = arms,
+  sensitivity_arms = sens_arms,
   sensitivity_findings = sensitivity,
   verdict = if (verdict) "PASS" else "FAIL",
   frame_sha256 = digest::digest(file = FRAME, algo = "sha256"),
@@ -518,18 +664,25 @@ strip_volatile <- function(x) {
 if (CHECK_ONLY) {
   check("prior_predictive.json present", file.exists(OUT_JSON), OUT_JSON)
   if (file.exists(OUT_JSON)) {
-    old <- jsonlite::fromJSON(OUT_JSON, simplifyVector = FALSE)
+    raw <- jsonlite::fromJSON(OUT_JSON, simplifyVector = FALSE)
+    one <- is.list(raw) && is.null(names(raw)) && length(raw) == 1L && !is.null(names(raw[[1]]))
+    check("the file is a list of one record, as the W2.21 export gate reads json", one,
+          sprintf("%s of length %d", if (is.null(names(raw))) "array" else "object", length(raw)))
+    old <- if (one) raw[[1]] else raw
     new <- jsonlite::fromJSON(jsonlite::toJSON(res, auto_unbox = TRUE, digits = NA, null = "null"),
                               simplifyVector = FALSE)
+    # Flattened field by field, in order. A list of records flattens to repeated names
+    # (one per record), so the two sides are compared by position once their names match
+    # in order.
     fo <- unlist(strip_volatile(old)); fn <- unlist(strip_volatile(new))
-    same_keys <- identical(sort(names(fo)), sort(names(fn)))
+    same_keys <- identical(names(fo), names(fn))
     check("the file and the rerun hold the same fields", same_keys,
           sprintf("%d vs %d", length(fo), length(fn)))
     if (same_keys) {
-      num <- suppressWarnings(!is.na(as.numeric(fo)) & !is.na(as.numeric(fn[names(fo)])))
-      dn <- abs(as.numeric(fo[num]) - as.numeric(fn[names(fo)][num]))
+      num <- suppressWarnings(!is.na(as.numeric(fo)) & !is.na(as.numeric(fn)))
+      dn <- abs(as.numeric(fo[num]) - as.numeric(fn[num]))
       bad_num <- names(fo)[num][dn > 1e-6]
-      bad_txt <- names(fo)[!num][fo[!num] != fn[names(fo)][!num]]
+      bad_txt <- names(fo)[!num][fo[!num] != fn[!num]]
       check("every number in the file equals the rerun to 1e-6", length(bad_num) == 0,
             paste(utils::head(bad_num, 5), collapse = ", "))
       check("every string in the file equals the rerun", length(bad_txt) == 0,
@@ -539,7 +692,8 @@ if (CHECK_ONLY) {
   }
 } else {
   dir.create(dirname(OUT_JSON), showWarnings = FALSE, recursive = TRUE)
-  jsonlite::write_json(res, OUT_JSON, auto_unbox = TRUE, digits = NA, pretty = TRUE, null = "null")
+  # a list of one record: tests/unit/test_exports.py reads a .json under out/ only as records
+  jsonlite::write_json(list(res), OUT_JSON, auto_unbox = TRUE, digits = NA, pretty = TRUE, null = "null")
   record("wrote", sprintf("%s, %d bytes", OUT_JSON, file.size(OUT_JSON)))
 }
 check("no provenance.json under out/ch2", length(list.files("out/ch2", "^provenance\\.json$",

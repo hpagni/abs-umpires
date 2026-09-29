@@ -2,23 +2,27 @@
 # phase 04. SOP W4.7.
 #
 # R/ch2/03_prior_predictive.R --check samples M1's prior again with brms and
-# sample_prior = "only" (1,000 draws, seed 20260922), once on the probit link MT-01
-# names and once on the logit link W4.10 fits, and compares every number with
-# out/ch2/log/prior_predictive.json. It exits 0 only if the file matches the rerun and
-# both W4.7 gates pass in the probit arm, the scale MT-01 names: the league overturn
-# rate's central 95% interval covers [0.10, 0.90] with median in [0.35, 0.65], and the
-# 90th percentile of the between-challenger SD on the probability scale is below 0.30.
-# The logit arm is computed the same way and reported as the named sensitivity finding
-# SENS-W4.7-LOGIT (its gate 1 interval, [0.1204, 0.8757], is short of [0.10, 0.90] by
-# 0.0204 and 0.0243); it does not set the exit code. The rule written before any draw
-# gated both arms; it was narrowed on 2026-09-25 after the first draws, with no prior
-# changed, and the deviation is in logs/decisions-pending/ch2-w47.md. No likelihood is
-# used and the outcome column is never read. GD-04 then scans the script.
+# sample_prior = "only" (1,000 draws, seed 20260922), on the probit link MT-01 names and
+# on the logit link W4.10 fits, under M1's pre-registered Intercept prior normal(0, 1.9)
+# and under the SOP's normal(0, 1.5), and compares every number with
+# out/ch2/log/prior_predictive.json, a list of one record (the shape the W2.21 export
+# gate reads). It exits 0 only if the file matches the rerun and both W4.7 gates pass in
+# both arms under the pre-registered prior: the league overturn rate's central 95%
+# interval covers [0.10, 0.90] with median in [0.35, 0.65], and the 90th percentile of
+# the between-challenger SD on the probability scale is below 0.30. The SOP prior is the
+# sensitivity arm SENS-M1-INTERCEPT-SOP, reported and never gated. The scale 1.9 comes
+# from `--derive` (out/ch2/log/intercept_scale.json): the smallest multiple of 0.05 at
+# which both links clear both gates by two Monte Carlo standard errors of a 1,000-draw
+# quantile; --check fails if the script's scale differs from the derivation's. The rule
+# written before any draw gated both arms; it was narrowed to the probit arm after the
+# first draws (D-P4-15) and restored by the stats lane before the tag
+# (logs/decisions-pending/stats.md). No likelihood is used and the outcome column is
+# never read. GD-04 then scans the script.
 # The MT-01 Chapter 2 tests are tests/model/ch2_prior_predictive_test.py, run by
-# make test-model: they recompute both probit gates and the logit finding from the
-# per-draw values in the json, pin the three SOP priors, and rerun --check.
-# Mutation-tested 2026-09-25: 7 planted faults in the json, each caught by a test.
-# Measured 2026-09-25: about 45 s; probit arm passes both gates, verdict PASS.
+# make test-model: they recompute every gate and the sensitivity finding from the
+# per-draw values in the json, pin the priors and the derived scale, and rerun --check.
+# Measured 2026-09-25: build about 110 s, --derive about 430 s; both arms pass both
+# gates under normal(0, 1.9), verdict PASS.
 - id: W4.7
   title: "Prior predictive checks for M1, MT-01 Chapter 2"
   verify: "Rscript R/ch2/03_prior_predictive.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch2/03_prior_predictive.R"

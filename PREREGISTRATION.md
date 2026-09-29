@@ -68,7 +68,7 @@ The three regimes follow from it.
 
 Every model fitted before this tag used 2022–2024 calls, simulated calls, or no outcome at all:
 
-- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,496 called pitches from 2022–2024 (`docs/prereg/ch1.md` sections 1 to 7).
+- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,485 called pitches from 2022–2024 (`docs/prereg/ch1.md` sections 1 to 7).
 - SOP W3.4 fitted pooled contours for 2022, 2023 and 2024 to size the surviving-batter effect. Its 2025 and 2026 rows in `out/tables/height_coverage.csv` read `not_fitted_before_prereg`.
 - SOP W3.12 fitted the link and the nuisance variance components on 2022–2024 calls only. Its power curve, SBC and recovery fits use simulated calls (`docs/prereg/ch1.md` section 8).
 - SOP W4.7 sampled M1's prior only, with `sample_prior = "only"`, and never read the outcome (`docs/prereg/ch2.md` section 6).
@@ -79,7 +79,7 @@ Some steps read 2025 or 2026 data without fitting a model:
 - SOP W3.6: the 2026 original call, recovered for 10,167 of 10,167 drawer challenges.
 - DT-30: the ABS-measured share of called pitches in each season from 2022 to 2026.
 - SOP W3.10: pitch-level plane displacements from the trajectory columns, with no call read.
-- SOP W3.12: the location, umpire, season, game and edge of 498,059 shadow-band pitches from 2022–2026, as the design of the power curve, with no call read.
+- SOP W3.12: the location, umpire, season, game and edge of 498,055 shadow-band pitches from 2022–2026, as the design of the power curve, with no call read.
 - SOP W3.5: sample counts for every season. Its raw shadow-band called-strike rates are published for 2022–2024 only, and the 2025 and 2026 cells of `out/ch1/tab/T1_sample.csv` stay empty until this tag.
 - SOP W4.5: overturn counts by role on the 2026 open set (`docs/prereg/ch2.md` section 1).
 - SOP W3.9: AAA 2023–2025 called pitches against the zone, game by game, to classify each game's format.
@@ -146,8 +146,10 @@ Each sealed analysis runs once and never twice: SOP W3.23, W4.17 and the W5.11 s
 
 **The samples.** SOP D-61 defines two, once:
 
-- P0 is every called pitch with `game_type == 'R'`, official date 2022-01-01 to 2026-09-21, and non-null re-projected coordinates. It holds 1,830,267 rows at the freeze.
-- P1 is P0 restricted to the ABS-measured-height cohort. It holds 1,487,942 rows at the freeze.
+- P0 is every called pitch with `game_type == 'R'`, official date 2022-01-01 to 2026-09-21, and non-null re-projected coordinates. It holds 1,830,231 rows at the freeze.
+- P1 is P0 restricted to the ABS-measured-height cohort. It holds 1,487,927 rows at the freeze.
+
+Both counts follow D-P4-08: a pitch thrown by a position player leaves P0, and a pitcher is judged by the role he held in the season he pitched, not by his position today. The one pitcher that rule moves is player 621433, an outfielder in 2022 and 2023 who is a pitcher today. His 36 pitches in those two seasons, 32 in 2022 and 4 in 2023, stayed in P0 under the earlier rule and leave it now. Before the change P0 held 1,830,267 rows and P1 1,487,942. The 2022–2024 development sample moved from 687,496 to 687,485 pitches, and the W3.12 design from 498,059 to 498,055. Every Chapter 1 build before the tag was re-run on the new P0 (`docs/prereg/ch1.md`).
 
 `out/ch1/tab/T1_sample.csv` carries both, season by season, with one row per exclusion.
 
@@ -175,7 +177,7 @@ The 2022 share is below the 0.60 trigger. The fork's roster-height branch is the
 
 ## 8. Chapter 1 plan
 
-**The estimator.** The primary estimator is the frozen `mgcv::bam` specification in `docs/prereg/ch1.md` section 2. Its basis dimensions are in `docs/prereg/ch1.md` section 3 and never change after the tag. The fit uses the open window, 2022-01-01 through 2026-09-21. Intervals come from 1,000 posterior coefficient draws from the `bam` covariance `Vp`, and the model is never refitted for an interval. The secondary estimator is the binned logistic of `docs/prereg/ch1.md` section 5.
+**The estimator.** The primary estimator is the frozen `mgcv::bam` specification in `docs/prereg/ch1.md` section 2. Its basis dimensions are in `docs/prereg/ch1.md` section 3 and never change after the tag. The fit uses the open window, 2022-01-01 through 2026-09-21. Intervals come from 1,000 posterior coefficient draws from `Vc`, the `bam` covariance corrected for smoothing-parameter uncertainty (Wood, Pya and Säfken, 2016), and the model is never refitted for an interval. The SOP text quoted below says `Vp`, which treats the estimated smoothing parameters as known. The change was made before the tag. Its reason and its result are in `docs/prereg/ch1.md` section 8.7. Under `Vp`, the injected-effect recovery covered the top-edge shift in 91 of 100 replicates, against the 93 that CH1-A7 requires. The secondary estimator is the binned logistic of `docs/prereg/ch1.md` section 5.
 
 **The estimands.** SOP W3.14–W3.17, verbatim:
 
@@ -207,6 +209,8 @@ The primary result is the pair `Δ_buffer` and `Δ_ABS`, each with a 95% interva
 **Umpire heterogeneity.** The estimator is SOP W3.18, stages B1 to B3, as `docs/prereg/ch1.md` section 8.2 codes it. The prior-sensitivity rule, SOP W3.18, verbatim:
 
 > Prior sensitivity: refit with `exponential(1)` and `exponential(4)` and require the posterior median of `τ` to move by less than 20%.
+
+Two settings differ from the SOP text, and both were fixed before the tag. The prior on the three `edge:abs_step` coefficients, the league's 2025-to-2026 step, is `normal(0, 0.30)`. It is the widest multiple of 0.05 in at which MT-01's prior predictive holds for 2026 (`docs/prereg/ch1.md` section 8.8). The SOP's `normal(0, 1)` is the pre-registered sensitivity arm SENS-B2-ABS-PRIOR, fitted and reported beside the primary. The sampler runs at `adapt_delta` 0.99 with 4 chains of 1,000 warmup and 2,000 draws each, the settings under which the first power curve's failing fits met MT-05. A fit short only on R-hat or ESS is run again with the draws doubled, at most twice, and is otherwise reported as failed (`docs/prereg/ch1.md` section 8.2).
 
 No per-umpire table is published: the power curve does not reach the reliability gate (`docs/prereg/ch1.md` section 8.5, and D-21).
 
@@ -244,6 +248,7 @@ CH1-A9 sets the acceptance rule for this grid. The interquartile-range rule that
 `docs/prereg/ch2.md` is the plan. It carries the M1 and M2 formulas byte for byte from the SOP, the priors, the covariates and the sealed sample.
 
 - M1 estimates `P(overturn | challenged, challenger)`. **M1 does not condition on `m`** or on any other measure of where the pitch crossed the plate (`docs/prereg/ch2.md` section 3, D-64).
+- M1's `Intercept` prior is `normal(0, 1.9)`, not the SOP's `normal(0, 1.5)`. Under the SOP prior, on the logit link M1 is fitted on, W4.7's first gate fails: the league overturn rate's 95% prior interval is [0.1204, 0.8757]. The scale 1.9 is the smallest multiple of 0.05 at which both links clear both W4.7 gates by two Monte Carlo standard errors, and MT-01 now reads both links (`docs/prereg/ch2.md` section 6). The SOP prior is the sensitivity arm SENS-M1-INTERCEPT-SOP, fitted and reported beside the primary.
 - M2 estimates each challenger's perception noise and criterion on the probit scale, with the link fixed by D-55 (`docs/prereg/ch2.md` section 5).
 - The variance-components signal share gates willingness, and split-half is reported beside it (D-65).
 - The sealed set carries calibration-in-the-large only (D-31, `docs/prereg/ch2.md` section 9).
@@ -647,7 +652,7 @@ Every test id this document names is the SOP's. Their definitions follow, quoted
 ## 14. Open at the freeze
 
 1. **The Chapter 2 power grid has not run.** `docs/prereg/ch2.md` section 10, item 1. SOP W4.8, W4.18, D-28 and R-19 require it before this tag. The owner decides whether the tag waits for it.
-2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 8, among them the W4.7 prior-predictive result on the logit link.
+2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 8, among them M1's widened `Intercept` prior, which the owner may reverse.
 3. **The four games without ABS hardware are still in the analysis table.** Section 7 excludes them. SOP W3.7 must drop their 621 called pitches before SOP W3.14 fits.
 4. **The Chapter 1 recovery replicates were still running at the freeze.** Their results go to the W3.12 receipt, not into `docs/prereg/ch1.md` (section 8.7 there).
 5. **Criteria with no SOP test id.** CH1-A3, CH1-A4, CH1-A5, CH1-A9, CH1-A10's calibration clause, CH1-A11, CH1-A13, CH1-A14, CH3-A4, CH3-A5, CH3-A6, CH3-A7, and the Chapter 2 role-rate gate. Each names the step that checks it. Assigning test ids is SOP W9.8 and W9.11 work.

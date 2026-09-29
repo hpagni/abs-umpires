@@ -85,6 +85,8 @@ pr <- c(prior(normal(0, 1.5), class = "Intercept"),
         prior(exponential(4), class = "sd"))
 ```
 
+The block above is SOP W4.10 as written. One line of it is not the plan. M1's `Intercept` prior is `normal(0, 1.9)`, not `normal(0, 1.5)`. Under the SOP's prior, on the logit link that M1 is fitted on, W4.7's first gate fails. Section 6 gives the check and the derivation of 1.9. The SOP's `normal(0, 1.5)` is the pre-registered sensitivity arm SENS-M1-INTERCEPT-SOP: W4.10 fits M1 under both priors and reports both.
+
 ### 4.1 Covariates
 
 D-64 fixes the covariates as ex ante: each is observable to the challenger at the moment of decision.
@@ -159,7 +161,7 @@ UT-21 pins the scale. It simulates 20,000 challenge decisions from a known probi
 
 | model | class | prior | link |
 |---|---|---|---|
-| M1 | `Intercept` | `normal(0, 1.5)` | logit |
+| M1 | `Intercept` | `normal(0, 1.9)` | logit |
 | M1 | `b` | `normal(0, 1)` | logit |
 | M1 | `sd` | `exponential(4)` | logit |
 | M2 | `Intercept` | `normal(0, 2)` | probit |
@@ -169,18 +171,22 @@ UT-21 pins the scale. It simulates 20,000 challenge decisions from a known probi
 
 The W4.11 continuation block restates only the `sd` and `cor` priors, and agrees with the W4.11 block on both. `exponential(4)` on `sd` has a prior mean of 0.25 and a 90th percentile of 0.576 on the link scale.
 
-W4.7 sampled M1's prior only: 1,000 draws, seed 20260922, on the 10,167-row design, with 0 divergent transitions. It ran each gate on two links.
+W4.7 sampled M1's prior only: 1,000 draws, seed 20260922, on the 10,167-row design, with 0 divergent transitions. It ran each gate on two links, under the pre-registered prior and under the SOP's `Intercept` prior.
 
 | arm | gate 1: 95% interval of the league overturn rate, must cover [0.10, 0.90] | gate 1: median, must lie in [0.35, 0.65] | gate 2: 90th percentile of the between-challenger SD, must be below 0.30 | result |
 |---|---|---|---|---|
-| probit, the scale MT-01 names | [0.0772, 0.9174] | 0.4950 | 0.1413 | both gates pass |
-| logit, the link W4.10 fits | [0.1204, 0.8757] | 0.4988 | 0.1045 | gate 1 fails |
+| probit, the scale MT-01 names | [0.0372, 0.9738] | 0.4985 | 0.1298 | both gates pass |
+| logit, the link W4.10 fits | [0.0767, 0.9338] | 0.4997 | 0.0914 | both gates pass |
+| probit, SOP `Intercept` prior `normal(0, 1.5)`, not gated | [0.0772, 0.9174] | 0.4950 | 0.1413 | both gates hold |
+| logit, SOP `Intercept` prior `normal(0, 1.5)`, not gated | [0.1204, 0.8757] | 0.4988 | 0.1045 | gate 1 does not hold |
 
-MT-01 reads the Chapter 2 gates on the probit scale, and there both pass. On the logit link that M1 is fitted on, gate 1 fails: the interval reaches neither 0.10 nor 0.90.
+The verdict is both gates in both arms, and all four pass. W4.7's rule, written before any draw, required both arms. After the first draws the verdict was narrowed to the probit arm (DECISIONS.md D-P4-15). That narrowing is undone: the logit arm is the link M1 is fitted on, so its prior is the one the check is for.
 
-W4.7's rule, written before any draw, required both arms. Its receipt therefore records a failure.
+**How 1.9 was chosen.** Under the SOP's `normal(0, 1.5)` the logit arm's interval reaches neither 0.10 nor 0.90. `Rscript R/ch2/03_prior_predictive.R --derive` drew M1's prior 40,000 times on each link, at each `Intercept` scale from 1.5 to 2.2 in steps of 0.05. For each gated quantile it also estimated the Monte Carlo standard error of the gate's own 1,000-draw reading. The rule was written before the scan: the smallest scale at which both links clear both gates with every gated quantile inside its bound by two such standard errors. That keeps the 1,000-draw gate from turning on Monte Carlo noise.
 
-This annex keeps the SOP priors unchanged. The choice between them and a wider M1 `Intercept` prior is the owner's. Section 10, item 2.
+On the logit link the gates first hold at 1.75, where the interval is [0.0916, 0.9057]. With standard errors near 0.010 they clear by two only at 1.90: [0.0742, 0.9230], with standard errors 0.0097 and 0.0088. The probit arm clears at every scale in the scan. The pre-registered prior is `normal(0, 1.9)`. The scan is `out/ch2/log/intercept_scale.json`, and `out/ch2/log/prior_predictive.json` carries it.
+
+The SOP's `normal(0, 1.5)` stays as the sensitivity arm SENS-M1-INTERCEPT-SOP. W4.7 samples and reports it and never gates on it.
 
 The W4.7 design carried a placeholder for `leverage_tercile`: balanced thirds from a permutation seeded at 20260922. Every `b` has the same prior, so the placeholder affects the check only through its marginal distribution.
 
@@ -338,7 +344,7 @@ That protection is a passphrase on a single-user laptop, not a separation of dut
 ## 10. Open before the tag
 
 1. **The W4.8 power grid.** Section 8 has no firing rates, and MT-11 checks for them. SOP W4.8, W4.18, D-28 and R-19 require them before `prereg-v1`. The fleet runs W4.8 in phase 09, after the tag. Either the grid runs first and its table enters section 8, or the owner records the change.
-2. **W4.7 gate 1 on the logit link.** Keep the SOP priors and read MT-01 on the probit scale, as its text says. Or widen M1's `Intercept` prior and rerun W4.7. This is the owner's choice.
+2. **M1's `Intercept` prior.** Widened before the tag from `normal(0, 1.5)` to `normal(0, 1.9)`, under D-R0-03's delegation, so that W4.7's gates hold on both links (section 6). The SOP prior is the sensitivity arm SENS-M1-INTERCEPT-SOP. The owner may restore it as the primary.
 3. **`leverage_tercile` is not built.** It needs W5's win-probability surface and the prior art's cut points. W4.7 used balanced thirds as a placeholder. The cut points are written into section 4.1 before the tag.
 4. **The M1 exclusion test does not exist** (section 3). The SOP gives it no test id.
 5. **The chronological challenge index is out of game order on 29 rows.** The W4.5 verifier found `game_pk` order reversing `game_number` in doubleheaders. CH2-H2a's split-half reads that index.
