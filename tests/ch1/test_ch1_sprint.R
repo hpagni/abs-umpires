@@ -278,8 +278,14 @@ check("a run receipt carries the nine section 1.4 keys and one git_sha",
         grepl("^[0-9a-f]{40}$", rj$git_sha), sprintf("%d games, last %s", rj$n_games, rj$max_official_date))
 out_na <- suppressWarnings(system2("Rscript", file.path(ROOT, "R/ch1/23_decomposition.R"), stdout = TRUE, stderr = TRUE))
 if (!identical(as.integer(anc), 0L)) {
-  check("with no arguments a script targets the real table and is refused before prereg-v1",
-        identical(attr(out_na, "status"), 4L) && any(grepl("REFUSED W3.16: real data, and GD-12", out_na)), tail(out_na, 1))
+  if (file.exists(mart_table())) {
+    check("with no arguments a script targets the real table and is refused before prereg-v1",
+          identical(attr(out_na, "status"), 4L) && any(grepl("REFUSED W3.16: real data, and GD-12", out_na)), tail(out_na, 1))
+  } else {
+    # A checkout without the data/ link has no analysis table: the script stops before any read.
+    check("with no arguments and no analysis table a script stops before any read",
+          identical(attr(out_na, "status"), 1L) && any(grepl("no analysis table", out_na)), tail(out_na, 1))
+  }
 }
 
 ## 14. W6.7's sentences, both directions and both readings
