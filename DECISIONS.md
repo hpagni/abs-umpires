@@ -1565,6 +1565,13 @@ acceptance criterion or the reading of one. D-P4-04 and D-P4-15 are OWNER-VISIBL
 reason. D-P4-17 to D-P4-19, and the snapshot B item in D-P4-20, are OPEN: the lanes left them
 for the owner, and no default is applied. None of the entries reads the sealed set.
 
+D-P4-24 to D-P4-37 joined on 2026-09-29. They were merged from the git, mechanical and stats
+lanes' files in `logs/decisions-pending/`. The stats lane's session ended before it recorded,
+so its entries were reconstructed from `RUNLOG.md`, the working tree and `logs/bg/`. D-P4-30,
+D-P4-31 and D-P4-32 change an inference method or a prior, and D-P4-35 defers a convergence
+check. Those four are OWNER-VISIBLE, as is D-P4-24. D-P4-30, D-P4-32 and D-P4-35 close D-P4-17,
+D-P4-19 and D-P4-18.
+
 **No entry below is an owner answer in his own words.** Each is applied under D-R0-03.
 The owner may override any of them, and an override becomes a DEVIATIONS entry.
 
@@ -1981,6 +1988,7 @@ Applied by the ch2-w47 lane on 2026-09-25 (Europe/Madrid). Merged from
 `logs/decisions-pending/ch2-w47.md`. Status: **applied default under D-R0-03's delegation, not
 an owner answer.** It is OWNER-VISIBLE because it changes how an acceptance criterion is read,
 which D-P4-01 to D-P4-03 did not. The deviation it creates is DEV-46.
+Superseded on 2026-09-29 by D-P4-31: M1's prior was widened and the gate reads both links again.
 
 The first run. `R/ch2/03_prior_predictive.R` sampled M1's prior on two links. A rule written
 before any draw passed MT-01 only if both W4.7 gates held in both arms.
@@ -2045,6 +2053,7 @@ Whether W3.11 may pass on its own verify while the shared pack is red is an orch
 Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
 `logs/decisions-pending/model-tests.md`, item 2. Status: **OPEN. No default is applied**,
 because every option changes an acceptance criterion or the inference method.
+Closed on 2026-09-29 by D-P4-30, which applies option (a).
 
 The clauses are those of `docs/prereg/ch1.md` 8.7, which restates SOP W3.12(a) and CH1-A7.
 Injected replicates, n = 100, with the truth read off the generating surfaces:
@@ -2092,6 +2101,7 @@ recommends (a).
 Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
 `logs/decisions-pending/model-tests.md`, item 3. Status: **OPEN. No default is applied**,
 because the question is the scope of an acceptance test.
+Closed on 2026-09-29 by D-P4-34 and D-P4-35.
 
 The `sop` design: 3 of 15 fits had divergent transitions, 6 in total, at tau 0.10 seeds 1, 4
 and 5. R-hat, ESS, tree depth and E-BFMI pass. The `ue_us` design: all 15 fits fail, with a
@@ -2112,6 +2122,7 @@ affected seeds with a higher `adapt_delta` and longer chains.
 Raised by the model-tests lane on 2026-09-25 (Europe/Madrid). Merged from
 `logs/decisions-pending/model-tests.md`, item 4. Status: **OPEN. No default is applied**,
 because both options change a pre-registered prior or record a limitation.
+Closed on 2026-09-29 by D-P4-32.
 
 No Chapter 1 prior predictive existed, so the test computes one from B2's SOP priors, the
 stored 2022-2024 link and the 2022-2024 shadow-band pitch locations. It reads no 2025 or 2026
@@ -2271,3 +2282,244 @@ The number gate. `quality/check_numbers.py` found one untraced literal,
 `abstract/FORM-FIELDS.md:119` "60". It is SOP W6.12's budget of about 60 words for the table
 when the form has no upload field. It is an owner budget, which the header of
 `docs/numbers-allow.txt` admits, so it is allow-listed there in the file's own format.
+
+### D-P4-24 APPLIED UNDER D-R0-03, OWNER-VISIBLE: drift figures measured against a build that counts sealed-window games are kept out of git
+
+Applied by the git lane on 2026-09-25 (Europe/Madrid), in the P6 commit round. Merged on
+2026-09-29 from `logs/decisions-pending/git.md`, item G-1. Status: **applied under D-R0-03's
+delegation, not an owner answer.** The deviation is DEV-59.
+
+`fixtures/prior_art/uiloi/PROVENANCE.txt` (W5.1) and `docs/prereg/ch3.md` section 10 item 2
+(W7.6) reported drift against upstream's 2026-09-24T14:27Z build. The figures were the count of
+cells of V that moved past 5e-5, the largest move, and the moves in `card.gain` and
+`observed_model.gain`. That build aggregates games dated 2026-09-22 and 2026-09-23, inside the
+seal. D-P4-20 leaves open whether such an aggregate may be read.
+
+The default. The three figures were removed before the first commit of either file, because a
+public repository cannot take them back. The game count stays (`capture_ratio.n_games` 2,338 to
+2,369), as schedule identity. The fact that the drift was measured stays disclosed in D-P4-20
+and in both files. `check_pin.py` passes and the SHA256SUMS digests are unchanged.
+
+The alternative, not applied: restore the three figures after the unseal.
+
+### D-P4-25 APPLIED UNDER D-R0-03: three hook fixes in the P6 commit round, and the git lane's hand-offs closed
+
+Applied by the git lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
+`logs/decisions-pending/git.md`, items G-2 to G-4. Status: **applied under D-R0-03's
+delegation, not an owner answer.** None is a deviation from the SOP.
+
+- G-2, commit 97ec48f. `end-of-file-fixer` appended a newline to the pinned
+  `tier1_results_2026.json` and broke its SOP sha256. The hook now excludes that one path.
+  `tests/unit/test_precommit_config.py` pins both excludes, the missing newline and the digest.
+- G-3, commit cf6acec. The URL literals in `R/ch1/01`, `02` and `10` moved unchanged to
+  `R/lib/endpoints.R`, which calls no reader. The EXEMPT list in `ops/lint_http.sh` is untouched.
+  T1 re-runs byte-identical, W3.6 passes 20 checks and W3.7 passes 33.
+- G-4, commit e401a46. The ruff findings in `tests/model` were fixed without changing a bound.
+  The MT-02 due day is the named constant `MT02_FULL_SCALE_DUE`, a wall-clock deadline.
+
+The lane handed three items on, and all three are closed. The stale P0 and P1 counts in
+`PREREGISTRATION.md` were updated (D-P4-33). The 5 prose violations were cleared (D-P4-26). Of
+the 3 unit failures, `test_paths` was fixed by the mechanical lane and `test_exports` on
+2026-09-29 (D-P4-37).
+
+### D-P4-26 APPLIED UNDER D-R0-03: prose rule 2 skips a question mark inside a balanced double-quoted span, and the W6.3 template carries D-P4-23's splits
+
+Applied by the mechanical lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
+`logs/decisions-pending/mechanical.md`, items M-1 and M-2. Status: **applied under D-R0-03's
+delegation, not an owner answer.** The deviation is DEV-58.
+
+M-1. `quality/prose_lint.py` runs rule 2 on the joined paragraph. It skips a question mark
+that sits between a pair of double quotes. A quote with no partner opens nothing. The quoted
+titles of two works cited in `docs/prior-art.md` therefore stand as published. Four fixtures
+were added, and the self-test runs 57 cases with 0 failures. `docs/writing-checklist.md` rule 2
+names the exemption. Rewording a title would misquote the source.
+
+M-2. `ops/sprint_feed_checkpoint.py` renders the four sentence splits D-P4-23 printed. The W6.3
+block of `abstract/SPRINT-STATUS.md` was re-rendered from it. `docs/numbers.json` did not change,
+and `--check` passes.
+
+Both close the items D-P4-23 left for other owners. The prose gate read 0 violations in the
+default scope on 2026-09-25 at 23:05.
+
+### D-P4-27 APPLIED UNDER D-R0-03: no snapshot B is taken until the season is unsealed
+
+Recorded by the mechanical lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
+`logs/decisions-pending/mechanical.md`, item M-3. Status: **applied under D-R0-03's delegation,
+not an owner answer.** It gives D-P4-20's open snapshot B item a default.
+
+Upstream's 2026-09-24 build already counts 31 games dated 2026-09-22 or later (`n_games` 2,338
+to 2,369). A snapshot B pinned after 2026-09-27 would read an aggregate over sealed-window games.
+The default: no snapshot B until the unseal, and BR-1 runs on the 3 pinned snapshot A files.
+DEV-54 stays OPEN until then, and D-P4-24 stands.
+
+### D-P4-28 APPLIED UNDER D-R0-03: W3.11 and W3.12 stay coupled through `make test-model`
+
+Recorded by the mechanical lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
+`logs/decisions-pending/mechanical.md`, item M-4. Status: **applied under D-R0-03's delegation,
+not an owner answer.**
+
+W3.11's own verify is green. Its phase verdict fails only because the shared `make test-model`
+target also runs W3.12's artefacts. The shared target is the one the SOP names. A green W3.11
+beside a red W3.12 would read as a partial chapter-1 pass, so the two are not decoupled.
+
+### D-P4-29 RECORDED, NOT APPLIED: two pre-tag text items keep their recommended defaults
+
+Recorded by the mechanical lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
+`logs/decisions-pending/mechanical.md`. Status: **recorded with a default. Neither is applied,
+and both touch the text of the pre-registration.**
+
+- P3 in `PREREGISTRATION.md` (the H-table row "machine zone does not move"). Default: state P3
+  net of each season's published rule, because the raw area has already moved 35.77 sq in by
+  rule. The row was unchanged on 2026-09-29.
+- `docs/prereg/ch2.md` section 7.1 computes the H2a split-half over challengers, while its
+  threshold line and SOP 9.3 say catchers. Default: follow SOP 9.3 unless the annex owner shows
+  that the SOP means challengers. The section was unchanged on 2026-09-29.
+
+Both change pre-registered text, so after the tag either becomes a DEVIATIONS entry.
+
+### D-P4-30 APPLIED UNDER D-R0-03, OWNER-VISIBLE: the W3.12 recovery intervals come from `Vc`, not `Vp`
+
+Applied by the stats lane on 2026-09-25 (Europe/Madrid). Reconstructed on 2026-09-29 from
+`RUNLOG.md`, the working tree and `logs/bg/`, because the lane's session ended before it
+recorded. Status: **applied under D-R0-03's delegation, not an owner answer.** It takes option
+(a) of D-P4-17. The deviation is DEV-60.
+
+The reason. The first full run drew each replicate's intervals from N(beta, Vp), which treats
+the smoothing parameters as known. It failed 4 of the 12 clauses of `docs/prereg/ch1.md` 8.7.
+The top edge's 95% interval covered the truth in 91 of 100, against at least 93. The
+half-width's null sampling SD was 1.30 times its posterior SD, with a 95% interval of 1.09 to
+1.62.
+
+The change. `bam(discrete = TRUE, method = "fREML")` returns Vc = Vp + J V_rho J', the
+covariance corrected for smoothing-parameter uncertainty. It omits the second-order term that
+`gam(method = "REML")` adds. No parametric bootstrap was needed. W3.15's 1,000 draws use the
+same Vc. No acceptance bound changed.
+
+The re-run. The Vp run moved to `out/dev/ch1_synth/recovery_vp_run4/`. The 100 injected and 50
+null replicates were relaunched with the same seeds. The first 4 reproduced the Vp point
+estimates exactly. The orchestrator owns the re-run and gates W3.12 after it. Section 8.7 keeps
+the `@@RECOVERY@@` marker until then.
+
+### D-P4-31 APPLIED UNDER D-R0-03, OWNER-VISIBLE: M1's `Intercept` prior is `normal(0, 1.9)`, and the W4.7 gate reads both links again
+
+Applied by the stats lane on 2026-09-25 (Europe/Madrid). Reconstructed on 2026-09-29. Status:
+**applied under D-R0-03's delegation, not an owner answer.** It supersedes D-P4-15's narrowing
+and DEV-46. The deviation is DEV-61.
+
+The reason. Under the SOP's `normal(0, 1.5)`, on the logit link M1 is fitted on, W4.7's first
+gate fails: the league overturn rate's 95% prior interval is [0.1204, 0.8757].
+
+The derivation. `Rscript R/ch2/03_prior_predictive.R --derive` drew M1's prior 40,000 times on
+each link, at each scale from 1.5 in steps of 0.05. The 30 rows are in
+`out/ch2/log/intercept_scale.json`. The rule, fixed before the draws: the smallest multiple of
+0.05 at which both links clear both W4.7 gates by 2 Monte Carlo SEs of a 1,000-draw quantile. On
+the logit link the gates first hold at 1.75, [0.0916, 0.9057]. They clear by 2 SEs at 1.90,
+[0.0742, 0.9230], with SEs 0.0097 and 0.0088.
+
+The build at 1.9. The probit arm gives [0.0372, 0.9738], median 0.4985, 90th percentile of the
+between-challenger SD 0.1298. The logit arm gives [0.0767, 0.9338], median 0.4997, 0.0914. The
+verdict is PASS on both links. The SOP prior stays as the sensitivity arm
+SENS-M1-INTERCEPT-SOP, which W4.7 samples and reports but never gates.
+
+### D-P4-32 APPLIED UNDER D-R0-03, OWNER-VISIBLE: B2's prior on the 2025-to-2026 league step is `normal(0, 0.30)`
+
+Applied by the stats lane on 2026-09-25 (Europe/Madrid). Reconstructed on 2026-09-29. Status:
+**applied under D-R0-03's delegation, not an owner answer.** It closes D-P4-19. The deviation
+is DEV-62.
+
+The lane did the calibration. D-P4-19's 20,000-draw Monte Carlo read 0.9326 for 2026 against
+the 0.95 bar. The exact share under the SOP prior is 0.9288 for 2026, 0.9525 for 2025 and
+0.9852 pre-buffer. The step coding of `docs/prereg/ch1.md` 8.2 widened the 2026 offset's prior
+to N(0, 1.73 in).
+
+The default. The prior on the three `edge:abs_step` coefficients is `normal(0, s)`. s is the
+largest multiple of 0.05 in at which all three regimes clear 0.95, so the least informative
+scale that passes. The 2026 share is 0.95079 at 0.25, 0.95002 at 0.30 and 0.94913 at 0.35, with
+the boundary at 0.3013. So s = 0.30, and the 2026 offset's prior is N(0, 1.45 in). The SOP's
+`normal(0, 1)` stays as the sensitivity arm SENS-B2-ABS-PRIOR, which W3.18 fits and reports.
+`docs/prereg/ch1.md` 8.8 records the derivation.
+
+### D-P4-33 APPLIED UNDER D-R0-03: the inputs were rebuilt after the position-player change, and the counts follow
+
+Applied by the stats and mechanical lanes on 2026-09-25 (Europe/Madrid). Reconstructed on
+2026-09-29. Status: **applied under D-R0-03's delegation, not an owner answer.** It follows
+D-P4-08 and DEV-53, and is not a new deviation.
+
+P0 went from 1,830,267 to 1,830,231 pitches, 36 fewer. P1 went from 1,487,942 to 1,487,927. The
+2022-2024 development sample went from 687,496 to 687,485, and the power-curve design from
+498,059 to 498,055. `data/interim/ch1/plane_displacement.csv` was rebuilt: 274 rows, 80 of them
+changed in n or the fourth decimal, with 15 build checks passing. The counts were updated in
+`PREREGISTRATION.md`, `docs/prereg/ch1.md` and `docs/harmonized_zone.md`. W3.10 re-proved PASS
+on 2026-09-29.
+
+### D-P4-34 APPLIED UNDER D-R0-03: the D-60 curve was run again on the rebuilt inputs, at pre-registered sampler settings
+
+Applied by the stats lane from 2026-09-25 to 2026-09-29 (Europe/Madrid). Reconstructed on
+2026-09-29. Status: **applied under D-R0-03's delegation, not an owner answer.** It answers
+D-P4-18 with sampler settings, not a narrower MT-05. The deviation is DEV-63.
+
+The settings. SOP W3.18 writes 4 chains of 2,000 iterations at CmdStan's default `adapt_delta`
+of 0.80. The settings below were fixed on re-runs of the first curve's failing fits, before any
+seed of the second curve ran. `R/ch1/21_synthetic.R` holds them in `STAN_SETTINGS`.
+
+| estimator | chains | warmup a chain | draws a chain | `adapt_delta` | `max_treedepth` |
+|---|---:|---:|---:|---:|---:|
+| `sop` | 4 | 1,000 | 2,000 | 0.99 | 10 |
+| `ue_us` | 4 | 2,000 | 6,000 | 0.99 | 10 |
+
+The calibration fit uses `ue_us`'s settings. A reported fit that misses R-hat or ESS without a
+divergence is re-run with the draws a chain doubled, at most twice.
+
+The second curve. The link was refitted on 687,485 pitches. The calibration fit reached R-hat
+1.0059 and bulk ESS 1,670. The 30 fits had 0 divergent transitions. `sop` fired in 0 of 5, 0 of
+5 and 4 of 5 seeds at τ = 0.10, 0.20 and 0.30 in. It covered the true τ in 13 of 15 seeds, so it
+sets CH1-A6. c* is 0.20 in and the claim is powered. The variance-components reliability is
+0.139, 0.313 and 0.494, so the per-umpire table's gate is not attainable.
+
+### D-P4-35 APPLIED UNDER D-R0-03, OWNER-VISIBLE: MT-05 on the power curve reads `sop`, and `ue_us`'s convergence is deferred to W3.18
+
+Applied on 2026-09-29 (Europe/Madrid) by the lane that landed the stats lane's work. Status:
+**applied under D-R0-03's delegation, not an owner answer.** It closes D-P4-18. The deviation
+is DEV-64.
+
+`out/tables/ch1_power_curve.csv` holds the second curve. Every `sop` fit meets MT-05: 15 fits, 0
+divergences, worst R-hat 1.0072, lowest bulk ESS 982 and lowest tail ESS 1,313. 14 of the 15
+`ue_us` fits meet it too. The fifteenth, τ = 0.30 in seed 1, reached R-hat 1.0133 and bulk ESS
+572 at 6,000 draws a chain.
+
+Its escalated re-run never finished. The Mac hibernated from 2026-09-26 01:24 to 2026-09-29
+12:24. On wake the daily `/tmp` clean-up removed the R temporary directories of the fits in
+flight, and the escalation failed. Its relaunch was killed on 2026-09-29.
+
+The default. `sop` at the settings of D-P4-34 is the pre-registered power curve, and it sets
+CH1-A6. `ue_us` is a sensitivity estimator. Its MT-05 convergence is DEFERRED to W3.18, which
+applies the escalation rule. Nothing was re-run for this entry.
+
+### D-P4-36 RECORDED: the hibernation left the SBC at the new prior incomplete, and the recovery workers survived
+
+Recorded on 2026-09-29 (Europe/Madrid). Status: **a finding, with the missing replicates
+deferred.** No default changes an acceptance criterion. The deviation is DEV-65.
+
+The SBC at the prior of D-P4-32 and the settings of D-P4-34 started on 2026-09-26 at 00:48.
+Both workers failed on wake, with exits -15 and 1, and 37 of the 200 replicates on disk. The
+restart of 2026-09-29 was killed. Scored on those 37, all ten quantities stay inside the 95%
+ECDF band. The chi-square p runs from 0.1186 to 0.9915, and the Benjamini-Hochberg p from 0.9613
+to 0.9915.
+
+So W3.12(b) at L = 200 has not run at the pre-registered prior. The 200-replicate SBC of
+2026-09-25 passed, but under the SOP's prior on `abs_step` and the default sampler. The four
+recovery workers survived the hibernation. The orchestrator is re-running the Vc recovery.
+
+### D-P4-37 APPLIED UNDER D-R0-03: `out/dev/` is ignored by git, and the W2.21 export gate skips only its ignored, untracked files
+
+Applied on 2026-09-29 (Europe/Madrid) by the lane that landed the stats lane's work. Status:
+**applied under D-R0-03's delegation, not an owner answer.** The deviation is DEV-66.
+
+`tests/unit/test_exports.py` walked every file under `out/`, including the local artefacts of
+`out/dev/ch1_synth/` and `out/dev/ch1_spec/`. Those are a 498,055-row synthetic design, recovery
+replicates and benchmark fits, never committed. Two tests failed on them.
+
+The default. `.gitignore` excludes `out/dev/`. The gate skips a file there only when git reports
+it untracked and ignored. A tracked file under `out/dev/`, and every file elsewhere under
+`out/`, is read as before. A new test fails if `out/dev/` stops being ignored or gains a tracked
+file. No row limit or column rule changed. Nothing under `out/dev/` was moved.

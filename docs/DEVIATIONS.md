@@ -1051,7 +1051,7 @@ Evidence: `logs/evidence/W3.3-fix3.log`; the verifier's findings R3 and R5,
 
 Raised 2026-09-25 (Europe/Madrid) by the ch2-w47 lane. Status: CLOSED 2026-09-25 by this entry,
 with an owner override open (D-P4-15). Applied under D-R0-03's delegation, not as an owner
-answer.
+answer. Superseded 2026-09-29 by DEV-61, which widens M1's prior and gates both links.
 
 What the SOP said. MT-01 names the Chapter 2 gates as "the two gates in W4.7, on the probit
 scale". W4.7's gate 1 asks that the league overturn rate's 95% interval cover [0.10, 0.90], with the
@@ -1252,3 +1252,110 @@ What the SOP said. The WR-20 path list names `PREREGISTRATION.md` only.
 What was done instead. Checklist rule 2 and `quality/checks/wr20.py` define the
 pre-registration as `PREREGISTRATION.md` plus `docs/prereg/`, and the W7.2 verify scans both.
 The reading is stricter than the SOP and finds 0 violations today.
+
+## DEV-58: W7.2 rule 2, a question mark inside a balanced double-quoted span is not a rhetorical question
+
+Raised 2026-09-25 (Europe/Madrid) by the mechanical lane. Status: CLOSED 2026-09-29 by this
+entry. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-26.
+
+What the SOP said. W7.2 rule 2 allows a question mark only on a line that begins `Q1.` to `Qn.`
+or `H1.` to `Hn.` in the pre-registration.
+
+What was done instead. `quality/prose_lint.py` tests rule 2 on the joined paragraph and skips a
+question mark between a pair of double quotes. An unpartnered quote opens nothing. The quoted
+titles of two works cited in `docs/prior-art.md` stand as published. Four fixtures cover the
+exemption, and a bare rhetorical question still fails.
+
+## DEV-59: W5.1 and W7.6, drift figures measured against a build that counts sealed-window games are withheld
+
+Raised 2026-09-25 (Europe/Madrid) by the git lane. Status: OPEN until the unseal. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-24.
+
+What the SOP said. W5.1 and W7.6 report the drift between the pinned snapshot and upstream.
+
+What was done instead. Three drift figures, measured against a 2026-09-24 build that aggregates
+games dated 2026-09-22 and 2026-09-23, were removed before the first commit. The game count and
+the fact of the measurement stay disclosed. The figures may return after the unseal.
+
+## DEV-60: W3.12(a) and W3.15, the `bam` intervals come from `Vc`, not `Vp`
+
+Raised 2026-09-25 (Europe/Madrid) by the stats lane. Status: CLOSED 2026-09-29 by this entry.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-30. OWNER-VISIBLE.
+
+What the SOP said. W3.14 to W3.17 draw 1,000 posterior coefficient draws from `mgcv`'s `Vp`.
+
+What was done instead. The draws come from `Vc`, which `bam(discrete = TRUE, method = "fREML")`
+returns as Vp + J V_rho J'. The first recovery run on Vp failed 4 of 12 clauses. Its top-edge
+95% coverage was 91 of 100, and the half-width's null sampling SD was 1.30 times its posterior
+SD. No acceptance bound changed. The 150 replicates are re-run with the same seeds.
+
+## DEV-61: W4.10 and W4.7, M1's `Intercept` prior is `normal(0, 1.9)`
+
+Raised 2026-09-25 (Europe/Madrid) by the stats lane. Status: CLOSED 2026-09-29 by this entry.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-31. OWNER-VISIBLE.
+
+What the SOP said. M1's prior is `normal(0, 1.5)` on the `Intercept`.
+
+What was done instead. The prior is `normal(0, 1.9)`: the smallest multiple of 0.05 at which
+both links clear both W4.7 gates by 2 Monte Carlo SEs. The logit arm gives [0.0742, 0.9230] at
+40,000 draws. The SOP prior is the sensitivity arm SENS-M1-INTERCEPT-SOP. W4.7's verdict reads
+both links again, which undoes DEV-46.
+
+## DEV-62: W3.18 B2, the prior on the three `edge:abs_step` coefficients is `normal(0, 0.30)`
+
+Raised 2026-09-25 (Europe/Madrid) by the stats lane. Status: CLOSED 2026-09-29 by this entry.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-32. OWNER-VISIBLE.
+
+What the SOP said. `normal(0, 1)` on every `b`.
+
+What was done instead. Under the step coding the 2026 league offset had prior N(0, 1.73 in),
+and MT-01's 2026 share was 0.9288 against 0.95. `normal(0, 0.30)` is the largest multiple of
+0.05 in at which all three regimes clear 0.95, with 0.95002 for 2026. The SOP prior is the
+sensitivity arm SENS-B2-ABS-PRIOR.
+
+## DEV-63: W3.18 and W3.12, the Stan sampler settings
+
+Raised 2026-09-25 (Europe/Madrid) by the stats lane. Status: CLOSED 2026-09-29 by this entry.
+Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-34.
+
+What the SOP said. `chains = 4, iter = 2000`, at CmdStan's default `adapt_delta` of 0.80.
+
+What was done instead. `sop` runs 4 chains of 1,000 warmup and 2,000 draws. `ue_us` and the
+calibration fit run 4 chains of 2,000 warmup and 6,000 draws. Both use `adapt_delta` 0.99 and
+`max_treedepth` 10. A reported fit short on R-hat or ESS without a divergence doubles its draws,
+at most twice. The settings were fixed before any seed of the second curve ran.
+
+## DEV-64: MT-05 on the D-60 power curve reads `sop`, and `ue_us` is deferred to W3.18
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W3.18. Applied under D-R0-03's delegation,
+not as an owner answer. The decision is D-P4-35. OWNER-VISIBLE.
+
+What the SOP said. MT-05 holds on every reported fit.
+
+What was done instead. The 15 `sop` fits meet MT-05, with worst R-hat 1.0072 and lowest bulk
+ESS 982. `ue_us` is a sensitivity estimator. One of its 15 fits reached R-hat 1.0133, and its
+escalated re-run was lost to the hibernation of 2026-09-26 to 2026-09-29. Its convergence is
+deferred to W3.18.
+
+## DEV-65: W3.12(b), the SBC at the pre-registered prior has 37 of its 200 replicates
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until the 163 missing replicates run. Recorded
+under D-R0-03's delegation, not as an owner answer. The decision is D-P4-36.
+
+What the SOP said. 200 SBC replicates, with a chi-square uniformity test at α = 0.05 for τ and
+the regime mean.
+
+What was done instead. The hibernation stopped the run at 37 replicates. On those 37 all ten
+quantities stay inside the ECDF band, with chi-square p from 0.1186 to 0.9915. The 200-replicate
+run of 2026-09-25 passed under the SOP prior on `abs_step`.
+
+## DEV-66: W2.21, the export gate skips the ignored, untracked files under `out/dev/`
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-37.
+
+What the SOP said. No file under `out/` may mix the game and pitch grain or exceed 50,000 rows.
+
+What was done instead. `.gitignore` excludes `out/dev/`, which holds local development
+artefacts that are never committed. The gate skips a file there only when git reports it
+untracked and ignored. A test pins that `out/dev/` stays ignored and holds no tracked file.
