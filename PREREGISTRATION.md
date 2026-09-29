@@ -667,7 +667,7 @@ Every test id this document names is the SOP's. Their definitions follow, quoted
 ## 14. Open at the freeze
 
 1. **The Chapter 2 power grid has not run.** `docs/prereg/ch2.md` section 10, item 1. SOP W4.8, W4.18, D-28 and R-19 require it before this tag. The owner decides whether the tag waits for it.
-2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 8, among them M1's widened `Intercept` prior, which the owner may reverse.
+2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 8, among them M1's widened `Intercept` prior, which the owner may reverse. Items 3, 5 and 6 are closed there. The `leverage_tercile` cut points are registered as a rule, and M1 does not run until they are recorded (`docs/prereg/ch2.md` section 4.3). `docs/prereg/ch2.md` section 11 lists three M2 items that stay open until W4.11.
 3. **The four games without ABS hardware are still in the analysis table.** Section 7 excludes them. SOP W3.7 must drop their 621 called pitches before SOP W3.14 fits.
 4. **Three Chapter 1 recovery clauses are not met.** All 150 replicates are scored in `docs/prereg/ch1.md` section 8.7: 10 of the 12 CH1-A7 clauses are met, and 12 of the 13 MT-03 and MT-04 clauses. The owner disclosed the three and kept the bounds and the method (DECISIONS.md D-R0-04, DEV-67). This is decided, and it is listed because the shortfall stands at the freeze.
 5. **Criteria with no SOP test id.** CH1-A3, CH1-A4, CH1-A5, CH1-A9, CH1-A10's calibration clause, CH1-A11, CH1-A13, CH1-A14, CH3-A4, CH3-A5, CH3-A6, CH3-A7, and the Chapter 2 role-rate gate. Each names the step that checks it. Assigning test ids is SOP W9.8 and W9.11 work.

@@ -2704,3 +2704,120 @@ arm's blockers. It did not say that P3 does not run in the SSAC sprint, that P4 
 threshold, or that the consequence of a placebo failure turns on P1 and P2 alone. Applied:
 root section 8 says all three, in line with the header of `R/ch1/26_placebos.R`. The verbatim
 SOP rows and the verbatim consequence are unchanged.
+
+### D-T3 APPLIED UNDER D-R0-03, OWNER-VISIBLE: M1 carries Chapter 1's MT-05 escalation rule
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`, from the Chapter 2 fit-code
+review. Status: **applied under D-R0-03's delegation, not an owner answer.** The deviation is
+DEV-T3. Provisional id. OWNER-VISIBLE because it adds a sampler rule.
+
+The question. `docs/prereg/ch2.md` section 4.2 registered 4 chains × 2,000 iterations and no
+escalation. `m1_fit_mt05()` in `R/ch2/lib_ch2.R` on `phase05/ch2-fits` already implements the
+rule DEV-63 registers for Chapter 1, behind `--doublings N`, which defaults to 0. Its log line
+says a real run that uses it needs an owner line in the annex before the tag.
+
+The default applied. Annex 4.2 registers the Chapter 1 rule for every M1 fit, in W4.10, W4.12
+and W4.13. A fit with no divergence, no tree-depth hit and E-BFMI ≥ 0.2 that misses R-hat ≤ 1.01
+or ESS ≥ 400 is re-run from the same seed with the draws a chain doubled, at most twice. A fit
+with a divergence, or still short after that, is reported as failed. Every attempt is recorded.
+The flag is `--doublings 2`. The code checked matches the rule: `length_only` excludes a
+divergence, a tree-depth hit and a low E-BFMI, and each attempt writes its own FIT line.
+
+Follow-up for the Chapter 2 lane. `scripts/ch2_sprint.sh` passes no `--doublings`, and
+`ch2_log_escalation()` still says the rule is not in the annex. Both change when the fit branch
+lands. This branch does not touch the fit code.
+
+### D-T4 APPLIED UNDER D-R0-03, OWNER-VISIBLE: `leverage_tercile` is registered as a rule, and M1 waits for its cut points
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-T4. Provisional id.
+OWNER-VISIBLE because it adds a rule and a precondition on M1.
+
+The question. Annex section 10 item 3 promised the `leverage_tercile` cut points in section 4.1
+before the tag. The review asked whether they can be computed now, with no fit on 2025 or 2026
+calls and no sealed row.
+
+What was found. They cannot.
+
+- The stake is a win-probability difference, and no win-probability surface exists.
+  `docs/prereg/ch3.md` section 1 says none has been fitted, `out/ch3/` is empty, and the only
+  W5 receipt is W5.1. Building W5's count-composed cube is SOP W5.2 to W5.6, a model build and
+  not minutes of work.
+- W5.1 pinned 3 of the prior art's 7 files: `dp_V_2026.npy`, `tier1_results_2026.json` and
+  `tier1_card_2026.csv`. The card holds each cell's tercile label, count and median `g`. It
+  holds no cut point, and cut points cannot be recovered from cell medians. The upstream code
+  that sets them is not pinned.
+- No file under `data/` or `warehouse/` carries a tercile or a win-probability surface.
+
+The default applied. Annex section 4.3 pre-registers the rule instead of the values. The
+quantity is each opportunity's stake `g_j` in the acting side's units, read off W5's
+count-composed cube. The population is every MLB 2026 row of `v_opportunity_open`, through
+2026-09-21. c1 and c2 are the unweighted 1/3 and 2/3 quantiles by R's default `quantile()`.
+Each challenge takes its own row's tercile, and M2's `cell` uses the same cut points. They are
+computed once, before any M1 fit, and recorded with their values in `docs/DEVIATIONS.md`. M1
+does not run until then. Section 4.1's table and section 10 item 3 no longer promise values
+before the tag. `R/ch2/10_m1_design.R` on `phase05/ch2-fits` already refuses to build the M1
+design without a `--leverage` file, so the code holds the precondition.
+
+### D-T5 APPLIED UNDER D-R0-03: four Chapter 2 code choices are recorded in the annex
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-T5. Provisional id. Each
+item was checked against the code on `phase05/ch2-fits` at 69da486.
+
+- The index CH2-H2a reads (annex 7.1, section 10 item 5). `R/ch2/10_m1_design.R` rebuilds the
+  chronological index within each challenger by official date, game number, `game_pk`, at-bat
+  and pitch, which fixes the W4.5 index's 29-row doubleheader fault. `--index-source w45`
+  keeps the W4.5 index. The annex registers the rebuilt index, and item 5 is closed.
+- The challenger's role (annex 7.1). `ch2_challenger_roles()` in `R/ch2/lib_ch2.R` gives each
+  challenger the role of most of his challenges, a tie going to the role of his first
+  challenge. `R/ch2/12_reliability.R` counts all his challenges toward the 20. That set is
+  "catchers with ≥20 challenges" for CH2-H2a under D-P4-29.
+- M1's seed (annex 4.2, section 10 item 6). `M1_SEED` is 20260922, the SOP W4.10 seed, and
+  W4.10, W4.12 and W4.13 all default to it. `config/seeds.yml`'s `ch2_brms_chain_base: 424242`
+  is not used by M1. Item 6 is closed.
+- W4.14's framing input (annex 7.9). `R/ch2/14_framing.R` accepts a framing file only with a
+  `through_date`, or failing that a `pull_date`, before the seal start, and blocks a file with
+  neither. The annex says so: through 2026-09-21 at the latest. No framing file is built, and
+  W4.14 does not run until one exists.
+
+Not applied, and why. The review also asked that the Savant expected-rate CSV come
+from a pull dated 2026-09-21 or earlier. The record differs. That CSV feeds W4.13 and W4.16,
+not W4.14. `scripts/ch2_savant_expected.py` accepts a page pulled on or before the baseline
+pull date in `contracts/savant_absdata.yml`, which is 2026-09-22. That pull was made before any
+game of 2026-09-22 was final and counts exactly the 10,167 open challenges. A rule of "2026-09-21
+or earlier" would refuse the one baseline pull on disk. Choosing between the two is left to
+the owner. The annex states no rule for that file.
+
+### D-T6 RECORDED: three M2 items stay open after the tag, until W4.11
+
+Recorded on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **recorded under
+D-R0-03's delegation, not an owner answer; OPEN.** The deviation is DEV-T6. Provisional id.
+
+Annex section 11 lists three items the Chapter 2 fit-code review raised that are not resolved
+tonight. Each is resolved by a dated entry in `docs/DEVIATIONS.md` before W4.11, the paper-tier
+M2 fit, runs. None touches M1 or the sprint, and M2 is not redesigned.
+
+1. M2's formula has no `m:role` term, so each role's σ comes only through shrunken slopes. The
+   fit code's first dry run, on a league drawn with one slope per role, returned a batter σ of
+   2.40 in against 3.02 in injected.
+2. CH2-H2b reads `sd_tau > 0.20 probit`, while `tau_i` is in inches. The code at 171f9f6
+   computed the probability on `sd_challenger_id__Intercept`. Since 2279fc1 it computes it on
+   the SD of `tau_i` in inches, reports the intercept SD beside it, and logs the unit as an
+   owner item. The annex describes the code as it stands.
+3. The role-rate reproduction gate has no test id. It was section 10 item 7 and stays there.
+
+### D-T7 APPLIED UNDER D-R0-03: the abstract branch is merged before the tag, as D-66 requires
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** No deviation: the merge departs from nothing in the
+SOP. Provisional id.
+
+SOP D-66 requires the three abstract variants to be committed before `prereg-v1`.
+`phase06/abstract` at 6102d4a, based on ae5a11d, holds them. It was merged with `--no-ff`.
+`main` changed none of the branch's files between ae5a11d and 044ad8a, so no conflict arose.
+`quality/merge_steps.py` folded the branch's six `quality/steps.d` files into
+`quality/steps.yml`: W6.10, W6.11, W6.12, W7.10 and W7.24 are new, and W9.13 takes the branch's
+registration. The branch's `quality/prose_lint.py`, `quality/check_numbers.py` and
+`ops/lint_prose.sh` pass the pre-registration at 0 violations and 0 untraced numbers, and
+`scripts/prove.sh W7.6` passes. No existing text needed a change for them.

@@ -4,7 +4,7 @@ This is the Chapter 2 annex to `PREREGISTRATION.md`, version 1.0. It is frozen b
 
 It comes from SOP step W4.1. The M1 and M2 formulas in sections 4 and 5 are the SOP's W4.10 and W4.11 text, copied byte for byte. Measured numbers come from `out/ch2/log/prior_predictive.json` (W4.7) and `data/interim/ch2/challenges.parquet` (W4.5). Published numbers from other work cite `docs/prior-art.md`.
 
-Section 10 lists eight items that must close before the tag. The largest is the power curve: the five-seed grid of section 8 has not run.
+Section 10 lists eight items raised before the tag and says which are closed. The largest open one is the power curve: the five-seed grid of section 8 has not run. Section 11 lists three M2 items that stay open after the tag.
 
 ## 1. What was seen before this annex
 
@@ -96,7 +96,7 @@ D-64 fixes the covariates as ex ante: each is observable to the challenger at th
 | `role` | batter, catcher or pitcher: `challenging_player_id` matched against `player_at_bat`, `fielder_2` and `pitcher`. `team_summary_mode` is never read | W4.5 |
 | `balls`, `strikes` | the count before the pitch, entered as numbers | W4.5 |
 | `inning_band` | 1-3, 4-6, 7-8, 9+, the prior art's card bands (`fixtures/prior_art/uiloi/tier1_card_2026.csv`) | W4.7 |
-| `leverage_tercile` | low, mid, high: the tercile of the call's win-probability stake, on the prior art's card bins | not built, section 10 item 3 |
+| `leverage_tercile` | low, mid, high: the tercile of the call's win-probability stake, binned as the prior art's card bins it | not built; its rule is section 4.3 |
 | `tokens_own`, `tokens_opp` | challenges in hand before the pitch, entered as numbers, from the warehouse view `v_opportunity_open` | W4.7 |
 | `challenger_id` | the challenging player | W4.5 |
 | `opponent_id` | `fielder_2` when `role` is batter, else `player_at_bat` | W4.5 |
@@ -112,11 +112,23 @@ On the 173 pitcher challenges the challenger and pitcher effects coincide. The e
 
 4 chains × 2,000 iterations, `adapt_delta = 0.95`, `seed = 20260922`. brms 2.23.0 on CmdStan 2.40.0 through cmdstanr 0.9.0. M1 stays on the logit link, and its thresholds in section 7 are in logit units.
 
-`config/seeds.yml` names a different Chapter 2 chain seed, `ch2_brms_chain_base: 424242`. M1 uses the W4.10 seed. Section 10, item 6.
+**M1's seed is 20260922**, the one SOP W4.10 sets. It serves every M1 fit: the three W4.10 arms, the W4.12 split-half refits, the W4.13 cross-validation folds and every escalation attempt below. `config/seeds.yml` names a different Chapter 2 chain seed, `ch2_brms_chain_base: 424242`. M1 does not use it.
 
 Every reported fit meets MT-05. That means at least 4 chains × 1,000/1,000, rank-normalised split R-hat ≤1.01, `ess_bulk` ≥400 and `ess_tail` ≥400. It also means 0 divergent transitions, 0 max-treedepth hits and E-BFMI ≥0.2 per chain.
 
 A fit with any divergence is reparameterised or reported as failed. It is never reported with a footnote.
+
+**The MT-05 escalation, pre-registered for M1.** It is the rule Chapter 1 registers for its curve and W3.18 (`docs/prereg/ch1.md` section 8.2, DEV-63). It covers an M1 fit with no divergence, no tree-depth hit and E-BFMI of at least 0.2 in every chain. If that fit's R-hat is above 1.01 or an ESS is below 400, it is run again from the same seed with the draws a chain doubled, at most twice. The draws a chain go from 1,000 to 2,000, then to 4,000. Warmup, model, priors and data do not change. A fit with a divergence, or still short after two doublings, is reported as failed. Every attempt is recorded. The W4.10, W4.12 and W4.13 scripts apply the rule with `--doublings 2`.
+
+### 4.3 `leverage_tercile`, pre-registered as a rule
+
+The cut points cannot be computed at the tag. The stake needs W5's win-probability surface, and none exists: SOP W5.1 pinned 3 of the prior art's 7 files, and no win-probability surface has been fitted (`docs/prereg/ch3.md` section 1). The prior art's pinned card, `fixtures/prior_art/uiloi/tier1_card_2026.csv`, carries each cell's tercile label, count and median `g`, and not the cut points. So the rule is registered here instead of the values.
+
+- The quantity: each opportunity's win-probability stake, `g_j` in the acting side's units in SOP W5's notation. It is the change in that side's win probability if the call is overturned, read off W5's primary surface, the count-composed cube (`docs/prereg/ch3.md` section 7).
+- The population: every row of `v_opportunity_open` with `level = 'mlb'` and `season = 2026`, one per called pitch and acting side that could have challenged it. These are the MLB 2026 open-set challenge opportunities, through 2026-09-21.
+- The terciles: the cut points c1 and c2 are the 1/3 and 2/3 quantiles of the stake over that population. Each row counts once, unweighted, and the quantile is R's default `quantile()`. A stake ≤ c1 is low, a stake above c1 and ≤ c2 is mid, and a stake above c2 is high.
+- Each challenge takes the tercile of its own opportunity row. M2's `cell` (section 5) uses the same cut points.
+- The cut points are computed once, before any M1 fit, and recorded with their values in a dated entry in `docs/DEVIATIONS.md`. M1 does not run until then. The W4.7 placeholder, balanced thirds, is never used on real data.
 
 ## 5. M2, signal detection
 
@@ -199,7 +211,9 @@ The thresholds are SOP section 9.3, unchanged. Each names the tests that check i
 - Threshold: `P(sd_challenger > 0.10 logit | data) ≥ 0.80`, and split-half Spearman-Brown ≥0.40 for catchers with ≥20 challenges.
 - Checked by: MT-05 on the M1 fit; MT-07 for the split-half; MT-03 for the recovery that gives a rank its meaning.
 - If it fails (annex default): accuracy is reported as not rankable in one season. The leaderboard keeps shrunken estimates with 95% intervals and carries no accuracy rank.
-- The split-half uses the chronological challenge index within each catcher, with `r_SB = 2r/(1+r)` over catchers with ≥20 challenges. It follows SOP section 9.3 and not W4.12's all-challenger wording, because section 9.3 is the done-criterion that gates H2a and it names catchers (D-P4-29). SOP W4.12's split-half over all challengers with ≥20 challenges is reported beside it and does not gate H2a. Section 10, item 5 records an ordering fault in that index.
+- The split-half uses the chronological challenge index within each catcher, with `r_SB = 2r/(1+r)` over catchers with ≥20 challenges. It follows SOP section 9.3 and not W4.12's all-challenger wording, because section 9.3 is the done-criterion that gates H2a and it names catchers (D-P4-29). SOP W4.12's split-half over all challengers with ≥20 challenges is reported beside it and does not gate H2a.
+- The index H2a reads is rebuilt within each challenger, in order of official date, game number, `game_pk`, at-bat number and pitch number. The W4.5 index ordered a doubleheader's games by `game_pk` and put 29 rows out of game order (section 10, item 5). The code's `--index-source w45` keeps the W4.5 index and is not the pre-registered one.
+- A challenger's role is the role of most of his challenges. A tie goes to the role of his first challenge by that index. "Catchers with ≥20 challenges" are the challengers whose role, so defined, is catcher and who have 20 or more challenges in all roles, because M1's challenger effect pools them (D-P4-29).
 
 ### 7.2 CH2-H2b, willingness is rankable
 
@@ -263,6 +277,7 @@ The thresholds are SOP section 9.3, unchanged. Each names the tests that check i
 
 - W4.12 reliability: three estimators for accuracy and for willingness. Variance components gates; the chronological split-half and a `game_pk %% 2` split are reported beside it, with their agreement as a number (MT-07).
 - W4.14 framing against challenging, on the 58 qualified catchers. At n = 58 the 95% CI on a correlation is about ±0.25. The test can separate zero from a moderate correlation, but not from |r| = 0.15.
+- W4.14's framing input is the Savant catcher-framing file of SOP W4.4. It is a season aggregate with no row dates, so it must count games through 2026-09-21 at the latest: its `through_date`, or failing that its `pull_date`, is on or before 2026-09-21. A file that carries neither is not used. No such file is built, and W4.14 does not run until one exists.
 - W4.15 year over year, AAA 2025 to MLB 2026, players with ≥10 challenges in each. The overlap count is printed before any correlation is computed.
 - Below 25 players the cross-level correlation is descriptive only, and the within-2026 split becomes the headline persistence number.
 
@@ -345,9 +360,17 @@ That protection is a passphrase on a single-user laptop, not a separation of dut
 
 1. **The W4.8 power grid.** Section 8 has no firing rates, and MT-11 checks for them. SOP W4.8, W4.18, D-28 and R-19 require them before `prereg-v1`. The fleet runs W4.8 in phase 09, after the tag. Either the grid runs first and its table enters section 8, or the owner records the change.
 2. **M1's `Intercept` prior.** Widened before the tag from `normal(0, 1.5)` to `normal(0, 1.9)`, under D-R0-03's delegation, so that W4.7's gates hold on both links (section 6). The SOP prior is the sensitivity arm SENS-M1-INTERCEPT-SOP. The owner may restore it as the primary.
-3. **`leverage_tercile` is not built.** It needs W5's win-probability surface and the prior art's cut points. W4.7 used balanced thirds as a placeholder. The cut points are written into section 4.1 before the tag.
+3. **`leverage_tercile` is not built.** Closed as a pre-tag item on 2026-09-29. Its cut points need W5's win-probability surface, which does not exist, so they cannot be written here before the tag. Section 4.3 pre-registers the rule that computes them, once and before any M1 fit, and M1 does not run until they are recorded in `docs/DEVIATIONS.md`.
 4. **The M1 exclusion test does not exist** (section 3). The SOP gives it no test id.
-5. **The chronological challenge index is out of game order on 29 rows.** The W4.5 verifier found `game_pk` order reversing `game_number` in doubleheaders. CH2-H2a's split-half reads that index.
-6. **Seed conflict.** W4.10 sets `seed = 20260922`; `config/seeds.yml` sets `ch2_brms_chain_base: 424242`. One is recorded as M1's seed.
-7. **The role-rate reproduction gate has no test id.** Section 7.6.
+5. **The chronological challenge index is out of game order on 29 rows.** The W4.5 verifier found `game_pk` order reversing `game_number` in doubleheaders. Closed on 2026-09-29: CH2-H2a reads the rebuilt index of section 7.1, not the W4.5 one.
+6. **Seed conflict.** W4.10 sets `seed = 20260922`; `config/seeds.yml` sets `ch2_brms_chain_base: 424242`. Closed on 2026-09-29: M1's seed is 20260922 (section 4.2).
+7. **The role-rate reproduction gate has no test id.** Section 7.6. It stays open after the tag, with the two M2 items of section 11.
 8. **Owner sign-off.** SOP section 9.1 closes a prose artifact with a dated owner line in `DECISIONS.md`. It has not been given.
+
+## 11. Open after the tag, before W4.11
+
+These three are known and are not resolved at the tag. Each is resolved by a dated entry in `docs/DEVIATIONS.md` before W4.11, the paper-tier M2 fit, runs. None of them touches M1 or the SSAC sprint, and M2 is not redesigned here.
+
+- **M2 reaches each role's σ only through shrunken slopes.** The M2 formula of section 5 has no `m:role` term. So σ_bat and σ_fld, which the reproduction gate of section 7.6 reads, come only through the challenger slopes of `(1 + m | challenger_id)`, and those are shrunk toward one pooled slope. In the fit code's first dry run, on a synthetic league drawn with a separate slope for each role, the batter σ came back at 2.40 in against 3.02 in injected.
+- **CH2-H2b's threshold and `tau_i` are on different scales.** CH2-H2b reads `P(sd_tau > 0.20 probit | data)`, while `tau_i = -a_i / s_i` is in inches (section 5). The fit code first computed the probability on `sd_challenger_id__Intercept`, the SD of the challenger intercepts on the probit scale. It now computes it on the SD of `tau_i` over challengers, in inches, and reports the intercept SD beside it. Which unit the 0.20 means is not decided.
+- **The role-rate reproduction gate has no test id** (section 7.6, section 10 item 7).
