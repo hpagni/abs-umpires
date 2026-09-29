@@ -24,8 +24,8 @@
 # write_receipt._layout resolves a token by importing absump.paths, prove.sh
 # runs on bare python3, absump is installed only in the uv virtual environment,
 # so the token is left as written and the step reads MISSING with the warehouse
-# on disk. W9.6 registers {duckdb} the same way and has the same problem; it
-# belongs to W9 to fix and is reported, not worked around here.
+# on disk. W9.6 registered {duckdb} the same way and had the same problem; it
+# now names the directory too.
 
 - id: W3.2
   title: "Chapter 1 preflight, seven clauses and the two OpenMP records"

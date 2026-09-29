@@ -5,10 +5,13 @@
 # assertions against the warehouse file and writes the row counts and null
 # rates SOP section 9.1 asks for into out/tables/data_quality.csv and .md.
 # `needs` names the warehouse because a pack that skipped every warehouse clause
-# should read MISSING, not PASS.
+# should read MISSING, not PASS. It names the warehouse directory, as W3.2 does
+# and for W3.2's reason: prove.sh runs on bare python3, which cannot import
+# absump.paths to resolve the {duckdb} layout token, so the token stayed as
+# written and the step read MISSING with the warehouse on disk.
 - id: W9.6
   title: "Data test pack green on the full warehouse"
   verify: "make test-data"
   expect_exit: 0
   owner: W9
-  needs: tests/data/test_warehouse_pack.py, {duckdb}
+  needs: tests/data/test_warehouse_pack.py, warehouse
