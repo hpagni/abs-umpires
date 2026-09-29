@@ -1,0 +1,18 @@
+# W6.10, the SSAC abstract draft, table1, figure1 and the R1 agenda. Owner W6, fleet
+# phase 06 (abstract lane). Registered 2026-09-29, Madrid.
+#
+# quality/w610_check.sh runs scripts/abstract.sh (make abstract) and then the SOP word
+# counter at 470 on the filled markdown as written, the SSAC format checks, the exhibit
+# count, WR-14 on the figure's alt text, and the prose, number and blind gates on the
+# step's files, then make lint-prose. Proven on a SYNTHETIC ledger by
+# ops/abstract_dryrun.sh, which also plants one fault per gate and requires each caught.
+# Until HEAD descends from prereg-v1, scripts/abstract.sh refuses the real ledger with
+# exit 4 (GD-12), so this verify fails by design; after the tag it reads MISSING until
+# W6.7 has written the Chapter 1 slots. The dry run also checks that every slot prints
+# its synthetic truth (tools/comms/synthetic_abstract_inputs.py --verify).
+- id: W6.10
+  title: "SSAC abstract draft from the template, table1, figure1, review R1 agenda"
+  verify: "bash quality/w610_check.sh"
+  expect_exit: 0
+  owner: W6
+  needs: out/tables/abstract_slots_ch1.csv, out/ch1/tab/T1_sample.csv, out/ch1/tab/T2_zone_gate.csv, out/ch1/tab/T4_decomposition.csv, out/ch1/tab/T4_plane_component.csv, out/ch1/tab/umpire_eb_summary.csv, abstract/ssac2027_abstract.md, tools/comms/fill_slots.R, tools/comms/build_exhibits.R

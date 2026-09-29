@@ -180,7 +180,8 @@ B2_UE_US_TEXT <- paste(B2_FORMULA_TEXT, "+ (1 | umpire_hp_id:edge) + (1 | umpire
 # tendency and an umpire x season shift common to the three edges.
 ESTIMATORS <- c(sop = "sop", ue_us = "ue_us")
 EST_FORMULA <- c(sop = B2_FORMULA_TEXT, ue_us = B2_UE_US_TEXT)
-EST_LABEL <- c(sop = sprintf("SOP W3.18 B2, abs_step prior normal(0, %.2f)", ABS_STEP_PRIOR_SD),
+EST_LABEL <- c(sop = sprintf("SOP W3.18 B2, with the `abs_step` prior `normal(0, %.2f)` of section 8.8",
+                             ABS_STEP_PRIOR_SD),
                ue_us = "B2 plus (1 | umpire x edge) and (1 | umpire x season)")
 # Which estimator sets CH1-A6. Written after the sop curve's first four seeds showed tau
 # under-estimated at 0.10 in, before any ue_us seed ran. An estimator is admissible when its
@@ -197,6 +198,9 @@ t_start <- Sys.time()
 n_pass <- 0L
 failures <- character(0)
 pending <- character(0)
+# Clauses not met and disclosed under the owner's answer D-R0-04. They are never counted as PASS:
+# each prints NOTMET and is counted on its own, and one that drifts from its disclosure is a FAIL.
+n_disclosed <- 0L
 check <- function(label, ok, detail) {
   if (isTRUE(ok)) {
     n_pass <<- n_pass + 1L
@@ -216,8 +220,8 @@ f2 <- function(x) sprintf("%.2f", x)
 f3 <- function(x) sprintf("%.3f", x)
 finish <- function() {
   el <- as.numeric(difftime(Sys.time(), t_start, units = "secs"))
-  cat(sprintf("\nW3.12 %s: %d PASS, %d FAIL, %d PENDING, %.0f s\n", MODE, n_pass,
-              length(failures), length(pending), el))
+  cat(sprintf("\nW3.12 %s: %d PASS, %d NOT MET AND DISCLOSED (D-R0-04), %d FAIL, %d PENDING, %.0f s\n",
+              MODE, n_pass, n_disclosed, length(failures), length(pending), el))
   if (length(failures) > 0L) {
     cat("failures:\n", paste0("  ", failures, "\n"), sep = "")
     quit(status = 1)
@@ -1036,13 +1040,15 @@ check_disclosed <- function(label, d, k) {
   dec <- txt(file.path(ROOT, "DECISIONS.md"))
   ann <- txt(PREREG_MD)
   s87 <- substr(ann, regexpr("### 8.7 ", ann, fixed = TRUE), regexpr("### 8.8 ", ann, fixed = TRUE))
-  cat(sprintf("NOT MET, DISCLOSED UNDER D-R0-04: %s %s, measured %d, bound %d\n",
-              d$clause, d$q, as.integer(k), d$bound))
-  check(sprintf("%s: disclosed, D-R0-04", label),
-        k == d$value && k < d$bound && grepl(d$sentence, txt(d$doc), fixed = TRUE) &&
-          grepl("### D-R0-04 OWNER ANSWER, W3.12 recovery", dec, fixed = TRUE) &&
-          grepl(d$row, s87, fixed = TRUE),
-        sprintf("measured %d, disclosed %d, bound %d", as.integer(k), d$value, d$bound))
+  ok <- k == d$value && k < d$bound && grepl(d$sentence, txt(d$doc), fixed = TRUE) &&
+    grepl("### D-R0-04 OWNER ANSWER, W3.12 recovery", dec, fixed = TRUE) && grepl(d$row, s87, fixed = TRUE)
+  detail <- sprintf("measured %d, disclosed %d, bound %d", as.integer(k), d$value, d$bound)
+  if (isTRUE(ok)) {
+    n_disclosed <<- n_disclosed + 1L
+    cat(sprintf("NOTMET  %-50s %s; NOT MET, DISCLOSED UNDER D-R0-04\n", label, detail))
+  } else {
+    check(sprintf("%s: disclosure under D-R0-04 still holds", label), FALSE, detail)
+  }
 }
 # The interval covariance, changed before the tag (docs/prereg/ch1.md 8.7). The first full run,
 # 2026-09-25, drew from N(beta, Vp). Vp conditions on the estimated smoothing parameters, and that
@@ -1754,6 +1760,8 @@ if (MODE == "--check") {
       if (!is.null(d)) check_disclosed(sprintf("null 90%% interval covers zero >= 43/50 (MT-04): %s", q), d,
                                        c90[[q]])
     }
+    check("recovery: each D-R0-04 disclosure is scored", n_disclosed == length(REC_DISCLOSED),
+          sprintf("%d of %d NOT MET AND DISCLOSED", n_disclosed, length(REC_DISCLOSED)))
   }
   finish()
 }

@@ -1094,8 +1094,8 @@ the same branch.
 ## DEV-48: W3.4 and D-R0-02, the roster offset is calibrated separately outside the ABS-measured cohort, and a sign-agreement clause is added
 
 Raised 2026-09-25 (Europe/Madrid) by the phase-04 orchestrator, from the W3.4 stat verifier.
-Status: OPEN, OWNER-VISIBLE. Applied under D-R0-03's delegation, not as an owner answer. The
-decision is D-P4-04.
+Status: CLOSED 2026-09-29 by implementation, still OWNER-VISIBLE. Applied under D-R0-03's
+delegation, not as an owner answer. The decision is D-P4-04 and its follow-up of 2026-09-29.
 
 What the SOP said. W3.4 and D-13 use one roster offset, measured in 2026 on batters who carry
 both heights. D-R0-02 set it at 0.0022 in, SD 0.2909 in, over 658 batters.
@@ -1115,6 +1115,14 @@ What closes it: the pooled offset in `R/ch1/03_heights.R` and the clause in the
 pre-registration, both before the tag, or the owner's override.
 
 Evidence: `logs/evidence/W3.4.verify-stat.log`, sections G and I.
+
+How it closed, 2026-09-29. `R/ch1/03_heights.R` computes the pooled offset and writes it into
+`data/interim/dim_batter_season/calibration.json`: −0.347 in (SE 0.155 in), added to roster
+height outside the cohort in every season. Its check recomputes the value, and
+`tests/data/test_heights.py` recomputes it again in Python. The clause and the two arms, the
+ABS-measured arm and SENS-HEIGHT-SINGLE, are in `PREREGISTRATION.md` section 7 and
+`docs/prereg/ch1.md` section 1.1. The steps that ran before under the single offset are DEV-68.
+The owner may still override D-P4-04 before the tag.
 
 ## DEV-49: W3.5, the shadow band is read on the radius-adjusted signed edge distance, and the expected sizes are restated as measured
 
@@ -1327,7 +1335,7 @@ at most twice. The settings were fixed before any seed of the second curve ran.
 
 ## DEV-64: MT-05 on the D-60 power curve reads `sop`, and `ue_us` is deferred to W3.18
 
-Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W3.18. Applied under D-R0-03's delegation,
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by the follow-up below; it was OPEN until W3.18. Applied under D-R0-03's delegation,
 not as an owner answer. The decision is D-P4-35. OWNER-VISIBLE.
 
 What the SOP said. MT-05 holds on every reported fit.
@@ -1337,9 +1345,13 @@ ESS 982. `ue_us` is a sensitivity estimator. One of its 15 fits reached R-hat 1.
 escalated re-run was lost to the hibernation of 2026-09-26 to 2026-09-29. Its convergence is
 deferred to W3.18.
 
+Follow-up, 2026-09-29. The fit was re-run under the escalation rule and met MT-05 at 12,000
+draws a chain: R-hat 1.0066, bulk ESS 1,106, tail ESS 2,644, no divergence. All 30 power fits
+meet MT-05, and nothing is deferred to W3.18.
+
 ## DEV-65: W3.12(b), the SBC at the pre-registered prior has 37 of its 200 replicates
 
-Raised 2026-09-29 (Europe/Madrid). Status: OPEN until the 163 missing replicates run. Recorded
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by the follow-up below. Recorded
 under D-R0-03's delegation, not as an owner answer. The decision is D-P4-36.
 
 What the SOP said. 200 SBC replicates, with a chi-square uniformity test at α = 0.05 for τ and
@@ -1348,6 +1360,10 @@ the regime mean.
 What was done instead. The hibernation stopped the run at 37 replicates. On those 37 all ten
 quantities stay inside the ECDF band, with chi-square p from 0.1186 to 0.9915. The 200-replicate
 run of 2026-09-25 passed under the SOP prior on `abs_step`.
+
+Follow-up, 2026-09-29. The run finished with 200 of 200 replicates. All ten quantities stay
+inside the ECDF band, with chi-square p from 0.1538 to 0.8906 and a worst adjusted p of 0.8130.
+CH1-A8 is met at the pre-registered prior.
 
 ## DEV-66: W2.21, the export gate skips the ignored, untracked files under `out/dev/`
 
@@ -1381,3 +1397,182 @@ not met, with cause and consequence, in section 8.7. Top-edge results carry two 
 intervals slightly too narrow, and a design underpowered to declare no change. The sensitivity
 arm SENS-B1-UNDERSMOOTH refits with the season by-term at k = 24 and is reported beside the
 primary. The model test pins the three values and prints each as NOT MET, DISCLOSED UNDER D-R0-04.
+
+## DEV-68: W3.4, W3.5, W3.11, W3.12 and MT-01, steps before the tag ran under the single height offset
+
+Raised 2026-09-29 (Europe/Madrid) by W3.4's lane, when D-P4-04 was implemented (DEV-48).
+Status: CLOSED 2026-09-29 by disclosure in `docs/prereg/ch1.md` section 1.2. OWNER-VISIBLE with
+D-P4-04. Applied under D-R0-03's delegation, not as an owner answer.
+
+What the plan says. Under D-P4-04 a batter outside the ABS-measured cohort has roster height
+minus 0.347 in, in every season. A pre-registered computation would use that rule.
+
+What was done instead. Seven computations before the tag read such a batter's zn or d under
+D-R0-02's one offset, 0.0022 in:
+
+1. W3.11, the specification development of `docs/prereg/ch1.md` sections 1 to 7.
+2. W3.12(c), the power curve: its design, its link and its variance components.
+3. W3.12(a), the injected-effect recovery on the 2024 rows.
+4. W3.12(b), the SBC on the design's cells.
+5. MT-01's prior predictive, section 8.8.
+6. W3.4's selection effect in `out/tables/height_coverage.csv`.
+7. W3.5's band counts and raw shadow-band rates in `out/ch1/tab/T1_sample.csv`.
+
+W3.11's k.check was re-run under D-P4-04 on 2026-09-29, on 687,366 rows. Every group stays
+stable at the frozen k, with a largest k-index change of 0.0007 against the 0.01 rule, so no k
+changes. The `te()` k-indices read 0.964 to 0.972, against 0.956 to 0.962. The other six were not
+re-run. The W3.12 simulations measure the estimator on simulated calls. The rule moves the zone
+top of a batter outside the cohort by 0.187 in and the bottom by 0.094 in, and it does not
+change the estimator. The recovery, SBC and power-curve values D-R0-04 disclosed stand as run.
+MT-01's boundary, s = 0.3013 against the 0.30 chosen, stands under the single offset. W3.4's
+selection effect holds one height rule fixed by definition. W3.5's counts are descriptive, and
+the fit code recomputes d under D-P4-04 when it fits.
+
+Unaffected, read from the code: P0 and P1, the join, the challenge counts, the DT-21 zone gate,
+whose 10,168 challenged pitches all come from batters inside the cohort, and DT-30. Every
+frozen number that depends on the height outside the cohort describes one of the seven steps as
+it ran, such as the 498,055-pitch design, and it stays as run. No frozen number changed.
+
+Found on the way. W3.11's record predates D-P4-08. `out/dev/ch1_spec/frozen_spec.json` holds
+687,496 development rows, and the analysis table now gives 687,485. `PREREGISTRATION.md`
+section 4 said W3.11 ran on 687,485, and section 7 said every build was re-run on the new P0.
+Both sentences are corrected. W3.11's registered check asserts the two counts are equal, so it
+fails until W3.11 is rebuilt.
+
+What closes it: nothing further before the tag. A later re-run of a listed step under D-P4-04 is
+its own dated entry.
+
+Follow-up, 2026-09-29, W3.11's check. W3.11 was not rebuilt: a rebuild under D-P4-04 would
+rewrite the recorded figures of `docs/prereg/ch1.md` sections 1 and 3 to 7, and D-P4-08 took
+11 of the build's rows out of the table. `Rscript R/ch1/20_spec_dev.R --check` now follows this
+entry. It asserts the build's record of 687,496 rows and the table's 687,485 under the single
+offset, and holds the k.check table of section 3 to the record. It refits the frozen
+specification and the rung above it under D-P4-04 on 687,366 rows, requires the
+`--check-noncohort` record back and every group stable, and prints the three counts with this
+entry's id. A count that moves again fails the check. `docs/prereg/ch1.md` section 1.2 says so.
+
+## DEV-69: W6.1 and W2.3, the owner's personal address leaves the tracked files
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry for the tracked
+files; OPEN for git history, which the owner decides. Applied under D-R0-03's delegation, not
+as an owner answer. The decision is D-P4-38.
+
+What happened. `abstract/FORM-FIELDS.md` carried the owner's personal Gmail address three
+times from cd44758. `DECISIONS.md` carried it on one line from 74b995a, in a probe URL and in
+the header that probe produced. The repository is public.
+
+What was done instead. Both files now carry a phrase or a placeholder, and the owner's name
+and university stay. `tests/guard/test_no_owner_address.py` fails when a tracked file carries
+an address at gmail.com or the owner's handle, outside the lockfiles, the pattern definitions
+and quoted `prose_lint.py` command lines. It proves itself on violations planted in a
+throwaway repository.
+
+What stays open. History was not rewritten. The address remains in every commit from cd44758,
+and from 74b995a for `DECISIONS.md`, up to the commit that carries this entry. The owner
+decides whether history is scrubbed.
+
+## DEV-70: W3.15, W3.18 and W3.21, the two shadow bands, the W3.18 link, and P3 and P4
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-39.
+OWNER-VISIBLE.
+
+What the SOP said. W3.15 computes `shadow_rate` over `|d| ≤ 3.0 in`. W3.18 takes the link
+`g_{e,r}(d)` "from the pooled surface". W3.21 lists P3, "machine zone does not move", and P4,
+"rate ≈ 0 or 1 and stable", beside P1 and P2.
+
+What was done instead. The pre-registration names two bands. W3.15's shadow rate, P1,
+CH1-A10 and the sensitivity grid read `|d − 1.45| ≤ 3.0 in` (D-P4-09). W3.18's B1, the D-60
+curve, its SBC and CH1-A6 read `|d| ≤ 3.0 in` on the ball-centre d. The W3.18 link is
+`glm(cs ~ ns(d, 6), binomial)` per edge and regime on |d| ≤ 8 in, pooled over umpires: the form
+the curve and the SBC were built on, not the W3.14 `bam` surface. P3 does not run in the
+sprint and is reported as "not run" until the AAA arm runs (DEV-55). P4 carries no numeric
+threshold and no verdict. The consequence of a placebo failure turns on P1 and P2 alone.
+
+## DEV-71: W4.10, W4.12 and W4.13, M1 carries the MT-05 escalation rule
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-40.
+OWNER-VISIBLE.
+
+What the SOP said. W4.10 fits 4 chains × 2,000 iterations. MT-05 holds on every reported fit.
+
+What was done instead. `docs/prereg/ch2.md` section 4.2 registers DEV-63's rule for every M1
+fit. A fit short only on R-hat or ESS, with no divergence, no tree-depth hit and E-BFMI ≥ 0.2,
+is re-run from the same seed with its draws a chain doubled, at most twice. Otherwise it is
+reported as failed. Every attempt is recorded. The scripts' flag is `--doublings 2`.
+
+## DEV-72: W4.7 and W4.10, `leverage_tercile` is registered as a rule, not as cut points
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until the cut points are computed and recorded
+here. Applied under D-R0-03's delegation, not as an owner answer. The decision is D-P4-41.
+OWNER-VISIBLE.
+
+What the SOP said. M1 and M2 enter `leverage_tercile`, binned to match the prior art's card.
+The annex promised the cut points before the tag.
+
+What was done instead. No win-probability surface exists, and the pinned card carries tercile
+labels, not cut points, so the values cannot be written before the tag. `docs/prereg/ch2.md`
+section 4.3 registers the rule: the stake `g_j` from W5's count-composed cube, over every MLB
+2026 row of `v_opportunity_open` through 2026-09-21, cut at its unweighted 1/3 and 2/3
+quantiles. The cut points are computed once, before any M1 fit, and M1 does not run until then.
+
+What closes it: a dated entry here with c1 and c2, the surface they came from and the row count.
+
+## DEV-73: W4.10, W4.12 and W4.14, four Chapter 2 code choices are pre-registered
+
+Raised 2026-09-29 (Europe/Madrid). Status: CLOSED 2026-09-29 by this entry. Applied under
+D-R0-03's delegation, not as an owner answer. The decision is D-P4-42.
+
+What the SOP said. W4.12 splits each challenger's challenges by chronological index. W4.10 sets
+`seed = 20260922`, and `config/seeds.yml` sets a Chapter 2 chain seed of 424242. SOP 9.3 gates
+CH2-H2a on catchers with ≥20 challenges. W4.14 reads a catcher framing file.
+
+What was done instead. The annex registers what the code does. CH2-H2a reads the index rebuilt
+by official date, game number, `game_pk`, at-bat and pitch, not the W4.5 index with its 29-row
+doubleheader fault. A challenger's role is the role of most of his challenges, a tie going to
+his first. M1's seed is 20260922. W4.14's framing file must count games through 2026-09-21 at
+the latest, none is built, and W4.14 waits for one. The Savant expected-rate file's pull date is
+left to the owner (D-P4-42).
+
+Follow-up, 2026-09-29, the Savant file. Status of this item: OPEN for the owner. No Savant
+leaderboard view on disk was pulled before the seal. The 2026-09-22 baseline of
+`contracts/savant_absdata.yml` is a record of counts with no page behind it, and the cached
+MLB 2026 views were fetched on 2026-09-24. `docs/prereg/ch2.md` section 7.5 registers the rule
+a view must meet, and section 10 item 9 records that W4.13 and W4.16 do not run until one does
+(D-P4-42, follow-up).
+
+## DEV-74: W4.11, three M2 items stay open after the tag
+
+Raised 2026-09-29 (Europe/Madrid). Status: OPEN until W4.11 runs. Recorded under D-R0-03's
+delegation, not as an owner answer. The decision is D-P4-43.
+
+What the SOP said. W4.11's formula, CH2-H2b's `sd_tau > 0.20 probit`, and the role-rate gate of
+SOP 9.3.
+
+What stays open. The formula has no `m:role` term, so each role's σ comes only through
+shrunken slopes. CH2-H2b's threshold is written on the probit scale while `tau_i` is in inches.
+The role-rate gate has no test id. `docs/prereg/ch2.md` section 11 lists all three.
+
+What closes it: a dated entry here for each item, before W4.11 runs. None touches M1 or the
+sprint.
+
+## DEV-75: W3.14 and W3.22, SENS-HEIGHT-SINGLE cannot be fitted by the fit code as it stands
+
+Raised 2026-09-29 (Europe/Madrid) by the merge lane. Status: OPEN until the fit lane closes it,
+before W3.14 runs. Recorded under D-R0-03's delegation, not as an owner answer. The decision is
+D-P4-04.
+
+What the plan says. `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1
+pre-register SENS-HEIGHT-SINGLE beside the primary: P0, with roster height plus 0.0022 in for
+every batter.
+
+What stands. On `phase05/ch1-fits`, `apply_heights()` in `R/lib/ch1_fits.R` applies
+`offset_noncohort_in` whenever the calibration file holds it. `--height-rule single-offset`
+takes effect only when the key is absent. W3.4's lane wrote the key on 2026-09-29, so the flag
+does nothing, and the arm cannot be fitted.
+
+What closes it. The fit lane adds SENS-HEIGHT-SINGLE as a named fit, one that applies the
+single offset while the key is present, before W3.14 runs. The override flag stays for the
+owner's override of D-P4-04. A dated entry here records the change. This lane did not touch
+that branch.

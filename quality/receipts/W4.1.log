@@ -1,5 +1,7 @@
-lint-prose selftest: OK, 3 rules, 2 fixtures
-lint-prose: 1 file(s), 0 violation(s); rules run WR-01 WR-03 WR-05; WR-02 WR-04 WR-06..WR-20 are SOP W9.13, phase 06
-W4.1 OK: formulas M1, M2, m and the sealed predicate byte-identical to their sources; 12 CH2 thresholds equal SOP 9.3; CH2-H2a..H2e each carry a threshold, a test id and a failure rule; 13 excluded columns; frame 19469 rows, AAA 9302; W4.7 table matches; 8 open items; 418 numeric literals traced, 0 untraced
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
+docs/prereg/ch2.md:19: WR-06: percentage '49.0%' with no denominator (warn)
+prose-lint: 1 file(s) from the ABS_PROSE_FILES, 0 violation(s), 1 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+W4.1 OK: formulas M1, M2, m and the sealed predicate byte-identical to their sources; 12 CH2 thresholds equal SOP 9.3; CH2-H2a..H2e each carry a threshold, a test id and a failure rule; 13 excluded columns; frame 19469 rows, AAA 9302; W4.7 table matches; 9 open items; 452 numeric literals traced, 0 untraced
 wr20: 1 file(s) from the arguments, 0 sentence(s) with "buffer" and "two inches", 0 without "outside"; 0 note(s); 0 undecodable; 0 non-text file(s) skipped; absent: none
 W4.1 anchored: 19 thresholds each at its own criterion line equal SOP 9.3 (CH2-H2a, CH2-H2b, CH2-H2c, CH2-H2d open set, CH2-H2d sealed set, CH2-H2e); 4 reproduction gates in 7.6; 4 Plus items in 7.7; 11 test ids cited in section 7, all defined in SOP section 6; 6 failure rules marked SOP or annex default; power grid equals SOP W4.8 (0 0.06 0.12 0.25 0.10 0.23 5 10,167 20,000)

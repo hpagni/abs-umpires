@@ -68,7 +68,7 @@ The three regimes follow from it.
 
 Every model fitted before this tag used 2022–2024 calls, simulated calls, or no outcome at all:
 
-- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,485 called pitches from 2022–2024 (`docs/prereg/ch1.md` sections 1 to 7).
+- SOP W3.11 fitted the frozen `bam` specification and its k ladder on 687,496 called pitches from 2022–2024, before D-P4-08 and under the single height offset (`docs/prereg/ch1.md` sections 1 to 7). The frozen specification and the rung above it were refitted under D-P4-04 on 687,366 (`docs/prereg/ch1.md` section 1.2).
 - SOP W3.4 fitted pooled contours for 2022, 2023 and 2024 to size the surviving-batter effect. Its 2025 and 2026 rows in `out/tables/height_coverage.csv` read `not_fitted_before_prereg`.
 - SOP W3.12 fitted the link and the nuisance variance components on 2022–2024 calls only. Its power curve, SBC and recovery fits use simulated calls (`docs/prereg/ch1.md` section 8).
 - SOP W4.7 sampled M1's prior only, with `sample_prior = "only"`, and never read the outcome (`docs/prereg/ch2.md` section 6).
@@ -149,11 +149,31 @@ Each sealed analysis runs once and never twice: SOP W3.23, W4.17 and the W5.11 s
 - P0 is every called pitch with `game_type == 'R'`, official date 2022-01-01 to 2026-09-21, and non-null re-projected coordinates. It holds 1,830,231 rows at the freeze.
 - P1 is P0 restricted to the ABS-measured-height cohort. It holds 1,487,927 rows at the freeze.
 
-Both counts follow D-P4-08: a pitch thrown by a position player leaves P0, and a pitcher is judged by the role he held in the season he pitched, not by his position today. The one pitcher that rule moves is player 621433, an outfielder in 2022 and 2023 who is a pitcher today. His 36 pitches in those two seasons, 32 in 2022 and 4 in 2023, stayed in P0 under the earlier rule and leave it now. Before the change P0 held 1,830,267 rows and P1 1,487,942. The 2022–2024 development sample moved from 687,496 to 687,485 pitches, and the W3.12 design from 498,059 to 498,055. Every Chapter 1 build before the tag was re-run on the new P0 (`docs/prereg/ch1.md`).
+Both counts follow D-P4-08: a pitch thrown by a position player leaves P0, and a pitcher is judged by the role he held in the season he pitched, not by his position today. The one pitcher that rule moves is player 621433, an outfielder in 2022 and 2023 who is a pitcher today. His 36 pitches in those two seasons, 32 in 2022 and 4 in 2023, stayed in P0 under the earlier rule and leave it now. Before the change P0 held 1,830,267 rows and P1 1,487,942. The 2022–2024 development sample moved from 687,496 to 687,485 pitches, and the W3.12 design from 498,059 to 498,055. Every Chapter 1 build before the tag was re-run on the new P0 except SOP W3.11's, whose record stays on 687,496 (`docs/prereg/ch1.md` section 1).
 
 `out/ch1/tab/T1_sample.csv` carries both, season by season, with one row per exclusion.
 
-**The height rule.** The owner's answer D-R0-02 makes roster height plus the calibration offset the primary batter height, in all five seasons. The primary sample is therefore P0. The ABS-measured height is a pre-registered robustness arm, on P1. This departs from the SOP's D-13 text, which made measured height the headline. The owner's answer replaces that text before the tag.
+**The height rule.** The owner's answer D-R0-02 makes roster height plus a calibration offset the primary batter height, in all five seasons. The primary sample is therefore P0. This departs from the SOP's D-13 text, which made measured height the headline. The owner's answer replaces that text before the tag.
+
+DECISIONS.md D-P4-04 refines the offset. It is an applied default the owner may override before this tag (section 14, item 14). Inside the ABS-measured cohort, roster height is the measured height rounded to the inch, so D-R0-02's 2026 calibration measures only rounding there. The rule has two offsets, both added to roster height:
+
+- inside the cohort, 0.0022 in, D-R0-02's calibration over 658 batters;
+- outside the cohort, −0.347 in (SE 0.155 in), one value for every season.
+
+The second value pools 2022, 2023 and 2024 by inverse variance. Each season compares the zone top Hawk-Eye set before ABS with height, and no call is read. `docs/prereg/ch1.md` section 1.1 gives the estimate, and `R/ch1/03_heights.R` computes it. The evidence for the listing bias is indirect, and the pooled estimate is 2.2 standard errors from zero. The offset is season-invariant, so by itself it cannot create a difference between regimes.
+
+Two pre-registered arms are reported beside the primary:
+
+- the ABS-measured arm: P1, with the measured height (D-R0-02), which the listing bias cannot reach;
+- SENS-HEIGHT-SINGLE: P0, with roster height plus 0.0022 in for every batter, the rule as the owner first answered it.
+
+**The sign-agreement clause.** DECISIONS.md D-P4-04, part 3, verbatim:
+
+> The ABS-measured-only robustness arm, which this bias cannot reach, must agree in sign with the primary on the buffer and ABS components. Otherwise the primary is reported as sensitive to the height cohort.
+
+The components are `Δ_buffer` and `Δ_ABS` of section 8.
+
+**Steps before this tag that ran under the single offset.** The W3.11 development fits, the W3.12 power curve, recovery and SBC, MT-01's prior predictive, W3.4's selection effect and W3.5's band counts gave batters outside the cohort D-R0-02's one offset. `docs/prereg/ch1.md` section 1.2 lists each with its decision (DEV-68). W3.11's k.check was re-run under D-P4-04. The others were not re-run, and the values D-R0-04 disclosed stand as run. P0, P1, the join, the challenge counts, DT-21 and DT-30 read no height outside the cohort and are unchanged.
 
 The D-13 fork turns on DT-30, the ABS-measured share of called pitches, published before this tag (CH1-A12):
 
@@ -167,7 +187,14 @@ The D-13 fork turns on DT-30, the ABS-measured share of called pitches, publishe
 
 The 2022 share is below the 0.60 trigger. The fork's roster-height branch is the one taken, and D-R0-02 applies it to all five seasons.
 
-**Exclusions.** Each is a row in `out/ch1/tab/T1_sample.csv`: `game_type != "R"`; the postseason, held out of the primary as a separate pre-registered secondary; `automatic_ball`, `pitchout`, `hit_by_pitch` and blank-coordinate rows; pitches thrown by position players. `blocked_ball` is kept as a genuine ball call. The surface fit uses `|d| ≤ 8.0 in` on the harmonised zone. The shadow band `|d| ≤ 3.0 in` is a reporting region and a sensitivity factor, not a filter.
+**Exclusions.** Each is a row in `out/ch1/tab/T1_sample.csv`: `game_type != "R"`; the postseason, held out of the primary as a separate pre-registered secondary; `automatic_ball`, `pitchout`, `hit_by_pitch` and blank-coordinate rows; pitches thrown by position players. `blocked_ball` is kept as a genuine ball call. The surface fit uses `|d| ≤ 8.0 in` on the harmonised zone. Neither shadow band below is a filter.
+
+**Two shadow bands.** `d` is the signed distance in inches from the ball's centre to the edge of the harmonised zone, negative inside. `d − 1.45` is the same distance from the nearest part of the ball, so under D-14 a pitch is in the zone when `d − 1.45 < 0`. Two bands 3.0 in wide on each side are in use:
+
+- The shadow-rate band, `|d − 1.45| ≤ 3.0 in`, on the radius-adjusted signed edge distance (D-P4-09). It covers ball-centre `d` from −1.55 to 4.45 in. W3.15's `shadow_rate` reads it, and so do P1's shadow-rate test (CH1-A3), CH1-A10's sealed-set calibration and the sensitivity grid's shadow-band factor of 2, 3 or 4 in. Where a SOP quote in section 8 writes `|d| ≤ 3.0 in` for the shadow rate, this is the band it means.
+- The B1 band, `|d| ≤ 3.0 in` on the ball-centre `d` (`docs/prereg/ch1.md` section 8.1). W3.18's stage B1 estimates each umpire's offsets on it. The D-60 power curve, its SBC and the CH1-A6 thresholds of `docs/prereg/ch1.md` section 8.5 were built on it, with d under the single offset (`docs/prereg/ch1.md` section 1.2). The raw band rows of `out/ch1/tab/T1_sample.csv`, as SOP W3.5 built them before this tag, use it too. A rebuild of W3.5 states the band and the height rule it uses.
+
+The two differ because D-P4-09 moved the shadow rate to the radius-adjusted distance, the one D-14 and SOP W3.6's overturn count use. The power curve was built on the ball-centre band, and the thresholds of `docs/prereg/ch1.md` section 8.5 hold for the estimator the curve measured. So B1 keeps that band. Moving it would leave CH1-A6 with thresholds from a different design, which `docs/prereg/ch1.md` section 8.4 did not derive.
 
 **Four games without ABS hardware.** Games 823669, 823745, 825093 and 825094 were played at neutral sites with no ABS hardware (D-P2-01). They were played on 2026-04-25, 2026-04-26, 2026-08-13 and 2026-08-23. They join neither the 2026 regime nor a control regime, and every Chapter 1 estimate excludes them. They are also the four dates of D-P3-10, which carry the 1,144 of 688,686 MLB 2026 rows that break the 0.535 / 0.27 zone rule. D-P3-10 asked for this exclusion to be stated here with its dates and row count. At the freeze the Chapter 1 analysis table still holds their 621 called pitches (section 14, item 3).
 
@@ -233,9 +260,13 @@ No per-umpire table is published: the power curve does not reach the reliability
 
 **P3 is read net of each season's published rule (D-P4-29).** The SOP row above stays verbatim and says the machine zone does not move. On raw area it has already moved 35.77 sq in between the 2023 and 2024 AAA seasons, because the published zone definition changed. The top of the zone went from 51.0% to 53.5% of batter height. Read raw, P3 would fail by rule. The pre-registered P3 claim is this: after removing the change each season's published rule implies, the machine zone does not move. Rule-net area is the machine-day contour area minus the area of that season's published zone for the same batters. The decision rule is the one P1 uses for area, with its tolerance. Two one-sided equivalence tests pass when the 90% interval on the season-to-season change in rule-net area lies entirely inside ±3 sq in.
 
+**P3 and P4 in the sprint.** P3 does not run in the SSAC abstract sprint, SOP phase 1. It needs the AAA arm, which SOP W3.20 blocks on D-11, D-12 and D-57, and the AAA pull that W3.9 waits for (DEV-55). Until the arm runs, P3 is reported as "not run". P4 has no pre-registered numeric threshold. Its called-strike rates beyond 6 in on the ball-centre `d`, outside and inside, are tabulated per season with Wilson 95% intervals, and no verdict is drawn from them.
+
 **Pre-registered consequence.** SOP W3.21 requires this sentence here verbatim:
 
 > if P1 or P2 fails, the three-regime decomposition is reported as **descriptive**, the causal language is removed from every artifact, and the failure is the headline finding.
+
+The consequence turns on P1 and P2 alone. P3 not run, or a P4 rate that moves, does not trigger it.
 
 **The sensitivity grid.** SOP W3.22 defines the multiverse that CH1-A9 reads. Its cells, verbatim:
 
@@ -355,6 +386,7 @@ Threshold, SOP section 9.2, verbatim:
 - Checked by: SOP W3.12, `Rscript R/ch1/21_synthetic.R --check`.
 - If it fails: SOP section 9.6 item 8 applies: the failure is reported as the finding, with an interval.
 - Detail: `docs/prereg/ch1.md` section 8.7.
+- At the freeze: met. Over 200 replicates at the prior of `docs/prereg/ch1.md` section 8.8, the chi-square p is 0.8906 for τ and 0.7695 for the regime mean, and all ten quantities stay inside the 95% simultaneous ECDF band.
 
 #### CH1-A9, sign stability, and when the share is reported
 
@@ -655,7 +687,7 @@ Every test id this document names is the SOP's. Their definitions follow, quoted
 ## 14. Open at the freeze
 
 1. **The Chapter 2 power grid has not run.** `docs/prereg/ch2.md` section 10, item 1. SOP W4.8, W4.18, D-28 and R-19 require it before this tag. The owner decides whether the tag waits for it.
-2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 8, among them M1's widened `Intercept` prior, which the owner may reverse.
+2. **The other Chapter 2 items.** `docs/prereg/ch2.md` section 10, items 2 to 9, among them M1's widened `Intercept` prior, which the owner may reverse. Items 3, 5 and 6 are closed there. Under item 9, no Savant leaderboard view on disk was pulled before the seal, so W4.13 and W4.16 do not run until the owner chooses a route (`docs/prereg/ch2.md` section 7.5). The `leverage_tercile` cut points are registered as a rule, and M1 does not run until they are recorded (`docs/prereg/ch2.md` section 4.3). `docs/prereg/ch2.md` section 11 lists three M2 items that stay open until W4.11.
 3. **The four games without ABS hardware are still in the analysis table.** Section 7 excludes them. SOP W3.7 must drop their 621 called pitches before SOP W3.14 fits.
 4. **Three Chapter 1 recovery clauses are not met.** All 150 replicates are scored in `docs/prereg/ch1.md` section 8.7: 10 of the 12 CH1-A7 clauses are met, and 12 of the 13 MT-03 and MT-04 clauses. The owner disclosed the three and kept the bounds and the method (DECISIONS.md D-R0-04, DEV-67). This is decided, and it is listed because the shortfall stands at the freeze.
 5. **Criteria with no SOP test id.** CH1-A3, CH1-A4, CH1-A5, CH1-A9, CH1-A10's calibration clause, CH1-A11, CH1-A13, CH1-A14, CH3-A4, CH3-A5, CH3-A6, CH3-A7, and the Chapter 2 role-rate gate. Each names the step that checks it. Assigning test ids is SOP W9.8 and W9.11 work.
@@ -667,3 +699,4 @@ Every test id this document names is the SOP's. Their definitions follow, quoted
 11. **Owner sign-off.** SOP section 9.1 closes a prose artifact with a dated owner line in `DECISIONS.md`. It has not been given.
 12. **The Chapter 1 annex covers SOP W3.11 and W3.12 only.** Sections 7, 8 and 12 of this document carry the rest of the Chapter 1 plan from the SOP text.
 13. **D-67 and the fits before the tag.** The 2022–2024 specification fits and the simulated fits of section 4 ran before this tag. Whether they break D-67's ordering, and so whether the abstract may use the wider sentence, is the owner's call.
+14. **The height offset outside the ABS-measured cohort is an applied default.** DECISIONS.md D-P4-04 was applied under the owner's delegation, D-R0-03, and it is OWNER-VISIBLE. The owner may override it before this tag. SENS-HEIGHT-SINGLE's rule is then the primary rule.

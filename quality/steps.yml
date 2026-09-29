@@ -682,14 +682,25 @@
 # shares exactly, contour cells within 2e-4. It also asserts one roster offset,
 # 100% roster+offset coverage, fits on the pre-buffer regime only, closed
 # contours, and that prereg-v1, once tagged, carries the table byte for byte.
-# About 50 s. `needs` names the warehouse directory, as W3.2 does, so a clean
-# clone reads MISSING rather than FAIL.
+#
+# DECISIONS.md D-P4-04, added 2026-09-29. The same run recomputes the offset for
+# batters outside the ABS-measured cohort from 2022-2024 sz_top (median per
+# batter-season, OLS on height and a cohort indicator, three seasons pooled by
+# inverse variance). It reads no call and no 2025 or 2026 pitch, and asserts so.
+# It fails unless data/interim/dim_batter_season/calibration.json carries
+# offset_noncohort_in and its companions, reproducing within 1e-9 in; offset_in
+# is still D-R0-02's 0.0022 in; and docs/prereg/ch1.md states the pooled value,
+# its SE, the age-adjusted value and the what-it-moves table row for row. Build
+# mode writes the keys through absump.heights.merge_noncohort. Measured
+# 2026-09-29: the offset is -0.347 in, SE 0.155 in; about 50 s. `needs` names the
+# warehouse directory, as W3.2 does, so a clean clone reads MISSING rather than
+# FAIL.
 - id: W3.4
   title: "Height harmonisation, DT-30 coverage table and the D-13 fork"
   verify: "Rscript R/ch1/03_heights.R --check"
   expect_exit: 0
   owner: W3
-  needs: R/ch1/03_heights.R, out/tables/height_coverage.csv, warehouse
+  needs: R/ch1/03_heights.R, out/tables/height_coverage.csv, warehouse, data/interim/dim_batter_season/calibration.json, docs/prereg/ch1.md
 
 # W3.5, regimes, sample and exclusions. Owner W3, fleet phase 04.
 #
@@ -844,22 +855,27 @@
 # W3.11, specification development on 2022-2024 only. Owner W3, fleet phase 04.
 #
 # R/ch1/20_spec_dev.R --check reloads the development sample (P0 in 2022-2024
-# with |d| <= 8.0 in, 687,485 rows since D-P4-08; 687,496 before) through the script's one filtered read and
-# asserts that no 2025 or 2026 row arrived. It then refits the frozen
-# specification and the rung above it, two bam fits in parallel, about 10
-# minutes and 3.9 GB peak. It fails unless both refits reproduce
-# out/dev/ch1_spec/k_sweep.csv, no k-index moves by 0.01 or more between the two
-# rungs, and docs/prereg/ch1.md carries the same k values, the k.check table,
-# the 2022-2024 disclosure, both CH1-A5 tolerances and the single-thread record.
-# GD-04 then scans the script. `needs` names the analysis table and the build's
-# out/dev files, which never enter git, so a clean clone reads MISSING rather
-# than FAIL.
+# with |d| <= 8.0 in) through the script's one filtered read and asserts that no
+# 2025 or 2026 row arrived. The build's record holds 687,496 rows, from before
+# D-P4-08, and D-P4-08 took 11 of them out of the table, so the build cannot be
+# refitted. Since 2026-09-29 the check follows DEV-68's disclosure: it asserts the
+# record's 687,496 rows, the table's 687,485 under the single offset, and the
+# k.check table of docs/prereg/ch1.md against the record. It then refits the frozen
+# specification and the rung above it under D-P4-04 (sample d8nc, 687,366 rows),
+# two bam fits in parallel, about 10 minutes and 3.9 GB peak, and fails unless both
+# reproduce the --check-noncohort record in out/dev/ch1_spec/noncohort/, no k-index
+# moves by 0.01 or more between the two rungs, and docs/prereg/ch1.md carries the
+# same k values, the three counts, DEV-68, the 2022-2024 disclosure, both CH1-A5
+# tolerances and the single-thread record. It prints one DISCLOSED line with the
+# three counts. GD-04 then scans the script. `needs` names the analysis table and
+# the out/dev files, which never enter git, so a clean clone reads MISSING rather
+# than FAIL. docs/prereg/ch1.md section 1.2 says why W3.11 was not rebuilt.
 - id: W3.11
   title: "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
   verify: "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R"
   expect_exit: 0
   owner: W3
-  needs: R/ch1/20_spec_dev.R, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_spec/frozen_spec.json, out/dev/ch1_spec/k_sweep.csv
+  needs: R/ch1/20_spec_dev.R, docs/prereg/ch1.md, data/marts/ch1_called.parquet, out/dev/ch1_spec/frozen_spec.json, out/dev/ch1_spec/k_sweep.csv, out/dev/ch1_spec/noncohort/fits/k24-18-12-10_ord_d8nc.json, out/dev/ch1_spec/noncohort/fits/k32-24-16-20_ord_d8nc.json
 
 # W3.12, synthetic machinery: the D-60 power curve, SBC and injected-effect recovery.
 # Owner W3, fleet phase 04. MT-09 is the gate.
@@ -1303,6 +1319,58 @@
   owner: W6
   needs: docs/harmonized_zone.md, out/tables/height_coverage.csv, out/ch1/tab/T2_zone_gate.csv, R/ch1/03_heights.R, R/ch1/11_zone_gate.R, R/lib/zone.R, src/absump/geometry.py, data/marts/ch1_called.parquet, warehouse
 
+# W6.10, the SSAC abstract draft, table1, figure1 and the R1 agenda. Owner W6, fleet
+# phase 06 (abstract lane). Registered 2026-09-29, Madrid.
+#
+# quality/w610_check.sh runs scripts/abstract.sh (make abstract) and then the SOP word
+# counter at 470 on the filled markdown as written, the SSAC format checks, the exhibit
+# count, WR-14 on the figure's alt text, and the prose, number and blind gates on the
+# step's files, then make lint-prose. Proven on a SYNTHETIC ledger by
+# ops/abstract_dryrun.sh, which also plants one fault per gate and requires each caught.
+# Until HEAD descends from prereg-v1, scripts/abstract.sh refuses the real ledger with
+# exit 4 (GD-12), so this verify fails by design; after the tag it reads MISSING until
+# W6.7 has written the Chapter 1 slots. The dry run also checks that every slot prints
+# its synthetic truth (tools/comms/synthetic_abstract_inputs.py --verify).
+- id: W6.10
+  title: "SSAC abstract draft from the template, table1, figure1, review R1 agenda"
+  verify: "bash quality/w610_check.sh"
+  expect_exit: 0
+  owner: W6
+  needs: out/tables/abstract_slots_ch1.csv, out/ch1/tab/T1_sample.csv, out/ch1/tab/T2_zone_gate.csv, out/ch1/tab/T4_decomposition.csv, out/ch1/tab/T4_plane_component.csv, out/ch1/tab/umpire_eb_summary.csv, abstract/ssac2027_abstract.md, tools/comms/fill_slots.R, tools/comms/build_exhibits.R
+
+# W6.11, RP-08 clean-clone reproduction and the numbers freeze. Owner W6, fleet phase 06
+# (abstract lane). Registered 2026-09-29, Madrid.
+#
+# ops/coldbuild.sh clones origin into /tmp/coldbuild, bootstraps (uv sync --locked,
+# renv::restore), links data/ read only, empties the clone's ledger, runs make warehouse
+# and make all, re-exports, and compares every abstract slot and table cell with
+# docs/numbers.json into out/tables/coldbuild_compare.csv. It refuses to start before
+# prereg-v1 is on origin (GD-12). ops/coldbuild.sh --freeze tags numbers-frozen-ssac2027
+# behind six guards. The verify, quality/rp08.sh, reads that evidence and fails when the
+# ledger changed after the cold build.
+- id: W6.11
+  title: "Clean-clone reproduction RP-08 and the numbers-frozen-ssac2027 freeze"
+  verify: "bash quality/rp08.sh"
+  expect_exit: 0
+  owner: W6
+  needs: out/tables/coldbuild_compare.csv, out/tables/coldbuild_compare.json, ops/coldbuild.sh
+
+# W6.12, the SSAC submission package. Owner W6, fleet phase 06 (abstract lane).
+# Registered 2026-09-29, Madrid. The form submit is the owner's: it is sign-in gated.
+#
+# quality/w612_check.sh runs the SOP word counter verbatim on
+# submissions/ssac2027/submitted-abstract.txt and on the no-upload copy (both must fit
+# until abstract/FORM-FIELDS.md answers the upload question), the blind-review grep, the
+# SSAC format, and the prose and number gates. It checks the package, never the form.
+# The step closes when the archive agent commits the confirmation, the receipt and the
+# exact submitted text and tags ssac2027-abstract-submitted.
+- id: W6.12
+  title: "SSAC submission package and paste sheet; the submit is owner-only"
+  verify: "bash quality/w612_check.sh"
+  expect_exit: 0
+  owner: W6
+  needs: abstract/owner-calls.json, submissions/ssac2027/submitted-abstract.txt, submissions/ssac2027/paste-sheet.md
+
 # W7.1, the prose linter and its self-test. Owner W7, fleet phase 04. SOP W7.1..W7.5
 # cluster and section 2.8: one implementation at quality/prose_lint.py of W7.2 rules 1
 # to 11 and the ban list, WR-01..WR-08, and the P8 ban list on docs/p8/**. Rule 6 and
@@ -1523,12 +1591,54 @@
   owner: W7
   needs: quality/check_prereg.py, config/seal.yml, config/throttle.yml, src/absump/seal.py
 
+# W7.10, the seal-order tripwire (GD-12, D-67). Owner W7, fleet phase 06 (abstract lane).
+# Registered 2026-09-29, Madrid.
+#
+# tools/comms/check_seal_order.sh is the W7 path; it runs ops/check_seal_order.sh (W1.8),
+# so the two cannot drift. W7.10 fixed that script for a git worktree, where .git is a
+# file. tests/guard/test_seal_order_tripwire.py plants eight orderings in a scratch repo
+# with its own bare origin and asserts each exit status, so the tripwire is proven to fire
+# before any real receipt exists. On the real repository the check passes vacuously until
+# the first fit receipt; scripts/abstract.sh allows the wide pre-registration sentence
+# only on a non-vacuous pass.
+- id: W7.10
+  title: "The seal-order tripwire, GD-12"
+  verify: "uv run --locked pytest tests/guard/test_seal_order_tripwire.py -q && bash tools/comms/check_seal_order.sh"
+  expect_exit: 0
+  owner: W7
+  needs: tools/comms/check_seal_order.sh, ops/check_seal_order.sh, tests/guard/test_seal_order_tripwire.py, config/seal.yml
+
 - id: W7.11
   title: "Retired, folded into W7.10 at assembly"
   retired: true
   reason: "folded into W7.10 at assembly"
   date: 2026-09-23
   owner: W7
+
+# W7.24, number traceability: tools/comms/export_numbers.R writes docs/numbers.json.
+# Owner W7; fleet phase 06 seeds it for the abstract and phase 12 owns it from then on.
+# Registered 2026-09-29, Madrid.
+#
+# The exporter carries every entry from a committed CSV under out/ with its file and row
+# (W6.7 abstract_slots_ch1.csv, W6.9 abstract_slots_ch2.csv, W6.8 umpire_eb_summary.csv,
+# W3.16 T4_decomposition.csv, W3.17 T4_plane_component.csv) and keeps the W6.3 and W6.4
+# entries byte for byte. It rounds once, by tools/comms/abstract_slots.json, and writes
+# the printed strings beside each value, so WR-07 sees what the abstract prints. It also
+# carries the Methods counts, P0 and its games from W3.5's T1_sample.csv and the scored
+# challenges from W3.8's T2_zone_gate.csv, as N_CALLED_P0, N_GAMES_P0 and N_CHAL (D-P4-05,
+# DEV-47), and puts every new entry before W6.4's join slots so W6.3's and W6.4's byte
+# checks stay green. Outside --synthetic it refuses a fit-result input with exit 4 unless
+# HEAD descends from prereg-v1 (GD-12). The verify regenerates in memory and fails if
+# docs/numbers.json would change, which is how a hand edit is caught, runs the number
+# gate, and runs tests/unit/test_abstract_ledger.py, which proves the byte order against
+# W6.3's and W6.4's own renderers, the P0 mapping and the GD-12 refusal on SYNTHETIC
+# inputs. app/data/*.rds is read from phase 12.
+- id: W7.24
+  title: "Number traceability, docs/numbers.json from out/"
+  verify: "Rscript tools/comms/export_numbers.R --check && uv run --locked python quality/check_numbers.py && uv run --locked pytest tests/unit/test_abstract_ledger.py -q"
+  expect_exit: 0
+  owner: W7
+  needs: tools/comms/export_numbers.R, tools/comms/abstract_slots.json, docs/numbers.json, quality/check_numbers.py, out/ch1/tab/T1_sample.csv, out/ch1/tab/T2_zone_gate.csv, tests/unit/test_abstract_ledger.py
 
 # W8.2, the only pre-gate P8 step. SOP section 0.1 shape: one step, five keys.
 # The verify command is offline. It asserts the markets URL, the thirteen
@@ -1652,11 +1762,18 @@
   owner: W9
   needs: tests/guard/gd04_scan.py, tests/guard/redteam_run.sh, tests/guard/redteam.patch, tests/guard/test_no_sealed_reads.py, tests/guard/test_seal_receipts.py, tests/guard/test_seal_immutability.py, tests/guard/test_dbt_dev_target.py, tests/guard/test_commit_guards.py, tests/guard/test_redteam.py, quality/sealed_manifest.json, quality/prereg.lock
 
+# W9.13, prose lint: the W7.1-W7.5 stack in service and the WR-01..WR-20 pack. Owner W9,
+# fleet phase 06 (abstract lane). SOP W9.13 and section 6.6. Registered 2026-09-29, Madrid.
+#
+# One linter (SOP 2.8). quality/prose_lint.py carries W7's rules 1 to 11 and the WR pack
+# as quality/wr-scope.md scopes it; ops/lint_prose.sh now runs it instead of its own copy
+# of the ban list. quality/check_numbers.py is the one number gate (WR-07) and takes
+# --ledger for the dry run. The four rules whose targets W7 and W8 build (WR-10, WR-13,
+# WR-16, WR-17) print SKIP with the path they looked for. The verify runs all four gates
+# every time, so one failure does not hide another.
 - id: W9.13
-  title: "Writing rules, the three prose rules and the number trace"
-  # Both gates run, always. `&&` short-circuited: a failing lint_prose meant
-  # check_numbers never ran, and the receipt reported only half the violations.
-  verify: "bash ops/lint_prose.sh; rc_prose=$?; uv run --locked python quality/check_numbers.py; rc_numbers=$?; [ $rc_prose -eq 0 ] && [ $rc_numbers -eq 0 ]"
+  title: "Prose lint: the W7 linter stack in service over abstract/, the WR-01..WR-20 pack"
+  verify: "uv run --locked python quality/prose_lint.py --selftest; a=$?; make lint-prose; b=$?; uv run --locked python quality/check_numbers.py; c=$?; uv run --locked python tools/comms/check_blind.py; d=$?; [ $a -eq 0 ] && [ $b -eq 0 ] && [ $c -eq 0 ] && [ $d -eq 0 ]"
   expect_exit: 0
   owner: W9
-  needs: ops/lint_prose.sh, quality/check_numbers.py, docs/numbers.json, docs/priorart-numbers.txt, docs/numbers-allow.txt
+  needs: quality/prose_lint.py, quality/check_numbers.py, quality/checks/wr20.py, quality/banned.txt, quality/wr-scope.md, tools/comms/check_blind.py, docs/numbers.json, docs/priorart-numbers.txt, docs/numbers-allow.txt

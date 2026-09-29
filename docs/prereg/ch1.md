@@ -20,7 +20,91 @@ What the development saw, in full:
 - Earlier steps published 2022–2024 numbers before the tag. W3.4 wrote pooled contour areas per season to `out/tables/height_coverage.csv`. W3.5 wrote raw shadow-band called-strike rates to `out/ch1/tab/T1_sample.csv`.
 - No quantity for 2025 or 2026 was estimated.
 
-Batter height is roster height plus the calibration offset, the primary cohort under DECISIONS.md D-R0-02. The ABS-measured cohort was fitted once, as a sensitivity row in section 7.
+Batter height in every development fit is roster height plus the one calibration offset of DECISIONS.md D-R0-02. D-P4-04 refined that rule before the tag. Section 1.1 states the rule the primary analysis uses, and section 1.2 lists the steps that ran under the single offset. The ABS-measured cohort was fitted once, as a sensitivity row in section 7.
+
+### 1.1 The height rule: D-R0-02, refined by D-P4-04
+
+The primary batter height is roster height plus an offset, in every season from 2022 to 2026 (D-R0-02). DECISIONS.md D-P4-04 gives the offset one value inside the ABS-measured cohort and one outside it:
+
+- Inside the cohort, H = roster height + 0.0022 in. This is D-R0-02's calibration: the mean of measured minus roster height over the 658 batters who carry both in 2026, SD 0.2909 in.
+- Outside the cohort, H = roster height − 0.347 in (SE 0.155 in). One value serves every season.
+
+Both offsets are added to roster height. `data/interim/dim_batter_season/calibration.json` holds them as `offset_in` and `offset_noncohort_in`, with a `convention` string that says so. `R/ch1/03_heights.R` (SOP W3.4) computes the second value, and its `--check` recomputes it from the inputs.
+
+Why the cohort's offset cannot serve outside it. Inside the cohort, roster height is the measured height rounded to the inch, for 658 of 658 batters. D-R0-02's offset therefore measures rounding. It cannot see a listing error outside the cohort, where no measured height exists.
+
+The estimate uses 2022–2024 only and reads no call. For each season, every batter-season with at least 200 pitches carrying `sz_top` gives its median `sz_top`, the zone top that Hawk-Eye set before ABS. One least-squares fit regresses it on height and on an indicator for batters outside the cohort. Height is measured inside the cohort and listed outside it. Listed minus true height outside the cohort is minus the indicator's coefficient over the height slope. Its SE is the coefficient's SE over the slope. The three seasons are pooled by inverse variance, and the offset is minus the pooled value. The method is the W3.4 stat verifier's (`logs/evidence/W3.4.verify-stat.log`, section G), and it reproduces the verifier's per-season values.
+
+| season | batters outside the cohort | batters inside | listed minus true, in | SE, in | age-adjusted, in | SE, in |
+|---|---:|---:|---:|---:|---:|---:|
+| 2022 | 270 | 272 | 0.475 | 0.248 | 0.388 | 0.264 |
+| 2023 | 204 | 335 | 0.255 | 0.269 | 0.177 | 0.291 |
+| 2024 | 132 | 389 | 0.276 | 0.295 | 0.205 | 0.312 |
+| pooled | 606 batter-seasons | | 0.347 | 0.155 | 0.268 | 0.166 |
+
+The age-adjusted fit adds the batter-season mean of Statcast's `age_bat` as a third covariate. It gives an offset of −0.268 in (SE 0.166 in). It is reported and not used. D-P4-04 and the verifier's log report both estimates and choose neither, so the primary takes the fit with fewer modelling choices.
+
+What the evidence supports, stated plainly. It is indirect: it infers height from where the zone top was set, not from a measurement. The pooled bias sits 2.2 standard errors from zero. The 606 batter-seasons are 328 batters, and the three seasons share them, so the pooled SE, which treats the seasons as independent, is too small.
+
+The offset is one value for every season, so it cannot by itself create a difference between regimes. Its weight in a season's pooled zone scales with that season's share of called pitches from batters outside the cohort, and that share falls from 2022 to 2025. The table gives the size of the correction. For those batters the zone top moves by 53.5% and the bottom by 27% of the height change, −0.349 in, which is the non-cohort offset minus the cohort offset.
+
+| season | called pitches | from batters outside the cohort | share | zone top shift for those batters, in | zone bottom shift, in |
+|---|---:|---:|---:|---:|---:|
+| 2022 | 367,145 | 149,286 | 0.4066 | -0.187 | -0.094 |
+| 2023 | 374,523 | 102,459 | 0.2736 | -0.187 | -0.094 |
+| 2024 | 367,017 | 64,129 | 0.1747 | -0.187 | -0.094 |
+| 2025 | 368,925 | 27,693 | 0.0751 | -0.187 | -0.094 |
+
+In 2026, 2 of 358,461 called pitches come from batters outside the cohort (DT-30). The zone moves down in feet. In the normalised coordinate zn = z × 12 / H, the same pitches move up, so a fitted contour read for a 72-inch batter moves the other way.
+
+**Two arms beside the primary, both pre-registered.**
+
+- The ABS-measured arm: P1, with the measured height `H_abs` (D-R0-02). The listing bias cannot reach it.
+- SENS-HEIGHT-SINGLE: P0, with roster height plus D-R0-02's 0.0022 in for every batter. This is the rule as the owner first answered it. It is reported beside the primary, never in its place.
+
+**The sign-agreement clause.** DECISIONS.md D-P4-04, part 3, verbatim:
+
+> The ABS-measured-only robustness arm, which this bias cannot reach, must agree in sign with the primary on the buffer and ABS components. Otherwise the primary is reported as sensitive to the height cohort.
+
+The buffer and ABS components are `Δ_buffer` and `Δ_ABS` of `PREREGISTRATION.md` section 8.
+
+### 1.2 Steps before the tag that ran under the single offset
+
+Every Chapter 1 step before D-P4-04 was implemented gave a batter outside the cohort roster height plus D-R0-02's one offset. The table lists each step whose input held such a batter's zn or d, and what was done. The deviation is DEV-68.
+
+| step | input under the single offset | decision |
+|---|---|---|
+| W3.11, sections 1 to 7 | zn and d of 2022–2024, 687,496 rows | k.check re-run under D-P4-04, below. The rest is not re-run. |
+| W3.12(c), the power curve | the design's d, 2022–2026; the link and the variance components, fitted on 2022–2024 | not re-run |
+| W3.12(a), recovery | zn and d of the 2024 rows | not re-run |
+| W3.12(b), SBC | the design's d | not re-run |
+| MT-01's prior predictive, section 8.8 | the link and the 2022–2024 band | not re-run |
+| W3.4, the selection effect in `out/tables/height_coverage.csv` | the all-batter arm, 2022–2024 | not re-run |
+| W3.5, the band rows of `out/ch1/tab/T1_sample.csv`, d within 8.0 in and 3.0 in, and the raw shadow-band rates | d, 2022–2026 | not re-run |
+
+W3.11's k.check, re-run on 2026-09-29. `Rscript R/ch1/20_spec_dev.R --check-noncohort` refits the frozen specification and the rung above it on the development sample under D-P4-04. That sample holds 687,366 rows: 2022 226,513; 2023 233,551; 2024 227,302. The same table under the single offset holds 687,485.
+
+- Every group stays stable at the frozen k. The largest k-index change between the frozen fit and the rung above it is 0.0007, against the 0.01 rule. No k changes.
+- The `te()` k-indices read 0.964 to 0.972, against 0.956 to 0.962 in section 3, each with a permutation p-value below 0.01. The reading of section 3 stands: residual structure, not a basis that is too small.
+- `s(velo)` reads 0.986 with p = 0.025, against 0.996 and 0.2675. Its k-index does not move from k 10 to k 20.
+- The two runs differ in more than the height rule. D-P4-08 moved 11 rows, and k.check draws its 20,000-row sub-sample from a different row set.
+- The 2023-minus-2022 dry run of section 5 moves from −0.172 to −0.199 in at the top edge, and from −9.89 to −10.26 sq in in area. No acceptance criterion reads that contrast.
+
+The comparison is in `out/dev/ch1_spec/noncohort/`, which is not committed.
+
+W3.11 was not rebuilt. A rebuild under D-P4-04 would change no k. It would rewrite the recorded figures of sections 1 and 3 to 7: the k-indices and the dry run above already differ from sections 3 and 5. The build's own rows are no longer all in the table, because D-P4-08 took 11 of them out, so the build cannot be refitted either. W3.11's registered check, `Rscript R/ch1/20_spec_dev.R --check`, therefore follows the disclosure since 2026-09-29. It asserts the build's record of 687,496 rows, the table's 687,485 under the single offset, and the k.check table of section 3 against the record. It then refits the frozen specification and the rung above it under D-P4-04 on 687,366 rows. It passes only if both reproduce the `--check-noncohort` record and every group stays stable. It prints the three counts with DEV-68.
+
+Why the W3.12 simulations are not re-run. They measure the estimator's operating characteristics on simulated calls. The height rule moves the zone of a minority of batters by the amounts in section 1.1, and it does not change the estimator. The 150 recovery replicates, the SBC and the power curve take hours, and the values DECISIONS.md D-R0-04 disclosed stay as run. MT-01's margin is thin: the prior's boundary is s = 0.3013 against the 0.30 chosen. Its inputs would move under D-P4-04 and were not recomputed, so that margin stands under the single offset.
+
+Why W3.4 and W3.5 are not re-run. The selection effect holds one height rule fixed across its two arms, which is how SOP W3.4 defines it. The W3.4 stat verifier sized a D-P4-04 correction on it (DECISIONS.md D-P4-04). The T1 rows are descriptive counts on the analysis table's d. The Chapter 1 fit code recomputes d under D-P4-04 at fit time and reports its own row counts.
+
+Not affected, checked by reading how each is computed:
+
+- P0 and P1. P0 filters on game type, date, call type, coordinates and the pitcher's role, never on height. P1 is P0's rows with a measured height.
+- The join and the challenge counts, which read no height.
+- The DT-21 zone gate. It reads measured heights, and all 10,168 challenged pitches come from batters inside the cohort. Its roster-height row, 10,043 of 10,168, therefore uses the cohort offset, which D-P4-04 leaves unchanged.
+- DT-30, which counts called pitches by cohort, not by height.
+- The analysis table. It stores H with D-R0-02's one offset, and the fit code moves the rows outside the cohort at fit time. No mart is rebuilt.
 
 ## 2. The frozen specification
 
@@ -180,7 +264,7 @@ Each row is one fit on 2022–2024. The last five columns are the 2023-minus-202
 
 No k change moves an edge change by more than 0.004 in or the area change by more than 0.01 sq in. The largest probability difference from a k change, 0.0138, comes from the main k at 32. The ABS-measured cohort moves the top-edge change by 0.055 in and the area change by 1.51 sq in. That cohort is a different set of batters with a different height rule, so the gap is a cohort effect, not a basis effect.
 
-No fitted model object from this step is saved. GD-01 fails on a fitted object under `out/` with no `provenance.json` beside it. GD-12 fails on any `provenance.json` before `prereg-v1` is pushed. `Rscript R/ch1/20_spec_dev.R --check` refits the frozen specification and the rung above it, and compares both with this file.
+No fitted model object from this step is saved. GD-01 fails on a fitted object under `out/` with no `provenance.json` beside it. GD-12 fails on any `provenance.json` before `prereg-v1` is pushed. `Rscript R/ch1/20_spec_dev.R --check` compares the build's record with this file. It then refits the frozen specification and the rung above it under D-P4-04 and compares both with the record of section 1.2.
 
 ## 8. Umpire heterogeneity: the D-60 power curve and the CH1-A6 thresholds
 
@@ -190,7 +274,7 @@ It was run twice: the first run on 2026-09-25, the second from 2026-09-25 to 202
 
 ### 8.1 What was simulated
 
-The design is every real called pitch of 2022–2026 in the shadow band, |d| ≤ 3.0 in: 498,055 pitches from 114 umpires in 12,060 games. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
+The design is every real called pitch of 2022–2026 in the B1 band, |d| ≤ 3.0 in on the ball-centre d: 498,055 pitches from 114 umpires in 12,060 games. That d is under the single offset of section 1.2. Each pitch keeps its umpire, season, game, edge and d. Only the call is simulated. The script reads no call from 2025 or 2026: its design read selects no outcome column, and `--check` asserts that.
 
 Two inputs come from 2022–2024 calls, and from nothing later:
 
@@ -201,6 +285,8 @@ The generating offset of umpire u in season s at edge e is the sum of those four
 
 The same link serves all five seasons. The SOP measured 1.405 logit per inch on 2026-09-15; the 2022–2024 link is flatter. So the per-cell standard errors in the curve are, if anything, larger than 2025 and 2026 will give.
 
+**Two shadow bands.** d is the signed distance from the ball's centre to the zone edge, negative inside, and d − 1.45 is the radius-adjusted signed edge distance of D-14. The B1 band above, |d| ≤ 3.0 in on the ball-centre d, is the band of the design, the SBC and the CH1-A6 thresholds, and W3.18's stage B1 uses it. W3.15's `shadow_rate`, and with it placebo P1, reads a different band: D-P4-09's |d − 1.45| ≤ 3.0 in, which covers ball-centre d from −1.55 to 4.45 in. D-P4-09 moved the shadow rate there. B1 stays on the band the curve was built on, because the CH1-A6 thresholds hold for the estimator the curve measured. `PREREGISTRATION.md` section 7 names both.
+
 ### 8.2 The estimator the curve measures
 
 The whole SOP W3.18 estimator runs on each simulated league.
@@ -208,6 +294,8 @@ The whole SOP W3.18 estimator runs on each simulated league.
 - B1: for each umpire-season-edge, δ maximises the binomial likelihood of y ~ g_e(d − δ) over [−4, 4] in by 0.01 in. The SE is the profile half-width where the log likelihood falls by 0.5. B2 keeps cells with at least 30 pitches whose δ is not at the grid bound.
 - B2: the SOP formula and priors, with two changes made before the tag: the prior on the three `edge:abs_step` coefficients is `normal(0, 0.30)` (section 8.8), and the sampler settings are the ones below. Seed 20260922. Regime enters as two step contrasts, `buf_step` (1 in 2025 and 2026) and `abs_step` (1 in 2026). This is the SOP's `edge:regime` and `(1 + regime | umpire_hp_id)` re-coded, so the nine edge-by-regime means are unchanged. The `abs_step` slope is each umpire's 2025-to-2026 response, and its SD is τ. W3.18 uses this coding, so the thresholds below apply to the fit it runs. The re-coding is not neutral for the prior: section 8.8.
 - B3: each umpire-season's plate games are split odd and even by game index, and B1 runs on each half. The per-umpire response is 2026 minus 2025, centred per edge and pooled over edges by precision. It is correlated across halves and Spearman-Brown corrected. MT-07 makes the variance-components reliability the gating value. For the response it is 1 minus the mean posterior variance of the umpire's `abs_step` over the posterior mean of τ².
+
+**The W3.18 link, pre-registered.** SOP W3.18 says to "take the fitted link `g_{e,r}(d)` from the pooled surface". W3.18 reads that as one link per edge and regime: `glm(cs ~ ns(d, 6), binomial)` on that edge's pitches of that regime with |d| ≤ 8 in, pooled over umpires. It is the form of the calibration link of section 8.1, and the power curve and the SBC were built on that link, so the CH1-A6 thresholds apply to a B1 that uses it. The W3.14 `bam` surface does not serve as the link. It is a surface in (x_mid, zn) with umpire and count terms, and the curve never measured B1 against it. In the curve one link, fitted on 2022–2024, served every season. At W3.18 each regime has its own link, so δ is an umpire's offset from his regime's league link. B2's league steps then sit near zero, and τ, the SD of the umpires' responses, is unchanged.
 
 The curve measures two estimators on the same simulated leagues. `sop` is B2 as above. `ue_us` adds `(1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)`, the two nuisance terms the calibration found. A rule written in the script before any `ue_us` seed ran chose which one sets CH1-A6. It is `sop` if its 95% interval for τ covers the true τ in at least 13 of 15 seeds. Failing that it is `ue_us` on the same test, and failing both, neither.
 
@@ -222,7 +310,7 @@ Before any seed of the second curve ran, the failing fits were re-run on their o
 
 These are the pre-registered settings for the curve, SBC and W3.18. `ue_us` keeps 6,000 draws a chain, a margin over the 4,000 at which its worst fit reached R-hat 1.008. The 2022–2024 calibration fit carries `ue_us`'s two nuisance terms and uses its settings. `R/ch1/21_synthetic.R` holds them in `STAN_SETTINGS`, and every fit records the settings it ran with.
 
-**The MT-05 escalation, pre-registered for the curve and W3.18.** It covers a reported fit with no divergence, no tree-depth hit and E-BFMI of at least 0.2. If that fit's R-hat is above 1.01 or its ESS is below 400, it is run again from the same seed with the draws a chain doubled, at most twice. A fit with a divergence, or still short after two doublings, is reported as failed. Every attempt is recorded. SBC fits are not reported fits and never escalate. The rule was added when one fit of the second curve, `ue_us` at τ = 0.30 in seed 1, reached R-hat 1.0133 at 6,000 draws a chain. That was before the fit was re-run, and the rule is the one W3.18 applies.
+**The MT-05 escalation, pre-registered for the curve and W3.18.** It covers a reported fit with no divergence, no tree-depth hit and E-BFMI of at least 0.2. If that fit's R-hat is above 1.01 or its ESS is below 400, it is run again from the same seed with the draws a chain doubled, at most twice. A fit with a divergence, or still short after two doublings, is reported as failed. Every attempt is recorded. SBC fits are not reported fits and never escalate. The rule was added when one fit of the second curve, `ue_us` at τ = 0.30 in seed 1, reached R-hat 1.0133 at 6,000 draws a chain. The rule was written before that fit was re-run, and it is the one W3.18 applies. Under it the fit met MT-05 after one doubling (section 8.6).
 
 ### 8.3 The curve
 
@@ -275,7 +363,7 @@ Stated in words: τ is reported with its 95% interval. "Material" is declared on
 - The two differ because the calibration found an umpire-by-season shift of 0.097 in, common to the three edges. A split half shares it; the umpire's true ABS response does not include it.
 - The squared correlation between each umpire's shrunken `sop` response and his true response is 0.318 at τ = 0.20 in and 0.519 at τ = 0.30 in. A named table would rank umpires mostly on noise at τ = 0.20 in.
 - `sop` puts τ low: a mean posterior median of 0.158 in at a true 0.20 in, where `ue_us` gives 0.188 in. The likely cause is the persistent umpire-by-edge tendency of 0.217 in, which `sop` leaves to its residual SD.
-- MT-05 on the 30 fits. In the first run, 3 of 15 `sop` fits had divergent transitions, 6 in total, all at τ = 0.10 in. All 15 `ue_us` fits failed on R-hat or ESS, the worst at R-hat 1.051 and bulk ESS 106. At the settings of section 8.2 none of the 30 fits diverges. Every `sop` fit meets MT-05 at once: worst R-hat 1.0072, lowest bulk ESS 982, lowest tail ESS 1,313. 14 of the 15 `ue_us` fits meet it too. The fifteenth, τ = 0.30 in seed 1, reached R-hat 1.0133 and bulk ESS 572 at 6,000 draws a chain. Its escalated re-run, at 12,000 draws a chain, never finished: the Mac hibernated from 2026-09-26 to 2026-09-29, and the job was killed on 2026-09-29. So the curve's MT-05 verdict reads `sop`, the estimator that sets CH1-A6, at the settings of section 8.2. `ue_us` is a sensitivity estimator, and its MT-05 convergence is deferred to W3.18, which applies the escalation rule above (DECISIONS.md D-P4-35, DEV-64).
+- MT-05 on the 30 fits. In the first run, 3 of 15 `sop` fits had divergent transitions, 6 in total, all at τ = 0.10 in. All 15 `ue_us` fits failed on R-hat or ESS, the worst at R-hat 1.051 and bulk ESS 106. At the settings of section 8.2 none of the 30 fits diverges, and all 30 meet MT-05. Every `sop` fit meets it at once: worst R-hat 1.0072, lowest bulk ESS 982, lowest tail ESS 1,313. 14 of the 15 `ue_us` fits meet it at 6,000 draws a chain. The fifteenth, τ = 0.30 in seed 1, reached R-hat 1.0133 and bulk ESS 572 there, so the escalation rule doubled its draws. That re-run was lost when the Mac hibernated from 2026-09-26 to 2026-09-29. It ran again on 2026-09-29, from the same seed at 12,000 draws a chain, and met MT-05. It had no divergence and no tree-depth hit, lowest E-BFMI 0.593, R-hat 1.0066, bulk ESS 1,106 and tail ESS 2,644. Over the 15 `ue_us` fits the worst R-hat is 1.0082, the lowest bulk ESS 897 and the lowest tail ESS 1,074. The re-run left the `ue_us` rows of section 8.3 unchanged. Nothing on this point is deferred to W3.18 (DECISIONS.md D-P4-35, DEV-64).
 - The 2022–2024 calibration fit, at `ue_us`'s settings, reached R-hat 1.0059 and bulk ESS 1,670; in the first run, R-hat 1.021 and bulk ESS 384. It sets simulation inputs only and is not a reported estimate.
 
 ### 8.7 Injected-effect recovery and SBC, SOP W3.12(a) and (b)
@@ -344,7 +432,7 @@ SBC. Parameters are drawn from the B2 prior and δ is drawn from the B2 likeliho
 
 The 200 replicates ran on 2026-09-25 for `sop`, the estimator that sets CH1-A6. The chi-square p is 0.770 for τ and 0.993 for the regime mean. The worst Benjamini-Hochberg-adjusted p is 0.441, for the residual SD. All ten quantities stay inside the ECDF band. 25 of the 200 fits had divergent transitions, 58 in total. That run used the SOP's `normal(0, 1)` on `abs_step` and the first curve's sampler settings.
 
-The SBC at the prior of section 8.8 and the settings of section 8.2 started on 2026-09-26. Both of its workers failed when the Mac hibernated, with 37 of the 200 replicates on disk. Scored on those 37, all ten quantities stay inside the ECDF band. The chi-square p runs from 0.1186 to 0.9915, 0.9915 for τ and 0.1186 for the regime mean, and the worst adjusted p is 0.9613. The other 163 replicates are deferred, so CH1-A8 is not yet read at this prior (DECISIONS.md D-P4-36, DEV-65).
+The SBC at the prior of section 8.8 and the settings of section 8.2 started on 2026-09-26. The hibernation stopped it with 37 of the 200 replicates on disk, and it finished on 2026-09-29 (DECISIONS.md D-P4-36, DEV-65). Over all 200 replicates, the chi-square p is 0.8906 for τ and 0.7695 for the regime mean. Across the ten quantities it runs from 0.1538, for the residual SD, to 0.8906. The worst Benjamini-Hochberg-adjusted p is 0.8130. All ten quantities stay inside the 95% simultaneous ECDF band. None of the 200 fits had a divergent transition. CH1-A8 is met, and so are MT-02's clauses at L = 200. MT-02's L = 1,000 run is due by 2026-12-04.
 
 ### 8.8 The prior on the 2025-to-2026 league step, and MT-01
 

@@ -1,5 +1,6 @@
-........................................................................ [ 50%]
-........................................................................ [100%]
+........................................................................ [ 46%]
+........................................................................ [ 93%]
+..........                                                               [100%]
 =============================== warnings summary ===============================
 tests/guard/test_seal_receipts.py::test_every_fit_artifact_has_a_receipt
   /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:123: VacuousGuard: GD-01 vacuous: no fit artifacts under out/ yet, because phase 01 fits nothing

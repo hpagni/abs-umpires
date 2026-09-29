@@ -5,8 +5,8 @@ R/ch1/29_synthetic_table.R with a fixed seed, and its truth is the generating fu
 step injects the W3.12(a) shifts, top -0.60, bottom +0.30 and half-width -0.10 in. The buffer step
 is -0.30, +0.15 and +0.05 in, over a pre-trend of -0.05, +0.03 and -0.04 in a season.
 
-    fast   the R unit suite (tests/ch1/test_ch1_sprint.R), and the ledger generator keeping the
-           W6.3 and W6.4 generators' bytes
+    fast   the R unit suite (tests/ch1/test_ch1_sprint.R). The ledger generator keeping the W6.3
+           and W6.4 generators' bytes is tests/unit/test_abstract_ledger.py's (W7.24).
     slow   the whole chain on the tiny synthetic table, every entry point called as the post-tag
            run calls it, with 200 draws and a 2-chain sampler. The decomposition's 95% intervals
            must cover the injected buffer and ABS shifts, and the output checker must pass on
@@ -14,7 +14,6 @@ is -0.30, +0.15 and +0.05 in, over a pre-trend of -0.05, +0.03 and -0.04 in a se
 """
 
 import csv
-import importlib.util
 import json
 import pathlib
 import re
@@ -59,13 +58,6 @@ def rscript(*args, timeout=3600):
     )
 
 
-def load_module(name, path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def read_rows(path):
     with open(path, encoding="utf-8", newline="") as fh:
         return list(csv.DictReader(fh))
@@ -80,41 +72,6 @@ def test_the_r_unit_suite_passes():
     done = rscript(ROOT / "tests" / "ch1" / "test_ch1_sprint.R", timeout=900)
     assert done.returncode == 0, done.stdout[-3000:] + done.stderr[-2000:]
     assert " 0 FAIL" in done.stdout
-
-
-@pytest.mark.fast
-def test_the_ledger_generator_keeps_the_w63_and_w64_bytes(tmp_path):
-    """New model slots must not make ops/sprint_*_checkpoint.py --check report drift."""
-    tables = tmp_path / "out" / "tables"
-    tables.mkdir(parents=True)
-    head = ["slot", "point", "lo95", "hi95", "units", "estimator", "source_csv", "source_row"]
-    t4 = "out/ch1/tab/T4_decomposition.csv"
-    tp = "out/ch1/tab/T4_plane_component.csv"
-    with open(tables / "abstract_slots_ch1.csv", "w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(head)
-        w.writerow(["D_ABS", "-7.654", "-9.9", "-5.4", "sq in", "synthetic", t4, "3"])
-        w.writerow(["D_PLANE_TOP", "-0.412", "-0.61", "-0.2", "in", "synthetic", tp, "1"])
-    ledger = tmp_path / "docs" / "numbers.json"
-    done = rscript(
-        ROOT / "tools" / "comms" / "export_numbers.R",
-        "--inputs",
-        tmp_path,
-        "--base",
-        ROOT / "docs" / "numbers.json",
-        "--out",
-        ledger,
-        "--synthetic",
-    )
-    assert done.returncode == 0, done.stdout + done.stderr
-    text = ledger.read_text(encoding="utf-8")
-    data = json.loads(text)
-    for name in ("sprint_feed_checkpoint", "sprint_join_checkpoint"):
-        mod = load_module(name, ROOT / "ops" / f"{name}.py")
-        again = mod.render_ledger(data, mod.ledger_slots(data))
-        assert again == text, f"{name} would re-render the ledger"
-    slots = [e["slot"] for e in data["entries"]]
-    assert {"D_ABS", "D_PLANE_TOP"} <= set(slots)
 
 
 @pytest.fixture(scope="module")

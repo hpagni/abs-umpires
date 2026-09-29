@@ -185,7 +185,7 @@ Verifier evidence: `logs/evidence/verify-verify-throttle-chokepoint.log`. Verdic
 - Chokepoint guard REFUTED. Thirty realistic bypasses were planted in isolated temp trees and linted; no request was sent. `ops/lint_http.sh` caught three. It misses `subprocess.run(["curl", ...])` and `system2("curl", c(...))`, because PATTERN requires the literal `curl ` with a trailing space. It misses `httpx.post`, `from httpx import get`, `from requests import get`, `http.client`, `aiohttp` and a raw socket. It misses every library that fetches for you. These are polars `read_csv` on an https URL, `pandas.read_json` on a URL, duckdb `httpfs`, `pyarrow.fs`, `arrow::read_csv_arrow`, `jsonlite::fromJSON`, `read.csv(url())`, `download.file`, `httr::GET`, bare `request()` after `library(httr2)`, and `baseballr` fetch functions. The package baseballr 2.0.0 is installed and named in SOP line 255, so that last one is a live risk in W-chapters, not a hypothetical. It also scans only `src R tools notebooks`: `ops/`, `scripts/`, `dbt/`, `app/`, `sql/`, `quality/` and `tests/` are not looked at, and this project keeps 23 shell scripts under `ops/` and 17 under `scripts/`.
 - No live violation exists in the committed tree today. The chokepoint is intact as a fact about commit b4c297e. What fails is the guarantee.
 - The linter's own test is a tautology. `tests/unit/test_http_etiquette.py:519-527` plants exactly the six idioms that are literal members of PATTERN, all under directories the linter already scans. It proves the regex matches its own alphabet and cannot fail on any of the 27 misses.
-- Email posture, partly refuted. No header value contains `@`, and the User-Agent is not built from `git config user.email` -- verified by grep for `user.email`, `getpass`, `getuser`, `GIT_AUTHOR` and `gitconfig` across all code, no hits. But `get()` applies no check to the URL, and an offline MockTransport probe showed that `https://hudpag%40gmail.com:tok@statsapi.mlb.com/...` makes httpx add `Authorization: Basic aHVkcGFnQGdtYWlsLmNvbTp0b2s=`, which decodes to `hudpag@gmail.com:tok`. A query parameter carrying an address is also passed through. The `@` guard at `src/absump/http.py:244` and `R/lib/http.R:101` inspects `config["user_agent"]` only.
+- Email posture, partly refuted. No header value contains `@`, and the User-Agent is not built from `git config user.email` -- verified by grep for `user.email`, `getpass`, `getuser`, `GIT_AUTHOR` and `gitconfig` across all code, no hits. But `get()` applies no check to the URL, and an offline MockTransport probe showed that `https://someone%40example.invalid:tok@statsapi.mlb.com/...` makes httpx add `Authorization: Basic c29tZW9uZUBleGFtcGxlLmludmFsaWQ6dG9r`, which decodes to `someone@example.invalid:tok`. (The probe used the owner's own address. It was replaced by this placeholder on 2026-09-29 under DEV-69.) A query parameter carrying an address is also passed through. The `@` guard at `src/absump/http.py:244` and `R/lib/http.R:101` inspects `config["user_agent"]` only.
 - 403-fatal, no-retry-on-4xx and the cache short-circuit STAND, and the tests are real. Five mutations to `src/absump/http.py` (403 made retryable, 404 added to the retry ladder, `_FATAL_STATUS` emptied, the cache short-circuit disabled, `_throttle` removed) each produced a named failing test. The file was restored byte-identical after every one.
 
 OWNER DECISION D-VERIFY-01, raised, not taken. Widening `ops/lint_http.sh` changes an acceptance criterion that SOP section 2.3 states verbatim ("greps `src/`, `R/`, `tools/` and `notebooks/` for `requests.`, `httpx.get`, `httpx.Client`, `urllib`, `curl ` and `httr2::request`"), so it is not a silent fix. Recommended default: keep the SOP's six idioms as the floor and add six things in one edit. They are (i) the scan set `ops scripts dbt app sql quality tests`; (ii) bare `curl`/`wget` without the trailing space; and (iii) `httpx\.`, `aiohttp`, `http\.client` and `socket\.create_connection` in place of the two `httpx.` spellings. Then (iv) `from +(requests|httpx) +import`, and (vi) a `baseballr` import outside `R/lib/http.R`. Rule (v) is an `https?://` literal in any `.py`, `.R`, `.sql` or `.sh` outside the two call sites, `config/`, `docs/` and `tests/`. It catches every fetch-for-you library at once without enumerating them. Then extend `tests/unit/test_http_etiquette.py` to plant bypasses the pattern does NOT already contain, so the test can fail. Second decision, same entry: whether `src/absump/http.py:get()` should reject a URL carrying userinfo or an `@` in the query. Recommended default: yes, raise `HttpError` on either, since no endpoint in this project authenticates that way and the-odds-api's key rides in a normal query parameter.
@@ -1771,6 +1771,48 @@ clause belongs to the pre-registration lane, in `PREREGISTRATION.md` and
 
 What would reopen it: the owner's override.
 
+**Follow-up, 2026-09-29 (Europe/Madrid), by W3.4's lane: implemented.** Status unchanged:
+applied default under D-R0-03's delegation, OWNER-VISIBLE. Hudson Pagni has not answered it.
+
+`R/ch1/03_heights.R` computes the non-cohort offset and writes it into
+`data/interim/dim_batter_season/calibration.json`: **offset_noncohort_in = −0.347 in, SE
+0.155 in.** It is added to roster height for every batter outside the ABS-measured cohort,
+one value in every season from 2022 to 2026. The cohort keeps offset_in, 0.0022 in. The
+file's `convention` string states the sign, and every key it held before is unchanged.
+
+| season | batters outside the cohort | batters inside | listed minus true, in | SE, in |
+|---|---:|---:|---:|---:|
+| 2022 | 270 | 272 | 0.475 | 0.248 |
+| 2023 | 204 | 335 | 0.255 | 0.269 |
+| 2024 | 132 | 389 | 0.276 | 0.295 |
+
+The method is section G's, and it reproduces the verifier's figures in the table above. It
+reads 2022-2024 `sz_top` and heights only, and no call. The inverse-variance mean of the
+three seasons is 0.347 in, 2.2 SE from zero, and the offset is its negative. The three
+seasons share batters, so that SE is too small.
+
+Raw or age-adjusted. The record does not choose: this entry and the verifier's log report
+both. The primary is the unadjusted estimate, the fit with fewer modelling choices. The
+age-adjusted value, −0.268 in (SE 0.166 in), is reported beside it in `docs/prereg/ch1.md`
+section 1.1 and in the calibration file.
+
+The analysis table keeps H with the one D-R0-02 offset. The Chapter 1 fit code moves the
+rows outside the cohort at fit time, so no mart is rebuilt.
+
+Part 3's clause is in `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1,
+verbatim. Both name two arms beside the primary: D-R0-02's ABS-measured arm, and
+SENS-HEIGHT-SINGLE, roster height plus 0.0022 in for every batter. Steps before the tag that
+ran under the single offset are listed in `docs/prereg/ch1.md` section 1.2 and in DEV-68.
+DEV-48 is closed.
+
+The owner may override this default before the tag, and SENS-HEIGHT-SINGLE's rule then
+becomes primary. The fit code on branch `phase05/ch1-fits` carries the override flag,
+`--height-rule single-offset`. Its `apply_heights` uses `offset_noncohort_in` whenever the
+calibration file holds the key, and the flag takes effect only when the key is absent. So an
+override today means removing the D-P4-04 keys from the file and passing the flag. The
+SENS-HEIGHT-SINGLE arm needs `apply_heights` to honour the flag with the key present. That
+change belongs to the fit lane, before W3.14 runs.
+
 ### D-P4-05 APPLIED UNDER D-R0-03: `<<N_CALLED>>` reports P0, the sample the primary cohort covers in full
 
 Applied by the phase-04 orchestrator on 2026-09-25 (Europe/Madrid) and recorded by the
@@ -2513,6 +2555,14 @@ The default. `sop` at the settings of D-P4-34 is the pre-registered power curve,
 CH1-A6. `ue_us` is a sensitivity estimator. Its MT-05 convergence is DEFERRED to W3.18, which
 applies the escalation rule. Nothing was re-run for this entry.
 
+Follow-up, 2026-09-29 21:10 (Europe/Madrid), not the owner's words: the deferral is closed. The
+orchestrator re-ran the fifteenth fit on 2026-09-29 from 20:42 to 21:06, on simulated calls,
+under the escalation rule. It met MT-05 after one doubling, at 12,000 draws a chain: no
+divergence, no tree-depth hit, lowest E-BFMI 0.593, R-hat 1.0066, bulk ESS 1,106, tail ESS
+2,644. All 30 power fits now meet MT-05. Nothing on this point is deferred to W3.18. One row of
+`out/tables/ch1_power_curve.csv` changed, `ue_us` at τ = 0.30 in, and none of its three-decimal
+figures in `docs/prereg/ch1.md` 8.3 moved.
+
 ### D-P4-36 RECORDED: the hibernation left the SBC at the new prior incomplete, and the recovery workers survived
 
 Recorded on 2026-09-29 (Europe/Madrid). Status: **a finding, with the missing replicates
@@ -2527,6 +2577,12 @@ to 0.9915.
 So W3.12(b) at L = 200 has not run at the pre-registered prior. The 200-replicate SBC of
 2026-09-25 passed, but under the SOP's prior on `abs_step` and the default sampler. The four
 recovery workers survived the hibernation. The orchestrator is re-running the Vc recovery.
+
+Follow-up, 2026-09-29 21:10 (Europe/Madrid): the SBC finished at 20:39, 200 of 200 replicates,
+both workers exit 0. All ten quantities stay inside the 95% ECDF band. The chi-square p runs from
+0.1538 to 0.8906: 0.8906 for τ and 0.7695 for the regime mean. The worst Benjamini-Hochberg p is
+0.8130, and no fit diverged. CH1-A8 is met at the pre-registered prior, and so is MT-02 at
+L = 200. Nothing is deferred.
 
 ### D-P4-37 APPLIED UNDER D-R0-03: `out/dev/` is ignored by git, and the W2.21 export gate skips only its ignored, untracked files
 
@@ -2608,3 +2664,236 @@ and its result, and the three consequences. The pre-registered sensitivity arm
 SENS-B1-UNDERSMOOTH refits with the season by-term's k at 24 instead of 18.
 `tests/model/test_mt_ch1_03_recovery.py` pins the three values at 91, 44 and 42. It prints NOT
 MET, DISCLOSED UNDER D-R0-04 for each on every run.
+
+## Pre-tag text fixes, 2026-09-29 (Madrid), branch pretag/text
+
+**No entry below is an owner answer in his own words.** Each is applied under D-R0-03's
+delegation. The owner may override any of them, and an override becomes a DEVIATIONS entry.
+The tag is not cut, so each change to the pre-registration below is an edit in place.
+
+### D-P4-38 APPLIED UNDER D-R0-03: the owner's personal address leaves the tracked files, and a guard keeps it out
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-69.
+
+The question. The repository is public. `abstract/FORM-FIELDS.md`, committed in cd44758 for
+SOP W6.1, carried the owner's personal Gmail address three times. A sweep of every tracked
+file found it once more, in `DECISIONS.md` since 74b995a. There the W1.7 / W2.3 verification
+entry used it in a probe URL, URL-encoded, then in base64 and decoded.
+
+The default applied. The address is replaced in the tracked files, a guard keeps it out, and
+history is left alone.
+
+- `abstract/FORM-FIELDS.md`: the sign-in lines name "the owner's Google account", and the
+  author block reads "Email: entered by the owner at the form, not recorded here". The
+  owner's name and university stay, because the repository already makes both public.
+- `DECISIONS.md`, the W1.7 / W2.3 entry: the probe URL and its header use the placeholder
+  `someone@example.invalid`, with a note that the original probe used the owner's address.
+  The finding is unchanged.
+- `quality/wr-scope.md` no longer says that FORM-FIELDS names the account.
+- `tests/guard/test_no_owner_address.py`, collected by `make test-guard`, fails when a
+  tracked file carries an address at gmail.com, written with `@`, `%40` or `%2540`, or the
+  owner's handle in any case. It skips `renv.lock`, `uv.lock` and its own source. It lets
+  the handle stand only in the pattern definitions (`quality/prose_lint.py`,
+  `quality/w612_check.sh`, `quality/wr-scope.md`) on a line with no `@`. It also lets it
+  stand in `quality/steps.yml`, `quality/steps.d/` and `quality/receipts/` on a line that
+  quotes a `prose_lint.py` command. A second test plants eight files in a throwaway
+  repository and requires exactly the five violations to fire.
+
+What the owner decides. The address remains in git history, in every commit from cd44758
+for FORM-FIELDS and from 74b995a for DECISIONS.md, up to the commit that carries this entry.
+Scrubbing it rewrites every public sha after 74b995a. Whether to do that is his call.
+
+### D-P4-39 APPLIED UNDER D-R0-03, OWNER-VISIBLE: Chapter 1 names its two shadow bands, pre-registers the W3.18 link, and says what P3 and P4 carry
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`, from the Chapter 1 fit-code
+review. Status: **applied under D-R0-03's delegation, not an owner answer.** The deviation is
+DEV-70. OWNER-VISIBLE because the second item fixes a reading of SOP W3.18 that
+its text leaves open. The height paragraphs are untouched.
+
+**The two shadow bands.** `PREREGISTRATION.md` section 7 wrote "the shadow band `|d| ≤ 3.0 in`"
+without saying which d. Two bands are in use, both checked against the code before the text
+was written:
+
+- `shadow_band()` in `R/lib/ch1_fits.R` on `phase05/ch1-fits` is `|d − 1.45| ≤ 3.0 in`, the
+  radius-adjusted signed edge distance of D-P4-09. `R/lib/ch1_estimands.R` computes W3.15's
+  `shadow_rate` on it, and `R/ch1/26_placebos.R` reads P1's shadow-rate test from W3.15's draws.
+- `b1_band()` is `|d| ≤ 3.0 in` on the ball-centre d. `R/ch1/25_heterogeneity.R` runs B1 on it.
+  `R/ch1/21_synthetic.R` on `main` builds the D-60 design on the same band, 498,055 pitches.
+
+Applied: root section 7 gains a paragraph that defines d and d − 1.45, names both bands, says
+which estimand reads which, and says why they differ. Annex 8.1 names its design band as the
+B1 band and gains a short paragraph that points to it. Two readings are fixed that no code
+holds yet, because W3.22 and W3.23 are not built: the sensitivity grid's shadow-band factor
+and CH1-A10's sealed-set calibration read the shadow-rate band.
+
+**The W3.18 link.** SOP W3.18 says to "take the fitted link `g_{e,r}(d)` from the pooled
+surface". `fit_links()` in `R/lib/ch1_hetero.R` on `phase05/ch1-fits` fits
+`glm(cs ~ ns(d, 6), binomial)` per edge and regime on that regime's |d| ≤ 8 in pitches,
+pooled over umpires. `fit_links()` in `R/ch1/21_synthetic.R` on `main` fits the same form per
+edge on 2022–2024, the W3.12 calibration link of annex 8.1. The power curve simulated calls
+from it and B1 read them through it, and the SBC's analytic SEs come from it. Applied: annex
+8.2 pre-registers that reading, with the reason that the CH1-A6 thresholds apply to a B1 that
+uses the link the curve was built on. The W3.14 `bam` surface, the other reading of "pooled
+surface", is not the link.
+
+**P3 and P4.** The existing text stated P3 net of each season's rule (D-P4-29) and the AAA
+arm's blockers. It did not say that P3 does not run in the SSAC sprint, that P4 has no numeric
+threshold, or that the consequence of a placebo failure turns on P1 and P2 alone. Applied:
+root section 8 says all three, in line with the header of `R/ch1/26_placebos.R`. The verbatim
+SOP rows and the verbatim consequence are unchanged.
+
+### D-P4-40 APPLIED UNDER D-R0-03, OWNER-VISIBLE: M1 carries Chapter 1's MT-05 escalation rule
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`, from the Chapter 2 fit-code
+review. Status: **applied under D-R0-03's delegation, not an owner answer.** The deviation is
+DEV-71. OWNER-VISIBLE because it adds a sampler rule.
+
+The question. `docs/prereg/ch2.md` section 4.2 registered 4 chains × 2,000 iterations and no
+escalation. `m1_fit_mt05()` in `R/ch2/lib_ch2.R` on `phase05/ch2-fits` already implements the
+rule DEV-63 registers for Chapter 1, behind `--doublings N`, which defaults to 0. Its log line
+says a real run that uses it needs an owner line in the annex before the tag.
+
+The default applied. Annex 4.2 registers the Chapter 1 rule for every M1 fit, in W4.10, W4.12
+and W4.13. A fit with no divergence, no tree-depth hit and E-BFMI ≥ 0.2 that misses R-hat ≤ 1.01
+or ESS ≥ 400 is re-run from the same seed with the draws a chain doubled, at most twice. A fit
+with a divergence, or still short after that, is reported as failed. Every attempt is recorded.
+The flag is `--doublings 2`. The code checked matches the rule: `length_only` excludes a
+divergence, a tree-depth hit and a low E-BFMI, and each attempt writes its own FIT line.
+
+Follow-up for the Chapter 2 lane. `scripts/ch2_sprint.sh` passes no `--doublings`, and
+`ch2_log_escalation()` still says the rule is not in the annex. Both change when the fit branch
+lands. This branch does not touch the fit code.
+
+### D-P4-41 APPLIED UNDER D-R0-03, OWNER-VISIBLE: `leverage_tercile` is registered as a rule, and M1 waits for its cut points
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-72.
+OWNER-VISIBLE because it adds a rule and a precondition on M1.
+
+The question. Annex section 10 item 3 promised the `leverage_tercile` cut points in section 4.1
+before the tag. The review asked whether they can be computed now, with no fit on 2025 or 2026
+calls and no sealed row.
+
+What was found. They cannot.
+
+- The stake is a win-probability difference, and no win-probability surface exists.
+  `docs/prereg/ch3.md` section 1 says none has been fitted, `out/ch3/` is empty, and the only
+  W5 receipt is W5.1. Building W5's count-composed cube is SOP W5.2 to W5.6, a model build and
+  not minutes of work.
+- W5.1 pinned 3 of the prior art's 7 files: `dp_V_2026.npy`, `tier1_results_2026.json` and
+  `tier1_card_2026.csv`. The card holds each cell's tercile label, count and median `g`. It
+  holds no cut point, and cut points cannot be recovered from cell medians. The upstream code
+  that sets them is not pinned.
+- No file under `data/` or `warehouse/` carries a tercile or a win-probability surface.
+
+The default applied. Annex section 4.3 pre-registers the rule instead of the values. The
+quantity is each opportunity's stake `g_j` in the acting side's units, read off W5's
+count-composed cube. The population is every MLB 2026 row of `v_opportunity_open`, through
+2026-09-21. c1 and c2 are the unweighted 1/3 and 2/3 quantiles by R's default `quantile()`.
+Each challenge takes its own row's tercile, and M2's `cell` uses the same cut points. They are
+computed once, before any M1 fit, and recorded with their values in `docs/DEVIATIONS.md`. M1
+does not run until then. Section 4.1's table and section 10 item 3 no longer promise values
+before the tag. `R/ch2/10_m1_design.R` on `phase05/ch2-fits` already refuses to build the M1
+design without a `--leverage` file, so the code holds the precondition.
+
+### D-P4-42 APPLIED UNDER D-R0-03, OWNER-VISIBLE: four Chapter 2 code choices are recorded in the annex, and no Savant view qualifies
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** The deviation is DEV-73. Each
+item was checked against the code on `phase05/ch2-fits` at 69da486.
+
+- The index CH2-H2a reads (annex 7.1, section 10 item 5). `R/ch2/10_m1_design.R` rebuilds the
+  chronological index within each challenger by official date, game number, `game_pk`, at-bat
+  and pitch, which fixes the W4.5 index's 29-row doubleheader fault. `--index-source w45`
+  keeps the W4.5 index. The annex registers the rebuilt index, and item 5 is closed.
+- The challenger's role (annex 7.1). `ch2_challenger_roles()` in `R/ch2/lib_ch2.R` gives each
+  challenger the role of most of his challenges, a tie going to the role of his first
+  challenge. `R/ch2/12_reliability.R` counts all his challenges toward the 20. That set is
+  "catchers with ≥20 challenges" for CH2-H2a under D-P4-29.
+- M1's seed (annex 4.2, section 10 item 6). `M1_SEED` is 20260922, the SOP W4.10 seed, and
+  W4.10, W4.12 and W4.13 all default to it. `config/seeds.yml`'s `ch2_brms_chain_base: 424242`
+  is not used by M1. Item 6 is closed.
+- W4.14's framing input (annex 7.9). `R/ch2/14_framing.R` accepts a framing file only with a
+  `through_date`, or failing that a `pull_date`, before the seal start, and blocks a file with
+  neither. The annex says so: through 2026-09-21 at the latest. No framing file is built, and
+  W4.14 does not run until one exists.
+
+Not applied, and why. The review also asked that the Savant expected-rate CSV come
+from a pull dated 2026-09-21 or earlier. The record differs. That CSV feeds W4.13 and W4.16,
+not W4.14. `scripts/ch2_savant_expected.py` accepts a page pulled on or before the baseline
+pull date in `contracts/savant_absdata.yml`, which is 2026-09-22. That pull was made before any
+game of 2026-09-22 was final and counts exactly the 10,167 open challenges. A rule of "2026-09-21
+or earlier" would refuse the one baseline pull on disk. Choosing between the two is left to
+the owner. The annex states no rule for that file.
+
+**Follow-up, 2026-09-29 (Europe/Madrid), by the merge lane: the Savant view.** Status:
+**applied under D-R0-03's delegation, OWNER-VISIBLE.** Hudson Pagni has not answered it. The
+deviation is DEV-73.
+
+The claim checked. The paragraph above says the 2026-09-22 baseline pull was made before any
+game of that day was final, counts exactly the open challenges, and is on disk. The counts
+hold. The page is not on disk.
+
+- `contracts/savant_absdata.yml` sets `dt24.pull_date` to 2026-09-22 and records totals of
+  10,167 challenges, 5,490 overturns and 4,677 fails. 10,167 is the drawer's open-set count.
+  The feed's canonical count is 10,168 (D-P4-11). The one challenge between them is
+  825000:31:3, a strike that was not overturned, the review the drawer lacks.
+- The pull manifest, `data/raw/_manifest.csv`, holds no leaderboard row from 2026-09-22. Its
+  only MLB 2026 leaderboard rows are the seven views of the W4.3 sweep, fetched from
+  2026-09-24T01:42:35Z to 01:43:34Z. The batter, catcher and pitcher files in the raw cache
+  are those fetches. The manifest gives their sha256 as `0b778b433267...`, `1a3d599de153...`
+  and `222e257eed54...`.
+- The 2026-09-22 counts were transcribed from the SOP and never pulled by this repository.
+  W2.11's own log reads "none on disk", and `logs/evidence/refute-savant.log` says the same.
+  DEV-40 measured that the 2026-09-24 views grew by exactly the first sealed day.
+- The three cached files were not opened for this entry. Their fetch dates alone place them
+  after the seal.
+
+So no page on disk qualifies, and none can be pulled now: a view pulled today counts sealed
+days. `scripts/ch2_savant_expected.py` on `phase05/ch2-fits` refuses the three cached views,
+correctly, because they were fetched after the baseline date.
+
+The default applied. `docs/prereg/ch2.md` section 7.5 registers the rule. A view is
+admissible only if it was pulled before any game of 2026-09-22 was final and its challenges
+total 10,167. The view used is named by its pull date and its sha256, and a view pulled later
+is refused. Section 10 item 9 records that no admissible view exists, so W4.13 and W4.16,
+which both read the file, do not run until one does. `PREREGISTRATION.md` section 14 item 2
+points to it.
+
+What the owner decides. Whether CH2-H2e's Savant baseline and W4.16's Savant columns wait,
+take another open-set source, or are reported as not run is his call. Any of the three is a
+dated entry in `docs/DEVIATIONS.md`.
+
+### D-P4-43 RECORDED: three M2 items stay open after the tag, until W4.11
+
+Recorded on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **recorded under
+D-R0-03's delegation, not an owner answer; OPEN.** The deviation is DEV-74.
+
+Annex section 11 lists three items the Chapter 2 fit-code review raised that are not resolved
+tonight. Each is resolved by a dated entry in `docs/DEVIATIONS.md` before W4.11, the paper-tier
+M2 fit, runs. None touches M1 or the sprint, and M2 is not redesigned.
+
+1. M2's formula has no `m:role` term, so each role's σ comes only through shrunken slopes. The
+   fit code's first dry run, on a league drawn with one slope per role, returned a batter σ of
+   2.40 in against 3.02 in injected.
+2. CH2-H2b reads `sd_tau > 0.20 probit`, while `tau_i` is in inches. The code at 171f9f6
+   computed the probability on `sd_challenger_id__Intercept`. Since 2279fc1 it computes it on
+   the SD of `tau_i` in inches, reports the intercept SD beside it, and logs the unit as an
+   owner item. The annex describes the code as it stands.
+3. The role-rate reproduction gate has no test id. It was section 10 item 7 and stays there.
+
+### D-P4-44 APPLIED UNDER D-R0-03: the abstract branch is merged before the tag, as D-66 requires
+
+Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
+D-R0-03's delegation, not an owner answer.** No deviation: the merge departs from nothing in the
+SOP.
+
+SOP D-66 requires the three abstract variants to be committed before `prereg-v1`.
+`phase06/abstract` at 6102d4a, based on ae5a11d, holds them. It was merged with `--no-ff`.
+`main` changed none of the branch's files between ae5a11d and 044ad8a, so no conflict arose.
+`quality/merge_steps.py` folded the branch's six `quality/steps.d` files into
+`quality/steps.yml`: W6.10, W6.11, W6.12, W7.10 and W7.24 are new, and W9.13 takes the branch's
+registration. The branch's `quality/prose_lint.py`, `quality/check_numbers.py` and
+`ops/lint_prose.sh` pass the pre-registration at 0 violations and 0 untraced numbers, and
+`scripts/prove.sh W7.6` passes. No existing text needed a change for them.

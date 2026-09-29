@@ -24,8 +24,11 @@
 #    and 2024 only, the called-strike surface is fitted three times and the 50%
 #    contour is read for a 72-inch batter:
 #
-#      all_roster       every batter, roster height plus the offset. This is the
-#                       primary cohort under the owner answer D-R0-02.
+#      all_roster       every batter, roster height plus the one D-R0-02 offset.
+#                       D-P4-04 (item 3) later gave batters outside the cohort
+#                       their own offset. The selection effect holds one height
+#                       rule fixed across its two arms, so it keeps the single
+#                       offset, which is SENS-HEIGHT-SINGLE's rule.
 #      cohort_roster    only the ABS-measured cohort, with the same roster height.
 #      cohort_measured  the same cohort with its ABS-measured height. This is the
 #                       pre-registered robustness arm.
@@ -53,14 +56,44 @@
 # difference is narrower than the one reported. The reported interval is
 # conservative.
 #
-# WHAT IT READS. main_marts.v_called_pitch_open and main_marts.dim_batter_season
-# in the DuckDB warehouse, read-only, and DECISIONS.md. It fits nothing on 2025
-# or 2026: the fit seasons are asserted to be the pre-buffer regime before any
-# fit runs. It reaches no host.
+# 3. The non-cohort offset, DECISIONS.md D-P4-04. Inside the ABS-measured cohort
+#    roster height is round(measured height), so D-R0-02's offset (0.0022 in, the
+#    2026 overlap mean) measures rounding and cannot see a listing error outside
+#    the cohort. The evidence is pre-ABS Hawk-Eye sz_top, the W3.4 stat
+#    verifier's method (logs/evidence/W3.4.verify-stat.log, section G). For each
+#    season 2022, 2023 and 2024, every batter-season with at least 200 pitches
+#    carrying sz_top gives its median sz_top in inches, and one OLS is fitted:
 #
-# WHAT IT WRITES. out/tables/height_coverage.csv, and only when the content
-# changed, so two runs in a row leave the tree as the first run left it. The
-# check mode writes nothing.
+#      sz_top_in ~ h + nc     h = measured height in the cohort, roster height
+#                             outside it; nc = 1 outside the cohort
+#
+#    Listed minus true height outside the cohort is -coef(nc) / coef(h), and its
+#    SE is se(coef(nc)) / coef(h), conditional on the slope, as the verifier
+#    reported it. The three seasons are pooled by inverse variance into one value,
+#    and the offset is its negative, so that
+#
+#      H = h_roster_in + offset_in             inside the cohort (D-R0-02)
+#      H = h_roster_in + offset_noncohort_in   outside it, in every season
+#
+#    The same fit with batter age (Statcast age_bat, the batter-season mean) as a
+#    third covariate is reported beside it, not used. The value is written to
+#    data/interim/dim_batter_season/calibration.json under the keys
+#    absump.heights.NONCOHORT_KEYS; every existing key is kept. This step fits
+#    no surface and reads no call: the evidence read selects batter, season,
+#    sz_top, age_bat and game_date, from the 2022-2024 day files only. The
+#    analysis table keeps H with the one D-R0-02 offset; the Chapter 1 fit code
+#    moves the non-cohort rows at fit time, so no mart is rebuilt.
+#
+# WHAT IT READS. main_marts.v_called_pitch_open, main_marts.v_pitch_open (counts
+# only) and main_marts.dim_batter_season in the DuckDB warehouse, read-only; the
+# 2022-2024 interim Statcast day files for item 3; data/interim/dim_batter_season/
+# calibration.json; docs/prereg/ch1.md, which must carry item 3's values; and
+# DECISIONS.md. It fits nothing on 2025 or 2026: the fit seasons are asserted to
+# be the pre-buffer regime before any fit runs. It reaches no host.
+#
+# WHAT IT WRITES. out/tables/height_coverage.csv, and D-P4-04's keys in
+# calibration.json, each only when the content changed, so two runs in a row
+# leave the tree as the first run left it. The check mode writes nothing.
 
 suppressPackageStartupMessages({
   library(DBI)
@@ -80,6 +113,7 @@ script_path <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = 
 ROOT <- normalizePath(file.path(dirname(script_path[1]), "..", ".."))
 OUT_REL <- "out/tables/height_coverage.csv"
 OUT <- file.path(ROOT, OUT_REL)
+source(file.path(ROOT, "R", "lib", "zone.R"))   # ABS_TOP_FRAC and ABS_BOT_FRAC, D-14
 
 # ---------------------------------------------------------------- constants
 SEASONS       <- 2022:2026
@@ -104,8 +138,24 @@ MAX_NA_DRAWS  <- 0.01
 
 ARMS <- c("all_roster", "cohort_roster", "cohort_measured")
 
+# D-P4-04, item 3
+NC_SEASONS     <- 2022:2024         # the pre-2026 sz_top evidence; never 2025 or 2026
+NC_LAST_DATE   <- as.Date("2024-12-31")
+NC_MIN_PITCHES <- 200L              # the verifier's floor on a batter-season (section G)
+NC_TOL_IN      <- 1e-9              # calibration.json against the recomputation
+D_R0_02_OFFSET <- "0.0022"          # D-R0-02's cohort offset as the owner's answer states it
+CAL_REL        <- "data/interim/dim_batter_season/calibration.json"
+ANNEX_REL      <- "docs/prereg/ch1.md"
+NC_CONVENTION  <- paste(
+  "H = h_roster_in + offset_in for a batter inside the ABS-measured cohort (h_abs_in not null),",
+  "and H = h_roster_in + offset_noncohort_in for a batter outside it, one value in every season",
+  "2022-2026. Both offsets are added to roster height, in inches. offset_noncohort_in is negative",
+  "because roster listings outside the cohort run tall. offset_in is D-R0-02's; offset_noncohort_in",
+  "is D-P4-04's, pooled over 2022-2024 by R/ch1/03_heights.R (W3.4). The age-adjusted value is",
+  "reported, not used.")
+
 stopifnot(length(XG) == 301L, length(ZG) == 276L,
-          all(FIT_SEASONS %in% 2022:2024))
+          all(FIT_SEASONS %in% 2022:2024), all(NC_SEASONS %in% 2022:2024))
 
 # ---------------------------------------------------------------- reporting
 n_pass <- 0L
@@ -371,6 +421,247 @@ clause("roster+offset coverage", {
   } else {
     fail("roster+offset coverage below 100%: ",
          paste(cov$season, f6(cov$roster_offset_share), collapse = "; "))
+  }
+})
+
+# ---- D-P4-04: the non-cohort offset, from 2022-2024 sz_top, no call read
+interim_statcast_dirs <- function(seasons) {
+  code <- sprintf(paste0(
+    'from absump import paths; ',
+    'print(chr(10).join(str(paths.interim("statcast_pitch", "mlb", s, "%%d-06-01" %% s).parents[1]) ',
+    'for s in (%s)))'), paste(seasons, collapse = ", "))
+  out <- suppressWarnings(system2("uv", c("run", "--locked", "python", "-c", shQuote(code)),
+                                  stdout = TRUE, stderr = TRUE))
+  status <- attr(out, "status")
+  if (!is.null(status) && status != 0L) {
+    stop("could not read the interim Statcast layout from absump.paths: ",
+         paste(out, collapse = " "), call. = FALSE)
+  }
+  out <- trimws(utils::tail(out, length(seasons)))
+  if (length(out) != length(seasons) || !all(dir.exists(out))) {
+    stop("interim Statcast season directories missing: ", paste(out, collapse = " "), call. = FALSE)
+  }
+  if (!all(basename(out) == paste0("season=", seasons))) {
+    stop("interim directories are not the seasons asked for: ", paste(out, collapse = " "), call. = FALSE)
+  }
+  out
+}
+nc_dirs <- interim_statcast_dirs(NC_SEASONS)
+nc_src <- sprintf("read_parquet([%s], union_by_name = true)",
+                  paste(sprintf("'%s'", file.path(nc_dirs, "*", "*.parquet")), collapse = ", "))
+# The two reads of item 3. They name five columns and no call column.
+nc_guard_sql <- sprintf("
+SELECT season, count(*) AS n_pitches, count(sz_top) AS n_sz_top,
+       min(game_date) AS first_date, max(game_date) AS last_date
+FROM %s
+GROUP BY season ORDER BY season", nc_src)
+nc_agg_sql <- sprintf("
+SELECT season, batter, count(*) AS n_pitches, median(sz_top) * 12 AS sz_top_in,
+       avg(age_bat) AS age_bat, count(age_bat) AS n_age
+FROM %s
+WHERE sz_top IS NOT NULL
+GROUP BY season, batter
+HAVING count(*) >= %d", nc_src, NC_MIN_PITCHES)
+nc_wh_sql <- sprintf("
+SELECT season, count(*) AS n_pitches, count(sz_top) AS n_sz_top
+FROM main_marts.v_pitch_open
+WHERE level = 'mlb' AND season BETWEEN %d AND %d
+GROUP BY season ORDER BY season", min(NC_SEASONS), max(NC_SEASONS))
+nc_dim_sql <- sprintf("
+SELECT season, batter, h_abs_in, h_roster_in
+FROM main_marts.dim_batter_season
+WHERE level = 'mlb' AND season BETWEEN %d AND %d", min(NC_SEASONS), max(NC_SEASONS))
+
+nc_guard <- DBI::dbGetQuery(con, nc_guard_sql)
+nc_wh <- DBI::dbGetQuery(con, nc_wh_sql)
+nc_agg <- DBI::dbGetQuery(con, nc_agg_sql)
+nc_dim <- DBI::dbGetQuery(con, nc_dim_sql)
+for (nm in c("n_pitches", "n_sz_top")) {
+  nc_guard[[nm]] <- as.numeric(nc_guard[[nm]]); nc_wh[[nm]] <- as.numeric(nc_wh[[nm]])
+}
+
+clause("D-P4-04 evidence reads 2022-2024 only, and no call", {
+  cols_named <- unique(unlist(regmatches(c(nc_guard_sql, nc_agg_sql),
+                                         gregexpr("\\b(description|call_[a-z]+|events|type|cs)\\b",
+                                                  c(nc_guard_sql, nc_agg_sql)))))
+  if (identical(as.integer(nc_guard$season), NC_SEASONS) &&
+      max(as.Date(nc_guard$last_date)) <= NC_LAST_DATE && length(cols_named) == 0L) {
+    pass(sprintf("sz_top evidence: seasons %s only, last date %s, no call column named",
+                 paste(nc_guard$season, collapse = " "), format(max(as.Date(nc_guard$last_date)))))
+  } else {
+    fail("the D-P4-04 evidence read reached outside 2022-2024 or names a call column: seasons ",
+         paste(nc_guard$season, collapse = " "), ", last date ", format(max(as.Date(nc_guard$last_date))),
+         ", call columns ", paste(cols_named, collapse = " "))
+  }
+})
+clause("D-P4-04 evidence is the warehouse's pitch set", {
+  if (identical(nc_guard$n_pitches, nc_wh$n_pitches) && identical(nc_guard$n_sz_top, nc_wh$n_sz_top)) {
+    pass("interim day files and main_marts.v_pitch_open agree on pitches and sz_top counts: ",
+         paste(sprintf("%d %s / %s", as.integer(nc_wh$season), comma(nc_wh$n_pitches), comma(nc_wh$n_sz_top)),
+               collapse = "; "))
+  } else {
+    fail("interim day files and v_pitch_open disagree: ",
+         paste(nc_guard$season, nc_guard$n_pitches, nc_wh$n_pitches, nc_guard$n_sz_top, nc_wh$n_sz_top,
+               collapse = "; "))
+  }
+})
+
+nc_ev <- merge(nc_agg, nc_dim, by = c("season", "batter"), all.x = TRUE, sort = TRUE)
+nc_ev$season <- as.integer(nc_ev$season)
+nc_ev$nc <- as.numeric(is.na(nc_ev$h_abs_in))
+nc_ev$h <- ifelse(is.na(nc_ev$h_abs_in), nc_ev$h_roster_in, nc_ev$h_abs_in)
+clause("D-P4-04 evidence rows carry a height and an age", {
+  if (!anyNA(nc_ev$h) && !anyNA(nc_ev$age_bat)) {
+    pass(sprintf("%s batter-seasons with >= %d sz_top pitches, each with a height and a batter age",
+                 comma(nrow(nc_ev)), NC_MIN_PITCHES))
+  } else {
+    fail(sprintf("%d batter-seasons without a height, %d without an age", sum(is.na(nc_ev$h)),
+                 sum(is.na(nc_ev$age_bat))))
+  }
+})
+
+nc_fit <- function(x, age) {
+  m <- stats::lm(if (age) sz_top_in ~ h + nc + age_bat else sz_top_in ~ h + nc, data = x)
+  b <- stats::coef(m)
+  V <- stats::vcov(m)
+  g <- setNames(rep(0, length(b)), names(b))
+  g[["h"]] <- b[["nc"]] / b[["h"]]^2
+  g[["nc"]] <- -1 / b[["h"]]
+  list(delta = -b[["nc"]] / b[["h"]], se = sqrt(V["nc", "nc"]) / b[["h"]],
+       se_delta_method = sqrt(drop(t(g) %*% V %*% g)), slope = b[["h"]],
+       age_coef = if (age) b[["age_bat"]] else NA_real_,
+       n_noncohort = sum(x$nc == 1), n_cohort = sum(x$nc == 0))
+}
+nc_by <- do.call(rbind, lapply(NC_SEASONS, function(s) {
+  x <- nc_ev[nc_ev$season == s, ]
+  u <- nc_fit(x, FALSE)
+  a <- nc_fit(x, TRUE)
+  data.frame(season = s, n_batters_noncohort = u$n_noncohort, n_batters_cohort = u$n_cohort,
+             slope_in_per_in = u$slope, listed_minus_true_in = u$delta, se_in = u$se,
+             se_delta_method_in = u$se_delta_method,
+             age_adjusted_listed_minus_true_in = a$delta, age_adjusted_se_in = a$se,
+             age_coef_in_per_year = a$age_coef)
+}))
+ivw <- function(est, se) { w <- 1 / se^2; c(est = sum(w * est) / sum(w), se = 1 / sqrt(sum(w))) }
+nc_pool <- ivw(nc_by$listed_minus_true_in, nc_by$se_in)
+nc_pool_age <- ivw(nc_by$age_adjusted_listed_minus_true_in, nc_by$age_adjusted_se_in)
+o_nc <- -nc_pool[["est"]]
+o_nc_age <- -nc_pool_age[["est"]]
+nc_batters <- unique(nc_ev$batter[nc_ev$nc == 1])
+
+nc_payload <- list(
+  convention = NC_CONVENTION,
+  offset_noncohort_in = o_nc,
+  offset_noncohort_se_in = nc_pool[["se"]],
+  offset_noncohort_age_adjusted_in = o_nc_age,
+  offset_noncohort_age_adjusted_se_in = nc_pool_age[["se"]],
+  noncohort_evidence = list(
+    decision = "DECISIONS.md D-P4-04; logs/evidence/W3.4.verify-stat.log, section G",
+    method = paste(
+      "Per season, batter-seasons with at least min_pitches pitches carrying sz_top; median sz_top",
+      "in inches regressed by OLS on h (measured height inside the cohort, roster height outside",
+      "it) and nc (1 outside the cohort). listed_minus_true_in = -coef(nc) / coef(h), se_in =",
+      "se(coef(nc)) / coef(h). Seasons pooled by inverse variance; offset_noncohort_in is minus",
+      "the pooled value. The age-adjusted fit adds the batter-season mean of Statcast age_bat."),
+    seasons = NC_SEASONS,
+    min_pitches = NC_MIN_PITCHES,
+    by_season = nc_by,
+    pooled_listed_minus_true_in = nc_pool[["est"]],
+    pooled_se_in = nc_pool[["se"]],
+    age_adjusted_pooled_listed_minus_true_in = nc_pool_age[["est"]],
+    age_adjusted_pooled_se_in = nc_pool_age[["se"]],
+    n_batter_seasons_noncohort = sum(nc_ev$nc == 1),
+    n_batters_noncohort = length(nc_batters)))
+
+for (i in seq_len(nrow(nc_by))) {
+  r <- nc_by[i, ]
+  record(sprintf(paste0("D-P4-04 %d: %d outside the cohort, %d inside, slope %.3f; listed minus true %+.3f in ",
+                        "(SE %.3f, delta method %.3f); age-adjusted %+.3f in (SE %.3f), age %+.4f in a year"),
+                 r$season, r$n_batters_noncohort, r$n_batters_cohort, r$slope_in_per_in,
+                 r$listed_minus_true_in, r$se_in, r$se_delta_method_in,
+                 r$age_adjusted_listed_minus_true_in, r$age_adjusted_se_in, r$age_coef_in_per_year))
+}
+record(sprintf(paste0("D-P4-04 pooled 2022-2024: listed minus true %+.4f in, SE %.4f in (%.1f SE); ",
+                      "offset_noncohort_in %+.4f in. Age-adjusted, reported only: %+.4f in, SE %.4f in"),
+               nc_pool[["est"]], nc_pool[["se"]], nc_pool[["est"]] / nc_pool[["se"]], o_nc,
+               o_nc_age, nc_pool_age[["se"]]))
+record(sprintf(paste0("D-P4-04 the three seasons share batters: %s non-cohort batter-seasons are %s distinct ",
+                      "batters, so the pooled SE, which treats the seasons as independent, is a lower bound"),
+               comma(sum(nc_ev$nc == 1)), comma(length(nc_batters))))
+
+# What the rule moves (the annex table): the non-cohort share of called pitches,
+# and the zone top and bottom of those batters, 53.5% and 27% of the height change.
+d_h <- o_nc - o
+shift_top <- ABS_TOP_FRAC * d_h
+shift_bot <- ABS_BOT_FRAC * d_h
+nc_move <- data.frame(season = as.integer(cov$season), n_called = cov$n_called,
+                      n_noncohort = cov$n_called - cov$n_called_abs_measured)
+nc_move$share <- nc_move$n_noncohort / nc_move$n_called
+nc_move <- nc_move[nc_move$season %in% 2022:2025, ]
+annex_row <- function(r) sprintf("| %d | %s | %s | %.4f | %.3f | %.3f |", r$season,
+                                 comma(r$n_called), comma(r$n_noncohort), r$share, shift_top, shift_bot)
+annex_rows <- vapply(seq_len(nrow(nc_move)), function(i) annex_row(nc_move[i, ]), "")
+record(sprintf("D-P4-04 height change outside the cohort %+.4f in (offset_noncohort_in - offset_in): zone top %+.3f in, bottom %+.3f in",
+               d_h, shift_top, shift_bot))
+for (ln in annex_rows) record("D-P4-04 annex row ", ln)
+
+cal_path <- file.path(ROOT, CAL_REL)
+if (MODE == "build") {
+  tmp <- tempfile(fileext = ".json")
+  writeLines(jsonlite::toJSON(nc_payload, auto_unbox = TRUE, digits = NA, pretty = TRUE), tmp)
+  out <- suppressWarnings(system2("uv", c("run", "--locked", "python", "-m", "absump.heights",
+                                          "--merge-noncohort", shQuote(tmp)),
+                                  stdout = TRUE, stderr = TRUE))
+  unlink(tmp)
+  status <- attr(out, "status")
+  if (!is.null(status) && status != 0L) {
+    stop("the calibration merge failed: ", paste(out, collapse = " "), call. = FALSE)
+  }
+  record(utils::tail(out, 1L))
+}
+
+clause("D-P4-04 calibration.json", {
+  if (!file.exists(cal_path)) stop(CAL_REL, " is absent")
+  cal <- jsonlite::fromJSON(cal_path, simplifyVector = TRUE)
+  miss <- setdiff(names(nc_payload), names(cal))
+  if (length(miss)) stop(CAL_REL, " lacks ", paste(miss, collapse = ", "))
+  if (!identical(cal$convention, NC_CONVENTION)) stop("the convention string differs")
+  if (!(is.numeric(cal$offset_noncohort_in) && length(cal$offset_noncohort_in) == 1L)) {
+    stop("offset_noncohort_in is not one number")
+  }
+  got <- c(cal$offset_noncohort_in, cal$offset_noncohort_se_in, cal$offset_noncohort_age_adjusted_in,
+           cal$offset_noncohort_age_adjusted_se_in,
+           unlist(cal$noncohort_evidence$by_season[, setdiff(names(nc_by), "season")]))
+  want <- c(o_nc, nc_pool[["se"]], o_nc_age, nc_pool_age[["se"]],
+            unlist(nc_by[, setdiff(names(nc_by), "season")]))
+  dev <- max(abs(got - want))
+  if (length(got) != length(want) || !is.finite(dev) || dev > NC_TOL_IN) {
+    stop(sprintf("the file does not reproduce from the inputs: max |file - recomputed| %.3g", dev))
+  }
+  pass(sprintf("%s carries D-P4-04: offset_noncohort_in %+.6f in, SE %.6f in, one value for every season; it reproduces within %.0e",
+               CAL_REL, cal$offset_noncohort_in, cal$offset_noncohort_se_in, NC_TOL_IN))
+})
+
+clause("D-P4-04 leaves the cohort offset as D-R0-02 set it", {
+  cal <- jsonlite::fromJSON(cal_path, simplifyVector = TRUE)
+  if (abs(cal$offset_in - o) < 1e-12 && sprintf("%.4f", cal$offset_in) == D_R0_02_OFFSET) {
+    pass(sprintf("offset_in %.12f in: the dimension's offset and D-R0-02's %s in", cal$offset_in, D_R0_02_OFFSET))
+  } else {
+    fail(sprintf("offset_in %.12f in is not the dimension's %.12f or D-R0-02's %s", cal$offset_in, o, D_R0_02_OFFSET))
+  }
+})
+
+clause("D-P4-04 in the annex", {
+  annex <- readLines(file.path(ROOT, ANNEX_REL), warn = FALSE)
+  txt <- paste(annex, collapse = "\n")
+  need <- c(sprintf("%.3f in", abs(o_nc)), sprintf("SE %.3f in", nc_pool[["se"]]),
+            sprintf("%.3f in", abs(o_nc_age)), annex_rows)
+  miss <- need[!vapply(need, function(s) grepl(s, txt, fixed = TRUE), TRUE)]
+  if (length(miss) == 0L) {
+    pass(ANNEX_REL, " states the pooled offset, its SE, the age-adjusted value and all ",
+         length(annex_rows), " rows of the what-it-moves table")
+  } else {
+    fail(ANNEX_REL, " lacks: ", paste(miss, collapse = " || "))
   }
 })
 

@@ -1,17 +1,17 @@
 {
-  "cmd": "bash ops/lint_prose.sh; rc_prose=$?; uv run --locked python quality/check_numbers.py; rc_numbers=$?; [ $rc_prose -eq 0 ] && [ $rc_numbers -eq 0 ]",
-  "duration_s": 0,
+  "cmd": "uv run --locked python quality/prose_lint.py --selftest; a=$?; make lint-prose; b=$?; uv run --locked python quality/check_numbers.py; c=$?; uv run --locked python tools/comms/check_blind.py; d=$?; [ $a -eq 0 ] && [ $b -eq 0 ] && [ $c -eq 0 ] && [ $d -eq 0 ]",
+  "duration_s": 1,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "ca488d0eecf92152005234254da65e9341dd1044",
+  "git_sha": "147c851c9484da74216cdb462b1b9e4f7c80370a",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.13.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.13",
-  "timestamp_madrid": "2026-09-24 06:36:35 CEST",
-  "title": "Writing rules, the three prose rules and the number trace"
+  "timestamp_madrid": "2026-09-29 22:38:25 CEST",
+  "title": "Prose lint: the W7 linter stack in service over abstract/, the WR-01..WR-20 pack"
 }

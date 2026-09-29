@@ -283,30 +283,43 @@ ROOT <- root_saved
 check("D-67: no tag or an unpushed tag refuses; the tag on origin at the local commit passes",
       identical(c(t_none, t_local, t_pushed), c(FALSE, FALSE, TRUE)), paste(t_none, t_local, t_pushed))
 
-## 12. the ledger generator: model slots land before the W6.4 join slots, and a re-run is a no-op
+## 12. the ledger generator (tools/comms/export_numbers.R, W7.24), synthetic only: W6.7's slots,
+## N_CHAL among them, land between the W6.3 and W6.4 entries; a re-run is a no-op; a synthetic
+## run neither writes docs/numbers.json nor starts from it
 inp <- file.path(TMP, "inputs")
 dir.create(file.path(inp, "out", "tables"), recursive = TRUE)
-write_csv_plain(data.frame(slot = c("D_BUF", "D_ABS"), point = c(-3.21, -7.654), lo95 = c(-5.5, -9.9), hi95 = c(-1.1, -5.4),
-                           units = "sq in", estimator = "test", source_csv = "out/ch1/tab/T4_decomposition.csv",
-                           source_row = c(2L, 3L)), file.path(inp, "out", "tables", "abstract_slots_ch1.csv"))
+write_csv_plain(data.frame(slot = c("D_BUF", "D_ABS", "N_CHAL"), point = c(-3.21, -7.654, 1234), lo95 = c(-5.5, -9.9, NA),
+                           hi95 = c(-1.1, -5.4, NA), units = c("sq in", "sq in", "counts"), estimator = "test",
+                           source_csv = c("out/ch1/tab/T4_decomposition.csv", "out/ch1/tab/T4_decomposition.csv",
+                                          "out/ch1/tab/T2_zone_gate.csv"),
+                           source_row = c(2L, 3L, 1L)), file.path(inp, "out", "tables", "abstract_slots_ch1.csv"))
+base <- file.path(TMP, "numbers-base.SYNTHETIC.json")
+write_json_file(list(`_what` = "SYNTHETIC base", entries = list(
+  list(slot = "FEED_SYNTHETIC", value = 1, carried_by = "W6.3"),
+  list(slot = "JOIN_SYNTHETIC", value = 2, carried_by = "W6.4"))), base)
 led <- file.path(inp, "docs", "numbers.json")
-ex <- c(file.path(ROOT, "tools/comms/export_numbers.R"), "--inputs", inp, "--base", file.path(ROOT, "docs/numbers.json"),
-        "--out", led, "--synthetic")
-st1 <- system2("Rscript", ex, stdout = FALSE, stderr = FALSE)
+dir.create(dirname(led))
+exp_r <- file.path(ROOT, "tools/comms/export_numbers.R")
+st1 <- system2("Rscript", c(exp_r, "--inputs", inp, "--base", base, "--out", led, "--synthetic"), stdout = FALSE, stderr = FALSE)
 lj <- fromJSON(led, simplifyVector = FALSE)
-carried <- vapply(lj$entries, function(e) if (is.null(e$carried_by)) "" else e$carried_by, "")
 slots <- vapply(lj$entries, function(e) e$slot, "")
-first_join <- which(carried == "W6.4")[1]
-check("model slots sit after the W6.3 slots and before the W6.4 join slots",
-      st1 == 0L && all(which(slots %in% c("D_BUF", "D_ABS")) < first_join) &&
-        all(which(slots %in% c("D_BUF", "D_ABS")) > max(which(carried == "W6.3"))), paste(slots, collapse = ","))
+mine <- which(slots %in% c("D_BUF", "D_ABS", "N_CHAL"))
+check("W6.7's slots sit after the W6.3 entry and before the W6.4 entry",
+      st1 == 0L && length(mine) == 3L && all(mine > which(slots == "FEED_SYNTHETIC")) &&
+        all(mine < which(slots == "JOIN_SYNTHETIC")), paste(slots, collapse = ","))
 e1 <- lj$entries[[which(slots == "D_ABS")]]
-check("an entry carries the printed numbers", identical(e1$print$value, "-7.7") && identical(e1$print$lo95, "-9.9"),
-      toJSON(e1$print, auto_unbox = TRUE))
-st2 <- system2("Rscript", c(ex[1:7], "--check", "--synthetic"), stdout = FALSE, stderr = FALSE)
+e2 <- lj$entries[[which(slots == "N_CHAL")]]
+check("an entry carries the printed numbers; a count prints whole", identical(e1$print$point, "-7.7") &&
+        identical(e1$print$lo95, "-9.9") && identical(e2$print$point, "1,234") && is.null(e2$lo95),
+      paste(toJSON(e1$print, auto_unbox = TRUE), toJSON(e2$print, auto_unbox = TRUE)))
+st2 <- system2("Rscript", c(exp_r, "--inputs", inp, "--base", led, "--out", led, "--check", "--synthetic"),
+               stdout = FALSE, stderr = FALSE)
 check("a regeneration is a no-op (--check exits 0)", st2 == 0L, sprintf("exit %d", st2))
-st3 <- system2("Rscript", c(file.path(ROOT, "tools/comms/export_numbers.R"), "--synthetic"), stdout = FALSE, stderr = FALSE)
-check("--synthetic refuses to write docs/numbers.json", st3 == 2L, sprintf("exit %d", st3))
+st3 <- system2("Rscript", c(exp_r, "--inputs", inp, "--base", base, "--out", file.path(ROOT, "docs", "numbers.json"),
+                           "--synthetic"), stdout = FALSE, stderr = FALSE)
+st4 <- system2("Rscript", c(exp_r, "--inputs", inp, "--out", led, "--synthetic"), stdout = FALSE, stderr = FALSE)
+check("--synthetic neither writes docs/numbers.json nor starts from it", st3 == 2L && st4 == 2L,
+      sprintf("exit %d and %d", st3, st4))
 
 ## 13. the two shadow bands, the draws object and the receipts
 check("shadow_rate band is |d - 1.45| <= 3 in (D-P4-09)", identical(shadow_band(c(-1.6, -1.5, 4.4, 4.5)), c(FALSE, TRUE, TRUE, FALSE)),

@@ -9,6 +9,11 @@ clause:
 * no batter-season with two `feed_roster` heights differing by more than 1 inch;
 * `|o| < 1.0 in` and `sd(h_abs - h_roster) < 1.5 in`.
 
+Clause 5 is not W2.7's. DECISIONS.md D-P4-04 adds a second offset, for batters
+outside the ABS-measured cohort, which W3.4 writes into the same calibration
+file. Its tests check the keys, the unchanged cohort offset, the one value for
+every season, and the value itself, recomputed here from 2022-2024 `sz_top`.
+
 The rest of the module guards the two instructions in the same SOP paragraph
 that are not clauses but are just as load-bearing: `gameData.players[].
 strikeZoneTop/Bottom` is never read, and a feed height is read only for a player
@@ -27,6 +32,7 @@ from __future__ import annotations
 
 import ast
 import datetime as dt
+import json
 from pathlib import Path
 
 import polars as pl
@@ -302,6 +308,128 @@ def test_people_offset_rows_are_the_roster_height_plus_the_offset(
     assert rows.height > 0, "no batter-season falls back to people_offset"
     residual = (rows["height_in"] - rows["h_roster_in"] - calibration["offset_in"]).abs().max()
     assert residual < 1e-9, f"a people_offset height is {residual} in off the tier rule"
+
+
+# --------------------------------------------------------------------------
+# Clause 5. DECISIONS.md D-P4-04: the offset outside the ABS-measured cohort
+#
+# W3.4 (`R/ch1/03_heights.R`) writes it into calibration.json. These tests
+# recompute it here with numpy, from the same 2022-2024 inputs, so the R fit
+# and the file are checked by a second implementation.
+# --------------------------------------------------------------------------
+
+
+def test_noncohort_keys_and_their_sign_convention(calibration: dict) -> None:
+    missing = [k for k in heights.NONCOHORT_KEYS if k not in calibration]
+    assert not missing, f"calibration.json lacks D-P4-04's keys {missing}; run R/ch1/03_heights.R"
+    convention = calibration["convention"]
+    assert "H = h_roster_in + offset_in" in convention
+    assert "H = h_roster_in + offset_noncohort_in" in convention
+    assert "added to roster height" in convention
+    # Listed heights outside the cohort run tall (D-P4-04), so the value added
+    # to roster height is negative. A positive value would contradict the file's
+    # own convention string.
+    assert calibration["offset_noncohort_in"] < 0, calibration["offset_noncohort_in"]
+    assert "negative" in convention
+
+
+def test_the_cohort_offset_is_unchanged(calibration: dict, dim: pl.DataFrame) -> None:
+    """D-P4-04 part 1: the cohort keeps D-R0-02's 2026 calibration, 0.0022 in."""
+    offset = calibration["offset_in"]
+    assert f"{offset:.4f}" == "0.0022", f"offset_in {offset} is not D-R0-02's 0.0022 in"
+    overlap = dim.filter((pl.col("season") == 2026) & pl.col("h_abs_in").is_not_null())
+    mean = (overlap["h_abs_in"] - overlap["h_roster_in"]).mean()
+    assert abs(mean - offset) < 1e-12, f"the 2026 overlap mean {mean} is not offset_in {offset}"
+
+
+def test_the_noncohort_offset_is_one_value_for_every_season(calibration: dict) -> None:
+    """D-P4-04 part 2: pooled over 2022-2024 by inverse variance, one value."""
+    value = calibration["offset_noncohort_in"]
+    kind = type(value).__name__
+    assert isinstance(value, float), f"offset_noncohort_in is {kind}, not one number"
+    per_season = [k for k in calibration if k.startswith("offset_noncohort_") and k[-4:].isdigit()]
+    assert not per_season, f"per-season offsets at the top level: {per_season}"
+    ev = calibration["noncohort_evidence"]
+    assert ev["seasons"] == [2022, 2023, 2024], ev["seasons"]
+    rows = ev["by_season"]
+    assert [r["season"] for r in rows] == ev["seasons"]
+    w = [1 / r["se_in"] ** 2 for r in rows]
+    pooled = sum(wi * r["listed_minus_true_in"] for wi, r in zip(w, rows, strict=True)) / sum(w)
+    assert abs(value + pooled) < 1e-12, f"offset {value} is not minus the pooled {pooled}"
+    assert abs(calibration["offset_noncohort_se_in"] - sum(w) ** -0.5) < 1e-12
+
+
+def _noncohort_recomputed(dim: pl.DataFrame, seasons: list[int], min_pitches: int) -> dict:
+    import duckdb
+    import numpy as np
+
+    dirs = [paths.interim("statcast_pitch", "mlb", s, f"{s}-06-01").parents[1] for s in seasons]
+    src = ", ".join(f"'{d / '*' / '*.parquet'}'" for d in dirs)
+    con = duckdb.connect()
+    try:
+        agg = con.execute(
+            f"SELECT season, batter, median(sz_top) * 12 AS szt, avg(age_bat) AS age "
+            f"FROM read_parquet([{src}], union_by_name = true) WHERE sz_top IS NOT NULL "
+            f"GROUP BY season, batter HAVING count(*) >= {int(min_pitches)}"
+        ).pl()
+    finally:
+        con.close()
+    assert set(agg["season"].unique().to_list()) == set(seasons), "a season outside 2022-2024"
+    heights_ = dim.select("season", "batter", "h_abs_in", "h_roster_in")
+    ev = agg.with_columns(pl.col("season").cast(pl.Int32)).join(
+        heights_, on=["season", "batter"], how="left"
+    )
+    out: dict = {}
+    for season in seasons:
+        x = ev.filter(pl.col("season") == season)
+        nc = x["h_abs_in"].is_null().to_numpy().astype(float)
+        h = np.where(nc == 1, x["h_roster_in"].to_numpy(), x["h_abs_in"].fill_null(0).to_numpy())
+        y = x["szt"].to_numpy()
+        for tag, extra in (("raw", []), ("age", [x["age"].to_numpy()])):
+            X = np.column_stack([np.ones(len(y)), h, nc, *extra])
+            b, *_ = np.linalg.lstsq(X, y, rcond=None)
+            r = y - X @ b
+            cov = (r @ r / (len(y) - X.shape[1])) * np.linalg.inv(X.T @ X)
+            out[(season, tag)] = (-b[2] / b[1], np.sqrt(cov[2, 2]) / b[1], int(nc.sum()))
+    return out
+
+
+def test_the_noncohort_offset_reproduces_from_the_inputs(
+    calibration: dict, dim: pl.DataFrame
+) -> None:
+    """The file's per-season values and pooled offset, from 2022-2024 sz_top and heights."""
+    ev = calibration["noncohort_evidence"]
+    got = _noncohort_recomputed(dim, ev["seasons"], ev["min_pitches"])
+    for row in ev["by_season"]:
+        s = row["season"]
+        delta, se, n_nc = got[(s, "raw")]
+        assert n_nc == row["n_batters_noncohort"], (s, n_nc, row["n_batters_noncohort"])
+        assert abs(delta - row["listed_minus_true_in"]) < 1e-9, (s, delta, row)
+        assert abs(se - row["se_in"]) < 1e-9, (s, se, row)
+        delta_a, se_a, _ = got[(s, "age")]
+        assert abs(delta_a - row["age_adjusted_listed_minus_true_in"]) < 1e-9, (s, delta_a, row)
+        assert abs(se_a - row["age_adjusted_se_in"]) < 1e-9, (s, se_a, row)
+    w = {s: got[(s, "raw")][1] ** -2 for s in ev["seasons"]}
+    pooled = sum(w[s] * got[(s, "raw")][0] for s in w) / sum(w.values())
+    assert abs(calibration["offset_noncohort_in"] + pooled) < 1e-9
+
+
+def test_a_heights_rebuild_keeps_the_noncohort_keys(tmp_path: Path) -> None:
+    """W2.7 owns calibration.json and W3.4 owns D-P4-04's keys in it."""
+    path = tmp_path / "calibration.json"
+    w27 = {"max_diff_in": 0.5, "min_diff_in": -0.5, "n_overlap": 3, "offset_in": 0.1, "sd_in": 0.3}
+    path.write_text(json.dumps(w27, indent=2, sort_keys=True) + "\n")
+    payload = {k: -0.25 for k in heights.NONCOHORT_KEYS}
+    assert heights.merge_noncohort(payload, path)
+    merged = json.loads(path.read_text())
+    assert {k: merged[k] for k in w27} == w27, "the merge changed a W2.7 key"
+    assert all(merged[k] == -0.25 for k in heights.NONCOHORT_KEYS)
+    assert not heights.merge_noncohort(payload, path), "a second merge rewrote the file"
+    rebuilt = heights._carry_noncohort(dict(w27, offset_in=0.2), path)
+    assert rebuilt["offset_in"] == 0.2
+    assert all(rebuilt[k] == -0.25 for k in heights.NONCOHORT_KEYS)
+    with pytest.raises(ValueError):
+        heights.merge_noncohort({"offset_noncohort_in": -0.25}, path)
 
 
 # --------------------------------------------------------------------------
