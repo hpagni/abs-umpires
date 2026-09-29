@@ -222,6 +222,7 @@ b2_priors <- function(abs_sd = ABS_STEP_PRIOR_SD, sd_rate = 2) {
 
 fit_brms <- function(formula_text, data, priors, st) {
   warn <- character(0)
+  set.seed(STAN_SEED)   # RP-06: R's generator too, not only Stan's seed argument
   pt0 <- proc.time()
   fit <- withCallingHandlers(
     brms::brm(brms::bf(as.formula(formula_text)), data = data, family = gaussian(),
