@@ -456,6 +456,10 @@ fig_f2 <- function(p) {
     theme_fig() + theme(panel.grid.major.x = element_blank(), axis.text.x = element_text(size = 5.5))
   side <- dplyr::bind_rows(d[, setdiff(names(d), c("panel", "fill"))], const_rows("F2", c(ci_pct = 95)))
   v <- function(e, k, dg) f_d(d$value[d$estimand == e & d$key == k], dg)
+  mv <- function(e) {
+    x <- d$value[d$estimand == e & d$key == "delta_total"]
+    paste(if (x < 0) "moves down by" else "moves up by", f_d(abs(x), 2))
+  }
   caption <- paste0(
     "The change from 2024 to 2026 in each edge and in area, split by the identity Total = 2g + Buffer + ABS. ",
     "2g is two seasons of the 2022 to 2024 trend; Buffer and ABS are the departures from that trend in 2025 and ",
@@ -468,9 +472,8 @@ fig_f2 <- function(p) {
     "Four small bar charts, one each for the top edge, bottom edge, half-width and area. In area, Buffer is ",
     v("area_sqin", "delta_buffer", 1), " sq in and ABS ", v("area_sqin", "delta_abs", 1), " sq in, for a total of ",
     v("area_sqin", "delta_total", 1), " sq in, while the separate plane bar is ", v("area_sqin", "plane", 1),
-    " sq in. The top edge falls by ", v("top_in", "delta_total", 2), " in in total and the bottom edge rises by ",
-    v("bot_in", "delta_total", 2), " in; the plane bars are ", v("top_in", "plane", 2), " in at the top and ",
-    v("bot_in", "plane", 2), " in at the bottom.")
+    " sq in. The top edge ", mv("top_in"), " in in total and the bottom edge ", mv("bot_in"),
+    " in; the plane bars are ", v("top_in", "plane", 2), " in at the top and ", v("bot_in", "plane", 2), " in at the bottom.")
   list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 9, palette = unname(fills))
 }
 

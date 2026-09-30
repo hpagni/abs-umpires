@@ -443,7 +443,10 @@ tab_t9 <- function(p) {
     "their contrast is 2026 against 2025 without a trend; ours removes the 2022 to 2024 trend",
     sprintf("The 2026 departure from trend on count bias is %s pp (95%% CI %s to %s).", f_d(ca$point, 2), f_d(ca$lo95, 2), f_d(ca$hi95, 2)))
   out <- dplyr::bind_rows(rows)
-  md <- data.frame(Source = sprintf("%s (%s)", out$source, out$citation), Published = out$published_as_printed,
+  pub <- ifelse(grepl(" ft", out$published_as_printed) & !is.na(out$published_lo95),
+                sprintf("%s, that is %s to %s in", out$published_as_printed, f_d(out$published_lo95, 3), f_d(out$published_hi95, 3)),
+                out$published_as_printed)
+  md <- data.frame(Source = sprintf("%s (%s)", out$source, out$citation), Published = pub,
                    Here = ci_s(out$ours_point, out$ours_lo95, out$ours_hi95,
                                ifelse(out$ours_units == "sq in", 1L, ifelse(out$ours_units == "runs per 100 innings", 3L,
                                                                             ifelse(out$ours_units == "percent" & out$source == "Doolittle", 1L, 2L)))),

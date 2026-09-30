@@ -314,11 +314,11 @@ test_that("determinism: a second render reproduces every sidecar and table CSV t
   dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
   env <- c("STAN_NUM_THREADS=1", "OMP_NUM_THREADS=1")
-  r1 <- system2("Rscript", c(file.path(ROOT, "R", "ch1", "70_figures.R"), "--stage", "render", "--dest", tmp),
-                stdout = TRUE, stderr = TRUE, env = env)
+  r1 <- suppressWarnings(system2("Rscript", c(file.path(ROOT, "R", "ch1", "70_figures.R"), "--stage", "render", "--dest", tmp),
+                stdout = TRUE, stderr = TRUE, env = env))
   expect_true(is.null(attr(r1, "status")) || attr(r1, "status") %in% c(0L, 3L), info = paste(tail(r1, 5), collapse = "\n"))
-  r2 <- system2("Rscript", c(file.path(ROOT, "R", "ch1", "71_tables.R"), "--dest", tmp, "--docs", file.path(tmp, "ch1.md")),
-                stdout = TRUE, stderr = TRUE, env = env)
+  r2 <- suppressWarnings(system2("Rscript", c(file.path(ROOT, "R", "ch1", "71_tables.R"), "--dest", tmp, "--docs", file.path(tmp, "ch1.md")),
+                stdout = TRUE, stderr = TRUE, env = env))
   expect_true(is.null(attr(r2, "status")) || attr(r2, "status") %in% c(0L, 3L), info = paste(tail(r2, 5), collapse = "\n"))
   files <- c(paste0(FIG_IDS, "_data.csv"), basename(tman$csv))
   for (f in files) {
