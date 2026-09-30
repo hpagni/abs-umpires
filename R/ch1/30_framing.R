@@ -1173,6 +1173,7 @@ write_prose <- function(ctx, T, reading, has_arms) {
                    pv(dl, sdl, "id", kch, "doolittle", 1, "%"), ".",
                    " Over the whole open 2026 season the top-30 mean is ", pv(dl, sdl, "id", k26, "point", 3), " (",
                    ci95(dl, sdl, "id", k26, 3), ")."), "")
+  k_sis <- "framing_rel:2026_minus_2025:cnt:sis"
   r_dd <- rl[rl$id == k_rl("2026_minus_2025"), ]
   r_da <- rl[rl$id == k_rl("delta_abs"), ]
   rd <- if (r_dd$reading == "fell" && r_da$reading == "fell") {
@@ -1192,7 +1193,11 @@ write_prose <- function(ctx, T, reading, has_arms) {
                    " The 2026 minus 2025 difference is ", pv(rl, srl, "id", k_rl("2026_minus_2025"), "point", 2), " (",
                    ci95(rl, srl, "id", k_rl("2026_minus_2025"), 2), ").",
                    " The trend-adjusted `Delta_ABS` component is ", pv(rl, srl, "id", k_rl("delta_abs"), "point", 2), " (",
-                   ci95(rl, srl, "id", k_rl("delta_abs"), 2), "). ", rd), "")
+                   ci95(rl, srl, "id", k_rl("delta_abs"), 2), "). ", rd,
+                   " Excluding challenged pitches, the SIS convention, the same difference is ",
+                   pv(rl, srl, "id", k_sis, "point", 2), " (", ci95(rl, srl, "id", k_sis, 2), "), and that interval ",
+                   switch(rl$reading[rl$id == k_sis], fell = "also lies below zero.", rose = "lies above zero.",
+                          "includes zero.")), "")
   desc <- !identical(reading, "as pre-registered")
   L <- c(L, paste0("**Decomposition.** On the signal SD, `Delta_buffer` is ", D("sd_signal_per100", "delta_buffer", 3), " (",
                    DC("sd_signal_per100", "delta_buffer", 3), ") runs per ", C100, " innings.",
