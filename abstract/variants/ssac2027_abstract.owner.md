@@ -14,4 +14,4 @@ The pre-registered placebo failed: the zone grew <<P1_AREA>> square inches, beyo
 
 ## Conclusion
 
-<<CALL>> Table 1 gives the shifts by edge and step to inform baseline adjustments. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+<<CALL>> Table 1's shifts serve three uses: season-adjusted framing and pitch-location baselines, edge targets for pitchers, and the plane correction for 2025-to-2026 Statcast comparisons. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.

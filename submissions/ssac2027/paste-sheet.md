@@ -29,7 +29,7 @@ MLB's called strike zone: a failed placebo and two contractions
 
 Choose by the upload question in `abstract/FORM-FIELDS.md` section 3 item 5.
 
-Option A, the form has an upload field: 475 words with the title. Upload
+Option A, the form has an upload field: 485 words with the title. Upload
 `abstract/table1.png` and, if the figure stays after review R1, `abstract/figure1.png`.
 
 ```text
@@ -49,10 +49,10 @@ The pre-registered placebo failed: the zone grew 10.8 (90% CI 7.7 to 13.9) squar
 
 Conclusion
 
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1 gives the shifts by edge and step to inform baseline adjustments. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1's shifts serve three uses: season-adjusted framing and pitch-location baselines, edge targets for pitchers, and the plane correction for 2025-to-2026 Statcast comparisons. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
-Option B, no upload field: 508 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
+Option B, no upload field: 518 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
 the end of Results and the figure is dropped.
 
 ```text
@@ -74,7 +74,7 @@ Table 1, inches, 95% intervals in brackets. Buffer change, 2025: top edge -0.18 
 
 Conclusion
 
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1 gives the shifts by edge and step to inform baseline adjustments. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1's shifts serve three uses: season-adjusted framing and pitch-location baselines, edge targets for pitchers, and the plane correction for 2025-to-2026 Statcast comparisons. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
 ## 5. Body, four boxes
@@ -99,10 +99,10 @@ Results, 156 words:
 The pre-registered placebo failed: the zone grew 10.8 (90% CI 7.7 to 13.9) square inches, beyond its ±3 margin, so every step is descriptive. Net of the trend, the area fell 23.4 (95% CI 18.6 to 28.3) square inches in 2025 and 33.1 (95% CI 28.7 to 37.5) in 2026 (Figure 1). The zone lost width mostly in 2025 and height mostly in 2026 (Table 1). Within 3 inches of the rule-book zone's edge, the called-strike rate fell 10.69 (95% CI 10.04 to 11.28) percentage points from 2024 to 2026. Clemens's comparison reads 2025 at the plate front and 2026 at mid-plate. That convention gives a loss of 20.0 (95% CI 13.0 to 28.2) square inches; with both at mid-plate it is 32.8 (95% CI 29.3 to 36.6). The binned estimator failed the ±3 agreement tolerance, giving contractions of 29.5 and 40.7 square inches. Top-edge intervals covered 91 of 100 recovery runs, below the 93 bound.
 ```
 
-Conclusion, 84 words:
+Conclusion, 94 words:
 
 ```text
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1 gives the shifts by edge and step to inform baseline adjustments. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1's shifts serve three uses: season-adjusted framing and pitch-location baselines, edge targets for pitchers, and the plane correction for 2025-to-2026 Statcast comparisons. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
 ## 6. Uploads
