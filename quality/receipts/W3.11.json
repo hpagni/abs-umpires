@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/20_spec_dev.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/20_spec_dev.R",
-  "duration_s": 520,
+  "duration_s": 536,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
+  "git_sha": "f790ae39d913bd0cfefdd11355740f44860e571d",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.11.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.11",
-  "timestamp_madrid": "2026-09-30 00:34:34 CEST",
+  "timestamp_madrid": "2026-09-30 01:34:25 CEST",
   "title": "Specification development on 2022-2024 only, k frozen, binned-logistic tolerance stated"
 }

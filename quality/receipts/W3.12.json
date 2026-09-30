@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/21_synthetic.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/21_synthetic.R",
-  "duration_s": 57,
+  "duration_s": 56,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
+  "git_sha": "f790ae39d913bd0cfefdd11355740f44860e571d",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.12.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.12",
-  "timestamp_madrid": "2026-09-30 00:35:31 CEST",
+  "timestamp_madrid": "2026-09-30 02:30:02 CEST",
   "title": "Synthetic machinery: recovery, SBC, the D-60 power curve"
 }

@@ -1,18 +1,7 @@
-# quality/prereg.lock -- the pre-registration hash lock. SOP step W9.7, layer 2.
-#
-# PLACEHOLDER. Written by W9.7 in fleet phase 01, 2026-09-23 05:13 CEST. It carries no hash
-# line yet, because PREREGISTRATION.md does not exist yet and the tag prereg-v1
-# has not been cut. Phase 04 owns both: it writes PREREGISTRATION.md, tags
-# prereg-v1, pushes the tag, and replaces this file wholesale with the output of
-#
-#     shasum -a 256 PREREGISTRATION.md <each annex>
-#
-# one "<sha256>  <path>" line per file, PREREGISTRATION.md among them.
-#
-# HOW IT IS READ. absump.seal._prereg_hash_matches() re-hashes each named path
-# from the tagged blob, git show prereg-v1:<path>, never from the worktree, so
-# an edit made after the tag cannot satisfy the lock. While this file holds no
-# hash line, that function returns False, _unlocked() returns False, and the
-# seal stays shut. That is the intended state for every phase before 04.
-#
-# Do not add a line here by hand. The lock is generated from the tagged blobs.
+7fe24c0e46ee5388c88f664252888468c0202308d2cbb9041ce6ead4617f0205  PREREGISTRATION.md
+85354181a5714d04dae14309cc0a23aeac2c517050256f3ed964784930cf0f97  docs/prereg/ch1.md
+435cfca8491c275e1130cc9b81df98a1922e5d06d99609ec3560d29b9056844f  docs/prereg/ch2.md
+ed73a008bc4cad5b9ead71b23e07223f0641c51ec2140284426a603e49fcacba  docs/prereg/ch3.md
+7e6aafeba859f9211d3bb5d3b6002ee7ed2456c91a84f2d755064a72e79c3a33  docs/prereg/p8.md
+e56c28ae3ba566b85593e2c0298658324cdaadd9faa2ee80cd3f5055cb4b9b4f  docs/prereg/RELEASE_NOTES.md
+29bc2d2448c85fb40f8b5863220fa45ca5a65f9614ea2c90ba5e614a4b1a5c4a  docs/prereg/SEAL.md
