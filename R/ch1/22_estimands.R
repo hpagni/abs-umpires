@@ -1,0 +1,190 @@
+#!/usr/bin/env Rscript
+# R/ch1/22_estimands.R - SOP W3.15, the estimands on the standardised grid.
+#
+#   Rscript R/ch1/22_estimands.R --table data/marts/ch1_called.parquet --out out
+#   Rscript R/ch1/22_estimands.R --table <table> --out <root> --fits main,undersmooth,abs_cohort,single_offset,panel,binned
+#
+# Every fit is its own arm in T3, named in the arm column (ARM_LABEL): the primary, the
+# ABS-measured arm, SENS-HEIGHT-SINGLE, SENS-B1-UNDERSMOOTH, the CH1-A14 panel and the CH1-A5
+# binned logistic.
+# The undersmooth fit (SENS-B1-UNDERSMOOTH, annex 8.7) contributes top_in only: the annex reports
+# its top-edge estimate and interval beside the primary's, and nothing else from it.
+#
+# For each fit W3.14 wrote, each season 2022 to 2026 is evaluated on the 301 x 276 grid
+# (x_mid -1.5 to 1.5 ft by 0.01, zn 0.15 to 0.70 by 0.002), standardised by g-computation to the
+# 2024 reference mix of count class, handedness, pitch group and velocity of that fit's own
+# sample, random effects at zero. From the 50% contour, for a 72-inch batter: top_in, bot_in,
+# half_width_in, area_sqin (marching squares), shadow_rate and count_bias, defined in
+# R/lib/ch1_estimands.R. count_bias is METHODS section 8's pre-registered estimand, reported here
+# as a replication. Every interval comes from the 1,000 N(beta, Vc) draws W3.14 wrote; nothing
+# is refitted. The binned logistic gives the four geometric estimands, with draws from each
+# edge glm's own covariance, for the CH1-A5 comparison and its own pre-trend weights.
+#
+# WRITES, under --out:
+#   ch1/tab/T3_estimands.csv                 one row per fit, season and estimand: the arm, point,
+#                                            95% and 90% intervals, the estimator named
+#   ch1/model/estimand_draws_<fit>.csv       one row per draw, one column per season x estimand;
+#                                            W3.16 and W3.21 read their intervals from these
+#
+# It rebuilds each fit's sample with the loader and height rule W3.14 used and fails unless the
+# row count and the table's sha256 match the fit's receipt.
+
+ROOT <- local({
+  a <- commandArgs(trailingOnly = FALSE)
+  f <- sub("^--file=", "", grep("^--file=", a, value = TRUE))
+  normalizePath(file.path(dirname(f), "..", ".."))
+})
+setwd(ROOT)
+source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
+
+BAM_FITS <- setdiff(FIT_ARMS, "binned")
+# The sample each fit is read on, named by its height rule.
+RULE_SAMPLE <- c(primary = "P0, roster + cohort-specific offset (D-P4-04)",
+                 single_offset = "P0, roster + D-R0-02's one offset for every batter",
+                 abs_cohort = "P1, H_abs")
+sample_of <- function(name, rule) {
+  paste0(if (name == "panel") "balanced umpire panel of " else "", RULE_SAMPLE[[rule]])
+}
+BAM_LABEL <- "bam, frozen specification (annex 2); 95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter"
+US_LABEL <- paste("bam, frozen specification with the season by-term at k = 24, SENS-B1-UNDERSMOOTH (annex 8.7);",
+                  "95% interval from 1,000 draws of N(beta, Vc); 2024 reference mix; 72-in batter")
+# The estimands each bam fit reports: all six, except the undersmoothed arm's top edge (annex 8.7).
+ests_of <- function(name) if (name == "undersmooth") UNDERSMOOTH_ESTIMANDS else ESTIMANDS
+BIN_LABEL <- "binned logistic (annex 5), CH1-A5 secondary; interval from 1,000 draws of each edge glm's N(beta, vcov); 2024 count and stand mix"
+
+# Each fit's rows under the rule W3.14 fitted it with; the rule rides along as an attribute,
+# which subsetting a data frame drops, so it is set on the result.
+fit_rows <- function(ctx, name, d, cal, opt) {
+  rk <- fit_height_rule(name, opt)
+  rows <- apply_heights(d, rk, cal, ctx)
+  if (name == "panel") rows <- rows[rows$umpire_hp_id %in% panel_umpires(rows), ]
+  out <- surface_rows(rows)
+  attr(out, "height_rule_key") <- rk
+  out
+}
+
+receipt_matches <- function(ctx, name, rows) {
+  rp <- file.path(ctx$paths$models, sprintf("surface_%s", name), "provenance.json")
+  if (!file.exists(rp)) die("no W3.14 receipt at ", rp)
+  r <- fromJSON(rp)
+  rk <- attr(rows, "height_rule_key")
+  check(sprintf("%s: sample rebuilt as W3.14 fitted it", name),
+        r$n_rows == nrow(rows) && identical(r$table_sha256, sha256_file(ctx$table)) && identical(r$height_rule_key, rk),
+        sprintf("%s rows now, %s in the receipt; height rule %s now, %s in the receipt; table sha256 %s", comma(nrow(rows)),
+                comma(r$n_rows), rk, format(r$height_rule_key),
+                if (identical(r$table_sha256, sha256_file(ctx$table))) "unchanged" else "CHANGED"))
+}
+
+t3_rows <- function(name, point, draws, estimator, n_rows, sample) {
+  out <- list()
+  for (s in SEASON_LEVELS) for (e in colnames(point)) {
+    v <- draws[, paste(s, e, sep = "_")]
+    i95 <- qint(v, 0.95); i90 <- qint(v, 0.90)
+    out[[length(out) + 1L]] <- data.frame(
+      fit = name, arm = ARM_LABEL[[name]], sample = sample, season = as.integer(s), regime = REGIME_OF[[s]], estimand = e,
+      units = ESTIMAND_UNITS[[e]], point = point[s, e], lo95 = i95[1], hi95 = i95[2], lo90 = i90[1], hi90 = i90[2],
+      n_draws = nrow(draws), n_complete = sum(is.finite(v)), estimator = estimator, n_rows_fit = n_rows,
+      stringsAsFactors = FALSE)
+  }
+  do.call(rbind, out)
+}
+
+bam_estimands <- function(ctx, name, rows) {
+  p <- ctx$paths
+  obj <- readRDS(file.path(p$model, sprintf("surface_%s.rds", name)))
+  cd <- readRDS(file.path(p$model, sprintf("draws_vc_%s.rds", name)))
+  check(sprintf("%s: draws are %s draws of the fitted coefficients", name, attr(cd, "covariance")),
+        identical(attr(cd, "covariance"), INTERVAL_COV) && identical(colnames(cd), names(stats::coef(obj$m))) &&
+          nrow(cd) == ctx$n_draws,
+        sprintf("%d x %d, seed %d", nrow(cd), ncol(cd), attr(cd, "seed")))
+  ref <- rows[rows$season == as.integer(REF_SEASON), ]
+  mix <- ref_mix(obj$m, obj$spec, ref, REF_SEASON)
+  record(sprintf("%s: reference mix", name), sprintf("%s 2024 pitches, %d count x handedness cells, median velocity %.1f mph",
+                                                     comma(nrow(ref)), length(mix$cells), mix$velo_ref))
+  ests <- ests_of(name)
+  point <- matrix(NA_real_, length(SEASON_LEVELS), length(ests), dimnames = list(SEASON_LEVELS, ests))
+  draws <- list()
+  for (s in SEASON_LEVELS) {
+    t0 <- proc.time()
+    est <- surface_estimands(obj$m, obj$spec, mix, s, ref, cd, edges_only = all(ests %in% c("top_in", "bot_in", "half_width_in")))
+    point[s, ] <- est$point[ests]
+    dm <- est$draws[, ests, drop = FALSE]
+    n_ok <- sum(stats::complete.cases(dm))
+    colnames(dm) <- paste(s, ests, sep = "_")
+    draws[[s]] <- dm
+    share <- n_ok / nrow(cd)
+    check(sprintf("%s %s: >= %.0f%% of draws complete", name, s, 100 * MIN_COMPLETE_SHARE), share >= MIN_COMPLETE_SHARE,
+          sprintf("%d of %d; %d band points, %d draws re-read on the full grid; %.0f s", n_ok, nrow(cd),
+                  est$diag$n_band, est$diag$n_full_grid_draws, (proc.time() - t0)[["elapsed"]]))
+    record(sprintf("%s %s point", name, s), paste(sprintf("%s %.3f", ests, point[s, ]), collapse = ", "))
+  }
+  check(sprintf("%s: every point estimate finite", name), all(is.finite(point)), "a closed 50% contour in every season")
+  list(point = point, draws = do.call(cbind, draws), n_rows = obj$n_rows)
+}
+
+binned_block <- function(ctx, rows, n) {
+  obj <- readRDS(file.path(ctx$paths$model, "surface_binned.rds"))
+  w <- binned_ref_weights(rows[rows$season == as.integer(REF_SEASON), ])
+  B <- binned_draws(obj$fits, n, DRAW_SEED)
+  point <- t(vapply(SEASON_LEVELS, function(s) binned_estimands(obj$fits, w, s)[1, ], numeric(4)))
+  draws <- do.call(cbind, lapply(SEASON_LEVELS, function(s) {
+    m <- binned_estimands(obj$fits, w, s, B)
+    colnames(m) <- paste(s, colnames(m), sep = "_")
+    m
+  }))
+  check("binned: every point estimate finite", all(is.finite(point)), "four geometric estimands, five seasons")
+  list(point = point, draws = draws, n_rows = obj$n_rows)
+}
+
+main <- function() {
+  opt <- parse_cli(commandArgs(trailingOnly = TRUE))
+  ctx <- start_run("W3.15", opt, "R/ch1/22_estimands.R")
+  fits <- strsplit(opt_get(opt, "fits", paste(c(BAM_FITS, "binned"), collapse = ",")), ",")[[1]]
+  if (!all(fits %in% c(BAM_FITS, "binned"))) die("unknown fit in --fits: ", paste(setdiff(fits, c(BAM_FITS, "binned")), collapse = ","))
+  cal <- read_calibration(ctx, opt)
+  d <- load_table(ctx)
+  t3 <- list()
+  for (name in fits) {
+    rows <- fit_rows(ctx, if (name == "binned") "main" else name, d, cal, opt)
+    if (name == "binned") {
+      res <- binned_block(ctx, rows, ctx$n_draws)
+      est_label <- BIN_LABEL
+    } else {
+      receipt_matches(ctx, name, rows)
+      res <- bam_estimands(ctx, name, rows)
+      est_label <- if (name == "undersmooth") US_LABEL else BAM_LABEL
+    }
+    rk <- attr(rows, "height_rule_key")
+    t3[[name]] <- t3_rows(name, res$point, res$draws, est_label, res$n_rows, sample_of(name, rk))
+    write_csv_plain(data.frame(draw = seq_len(nrow(res$draws)), res$draws, check.names = FALSE),
+                    file.path(ctx$paths$model, sprintf("estimand_draws_%s.csv", name)))
+  }
+  tab <- do.call(rbind, t3)
+  f3 <- file.path(ctx$paths$tab, "T3_estimands.csv")
+  # --fits lets the fits run as separate processes; each replaces its own rows under the lock.
+  tab <- with_lock(ctx$paths$tab, {
+    if (file.exists(f3) && !setequal(fits, c(BAM_FITS, "binned"))) {
+      old <- read_csv_plain(f3)
+      tab <- rbind(old[!old$fit %in% fits, names(tab)], tab)
+      tab <- tab[order(match(tab$fit, c(BAM_FITS, "binned"))), ]
+    }
+    write_csv_plain(tab, f3)
+    tab
+  })
+  m <- tab[tab$fit == "main", ]
+  if (nrow(m) > 0L) {
+    check("T3: five seasons and six estimands for the primary fit",
+          setequal(m$season, SEASONS) && setequal(m$estimand, ESTIMANDS) && nrow(m) == 30L,
+          sprintf("%d rows", nrow(m)))
+  }
+  record("written", sprintf("%s, %d rows", f3, nrow(tab)))
+  step_receipt(ctx, rows = d, seed = DRAW_SEED,
+               suffix = if (setequal(fits, c(BAM_FITS, "binned"))) "" else paste(fits, collapse = "_"),
+               inputs = c(file.path(ctx$paths$model, sprintf("draws_vc_%s.rds", intersect(fits, BAM_FITS))),
+                          if ("binned" %in% fits) file.path(ctx$paths$model, "surface_binned.rds")),
+               outputs = c(f3, file.path(ctx$paths$model, sprintf("estimand_draws_%s.csv", fits))),
+               extra = list(fits = as.list(fits)))
+  finish("W3.15")
+}
+
+if (identical(environment(), globalenv()) && !interactive()) main()

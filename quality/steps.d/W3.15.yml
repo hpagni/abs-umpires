@@ -1,0 +1,23 @@
+# W3.15, the estimands on the standardised grid. Owner W3, fleet phase 05, the ch1-fits lane.
+#
+# R/ch1/22_estimands.R evaluates each season of each W3.14 fit on the 301 x 276 grid, standardised
+# by g-computation to the 2024 reference mix, for a 72-inch batter: top_in, bot_in, half_width_in,
+# area_sqin by marching squares, shadow_rate over the D-P4-09 band |d - 1.45| <= 3 in, and
+# count_bias. Every interval comes from W3.14's 1,000 Vc draws. T3 and the per-draw estimand table
+# are written under a lock, so the fits may run as separate processes. T3's arm column names each
+# fit's arm: primary, SENS-B1-UNDERSMOOTH, ABS-measured arm, SENS-HEIGHT-SINGLE, CH1-A14 balanced
+# panel, CH1-A5 binned logistic. The verify command fails on a missing arm or another label.
+#
+# Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
+# succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12), and writes a
+# provenance receipt under out/models/. The verify command re-reads what the step wrote with
+# tests/ch1/check_ch1_outputs.R --step W3.15 and refits nothing; GD-04 then scans the script.
+# `needs` names the step's outputs, which exist only after the post-tag run, so before it the step
+# reads MISSING rather than FAIL. The dry run on a synthetic table is
+# tests/model/test_mt_ch1_sprint.py.
+- id: W3.15
+  title: "Chapter 1 estimands on the 301 x 276 grid, standardised to the 2024 mix"
+  verify: "Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.15 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/22_estimands.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/22_estimands.R, out/ch1/tab/T3_estimands.csv, out/ch1/model/estimand_draws_main.csv

@@ -1,0 +1,309 @@
+#!/usr/bin/env Rscript
+# tests/ch1/check_ch1_outputs.R - the verify half of SOP W3.14 to W3.18, W3.21, W6.7 and W6.8.
+#
+#   Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.16
+#   Rscript tests/ch1/check_ch1_outputs.R --out <dry-run root>/out --step all --synthetic
+#
+# It reads the outputs a step wrote, refits nothing, and re-derives what can be re-derived:
+#   W3.14  each of the six fits (FIT_ARMS: main, undersmooth, abs_cohort, single_offset, panel,
+#          binned) has its object, its 1,000 Vc draws (bam fits) and a receipt with the SOP section
+#          1.4 keys, its arm label and its height rule; the union receipt sits beside the objects
+#          (GD-01); on real outputs every receipt's git_sha descends from prereg-v1 (GD-12) and
+#          no max_official_date passes the last open day
+#   W3.15  T3 carries every arm under its label: five seasons and six estimands for the primary,
+#          the ABS-measured arm, SENS-HEIGHT-SINGLE and the panel, the four geometric estimands for
+#          the binned logistic, the top edge alone for SENS-B1-UNDERSMOOTH; every interval equals
+#          the quantiles of its draws column
+#   W3.16  T4 and every arm's decomposition re-derived from T3 and the draws to 1e-9; the identity
+#          residual under 1e-9; the share reported only under the CH1-A9 rule; each arm under its
+#          label; the ABS-measured arm and SENS-HEIGHT-SINGLE beside the primary with their signs;
+#          height_cohort_flag present and equal to D-P4-04's verdict re-read from the area rows;
+#          SENS-B1-UNDERSMOOTH beside the top edge; W3.16's headline row present
+#   W3.17  top, bottom, width and area rows, each with a 95% interval (CH1-A13); one quantity named
+#          as the one the component was subtracted from; T9 present; the figure and its CSV
+#   W3.18  T6 and umpire_eb.csv present, no per-umpire column, CH1-A6 stated, MT-05 on real fits
+#   W3.21  P1 to P4 present, P1 scored as two one-sided tests against 0.5 pp and 3 sq in
+#   W6.7   every slot has a 95% interval (N_CHAL, a count, its value) and matches its source row
+#          digit for digit; N_CHAL is the n of T2_zone_gate.csv's overall row; the cohort sentence
+#          follows T4's height_cohort_flag; the ledger is what tools/comms/export_numbers.R --check
+#          regenerates; CALL and BREAK_YEAR absent
+#   W6.8   SD_UMP, REL_UMP and N_UMP match umpire_eb.csv; REL_UMP is the response's reliability
+# Exit 0 when every check passes, 1 otherwise.
+
+ROOT <- local({
+  a <- commandArgs(trailingOnly = FALSE)
+  f <- sub("^--file=", "", grep("^--file=", a, value = TRUE))
+  normalizePath(file.path(dirname(f), "..", ".."))
+})
+setwd(ROOT)
+source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
+opt <- parse_cli(commandArgs(trailingOnly = TRUE), flags = "synthetic")
+OUT <- opt_get(opt, "out", file.path(ROOT, "out"))
+P <- out_paths(OUT)
+STEPS <- c("W3.14", "W3.15", "W3.16", "W3.17", "W3.18", "W3.21", "W6.7", "W6.8")
+want <- opt_get(opt, "step", "all")
+steps <- if (want == "all") STEPS else strsplit(want, ",")[[1]]
+REAL <- !isTRUE(opt$synthetic)
+CONTRACT <- c("n_games", "n_rows", "min_official_date", "max_official_date", "game_pk_sha256",
+              "analysis_sets_touched", "seed", "code_sha256", "git_sha")
+has <- function(f) check(sprintf("present: %s", sub(paste0("^", OUT, "/"), "", f)), file.exists(f), "")
+csv <- function(f) if (file.exists(f)) read_csv_plain(f) else NULL
+same <- function(a, b, tol = 1e-9) length(a) == length(b) && all(is.na(a) == is.na(b)) &&
+  all(abs(a[!is.na(a)] - b[!is.na(b)]) <= tol)
+
+receipts <- function() {
+  fs <- list.files(P$models, pattern = "^provenance\\.json$", recursive = TRUE, full.names = TRUE)
+  c(fs, list.files(P$model, pattern = "^provenance\\.json$", full.names = TRUE))
+}
+
+chk_w314 <- function() {
+  keys <- list()
+  for (fit in FIT_ARMS) {
+    if (fit == "binned") {
+      has(file.path(P$model, "surface_binned.rds"))
+    } else {
+      has(file.path(P$model, sprintf("surface_%s.rds", fit)))
+      f <- file.path(P$model, sprintf("draws_vc_%s.rds", fit))
+      if (has(f)) {
+        cd <- readRDS(f)
+        check(sprintf("%s draws: a 1,000-row matrix from N(beta, Vc)", fit),
+              is.matrix(cd) && identical(attr(cd, "covariance"), "Vc") && (nrow(cd) == N_DRAWS || !REAL) &&
+                all(is.finite(cd)), sprintf("%d x %d, %s", NROW(cd), NCOL(cd), attr(cd, "covariance")))
+      }
+    }
+    rp <- file.path(P$models, sprintf("surface_%s", fit), "provenance.json")
+    if (has(rp)) {
+      r <- fromJSON(rp)
+      keys[[fit]] <- if (is.null(r$height_rule_key)) NA_character_ else r$height_rule_key
+      check(sprintf("%s receipt: arm %s", fit, ARM_LABEL[[fit]]), identical(r$arm, ARM_LABEL[[fit]]), format(r$arm))
+    }
+  }
+  # The two height arms keep their own rule; the other four share the primary's, which is
+  # D-P4-04's unless the owner overrode it (--height-rule single-offset).
+  if (length(keys) == length(FIT_ARMS)) {
+    shared <- unlist(keys[c("main", "undersmooth", "panel", "binned")])
+    check("height rules: abs_cohort, single_offset, and one primary rule for main, undersmooth, panel and binned",
+          identical(keys$abs_cohort, "abs_cohort") && identical(keys$single_offset, "single_offset") &&
+            length(unique(shared)) == 1L && shared[[1]] %in% c("primary", "single_offset"),
+          paste(sprintf("%s %s", names(keys), unlist(keys)), collapse = ", "))
+    if (identical(keys$main, "single_offset")) record("OWNER OVERRIDE of D-P4-04", "the primary fits ran SENS-HEIGHT-SINGLE's rule")
+  }
+  has(file.path(P$model, "provenance.json"))
+  last <- if (REAL) format(last_open_date()) else "9999-12-31"
+  tag_ok <- function(sha) {
+    st <- suppressWarnings(system2("git", c("-C", ROOT, "merge-base", "--is-ancestor", prereg_tag(), sha),
+                                   stdout = FALSE, stderr = FALSE))
+    identical(as.integer(st), 0L)
+  }
+  for (f in receipts()) {
+    r <- fromJSON(f)
+    lab <- sub(paste0("^", OUT, "/"), "", f)
+    check(sprintf("GD-01 keys: %s", lab), all(CONTRACT %in% names(r)), paste(setdiff(CONTRACT, names(r)), collapse = ", "))
+    check(sprintf("seal: %s", lab), is.null(r$max_official_date) || is.na(r$max_official_date) ||
+            r$max_official_date <= last, format(r$max_official_date))
+    # ops/check_seal_order.sh reads git_sha as one commit
+    check(sprintf("one git_sha: %s", lab), is.character(r$git_sha) && length(r$git_sha) == 1L &&
+            grepl("^[0-9a-f]{40}$", r$git_sha), format(r$git_sha))
+    if (REAL) check(sprintf("GD-12: %s", lab), tag_ok(r$git_sha), r$git_sha)
+  }
+}
+
+chk_w315 <- function() {
+  t3 <- csv(file.path(P$tab, "T3_estimands.csv"))
+  if (!has(file.path(P$tab, "T3_estimands.csv"))) return()
+  check("T3 carries an arm column", "arm" %in% names(t3), paste(names(t3), collapse = ","))
+  if (!"arm" %in% names(t3)) return()
+  want <- list(main = ESTIMANDS, abs_cohort = ESTIMANDS, single_offset = ESTIMANDS, panel = ESTIMANDS,
+               undersmooth = UNDERSMOOTH_ESTIMANDS, binned = GEOM)
+  for (fit in FIT_ARMS) {
+    m <- t3[t3$fit == fit, ]
+    check(sprintf("T3 %s: labelled %s, five seasons x %d estimands", fit, ARM_LABEL[[fit]], length(want[[fit]])),
+          nrow(m) == 5L * length(want[[fit]]) && setequal(m$season, SEASONS) && setequal(m$estimand, want[[fit]]) &&
+            all(m$arm == ARM_LABEL[[fit]]), sprintf("%d rows, arm %s", nrow(m), paste(unique(m$arm), collapse = "/")))
+  }
+  check("T3 holds no fit outside the six arms", all(t3$fit %in% FIT_ARMS),
+        paste(setdiff(unique(t3$fit), FIT_ARMS), collapse = ","))
+  for (fit in unique(t3$fit)) {
+    dr <- csv(file.path(P$model, sprintf("estimand_draws_%s.csv", fit)))
+    if (is.null(dr)) { check(sprintf("draws for %s", fit), FALSE, "absent"); next }
+    tt <- t3[t3$fit == fit, ]
+    lo <- hi <- numeric(nrow(tt))
+    for (i in seq_len(nrow(tt))) {
+      q <- qint(dr[[paste(tt$season[i], tt$estimand[i], sep = "_")]])
+      lo[i] <- q[1]; hi[i] <- q[2]
+    }
+    check(sprintf("T3 %s: intervals are the draws' quantiles", fit), same(lo, tt$lo95, 1e-6) && same(hi, tt$hi95, 1e-6),
+          sprintf("%d rows, %d draws", nrow(tt), nrow(dr)))
+  }
+}
+
+chk_w316 <- function() {
+  f4 <- file.path(P$tab, "T4_decomposition.csv")
+  fa <- file.path(P$tab, "T4_decomposition_arms.csv")
+  if (!has(f4) || !has(fa)) return()
+  t4 <- csv(f4); ta <- csv(fa); t3 <- csv(file.path(P$tab, "T3_estimands.csv"))
+  check("identity residual below 1e-9 on every row", max(abs(c(t4$identity_residual, ta$identity_residual))) < IDENTITY_TOL,
+        sprintf("max %.2e", max(abs(c(t4$identity_residual, ta$identity_residual)))))
+  # Every fit's decomposition, the primary's in T4 and each arm's in T4_decomposition_arms.csv,
+  # re-derived from T3's points and the W3.15 draws.
+  rederive <- function(fit, got) {
+    dr <- csv(file.path(P$model, sprintf("estimand_draws_%s.csv", fit)))
+    if (is.null(dr) || nrow(got) == 0L) return(FALSE)
+    ok <- TRUE
+    for (e in unique(t3$estimand[t3$fit == fit])) {
+      p5 <- vapply(SEASON_LEVELS, function(s) t3$point[t3$fit == fit & t3$season == as.integer(s) & t3$estimand == e], 0)
+      res <- decompose_estimand(p5, as.matrix(dr[, paste(SEASON_LEVELS, e, sep = "_")]), e, ESTIMAND_UNITS[[e]])$table
+      g <- got[got$estimand == e, ]
+      j <- match(res$component, g$component)
+      ok <- ok && !anyNA(j) && same(res$point, g$point[j], 1e-9) && same(res$lo95, g$lo95[j], 1e-9) &&
+        identical(res$reported, as.logical(g$reported[j]))
+    }
+    ok
+  }
+  check("T4 re-derived from T3 and the W3.15 draws", rederive("main", t4), "points, intervals and the CH1-A9 share rule")
+  check("T4 is the primary's, labelled primary", "arm" %in% names(t4) && all(t4$fit == "main") &&
+          all(t4$arm == ARM_LABEL[["main"]]), paste(unique(t4$arm), collapse = "/"))
+  for (fit in setdiff(FIT_ARMS, "main")) {
+    a <- ta[ta$fit == fit, ]
+    check(sprintf("T4 arms: %s present, labelled %s, re-derived from its draws", fit, ARM_LABEL[[fit]]),
+          nrow(a) > 0L && "arm" %in% names(ta) && all(a$arm == ARM_LABEL[[fit]]) && rederive(fit, a),
+          sprintf("%d rows, arm %s", nrow(a), if ("arm" %in% names(ta)) paste(unique(a$arm), collapse = "/") else "no arm column"))
+  }
+  # The two height arms beside the primary, with their signs, and D-P4-04's flag.
+  need <- c("abs_cohort_point", "abs_cohort_lo95", "abs_cohort_hi95", "sign_agrees_abs_cohort",
+            "single_offset_point", "single_offset_lo95", "single_offset_hi95", "sign_agrees_single_offset",
+            "height_cohort_flag")
+  miss <- setdiff(need, names(t4))
+  check("T4 carries the ABS-measured arm, SENS-HEIGHT-SINGLE and height_cohort_flag", length(miss) == 0L,
+        if (length(miss)) paste("missing:", paste(miss, collapse = ", ")) else "")
+  if (length(miss) == 0L) {
+    comp <- t4$component %in% c("delta_buffer", "delta_abs")
+    for (fit in c("abs_cohort", "single_offset")) {
+      a <- ta[ta$fit == fit, ]
+      j <- match(paste(t4$estimand, t4$component), paste(a$estimand, a$component))
+      agree <- ifelse(comp, sign(t4$point) == sign(a$point[j]), NA)
+      check(sprintf("T4 %s columns equal that arm's decomposition, signs re-read", fit),
+            same(t4[[paste0(fit, "_point")]], a$point[j], 1e-9) && same(t4[[paste0(fit, "_lo95")]], a$lo95[j], 1e-9) &&
+              identical(as.logical(t4[[paste0("sign_agrees_", fit)]]), as.logical(agree)), "")
+    }
+    ar <- t4[t4$estimand == CLAUSE_ESTIMAND & t4$component %in% c("delta_buffer", "delta_abs"), ]
+    verdict <- height_cohort_flag(sign(ar$point) == sign(ar$abs_cohort_point))
+    flag <- unique(t4$height_cohort_flag)
+    check("height_cohort_flag is D-P4-04's verdict on the area, on every row",
+          length(flag) == 1L && flag %in% c(CLAUSE_AGREE, CLAUSE_SENSITIVE) && identical(flag, verdict),
+          sprintf("flag %s; re-read %s", paste(flag, collapse = "/"), verdict))
+  }
+  us <- t4[t4$component %in% c("delta_buffer", "delta_abs"), ]
+  check("SENS-B1-UNDERSMOOTH beside the primary on the top edge only (annex 8.7)",
+        all(c("undersmooth_point", "undersmooth_lo95", "undersmooth_hi95") %in% names(t4)) &&
+          all(is.finite(us$undersmooth_lo95[us$estimand == "top_in"])) && all(is.na(us$undersmooth_point[us$estimand != "top_in"])), "")
+  rd <- if ("recovery_disclosure" %in% names(t4)) t4$recovery_disclosure else rep(NA_character_, nrow(t4))
+  check("annex 8.7's unmet recovery clauses disclosed on the top_in and half_width_in rows (D-R0-04)",
+        all(nzchar(rd[t4$estimand %in% names(RECOVERY_NOTE)]) & !is.na(rd[t4$estimand %in% names(RECOVERY_NOTE)])), "")
+  has(file.path(P$models, "ch1_W3_16", "provenance.json"))
+  hl <- csv(file.path(P$tables, "headline.csv"))
+  check("headline.csv carries W3.16's row", !is.null(hl) && "CH1_W316" %in% hl$id, "")
+  if (!is.null(hl) && "CH1_W316" %in% hl$id) {
+    s <- hl$sentence[hl$id == "CH1_W316"]
+    check("W3.16's sentence is descriptive", !grepl("caus(al|ed|es)|attributable|because of ABS", s, ignore.case = TRUE), s)
+  }
+}
+
+chk_w317 <- function() {
+  fp <- file.path(P$tab, "T4_plane_component.csv")
+  if (!has(fp)) return()
+  tp <- csv(fp)
+  check("CH1-A13: top, bottom and width rows, each with a 95% interval",
+        all(c("top_in", "bot_in", "half_width_in") %in% tp$estimand) && all(is.finite(c(tp$lo95, tp$hi95))), "")
+  check("one quantity named as the one the component was subtracted from", length(unique(tp$subtracted_from)) == 1L,
+        unique(tp$subtracted_from))
+  has(file.path(P$tab, "T9_published_comparison.csv"))
+  has(file.path(P$fig, "F_dz_by_pitch_type.png"))
+  has(file.path(P$fig, "F_dz_by_pitch_type.csv"))
+}
+
+chk_w318 <- function() {
+  t6 <- csv(file.path(P$tab, "T6_heterogeneity.csv"))
+  eb <- csv(file.path(P$tab, "umpire_eb.csv"))
+  if (!has(file.path(P$tab, "T6_heterogeneity.csv")) || !has(file.path(P$tab, "umpire_eb.csv"))) return()
+  check("no per-umpire column in the published tables", !any(c("umpire_hp_id", "umpire") %in% c(names(t6), names(eb))), "")
+  check("CH1-A6 stated", all(nzchar(t6$ch1_a6)), unique(t6$ch1_a6))
+  if (REAL) for (k in names(B2_FITS)) {
+    r <- t6[t6$fit == k & t6$quantity == "tau_abs", ]
+    check(sprintf("MT-05 %s", k), nrow(r) == 1L && isTRUE(as.logical(r$mt05_pass)), "")
+  }
+}
+
+chk_w321 <- function() {
+  t5 <- csv(file.path(P$tab, "T5_placebos.csv"))
+  if (!has(file.path(P$tab, "T5_placebos.csv"))) return()
+  check("P1 to P4 present", all(c("P1", "P2", "P3", "P4") %in% t5$placebo), "")
+  p1 <- t5[t5$placebo == "P1", ]
+  check("P1 is two one-sided tests at 0.5 pp and 3 sq in, 90% intervals", nrow(p1) == 2L &&
+          setequal(p1$margin_or_threshold, c(0.5, 3)) && all(p1$interval_level == 0.90), "")
+}
+
+chk_w67 <- function() {
+  fs <- file.path(P$tables, "abstract_slots_ch1.csv")
+  if (!has(fs)) return()
+  sl <- csv(fs)
+  check("CALL and BREAK_YEAR unfilled", !any(c("CALL", "BREAK_YEAR") %in% sl$slot), "")
+  t5 <- csv(file.path(P$tab, "T5_placebos.csv")); hl <- csv(file.path(P$tables, "headline.csv"))
+  if (!is.null(t5) && !is.null(hl)) {
+    causal_ok <- all(t5$placebo_verdict[t5$placebo %in% c("P1", "P2")] == "pass")
+    s67 <- hl$sentence[hl$id == "CH1_W67"]
+    check("W6.7's sentence names a cause only when P1 and P2 passed", length(s67) == 1L &&
+            (causal_ok || !grepl("caus(al|ed|es)|attributable|because of ABS", s67, ignore.case = TRUE)), s67)
+    check("W6.7 states D-P4-04's sign-agreement reading", "CH1_W67_COHORT" %in% hl$id, "")
+  }
+  counts <- sl$units == "counts"
+  check("every slot carries a 95% interval, a count its value",
+        all(is.finite(sl$lo95[!counts]) & is.finite(sl$hi95[!counts])) && all(is.finite(sl$point[counts])), "")
+  for (i in seq_len(nrow(sl))) {
+    src <- csv(file.path(dirname(OUT), sl$source_csv[i]))
+    cols <- strsplit(sl$source_columns[i], ";")[[1]]
+    v <- vapply(cols, function(cn) as.numeric(src[[cn]][sl$source_row[i]]), 0)
+    mine <- if (counts[i]) sl$point[i] else c(if (length(cols) == 3L) sl$point[i], sl$lo95[i], sl$hi95[i])
+    check(sprintf("%s traces to %s row %d", sl$slot[i], sl$source_csv[i], sl$source_row[i]), same(v, mine, 0), "")
+  }
+  nc <- sl[sl$slot == "N_CHAL", ]
+  t2 <- csv(file.path(P$tab, "T2_zone_gate.csv"))
+  check("N_CHAL is the n of T2_zone_gate.csv's overall row (W3.8)",
+        nrow(nc) == 1L && !is.null(t2) && identical(nc$source_csv, "out/ch1/tab/T2_zone_gate.csv") &&
+          identical(nc$source_columns, "n") && identical(t2$row_id[nc$source_row], "overall") &&
+          identical(as.numeric(nc$point), as.numeric(t2$n[t2$row_id == "overall"])),
+        if (nrow(nc) == 1L) sprintf("N_CHAL %s", format(nc$point)) else "no N_CHAL row")
+  t4 <- csv(file.path(P$tab, "T4_decomposition.csv"))
+  if (!is.null(hl) && !is.null(t4)) {
+    sc <- hl$sentence[hl$id == "CH1_W67_COHORT"]
+    flag <- if ("height_cohort_flag" %in% names(t4)) unique(t4$height_cohort_flag) else character(0)
+    check("W6.7's cohort sentence follows T4's height_cohort_flag", length(sc) == 1L && length(flag) == 1L &&
+            ((flag == CLAUSE_AGREE && grepl("agrees in sign", sc)) ||
+               (flag == CLAUSE_SENSITIVE && grepl("sensitive to the height cohort", sc))),
+          sprintf("%s: %s", paste(flag, collapse = "/"), paste(sc, collapse = " | ")))
+  }
+  led <- if (REAL) file.path(ROOT, "docs", "numbers.json") else file.path(dirname(OUT), "docs", "numbers.json")
+  args <- c(file.path(ROOT, "tools", "comms", "export_numbers.R"), "--check", "--inputs", dirname(OUT),
+            "--base", led, "--out", led, if (!REAL) "--synthetic")
+  check("the ledger is the exporter's output", system2("Rscript", args, stdout = FALSE) == 0L, led)
+}
+
+chk_w68 <- function() {
+  f <- file.path(P$tab, "umpire_eb_summary.csv")
+  if (!has(f)) return()
+  s <- csv(f); eb <- csv(file.path(P$tab, "umpire_eb.csv"))
+  q <- c(SD_UMP = "tau_abs", REL_UMP = "split_half_response", N_UMP = "n_umpires_behind_both")
+  for (k in names(q)) {
+    r <- s[s$slot == k, ]; e <- eb[eb$quantity == q[[k]], ]
+    check(sprintf("%s matches umpire_eb.csv", k), nrow(r) == 1L && nrow(e) == 1L && same(c(r$point, r$lo95, r$hi95),
+                                                                                        c(e$point, e$lo95, e$hi95), 0), "")
+  }
+  check("REL_UMP is the reliability of the response", grepl("RESPONSE", s$estimator[s$slot == "REL_UMP"]), "")
+}
+
+for (st in steps) {
+  cat(sprintf("\n== %s\n", st))
+  switch(st, W3.14 = chk_w314(), W3.15 = chk_w315(), W3.16 = chk_w316(), W3.17 = chk_w317(), W3.18 = chk_w318(),
+         W3.21 = chk_w321(), W6.7 = chk_w67(), W6.8 = chk_w68(), die("unknown step ", st))
+}
+finish(paste("check", want))

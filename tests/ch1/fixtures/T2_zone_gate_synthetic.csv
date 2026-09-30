@@ -1,0 +1,3 @@
+"row_id","population","zone","n","n_agree","n_disagree","agreement_pct","threshold_pct","verdict","benchmark_pct","benchmark_n","note"
+"overall","SYNTHETIC fixture for dry runs of W6.7, not a count of real challenges","ABS-measured height, 53.5%/27%, mid-plate, r = 1.45 in",1234,1232,2,"99.8379","99.75","PASS","","","synthetic; the real table is out/ch1/tab/T2_zone_gate.csv from W3.8"
+"outside_band","SYNTHETIC fixture for dry runs of W6.7, not a count of real challenges","ABS-measured height, 53.5%/27%, mid-plate, r = 1.45 in",900,900,0,"100.0000","99.95","PASS","","","synthetic"
