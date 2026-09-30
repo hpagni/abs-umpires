@@ -20,3 +20,16 @@
 "F2","bar","area_sqin","sq in","delta_total","Total",4,0,-56.022505931417,-56.022505931417,-59.5682473944862,-51.9793814290132,FALSE,7.105427357601e-14,-59.5682473944862,-51.9793814290132
 "F2","bar","area_sqin","sq in","plane","Plane",5.5,0,12.8583482793561,12.8583482793561,6.25250959396778,19.2020814259141,FALSE,7.105427357601e-14,6.25250959396778,19.2020814259141
 "F2","constant",,,"ci_pct",,,,,95,,,,,,
+"F2","constant",,,"top_cover_hits",,,,,91,,,,,,
+"F2","constant",,,"top_cover_n",,,,,100,,,,,,
+"F2","constant",,,"top_cover_bound",,,,,93,,,,,,
+"F2","constant",,,"top_null_margin_in",,,,,0.1,,,,,,
+"F2","constant",,,"top_null_hits",,,,,44,,,,,,
+"F2","constant",,,"top_null_n",,,,,50,,,,,,
+"F2","constant",,,"top_null_bound",,,,,47,,,,,,
+"F2","constant",,,"hw_null_hits",,,,,42,,,,,,
+"F2","constant",,,"hw_null_n",,,,,50,,,,,,
+"F2","constant",,,"hw_null_bound",,,,,43,,,,,,
+"F2","constant",,,"recovery_ci_pct",,,,,95,,,,,,
+"F2","constant",,,"recovery_null_ci_pct",,,,,90,,,,,,
+"F2","constant",,,"annex_section",,,,,8.7,,,,,,

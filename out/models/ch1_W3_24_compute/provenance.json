@@ -10,18 +10,18 @@
     "open"
   ],
   "seed": 20260922,
-  "code_sha256": "529fe5f3af25412428ae621771347e98a4323e68fbbc7a56c7cb3ba0a8802335",
+  "code_sha256": "3147fdf7f14925346334e75f892baf006a476b39f8b748240b282a35278840d2",
   "code_files": {
-    "R/ch1/70_figures.R": "90efdcf26d5c71411f33087904cc0b29d9dbb8d034cbc96a29e7684d6e102906",
+    "R/ch1/70_figures.R": "429cf721b020efcc4ac1c27faccc5948450a5088de5d16a5a9366fff791f198d",
     "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
     "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
     "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "efb6c1fc571a1ad6c99200c281feb5e5774d9849",
+  "git_sha": "1f749f867d50362f38c9fdfb73fb0700e887f3c2",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD efb6c1fc571a; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 1f749f867d50; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -36,5 +36,5 @@
     "out/ch1/fig/W3_24_fit_sample.csv": "d2ef3886bd7736ca2076bfd8af9c4f6dcdf047173fe17b7950262cb553c5122a"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T20:17:56+0200"
+  "written_madrid": "2026-09-30T23:14:15+0200"
 }

@@ -1889,3 +1889,59 @@ Applied as pre-registered; items 4 to 6 are the departures in how it landed. Wha
    bracket is tight and that every Tue/Wed/Thu game read fits the pattern.
 
 No frozen file was edited, and no fit was run.
+
+## DEV-85: W3.24, the acceptance verifier's gaps closed, and two presentation defaults the agent applied
+
+Stamped 2026-09-30T23:12:49+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `R/ch1/70_figures.R`,
+`R/ch1/71_tables.R`, `tests/testthat/test-ch1-figures.R`,
+`out/ch1/prose/sensitivity.md`, `out/tables/headline.csv`, `out/tables/T*.csv`, `out/figures/F2b.*`,
+`out/tables/F2b_data.csv`, `docs/ch1.md`, and `out/tables/acceptance.csv` (untracked).
+
+Items 1 to 6 apply the frozen plan and its consequences, after the CH1 acceptance verifier (DEV-81,
+DEV-83, `logs/evidence/CH1-acceptance-verify.log`). Items 7 and 8 are presentation defaults the agent
+applied in place of two open phase 08 questions. They are owner-visible and the owner may overturn
+either. No model was refitted, and no estimate, interval or verdict changed.
+
+1. **R3, annex 8.7 and D-R0-04.** The published `out/tables/T4_decomposition.csv` had dropped W3.16's
+   `recovery_disclosure` and `undersmooth_*` columns. They are restored. T3, T5, T8 and T9 now carry
+   `recovery_disclosure` on every top-edge and half-width row too. In `docs/ch1.md` each such table row
+   has an Annex 8.7 cell: top-edge intervals read as slightly too narrow (91 of 100, bound 93; null 44 of
+   50, bound 47). Half-width rows state the shortfall (42 of 50, bound 43). F1, F2 and F3 captions carry
+   both sentences. The counts are parsed from T4's text, never typed, and the run stops if that wording
+   changes. The chapter's Status section states the caveat once for the whole chapter.
+2. **R4, T8.** T8 is built from W3.22's `out/ch1/tab/sensitivity_grid.csv` now that
+   `quality/receipts/W3.22.json` is PASS. The chapter states CH1-A9 as not met, because the multiverse
+   is incomplete: `postseason_in` did not run. That is reported as the finding. Sign stability is
+   stated over the 31 computed rows only. W3.22's prose is folded into the chapter.
+3. **R5, the grid breakdown.** The grid holds 32 rows: 26 binned rows that ran, the deferred binned cell
+   `postseason_in`, and 5 `bam` rows (primary, height_abs_cohort, k_0.75x, mix_unweighted, plane_front),
+   so 31 were computed. The CH1-A9 cell of `out/tables/acceptance.csv` said "plus 6 bam rows". That
+   phrase alone is corrected, in place. The first sentence of `out/ch1/prose/sensitivity.md` now gives
+   the same breakdown.
+4. **CH1-A13 and D-56, the dz-by-pitch-type figure.** W3.17 drew it outside `make figures`, and it was
+   absent from the chapter and the manifest. It is now F2b, rendered by `R/ch1/70_figures.R` from
+   W3.17's `out/ch1/fig/F_dz_by_pitch_type.csv` with its sidecar. The id follows F2, whose plane bar it
+   explains. No existing figure is renumbered. The SOP lists F1 to F8, so F2b is an added figure, which
+   CH1-A13 requires.
+5. **CH1-A14, beside the headline.** `make tables` upserts three rows into `out/tables/headline.csv`,
+   `CH1_W324_PANEL_BUF`, `_ABS` and `_TOTAL`. Each gives the balanced 62-umpire panel's area component
+   with its 95% interval and the panel-minus-primary difference as a number: +3.14, -0.71 and -0.45
+   sq in (T4). CH1_P1 still leads the file.
+6. **D-21, F4's sidecar.** `out/tables/F4_data.csv` stays git-ignored (DEV-83). Neither figure script
+   stages any file, and the chapter's F4 Data line says the sidecar is local. F4 cannot be redrawn as
+   ranks only without per-umpire intervals. The SOP's F4 is a caterpillar, whose marks are those
+   intervals, and a sidecar must hold what the figure draws. The figure stays anonymised as DEV-80
+   item 3 left it.
+7. **Default, Doolittle's comparable (agent-applied).** It is reported as not reproduced and not
+   headlined. T9's Doolittle rows carry `reproduced = no` and `headlined = no`. The change row says
+   the point here is a rise, and the interval is too wide to confirm or reject his figure.
+   `docs/ch1.md` says the same in its framing section.
+8. **Default, framing reliability (agent-applied).** The pre-registered reading stands: framing's
+   reliability fell in 2026 on the primary run values and original calls. `docs/ch1.md` adds one
+   sentence naming the three variants whose 2026-minus-2025 95% interval includes zero: the flat
+   0.125 run value, the SIS convention, and the two together.
+
+Where items 7 and 8 sit: `make tables` prints both in a short block right after the folded
+`out/ch1/prose/framing.md`. W3.19's receipt hashes framing.md as its generator wrote it, so the prose
+file itself is left unedited. The W3.19 lane may move the sentences into its own output later. W3.24 stays open while F5 (W3.20) and F8 (W3.23, the sealed run) are
+placeholders. `make ch1` exits 3 on them, and W3.24's completeness test fails until they land.

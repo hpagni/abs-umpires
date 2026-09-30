@@ -1,6 +1,6 @@
 # Sensitivity grid
 
-SOP W3.22. Every estimate is read from `out/ch1/tab/sensitivity_grid.csv`, which holds 27 binned rows and 5 `bam` rows. Area is in sq in, with 95% intervals in brackets.
+SOP W3.22. Every estimate is read from `out/ch1/tab/sensitivity_grid.csv`: 26 binned rows ran, `postseason_in` is deferred, and 5 `bam` rows ran, 31 computed rows in all. Area is in sq in, with 95% intervals in brackets.
 
 **Sign stability, over the 31 computed rows only.** Delta_buffer and Delta_ABS each keep one sign on area, on every edge and on shadow rate. No 95% interval crosses zero. On area the highest 95% upper bounds are -16.8 for Delta_buffer and -27.6 for Delta_ABS.
 
