@@ -988,6 +988,124 @@
       }
     },
     {
+      "slot": "BIN_BUF",
+      "value": -29.4537647768061,
+      "units": "sq in",
+      "what": "CH1-A5 binned-logistic estimate of the 2025 area step (T4 binned_point beside the bam primary)",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 20,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-29.5"
+      },
+      "print_contraction": {
+        "point": "29.5"
+      }
+    },
+    {
+      "slot": "BIN_ABS",
+      "value": -40.723995798706,
+      "units": "sq in",
+      "what": "CH1-A5 binned-logistic estimate of the 2026 area step (T4 binned_point beside the bam primary)",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 21,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-40.7"
+      },
+      "print_contraction": {
+        "point": "40.7"
+      }
+    },
+    {
+      "slot": "SHADOW_TOT",
+      "value": -10.6850906268079,
+      "lo95": -11.2765582417966,
+      "hi95": -10.0383763033982,
+      "units": "pp",
+      "what": "delta_total, shadow-band called-strike rate: the 2024-to-2026 change in percentage points",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 28,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-10.69",
+        "lo95": "-11.28",
+        "hi95": "-10.04"
+      },
+      "print_contraction": {
+        "point": "10.69",
+        "lo95": "10.04",
+        "hi95": "11.28"
+      }
+    },
+    {
+      "slot": "COV_TOP_HIT",
+      "value": 91,
+      "units": "counts",
+      "what": "top edge: recovery replicates whose 95% interval covered the truth (annex 8.7, D-R0-04)",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 3,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "91"
+      }
+    },
+    {
+      "slot": "COV_TOP_N",
+      "value": 100,
+      "units": "counts",
+      "what": "top edge: recovery replicates run",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 3,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "100"
+      }
+    },
+    {
+      "slot": "COV_TOP_BOUND",
+      "value": 93,
+      "units": "counts",
+      "what": "top edge: the pre-registered coverage bound of CH1-A7",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 3,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "93"
+      }
+    },
+    {
+      "slot": "D_GAP",
+      "value": -9.669554907567033,
+      "lo95": -16.31611460869118,
+      "hi95": -3.1078937518777594,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 16 and 22 and 28; out/ch1/model/estimand_draws_main.csv columns 2024_area_sqin, 2025_area_sqin, 2026_area_sqin",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "sq in",
+      "what": "the 2026 area step minus the 2025 area step, both net of the trend: area 2026 - 2 area 2025 + area 2024. POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 28,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-9.7",
+        "lo95": "-16.3",
+        "hi95": "-3.1"
+      },
+      "print_contraction": {
+        "point": "9.7",
+        "lo95": "3.1",
+        "hi95": "16.3"
+      }
+    },
+    {
       "slot": "N_CALLED",
       "value": 1492502,
       "units": "counts",

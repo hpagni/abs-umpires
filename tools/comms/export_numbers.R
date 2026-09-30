@@ -295,6 +295,43 @@ read_cells <- function(path, rel, step, synthetic, plane) {
                      sum_lo95 = lo[i_sum], sum_hi95 = hi[i_sum], sum_row = i_sum,
                      reportable = reportable))
     }
+    # Four more entries the abstract prints from T4's own columns (added 2026-09-30 at an
+    # external reviewer's request; each is a value T4 already carries, not a new fit):
+    #   BIN_BUF, BIN_ABS   the CH1-A5 binned-logistic estimates of the two area steps
+    #   SHADOW_TOT         delta_total on the shadow-band called-strike rate, 2024 to 2026
+    #   COV_TOP_HIT/_N/_BOUND  the top edge's recovery coverage, parsed from T4's own
+    #                      recovery_disclosure text (annex 8.7, D-R0-04)
+    bp <- num(pick(df, c("binned_point")))
+    shadow <- grepl("shadow", tolower(q))
+    i_bb <- which(primary & area & comp == "delta_buffer")
+    i_ba <- which(primary & area & comp == "delta_abs")
+    if (length(bp) == nrow(df) && length(i_bb) == 1L && length(i_ba) == 1L && is.finite(bp[i_bb])) {
+      out[["BIN_BUF"]] <- make_entry("BIN_BUF", bp[i_bb], NA, NA, "sq in",
+        "CH1-A5 binned-logistic estimate of the 2025 area step (T4 binned_point beside the bam primary)",
+        rel, i_bb, step, synthetic)
+      out[["BIN_ABS"]] <- make_entry("BIN_ABS", bp[i_ba], NA, NA, "sq in",
+        "CH1-A5 binned-logistic estimate of the 2026 area step (T4 binned_point beside the bam primary)",
+        rel, i_ba, step, synthetic)
+    }
+    i_st <- which(primary & shadow & comp == "delta_total")
+    if (length(i_st) == 1L) {
+      out[["SHADOW_TOT"]] <- make_entry("SHADOW_TOT", p[i_st], lo[i_st], hi[i_st], "pp",
+        "delta_total, shadow-band called-strike rate: the 2024-to-2026 change in percentage points",
+        rel, i_st, step, synthetic)
+    }
+    rd <- pick(df, c("recovery_disclosure"))
+    i_top <- which(primary & grepl("top", tolower(q)) & comp == "delta_abs")
+    if (!is.null(rd) && length(i_top) == 1L) {
+      m <- regmatches(rd[i_top], regexec("covered the truth in ([0-9]+) of ([0-9]+) injected replicates \\(bound ([0-9]+)\\)", rd[i_top]))[[1]]
+      if (length(m) == 4L) {
+        out[["COV_TOP_HIT"]] <- make_entry("COV_TOP_HIT", num(m[2]), NA, NA, "counts",
+          "top edge: recovery replicates whose 95% interval covered the truth (annex 8.7, D-R0-04)", rel, i_top, step, synthetic)
+        out[["COV_TOP_N"]] <- make_entry("COV_TOP_N", num(m[3]), NA, NA, "counts",
+          "top edge: recovery replicates run", rel, i_top, step, synthetic)
+        out[["COV_TOP_BOUND"]] <- make_entry("COV_TOP_BOUND", num(m[4]), NA, NA, "counts",
+          "top edge: the pre-registered coverage bound of CH1-A7", rel, i_top, step, synthetic)
+      }
+    }
   } else {
     # The published-convention change, 2025 at the plate front against 2026 at mid-plate,
     # area row. Absent from a plane table without the column (the synthetic dry run's).
@@ -388,6 +425,9 @@ read_exploratory <- function(df, rel, draws, draws_rel, t4, step, synthetic) {
   yrs <- 2022:2025
   i_a <- vapply(yrs, row, 0L, q = "area_sqin")
   a <- num(df$point[i_a])
+  i_a26 <- row(2026, "area_sqin")
+  a26p <- num(df$point[i_a26])
+  D26 <- col(2026, "area_sqin")
   D <- vapply(yrs, col, numeric(nrow(dr)), q = "area_sqin")
   w <- 1 / apply(D[, 1:3, drop = FALSE], 2, stats::var)
   s <- 2022:2024
@@ -413,7 +453,12 @@ read_exploratory <- function(df, rel, draws, draws_rel, t4, step, synthetic) {
           i_a, cols),
     entry("BASE_2023_BUF", a[4] - a[2], D[, 4] - D[, 2], 0.95, "sq in",
           "the 2025 area step against the 2023 area alone: area 2025 - area 2023",
-          i_a[c(2, 4)], cols[c(2, 4)])
+          i_a[c(2, 4)], cols[c(2, 4)]),
+    # The gap between the two steps, 2026 minus 2025, each net of g: added 2026-09-30 at an
+    # external reviewer's request. (a26 - a25 - g) - (a25 - a24 - g) = a26 - 2 a25 + a24.
+    entry("D_GAP", a26p - 2 * a[4] + a[3], D26 - 2 * D[, 4] + D[, 3], 0.95, "sq in",
+          "the 2026 area step minus the 2025 area step, both net of the trend: area 2026 - 2 area 2025 + area 2024",
+          c(i_a[3:4], i_a26), c(cols[3:4], "2026_area_sqin"))
   ))
 }
 

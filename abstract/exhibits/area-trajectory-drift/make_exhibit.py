@@ -141,8 +141,8 @@ ax.set_ylim(y_lo, y_hi)
 # period bands and their labels
 periods = [
     (0.5, 3.5, BAND[2022], f"2022{EN}2024"),
-    (3.5, 4.5, BAND[2025], "2025\ngrading buffer\n0.75 in"),
-    (4.5, 5.5, BAND[2026], "2026\nABS challenges"),
+    (3.5, 4.5, BAND[2025], "2025"),
+    (4.5, 5.5, BAND[2026], "2026\n(to 21 Sep)"),
 ]
 for x0, x1, col, lab in periods:
     ax.add_patch(
@@ -258,12 +258,13 @@ fig.savefig(svg, metadata={"Creator": None, "Date": None})
 gi = comp["g"]
 caption = (
     f"Figure 1. Points are fitted areas of the 50 percent strike contour (72-inch batter, "
-    f"2024 pitch mix), with 95% intervals. Blue arrows are the 2025 and 2026 steps net of "
-    f"the 2022{EN}2024 trend of {f1(gi['point'])} sq in per season (95%: {f1s(gi['lo95'])} "
-    f"to {f1s(gi['hi95'])}). Each starts at the prior season plus the trend, so arrows and "
-    f"point-to-point drops differ by it. The rust bracket is the 2023-to-2024 change, "
-    f"{f1s(p1_est)} sq in ({pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}), with zone and "
-    f"grading rules unchanged. That placebo failed, so period labels name no cause.\n"
+    f"2024 pitch mix), with 95% model-conditional intervals. Arrows are the 2025 and "
+    f"2026 steps net of the 2022{EN}2024 trend of {f1(gi['point'])} sq in per season (95%: "
+    f"{f1s(gi['lo95'])} to {f1s(gi['hi95'])}); each starts at the prior season plus that "
+    f"trend. The bracket is the 2023-to-2024 change, {f1s(p1_est)} sq in "
+    f"({pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}), with zone and grading rules "
+    f"unchanged; that placebo failed. Grading changed in 2025 and regular-season challenges "
+    f"began in 2026; no step is attributed to either.\n"
 )
 n_words = len(caption.split())
 if n_words > 90:
@@ -274,8 +275,8 @@ with open(os.path.join(OUT, "caption.md"), "w") as fh:
 levels_txt = ", ".join(f"{s} {f1s(level[s]['point'])}" for s in SEASONS)
 alt = (
     f"Dot chart of strike-zone area by season, 2022 to 2026, in square inches with 95 percent "
-    f"bars. The points are {levels_txt}. Pale period bands mark 2022{EN}2024, 2025 (grading "
-    f"buffer 0.75 in) and 2026 (ABS challenges). Downward arrows show the steps net of the "
+    f"bars. The points are {levels_txt}. Pale period bands mark 2022{EN}2024, 2025 and 2026 "
+    f"(through 21 September). Downward arrows show the steps net of the "
     f"2022{EN}2024 trend. Each runs from the prior season's level plus the trend down to the "
     f"fitted level. They are 2025 {f1s(d25['point'])} (95 percent: {f1s(d25['lo95'])} to "
     f"{f1s(d25['hi95'])}) and 2026 {f1s(d26['point'])} ({f1s(d26['lo95'])} to "
@@ -352,7 +353,7 @@ lines += [
     "  The script checks that level minus baseline equals the T4 step to 1e-6.",
     "  The script checks that the P1 estimate equals the 2024 minus 2023 level to 1e-6.",
     "- The small bracket runs from the 2023 level to the 2024 level.",
-    "- Period band labels are the study's period names; no number in them is a statistic.",
+    "- Period band labels are years; 2026 runs to 21 September, the last open day (T1_sample.csv).",
     "```",
     "",
     "## Not drawn",

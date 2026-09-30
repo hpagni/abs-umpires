@@ -200,10 +200,10 @@ def rel(path: Path) -> str:
     return str(path.relative_to(ROOT))
 
 
-def ledger_print(slot: str, point: str, lo: str, hi: str) -> None:
+def ledger_print(slot: str, point: str, lo: str, hi: str, level: int = 95) -> None:
     """Assert a printed cell equals the ledger's printed string for its slot."""
     pr = numbers[slot]["print"]
-    got, want = (point, lo, hi), (pr["point"], pr["lo95"], pr["hi95"])
+    got, want = (point, lo, hi), (pr["point"], pr[f"lo{level}"], pr[f"hi{level}"])
     if got != want:
         sys.exit(f"{slot}: table prints {got}, docs/numbers.json prints {want}")
     FILES_READ.setdefault(rel(NUMBERS), set()).add(f"{slot}.print")
@@ -257,21 +257,25 @@ def drift_cell(estimand: str) -> dict:
 # Post-tag exploratory (DEV-82): the 2025 area step against two other baselines. The points
 # are recomputed here from T3 and T4's g and must equal the ledger's; the printed strings are
 # the ledger's.
-def base_cell(slot: str, point: float) -> dict:
+def base_cell(slot: str, point: float, level: int = 95) -> dict:
     e = numbers[slot]
     if abs(e["value"] - point) > 1e-9:
         sys.exit(f"{slot}: ledger value {e['value']} is not the recomputed {point}")
     cell = {
         "point": fmt(e["value"], "sq in"),
-        "lo": fmt(e["lo95"], "sq in"),
-        "hi": fmt(e["hi95"], "sq in"),
+        "lo": fmt(e[f"lo{level}"], "sq in"),
+        "hi": fmt(e[f"hi{level}"], "sq in"),
     }
-    ledger_print(slot, cell["point"], cell["lo"], cell["hi"])
+    ledger_print(slot, cell["point"], cell["lo"], cell["hi"], level)
     LEDGER.append(
         {
             "file": rel(NUMBERS),
             "where": {"slot": slot, "post-tag": "DEV-82, not pre-registered"},
-            "cols": {"value": str(e["value"]), "lo95": str(e["lo95"]), "hi95": str(e["hi95"])},
+            "cols": {
+                "value": str(e["value"]),
+                f"lo{level}": str(e[f"lo{level}"]),
+                f"hi{level}": str(e[f"hi{level}"]),
+            },
         }
     )
     return cell
@@ -284,6 +288,8 @@ base_mean = base_cell(
     "BASE_MEAN_BUF", _area[2025] - ((_area[2022] + _area[2023] + _area[2024]) / 3 + _g)
 )
 base_2023 = base_cell("BASE_2023_BUF", _area[2025] - _area[2023])
+# The other old-rule pair, 2023 minus 2022, read at the placebo's 90% level (DEV-82).
+drift_2223 = base_cell("DRIFT_2223_AREA", _area[2023] - _area[2022], level=90)
 
 # Placebo row: pre-registered on area and shadow-band rate only; its edge cells are post-tag.
 p1_area = t5_cell("area_sqin 2024 minus 2023")
@@ -317,7 +323,10 @@ ROWS = [
         "label": ["2026 step, net of trend", "(ABS challenges)"],
         "cells": {e: t4_cell(e, "delta_abs") for e in ESTIMANDS},
     },
-    {"label": ["2024 to 2026, total"], "cells": {e: t4_cell(e, "delta_total") for e in ESTIMANDS}},
+    {
+        "label": ["2024 to 2026, observed change", "(not net of trend)"],
+        "cells": {e: t4_cell(e, "delta_total") for e in ESTIMANDS},
+    },
     {
         "label": [
             "Measurement-plane adjustment,",
@@ -330,15 +339,19 @@ ROWS = [
 ]
 
 # Sign-convention sentence reused from abstract/table1.md line 1.
-SIGN_SENTENCE = "A positive value moves an edge up or outward, or enlarges the area."
+SIGN_SENTENCE = (
+    "Positive top or bottom values move that edge up; positive half-width values widen the "
+    "zone; positive area values enlarge it."
+)
 FOOTNOTE = (
-    f"Cells are point [95% interval] from coefficient draws of the fitted model; the placebo row "
-    f"prints its pre-registered {P1_LEVEL} interval on area and rate, and its edge cells, added "
-    f"after the tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage points; the shadow "
-    "band is the pitches within 3 inches, either side, of where the ball just touches the zone "
-    "edge. Top-edge intervals undercovered in the recovery test. The placebo pair moved beyond "
-    "its margin, so no step is attributed to its rule; the 2025 and 2026 labels name the period "
-    "only. Dashes: not estimated for that row."
+    f"Cells are point [95% interval] from 1,000 draws of the fitted model's coefficients, "
+    f"model-conditional, omitting season-to-season variation; the placebo row prints its "
+    f"pre-registered {P1_LEVEL} interval on area and rate, and its edge cells, added after the "
+    f"tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage points; the shadow band is "
+    "the pitches within 3 inches, either side, of where the ball just touches the zone edge. "
+    "In the recovery test, top-edge 95% intervals covered the truth in 91 of 100 runs (bound "
+    "93). The placebo pair moved beyond its margin, so no step is attributed to its rule; the "
+    "2025 and 2026 labels name the period only. Dashes: not estimated for that row."
 )
 
 
@@ -382,8 +395,10 @@ def num(s: str) -> str:
 
 
 EXPLORATORY = (
-    "Exploratory, not pre-registered: against the 2022-2024 mean plus one season of trend, the "
-    f"2025 area step is {signed(base_mean)} sq in; against 2023 alone, {signed(base_2023)} sq in."
+    "Exploratory, not pre-registered: the 2022-to-2023 area change was "
+    f"{signed(drift_2223)} sq in (90%); against the 2022-2024 mean plus one season of trend, "
+    f"the 2025 area step is {signed(base_mean)} sq in; against 2023 alone, "
+    f"{signed(base_2023)} sq in."
 )
 WRAP = 118
 wrapped = textwrap.wrap(FOOTNOTE, width=WRAP, break_on_hyphens=False)

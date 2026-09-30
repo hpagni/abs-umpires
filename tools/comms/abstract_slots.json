@@ -313,6 +313,49 @@
       "units": "in",
       "section": "Results",
       "ledger_slot": "DRIFT_2324_TOP"
+    },
+    "BIN_BUF_LOSS": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results",
+      "ledger_slot": "BIN_BUF"
+    },
+    "BIN_ABS_LOSS": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results",
+      "ledger_slot": "BIN_ABS"
+    },
+    "SHADOW_TOT_LOSS": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "pp",
+      "section": "Results",
+      "ledger_slot": "SHADOW_TOT"
+    },
+    "D_GAP_LOSS": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Conclusion",
+      "ledger_slot": "D_GAP"
+    },
+    "COV_TOP_HIT": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Results"
+    },
+    "COV_TOP_N": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Results"
+    },
+    "COV_TOP_BOUND": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Results"
     }
   },
   "table1": {

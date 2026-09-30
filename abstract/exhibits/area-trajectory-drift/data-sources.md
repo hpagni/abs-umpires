@@ -40,7 +40,7 @@ Fenced as code: these are table cells and raw values, provenance rather than pri
   The script checks that level minus baseline equals the T4 step to 1e-6.
   The script checks that the P1 estimate equals the 2024 minus 2023 level to 1e-6.
 - The small bracket runs from the 2023 level to the 2024 level.
-- Period band labels are the study's period names; no number in them is a statistic.
+- Period band labels are years; 2026 runs to 21 September, the last open day (T1_sample.csv).
 ```
 
 ## Not drawn

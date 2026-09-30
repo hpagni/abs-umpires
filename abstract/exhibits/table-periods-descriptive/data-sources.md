@@ -6,7 +6,7 @@ under out/, and the ledger docs/numbers.json, read only to assert the post-tag c
 
 ## Files and columns read
 
-- `docs/numbers.json`: columns BASE_2023_BUF.print, BASE_MEAN_BUF.print, DRIFT_2324_BOT.print, DRIFT_2324_HW.print, DRIFT_2324_TOP.print
+- `docs/numbers.json`: columns BASE_2023_BUF.print, BASE_MEAN_BUF.print, DRIFT_2223_AREA.print, DRIFT_2324_BOT.print, DRIFT_2324_HW.print, DRIFT_2324_TOP.print
 - `out/ch1/model/estimand_draws_main.csv`: columns 2023_bot_in, 2023_half_width_in, 2023_top_in, 2024_bot_in, 2024_half_width_in, 2024_top_in
 - `out/ch1/tab/T3_estimands.csv`: columns point, units
 - `out/ch1/tab/T4_decomposition.csv`: columns hi95, lo95, point, units
@@ -43,11 +43,11 @@ Rounding: inches to 2 decimals, sq in to 1 decimal (the `print_*` rule of `out/t
 | 2026 step, net of trend | Half-width (in) | -0.25 [-0.32, -0.16] | -0.245787, -0.320536, -0.160433 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=half_width_in; component=delta_abs |
 | 2026 step, net of trend | Area (sq in) | -33.1 [-37.5, -28.7] | -33.1011, -37.456, -28.7409 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=area_sqin; component=delta_abs |
 | 2026 step, net of trend | Shadow-band strike rate (pp) | -6.05 [-6.81, -5.31] | -6.04889, -6.81314, -5.30951 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=shadow_rate; component=delta_abs |
-| 2024 to 2026, total | Top edge (in) | -0.54 [-0.65, -0.43] | -0.543689, -0.651996, -0.430193 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=top_in; component=delta_total |
-| 2024 to 2026, total | Bottom edge (in) | 0.94 [0.85, 1.03] | 0.939865, 0.853426, 1.02699 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=bot_in; component=delta_total |
-| 2024 to 2026, total | Half-width (in) | -0.72 [-0.80, -0.64] | -0.722793, -0.796399, -0.644859 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=half_width_in; component=delta_total |
-| 2024 to 2026, total | Area (sq in) | -56.0 [-59.6, -52.0] | -56.0225, -59.5682, -51.9794 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=area_sqin; component=delta_total |
-| 2024 to 2026, total | Shadow-band strike rate (pp) | -10.69 [-11.28, -10.04] | -10.6851, -11.2766, -10.0384 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=shadow_rate; component=delta_total |
+| 2024 to 2026, observed change | Top edge (in) | -0.54 [-0.65, -0.43] | -0.543689, -0.651996, -0.430193 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=top_in; component=delta_total |
+| 2024 to 2026, observed change | Bottom edge (in) | 0.94 [0.85, 1.03] | 0.939865, 0.853426, 1.02699 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=bot_in; component=delta_total |
+| 2024 to 2026, observed change | Half-width (in) | -0.72 [-0.80, -0.64] | -0.722793, -0.796399, -0.644859 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=half_width_in; component=delta_total |
+| 2024 to 2026, observed change | Area (sq in) | -56.0 [-59.6, -52.0] | -56.0225, -59.5682, -51.9794 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=area_sqin; component=delta_total |
+| 2024 to 2026, observed change | Shadow-band strike rate (pp) | -10.69 [-11.28, -10.04] | -10.6851, -11.2766, -10.0384 | 95% | `out/ch1/tab/T4_decomposition.csv` | fit=main; arm=primary; estimand=shadow_rate; component=delta_total |
 | Measurement-plane adjustment, | Top edge (in) | -0.77 [-0.94, -0.61] | -0.766577, -0.935301, -0.612464 | 95% | `out/ch1/tab/T4_plane_component.csv` | estimand=top_in |
 | Measurement-plane adjustment, | Bottom edge (in) | -1.11 [-1.24, -0.98] | -1.10602, -1.2377, -0.977893 | 95% | `out/ch1/tab/T4_plane_component.csv` | estimand=bot_in |
 | Measurement-plane adjustment, | Half-width (in) | 0.12 [-0.01, 0.25] | 0.124105, -0.0115684, 0.25441 | 95% | `out/ch1/tab/T4_plane_component.csv` | estimand=half_width_in |
@@ -80,6 +80,7 @@ Fenced as code: these are table cells and raw values, provenance rather than pri
 - `out/ch1/tab/T3_estimands.csv` [fit=main; arm=primary; estimand=area_sqin; season=2025]: point=471.918904060984; units=sq in
 - `docs/numbers.json` [slot=BASE_MEAN_BUF; post-tag=DEV-82, not pre-registered]: value=-19.684870123001986; lo95=-23.25064957329134; hi95=-16.057315048868205
 - `docs/numbers.json` [slot=BASE_2023_BUF; post-tag=DEV-82, not pre-registered]: value=-12.390128159210008; lo95=-15.78158170659771; hi95=-8.535041512215
+- `docs/numbers.json` [slot=DRIFT_2223_AREA; post-tag=DEV-82, not pre-registered]: value=-10.332566419011982; lo90=-13.398514017982354; hi90=-7.261303443840504
 - `out/ch1/tab/T5_placebos.csv` [placebo=P1; quantity=area_sqin 2024 minus 2023]: estimate=10.786347352715; lo=7.72731787901478; hi=13.9412740611873; interval_level=0.9; margin_or_threshold=3; verdict=fail; units=sq in
 - `out/ch1/tab/T5_placebos.csv` [placebo=P1; quantity=shadow_rate 2024 minus 2023]: estimate=1.5404783097804; lo=1.03383788312274; hi=2.03825977729399; interval_level=0.9; margin_or_threshold=0.5; verdict=fail; units=pp
 - `out/ch1/tab/T4_decomposition.csv` [fit=main; arm=primary; estimand=top_in; component=g]: point=0.134603062999804; lo95=0.0864051560148306; hi95=0.179677857748082; units=in per season

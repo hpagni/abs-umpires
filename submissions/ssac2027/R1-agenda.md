@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 485 of 495,
+Variant filled: owner. Words counted: 495 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -135,7 +135,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 518 words with the inline table, OVER THE CAP by 23 words after every rung. Cuts: none.
+The no-upload body counts 528 words with the inline table, OVER THE CAP by 33 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -157,7 +157,7 @@ The conference page says "Oct. 1, 2026 11:59 p.m. EST".
 - The SENS arms: W3.22's multiverse did not run, so CH1-A9 sign stability is not
   evaluated. The five arms present agree in sign on all eight geometric components.
 - CH1-A5 misses on area. The binned estimates exceed the smooth fit by 6.0 and 7.6 sq in,
-  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up. The Conclusion names it, from A5_BUF, A5_ABS and A5_TOL.
+  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up. The abstract does not name it yet.
 - D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it.
 - The RESULT CALL line in `out/ch1/decision.md`, and CALL and BREAK_YEAR.
 - `make abstract` then `bash quality/w612_check.sh`, then RP-08 and the numbers freeze.
@@ -173,23 +173,26 @@ The slots as printed in this fill:
 | N_CHAL_AGREE | 10,164 | 1 |
 | N_CHAL | 10,168 | 1 |
 | P1_AREA | 10.8 (90% CI 7.7 to 13.9) | 6 |
-| A5_BUF | 6.0 | 1 |
-| A5_ABS | 7.6 | 1 |
-| A5_TOL | 3 | 1 |
-| DRIFT_2223_AREA | 10.3 (90% CI 7.3 to 13.4) | 6 |
 | D_BUF | 23.4 (95% CI 18.6 to 28.3) | 6 |
 | D_ABS | 33.1 (95% CI 28.7 to 37.5) | 6 |
-| P2_AREA_MAX | 6.8 square inches | 3 |
 | HW_BUF_LOSS | 0.41 (95% CI 0.33 to 0.49) | 6 |
 | BOT_ABS_PT | 0.65 | 1 |
 | T1_ABS_TOP | 0.63 (95% CI 0.50 to 0.76) | 6 |
 | DRIFT_2324_TOP_PT | 0.47 | 1 |
+| SHADOW_TOT_LOSS | 10.69 (95% CI 10.04 to 11.28) | 6 |
 | A_PUB_LOSS | 8 to 22 | 3 |
 | A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
 | A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
-| CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step. | 26 |
+| BIN_BUF_LOSS | 29.5 | 1 |
+| BIN_ABS_LOSS | 40.7 | 1 |
+| A5_TOL | 3 | 1 |
+| COV_TOP_HIT | 91 | 1 |
+| COV_TOP_N | 100 | 1 |
+| COV_TOP_BOUND | 93 | 1 |
+| CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. | 23 |
 | SHARE_ABS | 59 | 1 |
 | SHARE_ABS_CI | 53 to 65 | 3 |
+| D_GAP_LOSS | 9.7 (95% CI 3.1 to 16.3) | 6 |
 
 Cut ladder, SOP order. Rungs applied in this fill:
 

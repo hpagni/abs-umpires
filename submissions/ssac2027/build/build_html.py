@@ -52,10 +52,17 @@ def body_html(md: str) -> tuple[str, str]:
 
 
 def figure_html(folder: Path) -> str:
+    # The exhibit and its caption are one image (exhibit-with-caption.png, written by
+    # bake_captions.mjs), so the upload's text layer holds only the abstract's words.
     png = folder / f"{folder.name}.png"
-    data = base64.b64encode(png.read_bytes()).decode("ascii")
+    baked = Path(__file__).resolve().parent / f"{folder.name}-with-caption.png"
+    src = baked if baked.exists() else png
+    data = base64.b64encode(src.read_bytes()).decode("ascii")
     caption = " ".join((folder / "caption.md").read_text().split())
     alt = " ".join((folder / "alt.txt").read_text().split())
+    if baked.exists():
+        alt_all = html.escape(alt + " " + caption, quote=True)
+        return f'<figure><img src="data:image/png;base64,{data}" alt="{alt_all}"></figure>'
     return (
         f'<figure><img src="data:image/png;base64,{data}" alt="{html.escape(alt, quote=True)}">'
         f"<figcaption>{html.escape(caption)}</figcaption></figure>"
