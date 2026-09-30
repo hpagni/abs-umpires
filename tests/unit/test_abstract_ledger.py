@@ -140,7 +140,8 @@ def test_list_inputs_names_every_input():
     assert r.returncode == 0
     listed = r.stdout.split()
     assert "out/ch1/tab/T1_sample.csv" in listed and "out/ch1/tab/T2_zone_gate.csv" in listed
-    assert len(listed) == 7
+    assert "out/ch1/tab/T5_placebos.csv" in listed
+    assert len(listed) == 8
 
 
 def test_gd12_refuses_a_fit_result_before_the_tag(dry, tmp_path):

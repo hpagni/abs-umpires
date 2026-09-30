@@ -3026,3 +3026,46 @@ which the test does not reach.
 **Left for the owner.** Round 2 notes that the public repository is the top search result for
 this question and carries the author's handle. Whether that suits SSAC's blind review is his
 decision before 2026-10-01.
+
+## Post-tag abstract lane, 2026-09-30 (Madrid)
+
+### D-P6-01 APPLIED UNDER D-R0-03, OWNER-VISIBLE: a fourth abstract variant, descriptive, carries the frozen P1 consequence
+
+Applied on 2026-09-30 09:35 CEST (Europe/Madrid) on the branch `phase01/public`. Status:
+**applied under D-R0-03's delegation, not an owner answer.** No deviation: the consequence
+is pre-registered, and the new variant text is machinery that applies it.
+
+**What happened.** Placebo P1 failed (W3.21, `out/ch1/tab/T5_placebos.csv`). It compares
+2023 with 2024, two seasons under one rule. The shadow-band called-strike rate rose 1.54 pp.
+Its 90% interval, 1.03 to 2.04, lies outside the margin of 0.5 pp. The area grew 10.8 sq in.
+Its 90% interval, 7.7 to 13.9, lies outside the margin of 3 sq in. Placebo P2 passed on all
+four estimands.
+
+**The rule applied, verbatim.** `PREREGISTRATION.md` section 8: "if P1 or P2 fails, the
+three-regime decomposition is reported as **descriptive**, the causal language is removed
+from every artifact, and the failure is the headline finding." CH1-A3 says the same: "Failure
+converts the chapter to descriptive and removes the causal language, and that failure is then
+the headline finding."
+
+**Why a fourth variant.** D-66's three variants (main, null-buffer, sign-reversal) all say
+"The buffer change accounts for ... and the challenge system for ...". None was written for a
+failed placebo, so none can carry the consequence. The fourth,
+`abstract/variants/ssac2027_abstract.descriptive.md`, starts from the main template:
+
+1. Results opens with the P1 failure and its two numbers, and says what it means: seasons
+   under one rule moved about half as far as the 2025 step. It states that P2 passed.
+2. The 2025 and 2026 steps, net of the 2022-2024 trend, are printed as measured, with their
+   intervals, as changes observed in each season. "Accounts for" is gone. The top and bottom
+   edges are printed for both steps.
+3. The plane correction, the published comparison, the bounded umpire null and the narrow
+   pre-registration sentence stay. The umpire slot now names the shift the model estimates,
+   the 2025-to-2026 edge shift, not "the 2026 top-edge shift" (the pre-registration verifier).
+4. The Conclusion names the failed placebo as its limitation (WR-18).
+5. Every number is a `docs/numbers.json` slot. `tools/comms/export_numbers.R` now reads
+   `T5_placebos.csv` into P1_AREA and P1_SHADOW, with 90% intervals stored as lo90 and hi90
+   and their margins, and P2_AREA_MAX. The four edge slots print the committed T1_ cells.
+   `docs/numbers-allow.txt` gains 90, the CH1-A3 interval level.
+
+`scripts/abstract.sh` now fills the descriptive variant by default. The CALL and BREAK_YEAR
+slots, and the RESULT CALL line, stay the owner's. The owner may still reword the variant at
+review R1. He may not restore causal wording: that would be a deviation from section 8.

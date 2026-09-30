@@ -17,7 +17,10 @@
 #
 # Environment:
 #   ABS_LEDGER           the ledger (default docs/numbers.json)
-#   ABS_VARIANT          main | null-buffer | sign-reversal (default main), D-66
+#   ABS_VARIANT          main | null-buffer | sign-reversal | descriptive (default
+#                        descriptive). D-66 wrote the first three. Placebo P1 failed, so
+#                        the frozen CH1-A3 consequence applies and only the descriptive
+#                        variant carries it (DECISIONS.md, 2026-09-30)
 #   ABS_CALLS            the owner's CALL and BREAK_YEAR (default abstract/owner-calls.json)
 #   ABS_PREREG_SENTENCE  narrow | wide (default narrow); wide needs GD-12 to pass
 #   ABS_OUTDIR           where abstract/, out/tables/ and submissions/ssac2027/ are
@@ -32,7 +35,7 @@ set -uo pipefail
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root" || exit 2
 LEDGER=${ABS_LEDGER:-docs/numbers.json}
-VARIANT=${ABS_VARIANT:-main}
+VARIANT=${ABS_VARIANT:-descriptive}
 CALLS=${ABS_CALLS:-abstract/owner-calls.json}
 PREREG=${ABS_PREREG_SENTENCE:-narrow}
 OUT=${ABS_OUTDIR:-$root}

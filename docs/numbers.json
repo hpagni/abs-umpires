@@ -290,6 +290,11 @@
         "point": "-0.18",
         "lo95": "-0.32",
         "hi95": "-0.05"
+      },
+      "print_contraction": {
+        "point": "0.18",
+        "lo95": "0.05",
+        "hi95": "0.32"
       }
     },
     {
@@ -307,6 +312,11 @@
         "point": "-0.63",
         "lo95": "-0.76",
         "hi95": "-0.50"
+      },
+      "print_contraction": {
+        "point": "0.63",
+        "lo95": "0.50",
+        "hi95": "0.76"
       }
     },
     {
@@ -575,6 +585,56 @@
       "carried_by": "W7.24",
       "print": {
         "point": "88"
+      }
+    },
+    {
+      "slot": "P1_AREA",
+      "value": 10.786347352715,
+      "lo90": 7.72731787901478,
+      "hi90": 13.9412740611873,
+      "margin": 3,
+      "units": "sq in",
+      "what": "P1, called-zone area, 2024 minus 2023, two seasons under one rule; CH1-A3 verdict fail",
+      "source": "out/ch1/tab/T5_placebos.csv",
+      "source_row": 2,
+      "produced_by": "W3.21",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "10.8",
+        "lo90": "7.7",
+        "hi90": "13.9"
+      }
+    },
+    {
+      "slot": "P1_SHADOW",
+      "value": 1.5404783097804,
+      "lo90": 1.03383788312274,
+      "hi90": 2.03825977729399,
+      "margin": 0.5,
+      "units": "pp",
+      "what": "P1, shadow-band called-strike rate, 2024 minus 2023; CH1-A3 verdict fail",
+      "source": "out/ch1/tab/T5_placebos.csv",
+      "source_row": 1,
+      "produced_by": "W3.21",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "1.54",
+        "lo90": "1.03",
+        "hi90": "2.04"
+      }
+    },
+    {
+      "slot": "P2_AREA_MAX",
+      "value": 6.8432551607383,
+      "threshold_p95": 6.6927754596714,
+      "units": "sq in",
+      "what": "P2, the largest of the five All-Star-break area placebos, one per season 2022 to 2026; verdict pass",
+      "source": "out/ch1/tab/T5_placebos.csv",
+      "source_row": 6,
+      "produced_by": "W3.21",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "6.8"
       }
     },
     {

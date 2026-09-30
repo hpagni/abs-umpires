@@ -165,7 +165,7 @@ def shown(e):
     if not e.get("print"):
         return str(e.get("value"))
     pr = e.get("print_contraction") or e["print"]
-    return " ".join(str(pr.get(k, "")) for k in ("point", "lo95", "hi95")).strip()
+    return " ".join(str(pr.get(k, "")) for k in ("point", "lo95", "hi95", "lo90", "hi90")).strip()
 repo, cold = load(repo_p), load(cold_p)
 rows = [(s, shown(repo.get(k)), shown(cold.get(k))) for s, k in slots]
 rows = [(s, a, b, bool(a) and a == b) for s, a, b in rows]

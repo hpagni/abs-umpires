@@ -15,6 +15,11 @@
 # that enlarges the published contraction instead of explaining part of it (R-44). Each
 # edge keeps its own signed number in all three, so a flipped edge reads correctly.
 # Choosing among the three is the owner's result call at review R1, not a rewrite.
+# A fourth, descriptive, is for a failed placebo P1 or P2. PREREGISTRATION.md section 8
+# and CH1-A3 then make the decomposition descriptive, remove the causal language and make
+# the failure the headline finding. The three D-66 variants all say "accounts for", so
+# none can carry that case. P1 failed, and DECISIONS.md (2026-09-30, under D-R0-03's
+# delegation) records the fourth variant; scripts/abstract.sh fills it by default.
 #
 # Every number comes from docs/numbers.json, as the string tools/comms/export_numbers.R
 # printed there. This script does no arithmetic and no rounding, so the number gate
@@ -37,7 +42,7 @@
 # Over the cap, the SOP cut ladder is applied in its order and no other: the pre-trend clause, then the reliability clause,
 # then the second edge in the plane sentence. Every cut is recorded in the report.
 #
-#   Rscript tools/comms/fill_slots.R [--ledger F] [--variant main|null-buffer|sign-reversal]
+#   Rscript tools/comms/fill_slots.R [--ledger F] [--variant main|null-buffer|sign-reversal|descriptive]
 #       [--calls F] [--out F] [--report F] [--prereg-sentence narrow|wide] [--seal-order-ok]
 #       [--extra-words N]
 #
@@ -68,7 +73,8 @@ WIDE <- paste("The analysis plan, acceptance criteria and sealed-set definition 
               "publicly before estimation.")
 VARIANTS <- c(main = "abstract/ssac2027_abstract.md",
               "null-buffer" = "abstract/variants/ssac2027_abstract.null-buffer.md",
-              "sign-reversal" = "abstract/variants/ssac2027_abstract.sign-reversal.md")
+              "sign-reversal" = "abstract/variants/ssac2027_abstract.sign-reversal.md",
+              descriptive = "abstract/variants/ssac2027_abstract.descriptive.md")
 
 # The SOP cut ladder, in order. Each rung is a clause of the filled text.
 LADDER <- list(
@@ -96,6 +102,15 @@ render <- function(slot, s, e) {
   if (is.null(pr)) stop(slot, ": the ledger entry has no printed form; re-run export_numbers.R")
   if (s$kind == "range") {
     return(paste0(pr$lo95, " to ", pr$hi95, s$suffix %||% ""))
+  }
+  if (s$kind == "value") {
+    if (is.null(pr$point)) stop(slot, ": the ledger entry has no printed point")
+    return(paste0(pr$point, s$suffix %||% ""))
+  }
+  if (s$kind == "estimate90") {
+    # CH1-A3's equivalence tests are read on 90% intervals; the level is printed as it is.
+    if (is.null(pr$lo90) || is.null(pr$hi90)) stop(slot, ": the ledger entry has no 90% interval")
+    return(paste0(pr$point, " (90% CI ", pr$lo90, " to ", pr$hi90, ")", s$suffix %||% ""))
   }
   if (is.null(pr$lo95) || is.null(pr$hi95)) {
     stop(slot, ": an estimate with no 95% interval is not printed (SSAC wants actual results)")

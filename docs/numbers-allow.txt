@@ -31,5 +31,6 @@
 27    # Statcast's 2026 bottom-of-zone rule, 27 percent of batter height (the ABS zone)
 50    # "the 50 percent contour", the called-strike estimand's definition, SOP W3.15
 95    # the interval level printed with every estimate, "95% CI", SOP 6.6 WR-07
+90    # the interval level of the CH1-A3 equivalence tests, "90% CI", PREREGISTRATION.md CH1-A3
 72    # the batter height, in inches, at which the edges are read, docs/prereg/ch1.md
 1,000 # draws from N(beta, Vc) behind each 95% interval, docs/prereg/ch1.md and SOP W3.15

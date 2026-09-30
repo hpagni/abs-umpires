@@ -1,0 +1,80 @@
+{
+  "variant": "descriptive",
+  "template": "abstract/variants/ssac2027_abstract.descriptive.md",
+  "ledger": "docs/numbers.json",
+  "ledger_sha256": "122c69ff9bb634493b39199596eb17d3edab9d08d9264144511485e899209e93",
+  "out": "abstract/ssac2027_abstract.inline-table.filled.md",
+  "words_filled": 408,
+  "owner_reserve": 24,
+  "extra_words": 33,
+  "words_counted": 465,
+  "cap": 470,
+  "within_cap": true,
+  "prereg_sentence": "narrow",
+  "filled": [
+    "N_CALLED",
+    "N_GAMES",
+    "N_CHAL",
+    "P1_AREA",
+    "P1_SHADOW",
+    "D_BUF",
+    "D_ABS",
+    "P2_AREA_MAX",
+    "D_PRE",
+    "T1_BUF_TOP",
+    "T1_ABS_TOP",
+    "T1_BUF_BOT",
+    "T1_ABS_BOT",
+    "D_PLANE_TOP",
+    "D_PLANE_BOT",
+    "A_CORR",
+    "A_PUB",
+    "SD_UMP",
+    "REL_UMP",
+    "N_UMP"
+  ],
+  "missing": [],
+  "owner_pending": [
+    "CALL",
+    "BREAK_YEAR"
+  ],
+  "printed": {
+    "N_CALLED": "1,830,231",
+    "N_GAMES": "12,060",
+    "N_CHAL": "10,168",
+    "P1_AREA": "10.8 (90% CI 7.7 to 13.9)",
+    "P1_SHADOW": "1.54 (90% CI 1.03 to 2.04)",
+    "D_BUF": "23.4 (95% CI 18.6 to 28.3)",
+    "D_ABS": "33.1 (95% CI 28.7 to 37.5)",
+    "P2_AREA_MAX": "6.8 square inches",
+    "D_PRE": "0.3 (95% CI -1.6 to 2.2)",
+    "T1_BUF_TOP": "0.18 (95% CI 0.05 to 0.32)",
+    "T1_ABS_TOP": "0.63 (95% CI 0.50 to 0.76)",
+    "T1_BUF_BOT": "0.18 (95% CI 0.08 to 0.29)",
+    "T1_ABS_BOT": "0.65 (95% CI 0.55 to 0.74)",
+    "D_PLANE_TOP": "-0.77 (95% CI -0.94 to -0.61)",
+    "D_PLANE_BOT": "-1.11 (95% CI -1.24 to -0.98)",
+    "A_CORR": "-32.8 (95% CI -36.6 to -29.3)",
+    "A_PUB": "-22 to -8 square inches",
+    "SD_UMP": "0.04 (95% CI 0.00 to 0.10)",
+    "REL_UMP": "0.17 (95% CI -0.27 to 0.46)",
+    "N_UMP": "88"
+  },
+  "cuts": [
+    {
+      "rung": "the pre-trend clause",
+      "applied": true,
+      "words_saved": 14
+    },
+    {
+      "rung": "the reliability clause",
+      "applied": true,
+      "words_saved": 11
+    },
+    {
+      "rung": "the second edge in the plane sentence",
+      "applied": true,
+      "words_saved": 10
+    }
+  ]
+}

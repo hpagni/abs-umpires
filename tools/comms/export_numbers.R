@@ -14,11 +14,15 @@
 #   out/ch1/tab/T1_sample.csv           W3.5, N_CALLED_P0 (row P0) and N_GAMES_P0 (row
 #                                       Z_games), column total: the Methods counts
 #   out/ch1/tab/T2_zone_gate.csv        W3.8, N_CHAL (row overall, column n)
+#   out/ch1/tab/T5_placebos.csv         W3.21, the placebo slots the descriptive variant
+#                                       prints: P1_AREA and P1_SHADOW (90% intervals, the
+#                                       CH1-A3 test level, with their margins) and
+#                                       P2_AREA_MAX, the largest of the five P2 area placebos
 # The Methods counts are P0's, the primary sample (D-R0-02, D-P4-05, DEV-47). The ledger's
 # N_CALLED and N_GAMES are W6.4's ABS-measured-cohort counts, which W6.4's --check owns, so
 # these are written under their own names and abstract_slots.json maps the slots to them.
 #
-# GD-12. The first five inputs are fit results. Outside --synthetic the exporter refuses to
+# GD-12. The first five inputs and T5_placebos.csv are fit results. Outside --synthetic the exporter refuses to
 # read any of them unless `git merge-base --is-ancestor <prereg tag> HEAD` succeeds, the
 # tag named in config/seal.yml, so no pre-registration-era number reaches the ledger. T1
 # and T2 are sample counts and a gate score, committed before the tag, and are not gated.
@@ -143,33 +147,37 @@ fmt <- function(x, d) {
   sub("^-(0(\\.0+)?)$", "\\1", s)
 }
 
-print_block <- function(p, lo, hi, d, negate = FALSE) {
+# An interval is stored under keys that name its level: lo95/hi95, or lo90/hi90 for the
+# 90% intervals of the CH1-A3 equivalence tests. A 90% interval is never filed as a 95% one.
+print_block <- function(p, lo, hi, d, negate = FALSE, level = 95) {
   if (negate) {
     t <- c(-p, -hi, -lo)
     p <- t[1]; lo <- t[2]; hi <- t[3]
   }
   out <- list()
   if (!is.na(p)) out$point <- fmt(p, d)
-  if (!is.na(lo)) out$lo95 <- fmt(lo, d)
-  if (!is.na(hi)) out$hi95 <- fmt(hi, d)
+  if (!is.na(lo)) out[[paste0("lo", level)]] <- fmt(lo, d)
+  if (!is.na(hi)) out[[paste0("hi", level)]] <- fmt(hi, d)
   out
 }
 
-make_entry <- function(slot, p, lo, hi, units, what, source, row, step, synthetic) {
+make_entry <- function(slot, p, lo, hi, units, what, source, row, step, synthetic,
+                       level = 95, extra = list()) {
   d <- spec$slots[[slot]]$digits %||% digits_for(units)
   e <- list(slot = slot, value = p)
-  if (!is.na(lo)) e$lo95 <- lo
-  if (!is.na(hi)) e$hi95 <- hi
+  if (!is.na(lo)) e[[paste0("lo", level)]] <- lo
+  if (!is.na(hi)) e[[paste0("hi", level)]] <- hi
+  for (k in names(extra)) e[[k]] <- extra[[k]]
   e$units <- units %||% NULL
   e$what <- what %||% NULL
   e$source <- source
   e$source_row <- row
   e$produced_by <- step
   e$carried_by <- "W7.24"
-  e$print <- print_block(p, lo, hi, d)
+  e$print <- print_block(p, lo, hi, d, level = level)
   s <- spec$slots[[slot]]
   if (!is.null(s) && identical(s$orient, "contraction")) {
-    e$print_contraction <- print_block(p, lo, hi, d, negate = TRUE)
+    e$print_contraction <- print_block(p, lo, hi, d, negate = TRUE, level = level)
   }
   if (synthetic) e$synthetic <- TRUE
   Filter(Negate(is.null), e)
@@ -271,6 +279,36 @@ read_t2 <- function(path, rel, step, synthetic) {
                   "MLB 2026 challenged pitches the zone-truth gate scored, overall row", step, synthetic))
 }
 
+# W3.21's T5_placebos.csv. CH1-A3 tests P1 with 90% intervals against fixed margins, so
+# P1's two entries carry lo90/hi90 and the margin. P2's area row carries the five
+# placebos' mean, min and max in estimate, lo and hi; the largest placebo is its hi.
+read_t5 <- function(path, rel, step, synthetic) {
+  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  need <- c("placebo", "quantity", "units", "estimate", "lo", "hi", "margin_or_threshold", "verdict")
+  if (!all(need %in% names(df))) stop(rel, ": needs the columns ", paste(need, collapse = ", "))
+  row <- function(pl, rx) {
+    i <- which(df$placebo == pl & grepl(rx, df$quantity))
+    if (length(i) != 1L) stop(rel, ": expected one ", pl, " row matching ", rx, ", found ", length(i))
+    i
+  }
+  p1 <- function(slot, rx, what) {
+    i <- row("P1", rx)
+    make_entry(slot, num(df$estimate[i]), num(df$lo[i]), num(df$hi[i]), df$units[i],
+               paste0(what, "; CH1-A3 verdict ", df$verdict[i]), rel, i, step, synthetic,
+               level = 90, extra = list(margin = num(df$margin_or_threshold[i])))
+  }
+  i2 <- row("P2", "^area_sqin")
+  list(
+    p1("P1_AREA", "^area_sqin", "P1, called-zone area, 2024 minus 2023, two seasons under one rule"),
+    p1("P1_SHADOW", "^shadow_rate", "P1, shadow-band called-strike rate, 2024 minus 2023"),
+    make_entry("P2_AREA_MAX", num(df$hi[i2]), NA, NA, df$units[i2],
+               paste0("P2, the largest of the five All-Star-break area placebos, one per season ",
+                      "2022 to 2026; verdict ", df$verdict[i2]),
+               rel, i2, step, synthetic,
+               extra = list(threshold_p95 = num(df$margin_or_threshold[i2])))
+  )
+}
+
 # ------------------------------------------------------------------ GD-12
 
 prereg_tag <- function() {
@@ -297,7 +335,8 @@ SOURCES <- list(
   list("out/ch1/tab/T4_decomposition.csv", "W3.16", "cells", TRUE),
   list("out/ch1/tab/T4_plane_component.csv", "W3.17", "plane", TRUE),
   list("out/ch1/tab/T1_sample.csv", "W3.5", "t1", FALSE),
-  list("out/ch1/tab/T2_zone_gate.csv", "W3.8", "t2", FALSE)
+  list("out/ch1/tab/T2_zone_gate.csv", "W3.8", "t2", FALSE),
+  list("out/ch1/tab/T5_placebos.csv", "W3.21", "t5", TRUE)
 )
 
 main <- function(args) {
@@ -359,6 +398,7 @@ main <- function(args) {
       slots = read_slots(path, in_name(s[[1]]), s[[2]], synthetic),
       t1 = read_t1(path, in_name(s[[1]]), s[[2]], synthetic),
       t2 = read_t2(path, in_name(s[[1]]), s[[2]], synthetic),
+      t5 = read_t5(path, in_name(s[[1]]), s[[2]], synthetic),
       read_cells(path, in_name(s[[1]]), s[[2]], synthetic, s[[3]] == "plane"))
     cat(sprintf("export_numbers: read %s, %d entr%s\n", in_name(s[[1]]), length(got),
                 if (length(got) == 1) "y" else "ies"))
