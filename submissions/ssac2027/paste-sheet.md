@@ -29,7 +29,7 @@ MLB's called strike zone: a failed placebo and two contractions
 
 Choose by the upload question in `abstract/FORM-FIELDS.md` section 3 item 5.
 
-Option A, the form has an upload field: 472 words with the title. Upload
+Option A, the form has an upload field: 471 words with the title. Upload
 `abstract/table1.png` and, if the figure stays after review R1, `abstract/figure1.png`.
 
 ```text
@@ -49,10 +49,10 @@ The pre-registered placebo failed: the zone grew 10.8 (90% CI 7.7 to 13.9) squar
 
 Conclusion
 
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. On model-conditional intervals the 2026 step was the larger, 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. Under the fitted model, the 2026 step was 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
-Option B, no upload field: 505 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
+Option B, no upload field: 504 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
 the end of Results and the figure is dropped.
 
 ```text
@@ -74,7 +74,7 @@ Table 1, inches, 95% intervals in brackets. Buffer change, 2025: top edge -0.18 
 
 Conclusion
 
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. On model-conditional intervals the 2026 step was the larger, 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. Under the fitted model, the 2026 step was 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
 ## 5. Body, four boxes
@@ -99,10 +99,10 @@ Results, 162 words:
 The pre-registered placebo failed: the zone grew 10.8 (90% CI 7.7 to 13.9) square inches, beyond its ±3 margin, so every step is descriptive. Net of the trend, the area fell 23.4 (95% CI 18.6 to 28.3) square inches in 2025 and 33.1 (95% CI 28.7 to 37.5) in 2026 (Figure 1). The zone lost width mostly in 2025 and height mostly in 2026 (Table 1). Within 3 inches of the rule-book zone's edge, the called-strike rate fell 10.69 (95% CI 10.04 to 11.28) percentage points from 2024 to 2026. A published comparison (Clemens, FanGraphs, 28 April 2026) reads 2025 at the plate front and 2026 at mid-plate. That convention gives a loss of 20.0 (95% CI 13.0 to 28.2) square inches; with both at mid-plate it is 32.8 (95% CI 29.3 to 36.6). The binned estimator failed the ±3 agreement tolerance, giving contractions of 29.5 and 40.7 square inches. Top-edge intervals covered 91 of 100 recovery runs, below the 93 bound.
 ```
 
-Conclusion, 100 words:
+Conclusion, 99 words:
 
 ```text
-The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. On model-conditional intervals the 2026 step was the larger, 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. Under the fitted model, the 2026 step was 59 percent of the two combined (95% CI 53 to 65), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
 ## 6. Uploads
@@ -111,7 +111,7 @@ At most two tables or figures combined. Table 1 is `abstract/table1.png`; its
 text form is below. Figure 1 is `abstract/figure1.png`, alt text in
 `abstract/figure1.alt.txt`.
 
-Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, mid-plate), by period: the trend, the failed placebo pair, the two trend-adjusted steps, the unadjusted 2024-to-2026 change, and the measurement-plane adjustment. The note under the table defines the cells. A sealed-set calibration check is pending after the postseason.
+Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, mid-plate), by period: the trend, the failed placebo pair, the two trend-adjusted steps, the unadjusted 2024-to-2026 change, and the measurement-plane adjustment. The note under the table defines the cells. A confirmatory sealed-set calibration check is pending after the postseason.
 
 The table is abstract/table1.png, copied from abstract/exhibits/table-periods-descriptive/table-periods-descriptive.png; its cells and their
 sources are listed in abstract/exhibits/table-periods-descriptive/data-sources.md, and its alt text is abstract/exhibits/table-periods-descriptive/alt.txt.

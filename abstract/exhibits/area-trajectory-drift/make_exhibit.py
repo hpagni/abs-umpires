@@ -257,14 +257,15 @@ fig.savefig(svg, metadata={"Creator": None, "Date": None})
 # ---- caption and alt text, from the same values ----------------------------------------
 gi = comp["g"]
 caption = (
-    f"Figure 1. Points are fitted 50 percent contour areas (72-inch batter, 2024 pitch "
-    f"mix), with 95% model-conditional intervals. Arrows are the 2025 and 2026 steps net "
+    f"Figure 1. Fitted 50 percent contour areas (72-inch batter, 2024 pitch mix), with "
+    f"95% model-conditional intervals. Arrows are the 2025 and 2026 steps net "
     f"of the 2022{EN}2024 trend of {f1(gi['point'])} sq in per season (95%: "
     f"{f1s(gi['lo95'])} to {f1s(gi['hi95'])}), each from the prior season plus that trend. "
     f"The bracket is the 2023-to-2024 change, {f1s(p1_est)} sq in "
     f"({pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}), with zone and grading rules "
     f"unchanged; that placebo failed. Grading changed in 2025, regular-season challenges "
-    f"began in 2026; neither step is attributed. A sealed-set calibration check is pending.\n"
+    f"began in 2026; neither step is attributed. A confirmatory sealed-set calibration check "
+    f"is pending.\n"
 )
 n_words = len(caption.split())
 if n_words > 90:

@@ -14,4 +14,4 @@ The pre-registered placebo failed: the zone grew <<P1_AREA>> square inches, beyo
 
 ## Conclusion
 
-<<CALL>> On model-conditional intervals the 2026 step was the larger, <<SHARE_ABS>> percent of the two combined (95% CI <<SHARE_ABS_CI>>), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
+<<CALL>> Under the fitted model, the 2026 step was <<SHARE_ABS>> percent of the two combined (95% CI <<SHARE_ABS_CI>>), but those intervals omit the season-to-season variation needed to rank the steps. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.

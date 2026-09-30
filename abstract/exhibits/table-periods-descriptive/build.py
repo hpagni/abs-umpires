@@ -349,7 +349,8 @@ FOOTNOTE = (
     f"placebo row prints its pre-registered {P1_LEVEL} interval on area and rate; its edge "
     f"cells, added after the tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage "
     f"points; the shadow band is "
-    "the pitches within 3 inches, either side, of where the ball just touches the zone edge. "
+    "the pitches within 3 inches, either side, of where the ball just touches the rule-book "
+    "zone's edge. "
     "In the recovery test, top-edge 95% intervals covered the truth in 91 of 100 runs (bound "
     "93). The placebo pair moved beyond its margin, so no step is attributed to its rule; the "
     "2025 and 2026 labels name the period only. Dashes: not estimated for that row."
@@ -397,7 +398,7 @@ def num(s: str) -> str:
 
 EXPLORATORY = (
     "Exploratory, not pre-registered: the 2022-to-2023 area change was "
-    f"{signed(drift_2223)} sq in (90%); against the 2022-2024 mean plus one season of trend, "
+    f"{signed(drift_2223)} sq in (90%). Against the 2022-2024 mean plus one season of trend, "
     f"the 2025 area step is {signed(base_mean)} sq in; against 2023 alone, "
     f"{signed(base_2023)} sq in."
 )
@@ -554,7 +555,8 @@ caption = (
     "Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, "
     "mid-plate), by period: the trend, the failed placebo pair, the two trend-adjusted steps, "
     "the unadjusted 2024-to-2026 change, and the measurement-plane adjustment. The note under "
-    "the table defines the cells. A sealed-set calibration check is pending after the postseason."
+    "the table defines the cells. A confirmatory sealed-set calibration check is pending after "
+    "the postseason."
 )
 n_words = len(caption.split())
 if n_words >= 60:
@@ -587,7 +589,8 @@ alt = (
     "is attributed to its rule, that top-edge intervals undercovered in the recovery test, and "
     "that the "
     "shadow band is the pitches within 3 inches either side of where the ball just touches the "
-    "zone edge. Its last line, exploratory and not pre-registered, gives the 2025 area step "
+    "rule-book zone's edge. Its last lines, exploratory and not pre-registered, give the "
+    f"2022-to-2023 area change, {span(drift_2223)} sq in at 90 percent, and the 2025 area step "
     f"against the 2022-2024 mean plus one season of trend, {span(base_mean)} sq in, and against "
     f"2023 alone, {span(base_2023)} sq in."
 )
