@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/01_sample.R",
-  "duration_s": 14,
+  "duration_s": 12,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "dfb5f8739e38b9a57a7b97421fc12faf58d0fc8b",
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.5.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.5",
-  "timestamp_madrid": "2026-09-30 13:13:11 CEST",
+  "timestamp_madrid": "2026-09-30 23:29:21 CEST",
   "title": "Regimes, sample and exclusions, T1_sample.csv with P0 and P1"
 }

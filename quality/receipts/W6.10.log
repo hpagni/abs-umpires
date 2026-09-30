@@ -1,54 +1,55 @@
 
 == 1. scripts/abstract.sh
 abstract: GD-12 ok, HEAD descends from prereg-v1
-abstract: ledger docs/numbers.json, variant descriptive, output root .
-SEAL-ORDER OK (29/29 fit receipt(s) descend from prereg-v1 7c2add919004dda9868932d49ae02efea1886dff, read from origin)
+abstract: ledger docs/numbers.json, variant owner, output root .
+SEAL-ORDER OK (34/34 fit receipt(s) descend from prereg-v1 e4382841f2bde84fbeb48aad1bb4bf5da48b6dbe, read from origin)
 abstract: GD-12 passed on real receipts; the wide sentence is allowed if ABS_PREREG_SENTENCE=wide
 build_exhibits: table1 16 of 16 cells filled; figure1 16 rows; tag ''
-fill_slots: descriptive variant, 23 slot(s) filled, 0 missing, 2 owner slot(s) pending; 468 words (444 written + 24 reserved + 0 extra) against a cap of 470; narrow pre-registration sentence; 2 cut(s)
-fill_slots: owner slots pending review R1: CALL, BREAK_YEAR
-fill_slots: descriptive variant, 23 slot(s) filled, 0 missing, 2 owner slot(s) pending; 491 words (434 written + 24 reserved + 33 extra) against a cap of 470; narrow pre-registration sentence; 3 cut(s)
-fill_slots: owner slots pending review R1: CALL, BREAK_YEAR
+abstract: figure1 is the chosen exhibit abstract/exhibits/area-trajectory-drift
+abstract: table1 is the chosen exhibit abstract/exhibits/table-periods-descriptive
+fill_slots: owner variant, 17 slot(s) filled, 0 missing, 0 owner slot(s) pending; 490 words (490 written + 0 reserved + 0 extra) against a cap of 495; narrow pre-registration sentence; 0 cut(s)
+fill_slots: owner variant, 17 slot(s) filled, 0 missing, 0 owner slot(s) pending; 523 words (490 written + 0 reserved + 33 extra) against a cap of 495; narrow pre-registration sentence; 0 cut(s)
 abstract: the no-upload body is over the cap after the whole ladder; review R1 decides
 r1_agenda: submissions/ssac2027/R1-agenda.md
-build_submission: unfilled slot(s), nothing written: <<BREAK_YEAR>>, <<CALL>>
-build_submission: CALL and BREAK_YEAR come from the owner at review R1
-abstract: drafted and exhibits built; the package waits for the owner's CALL and BREAK_YEAR (review R1)
+build_submission: 3 file(s) in submissions/ssac2027; body 485 words, with the inline table 518; cap 495; form survey NOT done; upload field: yes
+abstract: drafted, exhibits built, submission package written
 
 == 2-4. word counter, slots, sections on abstract/ssac2027_abstract.filled.md
-words: 468 of 470 (CALL pending, 25 reserved, BREAK_YEAR pending, 1 reserved)
+words: 490 of 495 (CALL written, BREAK_YEAR written)
 sections: Introduction, Methods, Results, Conclusion; no fifth; Results has intervals
 
 == 5. exhibits
 tables and figures in abstract: 2
-figure1 alt text: 496 characters
+figure1 alt text: 644 characters
 
 == 6. writing gates on this step's files
 ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
-abstract/ssac2027_abstract.filled.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/ssac2027_abstract.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.descriptive.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.null-buffer.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
+abstract/variants/ssac2027_abstract.owner.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.sign-reversal.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
-prose-lint: 8 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+abstract/ssac2027_abstract.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.null-buffer.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.sign-reversal.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+prose-lint: 9 file(s) from the arguments, 0 violation(s), 3 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
 ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
 WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
 prose-lint: 1 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
 check_numbers selftest: OK, 27 cases
 check_numbers: ledger: docs/numbers.json in place of docs/numbers.json
-check_numbers: 4 file(s), 228 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
+check_numbers: 4 file(s), 359 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
 WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
 check_blind: 4 file(s) from the arguments, 0 blind-review violation(s); review window open
 
 == 7. make lint-prose
 uv run --locked python quality/prose_lint.py
 ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
-abstract/ssac2027_abstract.filled.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
-abstract/ssac2027_abstract.inline-table.filled.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/ssac2027_abstract.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.descriptive.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.null-buffer.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
+abstract/variants/ssac2027_abstract.owner.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.sign-reversal.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 WR-10: SKIP (target docs/memo/memo.html not built until W7)
 WR-18: SKIP for the memo (target docs/memo/memo.html not built until W7)
@@ -59,6 +60,12 @@ DECISIONS.md:1403: WR-06: percentage '0.038%' with no denominator (warn)
 DECISIONS.md:1407: WR-06: percentage '15%' with no denominator (warn)
 DECISIONS.md:2442: WR-06: percentage '51.0%' with no denominator (warn)
 abstract/SPRINT-STATUS.md:0: WR-08: passive voice in 18 of 44 sentences, 41%, above 20% (warn)
+abstract/exhibits/area-trajectory-drift/data-sources.md:0: WR-08: passive voice in 4 of 13 sentences, 31%, above 20% (warn)
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:0: WR-08: passive voice in 3 of 12 sentences, 25%, above 20% (warn)
+abstract/exhibits/table-periods-descriptive/data-sources.md:0: WR-08: passive voice in 3 of 13 sentences, 23%, above 20% (warn)
+abstract/ssac2027_abstract.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.null-buffer.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.sign-reversal.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
 docs/DEVIATIONS.md:666: WR-06: percentage '100.000%' with no denominator (warn)
 docs/DEVIATIONS.md:671: WR-06: percentage '100.000%' with no denominator (warn)
 docs/DEVIATIONS.md:852: WR-06: percentage '0.313%' with no denominator (warn)
@@ -80,6 +87,6 @@ docs/prior-art.md:476: WR-06: percentage '8%' with no denominator (warn)
 docs/prior-art.md:485: WR-06: percentage '10%' with no denominator (warn)
 docs/prior-art.md:605: WR-06: percentage '99.75%' with no denominator (warn)
 docs/slide-requests.md:0: WR-08: passive voice in 8 of 31 sentences, 26%, above 20% (warn)
-prose-lint: 30 file(s) from the default scope, 0 violation(s), 25 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+prose-lint: 40 file(s) from the default scope, 0 violation(s), 31 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
 
-W6.10 OK: filled, within 470 words, four sections, at most two exhibits, gates green
+W6.10 OK: filled, within 495 words, four sections, at most two exhibits, gates green

@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python -m absump.ingest.savant_leaderboard --check",
-  "duration_s": 1,
+  "duration_s": 0,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "dfb5f8739e38b9a57a7b97421fc12faf58d0fc8b",
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.11.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.11",
-  "timestamp_madrid": "2026-09-30 13:09:42 CEST",
+  "timestamp_madrid": "2026-09-30 23:25:45 CEST",
   "title": "Savant ABS leaderboard, absData parsed out of the page"
 }

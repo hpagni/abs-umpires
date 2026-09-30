@@ -3173,3 +3173,12 @@ recommended default, and the owner took the default in every case.
 
 Still open for the owner: the gh token's workflow scope for W9.10 (CI), and the form submission
 of the abstract on 2026-10-01.
+
+### D-16 REVERSED, owner decision 2026-10-01T00:24:33+02:00: no AI attribution on any commit
+
+Owner: Hudson Pagni. Status: applied. The 2026-09-23 entry applied a `Co-Authored-By` trailer as a
+default and left it "for a one-line confirmation"; the confirmation never came, and the default was
+wrong. Hudson's rule covers every repository of his: commits are authored by him alone, with no
+co-author trailer, session line or "generated with" line. The public history was rewritten on
+2026-10-01 to remove the trailers from all 154 commits that carried them (DEV-86, map in
+`quality/commit-map-2026-10-01.json`). Every fleet prompt that lets an agent commit must say so.

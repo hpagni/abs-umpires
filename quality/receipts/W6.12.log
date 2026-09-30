@@ -1,0 +1,23 @@
+upload field per abstract/FORM-FIELDS.md: yes,theabstractisuploadedasafilewithtable1andfigure1embedded(owner,2026-09-30)
+
+== submissions/ssac2027/submitted-abstract.txt (must fit)
+words: 485
+format: title, four sections in order, Results carries intervals
+
+== submissions/ssac2027/submitted-abstract.inline-table.txt (advisory)
+words: 518
+advisory: over the cap
+format: title, four sections in order, Results carries intervals
+
+== writing gates
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
+prose-lint: 2 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+check_numbers selftest: OK, 27 cases
+check_numbers: ledger: docs/numbers.json in place of docs/numbers.json
+check_numbers: 2 file(s), 359 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
+
+== package files
+README: both deadline readings and the 12:00 Madrid target
+
+W6.12 package OK: the text to paste fits, is blind, is in SSAC format and passes the gates

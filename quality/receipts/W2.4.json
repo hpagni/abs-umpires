@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked pytest tests/unit/test_seal_classifier.py tests/unit/test_seal_config_agrees.py tests/unit/test_seal_unseal_gate.py -q && bash ops/seal_check.sh",
-  "duration_s": 8,
+  "duration_s": 9,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "dfb5f8739e38b9a57a7b97421fc12faf58d0fc8b",
+  "git_sha": "9b6112134174132a73cae18d65055aeca4fd3682",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.4.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.4",
-  "timestamp_madrid": "2026-09-30 13:08:05 CEST",
+  "timestamp_madrid": "2026-09-30 23:24:05 CEST",
   "title": "Seal definition, routing and the unseal gate"
 }

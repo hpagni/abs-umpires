@@ -129,6 +129,6 @@ the ledger, planted rows must be charged to this check
   PASS W4.3.13 a host no puller works: charged
   PASS W4.3.13 a day the check did not span: charged
   PASS W4.3.13 a puller's row, the control: attributed to the puller
-  PASS W4.3.13 offline: manifest unchanged at 5079 rows, no budget count moved
+  PASS W4.3.13 offline: manifest unchanged at 5458 rows, no budget count moved
 
 W4.3: 111 checks, 111 passed, 0 failed

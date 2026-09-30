@@ -1,0 +1,19 @@
+W9.10 ci_check: workflows parked at ops/ci-pending/
+C1   yaml             PASS  ci.yml and seal-guard.yml parse
+C2   triggers         PASS  push and pull_request, no schedule
+C3   six jobs         PASS  ci.yml: lint python r dbt guard secrets, parallel, ubuntu-latest, 8 min cap each; seal-guard: 1 job, same
+C4   pinned actions   PASS  5 distinct, all on the pin list: actions/cache@v6.1.0, actions/checkout@v7.0.1, actions/upload-artifact@v7.0.1, astral-sh/setup-uv@v10.2.0, r-lib/actions/setup-r@v2
+C5   SOP commands     PASS  every command in the W1.16 table, no Stan compile in any job, dbt on target ci only, python and guard prerequisites present
+C6   zero MLB calls   PASS  arm first and audit last in all 7 jobs; NO-MLB selftest PASS: 9 planted MLB lookups caught, 7 clean lookups passed, 17 sinkhole hosts all in the family; 7 MLB-family host(s) named in tracked files, all 17 on the sinkhole list
+C7   no nightly.yml   PASS  no nightly.yml; nightly is local launchd (ops/com.absump.nightly.plist); runbook carries the 60-day rule, UTC, default branch, hourly delay, re-enable, no keepalive
+     plant: a fit started a day before the tag                       expect fail, exit 1:   out/models/plant/provenance.json: fit_started_at 2026-09-29T04:17:46+02:00 is earlier th
+     plant: a sealed output with no sibling provenance               expect fail, exit 1:   out/sealed/plant/fit.parquet has no sibling provenance.json
+     plant: a fit_started_at that is not a timestamp                 expect fail, exit 1:   out/models/plant/provenance.json: fit_started_at 'yesterday' is not a zoned ISO 8601 tim
+     plant: PREREGISTRATION.md edited after the lock                 expect fail, exit 1:   PREREGISTRATION.md no longer matches quality/prereg.lock: file a8ee2443112e5e33a18f858b9
+     plant: a sealed output with complete provenance after the tag   expect pass, exit 0: SEAL-GUARD PASS: prereg-v1 at 7c2add919004, lock matches, 1 sealed file(s), 1 fit start(s)
+     plant: the tag deleted                                          expect fail, exit 1: It was cut in SOP W3.13; every sealed-side guarantee is anchored to it.
+C8   seal-guard       PASS  layers 3 and 4 named; provenance step on clean HEAD: SEAL-GUARD PASS: prereg-v1 at 7c2add919004, lock matches, 0 sealed file(s), 0 fit start(s) on or after the tag; 6/6 plants behave
+C9   R-31 wording     PASS  no badge presented as reproduction; make prove on the Mac named authoritative
+C10  actionlint       SKIP  not installed on this machine, so not run; nothing was installed to run it
+CL3  clause 3        PENDING-OWNER  CI green on every push in under 8 minutes: NOT MEASURABLE UNTIL THE OWNER ENABLES THE SCOPE. The gh token lacks `workflow`, so the files are parked and no run exists. Never reported as passed by this script.
+W9.10 ci_check: 9 PASS, 0 FAIL, 1 SKIP of 10; clause 3 PENDING-OWNER

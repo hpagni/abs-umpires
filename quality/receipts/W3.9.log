@@ -6,9 +6,9 @@ PASS    file present for comparison                  /Users/hudsonpagni/sports-p
 PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_format.csv
 RECORD  prereg-v1 tag                                present
 RECORD  schedule, Final regular-season games         2023: 2,224; 2024: 2,232; 2025: 2,232
-RECORD  feeds on disk                                5,065 in the lake, 7 in staging only
+RECORD  feeds on disk                                5,119 in the lake, 7 in staging only
 PASS    every T5 game has a feed on disk             934 games in T5, 0 without a feed
-RECORD  feeds on disk that T5 does not list          4,138 (the corpus grew since the build; a build run takes them in)
+RECORD  feeds on disk that T5 does not list          4,192 (the corpus grew since the build; a build run takes them in)
 PASS    every feed on disk parses                    934 feeds
 RECORD  feeds left out, not Final regular season     0 (none)
 RECORD  coverage 2023                                276 of 2,224 Final games on disk, 2023-03-31 to 2023-07-18

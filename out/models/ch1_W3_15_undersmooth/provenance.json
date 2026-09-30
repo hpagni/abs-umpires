@@ -19,7 +19,7 @@
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
   "prereg_tag": "prereg-v1",
   "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,

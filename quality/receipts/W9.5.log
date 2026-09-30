@@ -1,18 +1,52 @@
 uv run --locked pytest tests/unit -q
-......s........................................................s........ [  7%]
+......s........................................................s........ [  6%]
 .........
-W2.21 export gate: 148 files under out/, 80 read as tables, 31 of them single-object JSON walked for dates and identifiers
+W2.21 export gate: 230 files under out/, 133 read as tables, 37 of them single-object JSON walked for dates and identifiers
 ........................................................................ [ 14%]
-........................................................................ [ 21%]
+.................................................F...................... [ 21%]
 ........................................................................ [ 28%]
 ........................................................................ [ 35%]
 ........................................................................ [ 42%]
-........................................................................ [ 50%]
-........................................................................ [ 57%]
-........................................................................ [ 64%]
-........................................................................ [ 71%]
-........................................................................ [ 78%]
-........................................................................ [ 85%]
-........................................................................ [ 92%]
-........................................................................ [ 99%]
-.........                                                                [100%]
+........................................................................ [ 49%]
+........................................................................ [ 56%]
+........................................................................ [ 62%]
+........................................................................ [ 69%]
+........................................................................ [ 76%]
+........................................................................ [ 83%]
+........................................................................ [ 90%]
+........................................................................ [ 97%]
+...........................                                              [100%]
+=================================== FAILURES ===================================
+________________ test_repo_is_a_git_repository_on_the_main_line ________________
+
+    def test_repo_is_a_git_repository_on_the_main_line():
+        """W1.2. The branch model actually in use is: work on phase01/<x>, fast-forward main
+        onto it, push main. So HEAD is not always the literal ref refs/heads/main, and pinning
+        it there failed on every working branch. What must hold is that main exists, that
+        origin/main agrees with it, and that HEAD is on the main line rather than off it."""
+        assert (REPO_ROOT / ".git").is_dir(), f"no git repository at {REPO_ROOT}"
+
+        origin = git("rev-parse", "--verify", "refs/remotes/origin/main")
+        assert origin.returncode == 0, f"origin/main does not resolve: {origin.stderr.strip()}"
+        main_tip = origin.stdout.strip()
+
+        # A local branch main is not guaranteed: a clone checked out on phase01/public
+        # has origin/main and no refs/heads/main, and requiring the local ref failed
+        # there for a reason that says nothing about the layout. origin/main is the
+        # anchor; a local main, when it exists, must agree with it.
+        local = git("rev-parse", "--verify", "refs/heads/main")
+        if local.returncode == 0:
+>           assert local.stdout.strip() == main_tip, (
+                f"origin/main is {main_tip[:12]} but local main is {local.stdout.strip()[:12]}; "
+                "main was not pushed, or the remote moved ahead"
+            )
+E           AssertionError: origin/main is bd9c85b94aac but local main is d25ec7a24d6b; main was not pushed, or the remote moved ahead
+E           assert 'd25ec7a24d6b...3f1cba0c8e3e1' == 'bd9c85b94aac...518b27c4d9342'
+E
+E             - be41ffb6e5db59bdea7dab76014ade6bdf140b32
+E             + 0e8806154c4c440048e453de98bdb7475fae7736
+
+tests/unit/test_layout.py:220: AssertionError
+=========================== short test summary info ============================
+FAILED tests/unit/test_layout.py::test_repo_is_a_git_repository_on_the_main_line
+make[1]: *** [test-unit] Error 1

@@ -1,7 +1,7 @@
 ........................................................................ [ 68%]
 .................................                                        [100%]
 SEAL MODULE OK (9/9) boundary 2026-09-22, tag prereg-v1, gate shut
-SEAL-ORDER OK (29/29 fit receipt(s) descend from prereg-v1 7c2add919004dda9868932d49ae02efea1886dff)
+SEAL-ORDER OK (34/34 fit receipt(s) descend from prereg-v1 e4382841f2bde84fbeb48aad1bb4bf5da48b6dbe)
 MILESTONE M1 preconditions (SOP phase 04, D3 end of day):
   OK      prereg_tag in config/seal.yml
   OK      PREREGISTRATION.md on disk

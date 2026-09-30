@@ -1,0 +1,17 @@
+{
+  "cmd": "uv run --locked python ops/ci_check.py",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W9.10.log",
+  "owner": "W9",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W9.10",
+  "timestamp_madrid": "2026-09-30 23:57:33 CEST",
+  "title": "CI: ci.yml and seal-guard.yml, checked locally; clause 3 (green, under 8 minutes) pending the owner"
+}

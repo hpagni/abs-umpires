@@ -1,4 +1,4 @@
-SEAL-ORDER OK (29/29 fit receipt(s) descend from prereg-v1 7c2add919004dda9868932d49ae02efea1886dff, read from origin)
-check_numbers: 1 file(s), 69 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
+SEAL-ORDER OK (34/34 fit receipt(s) descend from prereg-v1 e4382841f2bde84fbeb48aad1bb4bf5da48b6dbe, read from origin)
+check_numbers: 1 file(s), 71 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
 prose-lint: 1 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
-W6.6 OK: W3.13 PASS; prereg-v1 object a1b06d1 on 7c2add9, same object on origin; GD-12 exit 0; ordering not achieved (tagged PREREGISTRATION.md says fits ran before it: True; first W3.4 receipt 2026-09-25 13:00:11 CEST at f891d71, not a descendant: True; 15 pre-tag fit records, 11 on 2022-2024, max 687496 rows); chosen narrow; 4 abstract sources carry it; 0 wide hits in 15 files; 7 counts traced
+W6.6 OK: W3.13 PASS; prereg-v1 object a1b06d1 on 7c2add9, same object on origin; GD-12 exit 0; ordering not achieved (tagged PREREGISTRATION.md says fits ran before it: True; first W3.4 receipt 2026-09-25 13:00:11 CEST at f891d71, not a descendant: True; 15 pre-tag fit records, 11 on 2022-2024, max 687496 rows); chosen narrow; 5 abstract sources carry it; 0 wide hits in 54 files; 7 counts traced

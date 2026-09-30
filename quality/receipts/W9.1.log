@@ -1,4 +1,4 @@
-steps.yml OK: 97 registered, 94 live, 3 retired
+steps.yml OK: 103 registered, 100 live, 3 retired
 receipt W9.1 PASS exit=0 0s -> <temporary directory>/W9.1.json
 selftest OK: receipt written and read back, stamped <Madrid timestamp, pattern asserted by write_receipt.py --selftest>
 W9.1 scaffold check: OK

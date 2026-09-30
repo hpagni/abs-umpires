@@ -39,10 +39,10 @@ PASS   ch1.md states: 687,485                       "687,485"
 PASS   ch1.md states: 687,366                       "687,366"
 PASS   ch1.md states: 0.0007                        "0.0007"
 PASS   ch1.md states: DEV-68                        "DEV-68"
-start  k24-18-12-10_ord_d8nc              10:57:47
-start  k32-24-16-20_ord_d8nc              10:57:47
-done   k24-18-12-10_ord_d8nc              11:04:03  373.0 s wall, 2.88 GB peak
-done   k32-24-16-20_ord_d8nc              11:06:28  516.6 s wall, 4.12 GB peak
+start  k24-18-12-10_ord_d8nc              23:30:15
+start  k32-24-16-20_ord_d8nc              23:30:15
+done   k24-18-12-10_ord_d8nc              23:36:31  372.3 s wall, 2.87 GB peak
+done   k32-24-16-20_ord_d8nc              23:38:56  516.4 s wall, 4.33 GB peak
 PASS   refits completed                             k24-18-12-10_ord_d8nc k32-24-16-20_ord_d8nc
 PASS   no 2025 or 2026 row: k24-18-12-10_ord_d8nc   seasons 2022 2023 2024, last date 2024-09-30, 687,366 rows fitted
 PASS   no 2025 or 2026 row: k32-24-16-20_ord_d8nc   seasons 2022 2023 2024, last date 2024-09-30, 687,366 rows fitted
@@ -53,7 +53,7 @@ PASS   k stable at the frozen rung: season          k 18 -> 24, max |k-index cha
 PASS   k stable at the frozen rung: ccst            k 12 -> 16, max |k-index change| 0.0007 < 0.01
 PASS   k stable at the frozen rung: velo            k 10 -> 20, max |k-index change| 0.0000 < 0.01
 PASS   no fit object or provenance.json under out/dev /Users/hudsonpagni/sports-project/out/dev/ch1_spec
-RECORD check refit cost                             k24-18-12-10_ord_d8nc 373 s wall, 2.88 GB peak; k32-24-16-20_ord_d8nc 517 s wall, 4.12 GB peak
+RECORD check refit cost                             k24-18-12-10_ord_d8nc 372 s wall, 2.87 GB peak; k32-24-16-20_ord_d8nc 516 s wall, 4.33 GB peak
 
 W3.11 check: 48 PASS, 0 FAIL, <elapsed> s
 GD-04: 0 violation(s) in R/ch1/20_spec_dev.R

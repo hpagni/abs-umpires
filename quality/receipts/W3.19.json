@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "867b4a2257bbbf2c662e16bcc45a78862020f8eb",
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.19.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.19",
-  "timestamp_madrid": "2026-09-30 17:57:53 CEST",
+  "timestamp_madrid": "2026-09-30 23:40:24 CEST",
   "title": "Chapter 1 catcher framing by regime, and CH1-A11"
 }

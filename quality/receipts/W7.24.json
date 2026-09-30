@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript tools/comms/export_numbers.R --check && uv run --locked python quality/check_numbers.py && uv run --locked pytest tests/unit/test_abstract_ledger.py -q",
-  "duration_s": 4,
-  "exit": 0,
+  "duration_s": 1,
+  "exit": 1,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "57167fd713c5eae07ecbef383cb3960157649357",
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W7.24.log",
   "owner": "W7",
   "schema": "absump/receipt/1",
-  "status": "PASS",
+  "status": "FAIL",
   "step": "W7.24",
-  "timestamp_madrid": "2026-09-30 11:12:05 CEST",
+  "timestamp_madrid": "2026-09-30 23:44:50 CEST",
   "title": "Number traceability, docs/numbers.json from out/"
 }

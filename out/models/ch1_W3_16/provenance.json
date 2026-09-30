@@ -17,9 +17,9 @@
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "git_sha": "87b0a14747abfd0b960a5596a63015b4a4ede1d9",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 0a76fd7b8a09; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -34,8 +34,8 @@
   "outputs": {
     "out/ch1/tab/T4_decomposition.csv": "d8e89dfc4d60ee3f29620c36262f75da9d309b7ba0508f52777602b13600e62c",
     "out/ch1/tab/T4_decomposition_arms.csv": "0e5da6f00bf4bc00ef607d6fa6316c5f62e554919ac4623df012b476703c0390",
-    "out/tables/headline.csv": "c26f4910c752cdeb93223c954797ea7275e0530f6f50fbc4b5ead408a7aef208"
+    "out/tables/headline.csv": "b7bf74a5bc8c9e2110a57f8c1708b384a7c67ada5fe82ed990660220e87bcd0b"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T08:34:17+0200"
+  "written_madrid": "2026-09-30T20:33:08+0200"
 }

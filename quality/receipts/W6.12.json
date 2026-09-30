@@ -1,0 +1,17 @@
+{
+  "cmd": "bash quality/w612_check.sh",
+  "duration_s": 1,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W6.12.log",
+  "owner": "W6",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W6.12",
+  "timestamp_madrid": "2026-09-30 23:43:48 CEST",
+  "title": "SSAC submission package and paste sheet; the submit is owner-only"
+}

@@ -42,11 +42,7 @@ smoke: a data lake is present and no check reads it; all twelve run
           <size>	/Users/hudsonpagni/sports-project/.venv
           <size>	/Users/hudsonpagni/sports-project/renv
 
-smoke: the request ledger moved during the run, and a running puller explains all of it
-          manifest grew from 5181 to 5189 rows during the check (baseballsavant.mlb.com 3, statsapi.mlb.com 5); UTC days 2026-09-30; puller mutexes held: .statsapi_night.lock, .savant_night.lock
-          budget moved: baseballsavant.mlb.com 348 -> 351, statsapi.mlb.com 2103 -> 2109
-          every added row and every budget move is a running puller's: its host, its mutex held, dated a day the check spanned
-          limit: this check names no address of its own, so a request it made to those hosts in this window would read as the puller's; the exact claim is the quiet-ledger one
+smoke: request ledger unchanged, so no host was reached through the chokepoint
 smoke: <elapsed> s
 SMOKE OK (10/12, 2 skipped: b2, motherduck)
 smoke: 12/12 (10 ran and passed, 2 skipped and counted as passes: b2, motherduck)

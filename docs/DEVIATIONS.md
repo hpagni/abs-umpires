@@ -1945,3 +1945,25 @@ Where items 7 and 8 sit: `make tables` prints both in a short block right after 
 `out/ch1/prose/framing.md`. W3.19's receipt hashes framing.md as its generator wrote it, so the prose
 file itself is left unedited. The W3.19 lane may move the sentences into its own output later. W3.24 stays open while F5 (W3.20) and F8 (W3.23, the sealed run) are
 placeholders. `make ch1` exits 3 on them, and W3.24's completeness test fails until they land.
+
+## DEV-86: commit messages rewritten to remove assistant attribution trailers; trees, authors and dates unchanged
+
+Stamped 2026-10-01T00:24:33+02:00, Europe/Madrid. Owner: the project owner, applied by the main session at his
+instruction. Files: `quality/commit-map-2026-10-01.json` (the old-to-new object ids), every
+`quality/receipts/*.json` and `*.log`, every `out/**/provenance.json`, `docs/prereg/ordering_sentence.md`,
+`quality/steps.yml` (the W7.9 tag-object pin), `DECISIONS.md` (D-16 reversed).
+
+Not a change to the plan, the data, the code or any result. The owner's standing rule is that his
+commits carry no AI attribution. D-16 recorded the opposite default on 2026-09-23 "for a one-line
+confirmation" that was never given, and 154 of 155 commits then carried a `Co-Authored-By: Claude ...`
+trailer (six also a `Claude-Session:` line). On 2026-10-01 the history was rewritten with
+`git filter-repo --message-callback`, removing those lines and nothing else. Every rewritten commit
+has the same tree, author, author date, committer and committer date as the original, checked
+against a pre-rewrite snapshot of all 155 commits across every ref. The `prereg-v1` tag was rewritten
+with it: same message, same tagger date (2026-09-30T04:17:58+02:00), same tree; its object id moved
+from a1b06d1 to 980db5f and its commit from 7c2add9 to e438284. The GitHub release keeps its assets.
+
+Because commit ids changed, every receipt's `git_sha` and every fit receipt's `git_sha` were
+translated through the map, so `make prove`, GD-02 and GD-12 read the same commits under their new
+ids. Hashes quoted in the prose of DECISIONS.md, this file and RUNLOG.md before this entry refer to
+the pre-rewrite history; the map resolves each one. No file's contents changed in any commit.

@@ -2,11 +2,10 @@ SOP transcription check: 74 entries, 9 P8 entries and 9 thresholds and strings m
 prose-lint selftest: OK, 75 fixture cases, 27 checks each tripped by a fixture, 0 failure(s)
 uv run --locked python quality/prose_lint.py
 ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
-abstract/ssac2027_abstract.filled.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
-abstract/ssac2027_abstract.inline-table.filled.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/ssac2027_abstract.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.descriptive.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.null-buffer.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
+abstract/variants/ssac2027_abstract.owner.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 abstract/variants/ssac2027_abstract.sign-reversal.md: WR-18 pending; the Conclusion still holds <<CALL>>, the owner's sentence, so the limitation sentence is checked on the filled text
 WR-10: SKIP (target docs/memo/memo.html not built until W7)
 WR-18: SKIP for the memo (target docs/memo/memo.html not built until W7)
@@ -17,6 +16,12 @@ DECISIONS.md:1403: WR-06: percentage '0.038%' with no denominator (warn)
 DECISIONS.md:1407: WR-06: percentage '15%' with no denominator (warn)
 DECISIONS.md:2442: WR-06: percentage '51.0%' with no denominator (warn)
 abstract/SPRINT-STATUS.md:0: WR-08: passive voice in 18 of 44 sentences, 41%, above 20% (warn)
+abstract/exhibits/area-trajectory-drift/data-sources.md:0: WR-08: passive voice in 4 of 13 sentences, 31%, above 20% (warn)
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:0: WR-08: passive voice in 3 of 12 sentences, 25%, above 20% (warn)
+abstract/exhibits/table-periods-descriptive/data-sources.md:0: WR-08: passive voice in 3 of 13 sentences, 23%, above 20% (warn)
+abstract/ssac2027_abstract.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.null-buffer.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
+abstract/variants/ssac2027_abstract.sign-reversal.md:0: WR-08: passive voice in 5 of 23 sentences, 22%, above 20% (warn)
 docs/DEVIATIONS.md:666: WR-06: percentage '100.000%' with no denominator (warn)
 docs/DEVIATIONS.md:671: WR-06: percentage '100.000%' with no denominator (warn)
 docs/DEVIATIONS.md:852: WR-06: percentage '0.313%' with no denominator (warn)
@@ -38,7 +43,69 @@ docs/prior-art.md:476: WR-06: percentage '8%' with no denominator (warn)
 docs/prior-art.md:485: WR-06: percentage '10%' with no denominator (warn)
 docs/prior-art.md:605: WR-06: percentage '99.75%' with no denominator (warn)
 docs/slide-requests.md:0: WR-08: passive voice in 8 of 31 sentences, 26%, above 20% (warn)
-prose-lint: 30 file(s) from the default scope, 0 violation(s), 25 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+prose-lint: 40 file(s) from the default scope, 0 violation(s), 31 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
 check_numbers selftest: OK, 27 cases
-check_numbers: 11 file(s), 228 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
-check_blind: 30 file(s) from the default scope, 0 blind-review violation(s); review window open
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:23: WR-07 473.032058680372 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:23: WR-07 473.03 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:24: WR-07 460.173710401016 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:24: WR-07 460.17 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:41: WR-07 473.03 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:41: WR-07 460.17 is in no traceable source
+abstract/exhibits/plane-convention-vs-corrected/data-sources.md:44: WR-07 −40 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/alt.txt:1: WR-07 17 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/alt.txt:1: WR-07 19.4 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/alt.txt:1: WR-07 38.5 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:19: WR-07 12 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:19: WR-07 17 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:19: WR-07 19.44 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:20: WR-07 38.52 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:20: WR-07 12 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:20: WR-07 0.4025 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 40.96 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 40.87 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 41.05 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 16.68 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 16.61 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 16.76 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 11.13 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 11.05 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:26: WR-07 11.19 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 40.76 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 40.67 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 40.85 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 16.63 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 16.56 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 16.70 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 10.94 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 10.87 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:27: WR-07 11.00 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 41.24 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 41.14 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 41.33 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 16.79 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 16.72 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 16.86 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 11.06 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 10.99 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:28: WR-07 11.13 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 41.19 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 41.09 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 41.28 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 17.02 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 16.95 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 17.10 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 10.62 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 10.55 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:29: WR-07 10.68 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 40.69 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 40.59 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 40.79 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 17.73 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 17.65 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 17.80 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 10.34 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 10.27 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:30: WR-07 10.40 is in no traceable source
+abstract/exhibits/zone-edges-three-periods/data-sources.md:32: WR-07 warn: 'fifteen' is a number above nine in words; rule 6 wants digits in a claim sentence, so check it by hand
+check_numbers: 25 file(s), 359 traceable value(s), 61 untraced literal(s), 0 bad source line(s), 1 word-number warning(s)
+check_blind: 40 file(s) from the default scope, 0 blind-review violation(s); review window open

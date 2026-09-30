@@ -1,0 +1,7 @@
+FAILURE: 'test-ch1-figures.R:449:3' ---------------
+W3.24 INCOMPLETE, placeholders remain: F5 blocked on W3.20; F8 blocked on W3.23
+
+[ FAIL 1 | WARN 0 | SKIP 0 | PASS 676 ]
+Error:
+! Test failures.
+Execution halted

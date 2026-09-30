@@ -10,10 +10,10 @@
   ],
   "seed": "20260922;none;20260951;20260939",
   "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714;0ecd6909801586dbaf912ba7c4f148b3f7737fb946a7fbfba8c94e1d1a2a1294;d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c;325856af235504f2beed2cb30daba011adf3027f5cea924ce4d2bd09e9f2c04b;2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
-  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
   "git_shas": [
-    "ad79e3669cc2788a30847f06f85dbbf2592f44de",
-    "08f111d8d6d5f32978542dfec3ce527a23bd6009"
+    "dcfb252aef8e0922369165ced171086cd46071f7",
+    "f01de11c5ac8247acd3dc546045110a994bc4e83"
   ],
   "synthetic": false,
   "fits": [
@@ -39,7 +39,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -98,7 +98,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -138,7 +138,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "08f111d8d6d5f32978542dfec3ce527a23bd6009",
+      "git_sha": "f01de11c5ac8247acd3dc546045110a994bc4e83",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 442d427f5e11; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -204,7 +204,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -263,7 +263,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -322,7 +322,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -361,7 +361,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -400,7 +400,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -439,7 +439,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -478,7 +478,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -517,7 +517,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -562,7 +562,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -607,7 +607,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -666,7 +666,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -725,7 +725,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -787,7 +787,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -849,7 +849,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -911,7 +911,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,
@@ -973,7 +973,7 @@
         "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
         "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
       },
-      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "git_sha": "dcfb252aef8e0922369165ced171086cd46071f7",
       "prereg_tag": "prereg-v1",
       "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
       "synthetic": false,

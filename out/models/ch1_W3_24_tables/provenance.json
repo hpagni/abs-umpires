@@ -17,9 +17,9 @@
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "6c12e25515e7d8c46eabf0e671afd66963911108",
+  "git_sha": "9b6112134174132a73cae18d65055aeca4fd3682",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 6c12e25515e7; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD b460747b3cee; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -56,5 +56,5 @@
     "out/tables/headline.csv": "168c6a40826dae5731dd3a37ccdf2beff667bb67d21ff403891ce5c590da4a83"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T23:19:14+0200"
+  "written_madrid": "2026-09-30T23:21:13+0200"
 }

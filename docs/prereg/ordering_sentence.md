@@ -20,10 +20,10 @@ D-67 says: tag and push `prereg-v1` before the first Chapter 1 fit of any kind. 
 
 ## What W3.13 achieved
 
-- `prereg-v1` is the annotated tag object `a1b06d1` on commit `7c2add9`. The tagger date is `2026-09-30T04:17:58+02:00`.
+- `prereg-v1` is the annotated tag object `980db5f` on commit `e438284` (before the 2026-10-01 message rewrite recorded in quality/commit-map-2026-10-01.json it was `a1b06d1` on `7c2add9`; same tree, same tagger date). The tagger date is `2026-09-30T04:17:58+02:00`.
 - `git ls-remote origin` returns the same tag object and the same peeled commit. The tag is public.
 - The W3.13 receipt reads PASS with exit 0. The W3.13 gate agent wrote its pass line.
-- GD-12, `bash tools/comms/check_seal_order.sh`, exits 0. On `2026-09-30` it printed `SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add9..., pushed=1)`.
+- GD-12, `bash tools/comms/check_seal_order.sh`, exits 0. On `2026-09-30` it printed `SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add9... (now e438284...), pushed=1)`.
 
 ## Why the ordering was not achieved
 

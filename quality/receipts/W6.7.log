@@ -4,7 +4,7 @@ PASS    present: tables/abstract_slots_ch1.csv
 PASS    CALL and BREAK_YEAR unfilled
 PASS    W6.7's sentence names a cause only when P1 and P2 passed Of the 56.0 square inches (95% CI 52.0 to 59.6) by which the called zone contracted between 2024 and 2026, 23.4 (95% CI 18.6 to 28.3) falls in the 2025 buffer season and 33.1 (95% CI 28.7 to 37.5) in the 2026 ABS season.
 PASS    W6.7 states D-P4-04's sign-agreement reading
-PASS    headline.csv leads with CH1_P1, W6.7's placebo row CH1_P1, CH1_W316, CH1_W67, CH1_W67_COHORT
+PASS    headline.csv leads with CH1_P1, W6.7's placebo row CH1_P1, CH1_W316, CH1_W67, CH1_W67_COHORT, CH1_W324_PANEL_BUF, CH1_W324_PANEL_ABS, CH1_W324_PANEL_TOTAL
 PASS    CH1_P1 prints T5's P1 estimates, 90% intervals, margins and verdicts Placebo P1 failed. With no rule change between 2023 and 2024, the called zone grew 10.8 square inches (90% CI 7.7 to 13.9), not inside its ±3 margin. The shadow-band strike rate rose 1.54 percentage points (90% CI 1.03 to 2.04), not inside its ±0.5 margin. So the three-regime decomposition is reported as descriptive (PREREGISTRATION.md section 8).
 PASS    CH1_P1 holds no number that is not T5's
 PASS    CH1_P1's verdict, reading and source row follow T5 verdict fail, row 2

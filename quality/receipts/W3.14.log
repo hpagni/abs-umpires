@@ -32,122 +32,142 @@ PASS    height rules: abs_cohort, single_offset, and one primary rule for main, 
 PASS    present: ch1/model/provenance.json
 PASS    GD-01 keys: models/ch1_W3_15_abs_cohort/provenance.json
 PASS    seal: models/ch1_W3_15_abs_cohort/provenance.json  2026-09-21
-PASS    one git_sha: models/ch1_W3_15_abs_cohort/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_abs_cohort/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_abs_cohort/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_abs_cohort/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_15_binned/provenance.json
 PASS    seal: models/ch1_W3_15_binned/provenance.json      2026-09-21
-PASS    one git_sha: models/ch1_W3_15_binned/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_binned/provenance.json     ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_binned/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_binned/provenance.json     dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_15_main/provenance.json
 PASS    seal: models/ch1_W3_15_main/provenance.json        2026-09-21
-PASS    one git_sha: models/ch1_W3_15_main/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_main/provenance.json       ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_main/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_main/provenance.json       dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_15_panel/provenance.json
 PASS    seal: models/ch1_W3_15_panel/provenance.json       2026-09-21
-PASS    one git_sha: models/ch1_W3_15_panel/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_panel/provenance.json      ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_panel/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_panel/provenance.json      dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_15_single_offset/provenance.json
 PASS    seal: models/ch1_W3_15_single_offset/provenance.json 2026-09-21
-PASS    one git_sha: models/ch1_W3_15_single_offset/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_single_offset/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_single_offset/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_single_offset/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_15_undersmooth/provenance.json
 PASS    seal: models/ch1_W3_15_undersmooth/provenance.json 2026-09-21
-PASS    one git_sha: models/ch1_W3_15_undersmooth/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_15_undersmooth/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_15_undersmooth/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_15_undersmooth/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/ch1_W3_16/provenance.json
 PASS    seal: models/ch1_W3_16/provenance.json             NULL
-PASS    one git_sha: models/ch1_W3_16/provenance.json      ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_16/provenance.json            ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_16/provenance.json      87b0a14747abfd0b960a5596a63015b4a4ede1d9
+PASS    GD-12: models/ch1_W3_16/provenance.json            87b0a14747abfd0b960a5596a63015b4a4ede1d9
+PASS    GD-01 keys: models/ch1_W3_19/provenance.json
+PASS    seal: models/ch1_W3_19/provenance.json             2026-09-21
+PASS    one git_sha: models/ch1_W3_19/provenance.json      3159fa91ee9d5b93785e1c901bf5df3dc20989e1
+PASS    GD-12: models/ch1_W3_19/provenance.json            3159fa91ee9d5b93785e1c901bf5df3dc20989e1
 PASS    GD-01 keys: models/ch1_W3_21/provenance.json
 PASS    seal: models/ch1_W3_21/provenance.json             2026-09-21
-PASS    one git_sha: models/ch1_W3_21/provenance.json      ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W3_21/provenance.json            ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W3_21/provenance.json      dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/ch1_W3_21/provenance.json            dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-01 keys: models/ch1_W3_24_compute/provenance.json
+PASS    seal: models/ch1_W3_24_compute/provenance.json     2026-09-21
+PASS    one git_sha: models/ch1_W3_24_compute/provenance.json ac08d162581e04a30ca14a378914cdcdbf6f0249
+PASS    GD-12: models/ch1_W3_24_compute/provenance.json    ac08d162581e04a30ca14a378914cdcdbf6f0249
+PASS    GD-01 keys: models/ch1_W3_24_figures/provenance.json
+PASS    seal: models/ch1_W3_24_figures/provenance.json     NULL
+PASS    one git_sha: models/ch1_W3_24_figures/provenance.json 9b6112134174132a73cae18d65055aeca4fd3682
+PASS    GD-12: models/ch1_W3_24_figures/provenance.json    9b6112134174132a73cae18d65055aeca4fd3682
+PASS    GD-01 keys: models/ch1_W3_24_tables/provenance.json
+PASS    seal: models/ch1_W3_24_tables/provenance.json      NULL
+PASS    one git_sha: models/ch1_W3_24_tables/provenance.json 9b6112134174132a73cae18d65055aeca4fd3682
+PASS    GD-12: models/ch1_W3_24_tables/provenance.json     9b6112134174132a73cae18d65055aeca4fd3682
 PASS    GD-01 keys: models/ch1_W6_7/provenance.json
 PASS    seal: models/ch1_W6_7/provenance.json              NULL
-PASS    one git_sha: models/ch1_W6_7/provenance.json       c3a5dede36662391f1a6f32fdb000ed8611c8816
-PASS    GD-12: models/ch1_W6_7/provenance.json             c3a5dede36662391f1a6f32fdb000ed8611c8816
+PASS    one git_sha: models/ch1_W6_7/provenance.json       c030c5fca363592b61c7d36b0b9cb855570d3779
+PASS    GD-12: models/ch1_W6_7/provenance.json             c030c5fca363592b61c7d36b0b9cb855570d3779
 PASS    GD-01 keys: models/ch1_W6_8/provenance.json
 PASS    seal: models/ch1_W6_8/provenance.json              NULL
-PASS    one git_sha: models/ch1_W6_8/provenance.json       c3a5dede36662391f1a6f32fdb000ed8611c8816
-PASS    GD-12: models/ch1_W6_8/provenance.json             c3a5dede36662391f1a6f32fdb000ed8611c8816
+PASS    one git_sha: models/ch1_W6_8/provenance.json       c030c5fca363592b61c7d36b0b9cb855570d3779
+PASS    GD-12: models/ch1_W6_8/provenance.json             c030c5fca363592b61c7d36b0b9cb855570d3779
 PASS    GD-01 keys: models/surface_abs_cohort/provenance.json
 PASS    seal: models/surface_abs_cohort/provenance.json    2026-09-21
-PASS    one git_sha: models/surface_abs_cohort/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_abs_cohort/provenance.json   ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_abs_cohort/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_abs_cohort/provenance.json   dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_binned/provenance.json
 PASS    seal: models/surface_binned/provenance.json        2026-09-21
-PASS    one git_sha: models/surface_binned/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_binned/provenance.json       ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_binned/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_binned/provenance.json       dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-01 keys: models/surface_framing/provenance.json
+PASS    seal: models/surface_framing/provenance.json       2026-09-21
+PASS    one git_sha: models/surface_framing/provenance.json f01de11c5ac8247acd3dc546045110a994bc4e83
+PASS    GD-12: models/surface_framing/provenance.json      f01de11c5ac8247acd3dc546045110a994bc4e83
 PASS    GD-01 keys: models/surface_main/provenance.json
 PASS    seal: models/surface_main/provenance.json          2026-09-21
-PASS    one git_sha: models/surface_main/provenance.json   ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_main/provenance.json         ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_main/provenance.json   dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_main/provenance.json         dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_panel/provenance.json
 PASS    seal: models/surface_panel/provenance.json         2026-09-21
-PASS    one git_sha: models/surface_panel/provenance.json  ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_panel/provenance.json        ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_panel/provenance.json  dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_panel/provenance.json        dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_placebo_p2_2022/provenance.json
 PASS    seal: models/surface_placebo_p2_2022/provenance.json 2022-10-05
-PASS    one git_sha: models/surface_placebo_p2_2022/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_placebo_p2_2022/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_placebo_p2_2022/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_placebo_p2_2022/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_placebo_p2_2023/provenance.json
 PASS    seal: models/surface_placebo_p2_2023/provenance.json 2023-10-01
-PASS    one git_sha: models/surface_placebo_p2_2023/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_placebo_p2_2023/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_placebo_p2_2023/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_placebo_p2_2023/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_placebo_p2_2024/provenance.json
 PASS    seal: models/surface_placebo_p2_2024/provenance.json 2024-09-30
-PASS    one git_sha: models/surface_placebo_p2_2024/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_placebo_p2_2024/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_placebo_p2_2024/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_placebo_p2_2024/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_placebo_p2_2025/provenance.json
 PASS    seal: models/surface_placebo_p2_2025/provenance.json 2025-09-28
-PASS    one git_sha: models/surface_placebo_p2_2025/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_placebo_p2_2025/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_placebo_p2_2025/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_placebo_p2_2025/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_placebo_p2_2026/provenance.json
 PASS    seal: models/surface_placebo_p2_2026/provenance.json 2026-09-21
-PASS    one git_sha: models/surface_placebo_p2_2026/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_placebo_p2_2026/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_placebo_p2_2026/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_placebo_p2_2026/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_plane2025_front/provenance.json
 PASS    seal: models/surface_plane2025_front/provenance.json 2025-09-28
-PASS    one git_sha: models/surface_plane2025_front/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_plane2025_front/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_plane2025_front/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_plane2025_front/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_plane2025_mid/provenance.json
 PASS    seal: models/surface_plane2025_mid/provenance.json 2025-09-28
-PASS    one git_sha: models/surface_plane2025_mid/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_plane2025_mid/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_plane2025_mid/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_plane2025_mid/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_single_offset/provenance.json
 PASS    seal: models/surface_single_offset/provenance.json 2026-09-21
-PASS    one git_sha: models/surface_single_offset/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_single_offset/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_single_offset/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_single_offset/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/surface_undersmooth/provenance.json
 PASS    seal: models/surface_undersmooth/provenance.json   2026-09-21
-PASS    one git_sha: models/surface_undersmooth/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/surface_undersmooth/provenance.json  ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/surface_undersmooth/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/surface_undersmooth/provenance.json  dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/umpire_me_sens_abs_prior/provenance.json
 PASS    seal: models/umpire_me_sens_abs_prior/provenance.json 2026-09-21
-PASS    one git_sha: models/umpire_me_sens_abs_prior/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/umpire_me_sens_abs_prior/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/umpire_me_sens_abs_prior/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/umpire_me_sens_abs_prior/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/umpire_me_sens_sd_exp1/provenance.json
 PASS    seal: models/umpire_me_sens_sd_exp1/provenance.json 2026-09-21
-PASS    one git_sha: models/umpire_me_sens_sd_exp1/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/umpire_me_sens_sd_exp1/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/umpire_me_sens_sd_exp1/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/umpire_me_sens_sd_exp1/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/umpire_me_sens_sd_exp4/provenance.json
 PASS    seal: models/umpire_me_sens_sd_exp4/provenance.json 2026-09-21
-PASS    one git_sha: models/umpire_me_sens_sd_exp4/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/umpire_me_sens_sd_exp4/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/umpire_me_sens_sd_exp4/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/umpire_me_sens_sd_exp4/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/umpire_me_ue_us/provenance.json
 PASS    seal: models/umpire_me_ue_us/provenance.json       2026-09-21
-PASS    one git_sha: models/umpire_me_ue_us/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/umpire_me_ue_us/provenance.json      ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/umpire_me_ue_us/provenance.json dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/umpire_me_ue_us/provenance.json      dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: models/umpire_me/provenance.json
 PASS    seal: models/umpire_me/provenance.json             2026-09-21
-PASS    one git_sha: models/umpire_me/provenance.json      ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/umpire_me/provenance.json            ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/umpire_me/provenance.json      dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: models/umpire_me/provenance.json            dcfb252aef8e0922369165ced171086cd46071f7
 PASS    GD-01 keys: ch1/model/provenance.json
 PASS    seal: ch1/model/provenance.json                    2026-09-21
-PASS    one git_sha: ch1/model/provenance.json             ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: ch1/model/provenance.json                   ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: ch1/model/provenance.json             dcfb252aef8e0922369165ced171086cd46071f7
+PASS    GD-12: ch1/model/provenance.json                   dcfb252aef8e0922369165ced171086cd46071f7
 
-check W3.14: 146 PASS, 0 FAIL, <elapsed> s
+check W3.14: 166 PASS, 0 FAIL, <elapsed> s
 GD-04: 0 violation(s) in R/ch1/20_surfaces.R
 GD-04: 0 violation(s) in R/lib/ch1_fits.R
 GD-04: 0 violation(s) in R/lib/ch1_estimands.R
