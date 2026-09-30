@@ -1,8 +1,8 @@
 # abs-umpires
 
-Decompose the change in the MLB called strike zone between 2024 and 2026 into a 2025
-umpire-grading component and a 2026 ABS component. Both sit on one scale: square inches of
-the 50% called-strike contour, and signed edge shifts in inches.
+Measure the change in the MLB called strike zone between 2024 and 2026 as two steps, one
+beside the 2025 umpire-grading change and one beside the 2026 ABS challenge system. Both sit
+on one scale: square inches of the 50% called-strike contour, and signed edge shifts in inches.
 
 The 2026 rollout of the ABS challenge system did not land on a stable baseline. The December
 2024 umpire labor agreement had already cut the grading buffer from two inches outside the
@@ -10,11 +10,14 @@ zone edge to three-quarters of an inch on either side of it. Published estimates
 2026 change either use 2025 as their baseline (Clemens, FanGraphs, 2026-04-28) or fold 2025
 into an untreated 2015-2025 trend (Lee et al., [arXiv](https://arxiv.org/abs/2609.25525),
 2026-09-22). A Baseball America series (2026-09-22) shows the 2025 zone already smaller than
-in any season from 2015 to 2024. None attributes that step to the grading change or puts an
-interval on it. This project adds 2022 to 2024 as a third regime under the earlier rule. One
-transition then identifies the grading change and the other identifies ABS net of it, and a
-genuinely untreated placebo pair sits inside 2022 to 2024. The evidence that no published work
-does this is in [docs/prior-art.md](docs/prior-art.md), section 6.1.
+in any season from 2015 to 2024. None puts an interval on that step against the seasons
+before it. This project adds 2022 to 2024 as a third regime under the earlier rule and
+measures each step net of the 2022-2024 trend, with a placebo pair inside 2022 to 2024. The
+pre-registered placebo failed: the zone grew 10.8 square inches (90% CI 7.7 to 13.9) from
+2023 to 2024 with no change to the zone or to umpire grading. Under the frozen plan
+([docs/DEVIATIONS.md](docs/DEVIATIONS.md), DEV-77) every step is therefore reported as
+descriptive, with no cause assigned. The evidence that no published work measures both steps
+this way is in [docs/prior-art.md](docs/prior-art.md), section 6.1.
 
 ## What is here
 

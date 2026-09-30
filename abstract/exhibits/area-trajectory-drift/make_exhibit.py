@@ -268,11 +268,11 @@ caption = (
     f"Figure 1. Area of the 50 percent strike contour (72-inch batter, 2024 pitch "
     f"mix), with 95% intervals. Blue brackets are the 2025 and 2026 steps net of the "
     f"2022{EN}2024 trend, {f1(gi['point'])} sq in per season (95%: {f1s(gi['lo95'])} to "
-    f"{f1s(gi['hi95'])}). Each starts at the prior season's level plus that trend. "
+    f"{f1s(gi['hi95'])}). Each starts at the prior season plus that trend. "
     f"The shaded bar behind each bracket is {f1s(p1_est)} sq in tall, the 2023-to-2024 "
-    f"change marked by the rust bracket ({pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}). "
-    f"Those seasons had no change to the zone or umpire grading, and the pre-registered "
-    f"placebo failed.\n"
+    f"change (rust bracket; {pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}). "
+    f"Those seasons had no zone or grading change; the pre-registered placebo failed, so "
+    f"the labels name no cause.\n"
 )
 n_words = len(caption.split())
 if n_words > 90:

@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-09-30T20:51:28.781778</dc:date>
+    <dc:date>2026-09-30T21:21:48.747276</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -159,7 +159,7 @@ L 463.68 249.696
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #4d4d4d" x="428.189434" y="58.949125" transform="rotate(-0 428.189434 58.949125)">[−0.41, 0.24]</text>
   </g>
   <g id="text_23">
-   <text style="font-size: 9px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="4.32" y="80.859375" transform="rotate(-0 4.32 80.859375)">2023 to 2024, no rule change</text>
+   <text style="font-size: 9px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start" x="4.32" y="80.859375" transform="rotate(-0 4.32 80.859375)">2023 to 2024, zone rules unchanged</text>
   </g>
   <g id="text_24">
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="91.539" transform="rotate(-0 4.32 91.539)">(placebo, pre-registered on area and rate;</text>
@@ -435,16 +435,16 @@ L 463.68 249.696
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="273.051" transform="rotate(-0 4.32 273.051)">90% interval on area and rate, and each of its cells names its level. A positive value moves an edge up or outward, or</text>
   </g>
   <g id="text_115">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">enlarges the area. Because a season pair with no rule change moved beyond its margin, no step is attributed to its</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">enlarges the area. Because a season pair with no change to the zone or umpire grading moved beyond its margin, no step</text>
   </g>
   <g id="text_116">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">rule; the 2025 and 2026 labels name the period only. Top-edge intervals read slightly too narrow. The shadow band is</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">is attributed to its rule; the 2025 and 2026 labels name the period only. Top-edge intervals read slightly too narrow.</text>
   </g>
   <g id="text_117">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">the pitches within 3 inches, either side, of where the ball just touches the zone edge. Edge cells of the placebo row</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">The shadow band is the pitches within 3 inches, either side, of where the ball just touches the zone edge. Edge cells</text>
   </g>
   <g id="text_118">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.931" transform="rotate(-0 4.32 311.931)">were added after the tag and are not pre-registered. Dashes: not estimated for that row.</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.931" transform="rotate(-0 4.32 311.931)">of the placebo row were added after the tag and are not pre-registered. Dashes: not estimated for that row.</text>
   </g>
   <g id="text_119">
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="321.651" transform="rotate(-0 4.32 321.651)">Exploratory, not pre-registered: against the 2022-2024 mean plus one season of trend, the 2025 area step is −19.7</text>

@@ -45,7 +45,7 @@ Data: `out/tables/F3_data.csv`. Vector: `out/figures/F3.pdf`.
 
 Each umpire's 2025 to 2026 response relative to the league's, in inches, as a posterior median with a 90% interval from W3.18's primary model, for the 88 umpires with cells in both seasons, ranked. No umpire is named: CH1-A6's reliability gate was not met, so under D-21 no per-umpire row is published. The inset is the posterior of tau, the between-umpire SD of the response. Its rule marks CH1-A6's materiality threshold, 0.20 in, and P(tau >= 0.20 in) is 0.000.
 
-Data: `out/tables/F4_data.csv`. Vector: `out/figures/F4.pdf`.
+Data: `out/tables/F4_data.csv`, kept local and not published, since its 88 rows are a per-umpire table (D-21, annex 8.5; DEV-83). Vector: `out/figures/F4.pdf`.
 
 ### F5. AAA challenge format versus full ABS
 

@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 494 of 495,
+Variant filled: owner. Words counted: 493 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -111,8 +111,9 @@ The numbers support **2025**: the 2025 step's interval excludes zero, so the zon
 ## (e) Which abstract variant applies
 
 **descriptive** (`abstract/variants/ssac2027_abstract.descriptive.md`), because P1
-failed. The three D-66 variants (main, null-buffer, sign-reversal) all say "accounts
-for", so none carries the consequence. D-P6-01 in DECISIONS.md records it.
+failed. The three D-66 variants (main, null-buffer, sign-reversal) were written
+before the placebo ran; their attributive wording was replaced under DEV-77 and they
+are not the submission. D-P6-01 in DECISIONS.md records it.
 `scripts/abstract.sh` fills it by default. The owner may reword it at R1, but not
 restore causal wording.
 
@@ -134,7 +135,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 527 words with the inline table, OVER THE CAP by 32 words after every rung. Cuts: none.
+The no-upload body counts 526 words with the inline table, OVER THE CAP by 31 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -179,13 +180,15 @@ The slots as printed in this fill:
 | D_BUF | 23.4 (95% CI 18.6 to 28.3) | 6 |
 | D_ABS | 33.1 (95% CI 28.7 to 37.5) | 6 |
 | P2_AREA_MAX | 6.8 square inches | 3 |
-| DRIFT_2324_HW | 0.12 (95% CI 0.06 to 0.18) | 6 |
-| DRIFT_2324_TOP | 0.47 (95% CI 0.37 to 0.57) | 6 |
+| HW_BUF_LOSS | 0.41 (95% CI 0.33 to 0.49) | 6 |
+| BOT_ABS_PT | 0.65 | 1 |
+| T1_ABS_TOP | 0.63 (95% CI 0.50 to 0.76) | 6 |
+| DRIFT_2324_TOP_PT | 0.47 | 1 |
 | A_PUB_LOSS | 8 to 22 | 3 |
 | A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
 | A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
 | SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
-| CALL | The zone had already shrunk in 2025, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step. | 23 |
+| CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step. | 26 |
 | SHARE_ABS | 59 | 1 |
 | SHARE_ABS_CI | 53 to 65 | 3 |
 

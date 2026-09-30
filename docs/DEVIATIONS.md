@@ -1739,6 +1739,57 @@ Stamped 2026-09-30T20:11:45+02:00, Europe/Madrid. Owner W3, fleet phase 08. File
    `R/ch1/71_tables.R` reads it only once `quality/receipts/W3.22.json` is PASS. Until then T8 is a
    placeholder, and `make tables` and the W3.24 test fail on it.
 
+## DEV-81: SOP section 9.2, the Chapter 1 acceptance evaluation, and the consequences it applies
+
+Stamped 2026-09-30T20:46:58+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `out/tables/acceptance.csv`
+(untracked, one row per criterion), `logs/evidence/CH1-acceptance.log`, `logs/evidence/MT-03.log`,
+`logs/evidence/MT-04.log`. Status: OPEN until the owner's RESULT CALL line exists and the rows
+marked FAIL below are either met or reported as the finding.
+
+Applied as pre-registered, not a departure. This entry records which frozen consequences were
+applied when CH1-A1 to CH1-A14 were evaluated at HEAD 0a76fd7. The evaluator changed no model, fit
+or published number.
+
+Verdicts: 9 PASS (CH1-A1, A2, A4, A6, A8, A11, A12, A13, A14), 5 FAIL (CH1-A3, A5, A7, A9, A10).
+Both hard gates, CH1-A1 and CH1-A2, pass.
+
+1. **CH1-A3 failed; the chapter is descriptive.** Placebo P1, 2024 minus 2023: shadow rate +1.540 pp
+   (90% CI 1.034 to 2.038, margin ±0.5 pp); area +10.786 sq in (90% CI 7.727 to 13.941, margin
+   ±3 sq in). The consequence DEV-77 applied was checked, not re-applied. `out/tables/headline.csv`
+   still leads with CH1_P1. T5 reads `descriptive` on every row. A causal-language scan found 0
+   causal claims in `docs/ch1.md`, `out/ch1/prose/framing.md`, `out/tables/headline.csv`,
+   `out/tables/T*.csv`, `out/ch1/tab/T*.csv` and `abstract/*.md`. Every hit is a disclaimer that
+   the text "names no cause". Correction, same day: that scan looked for the word "cause" only.
+   The verifier found attributive wording still standing in `abstract/ssac2027_abstract.md`, the
+   two D-66 variants and `README.md`; DEV-83 records its removal.
+2. **CH1-A5 failed on area; reported as a limitation.** Edges meet the rule. Binned minus bam on
+   area is −6.02 sq in for Delta_buffer and −7.62 sq in for Delta_ABS. Both lie outside the bam
+   95% interval and exceed 3 sq in. Under PREREGISTRATION.md 12.1 the gap is reported as a
+   limitation and not resolved. T4 carries `ch1_a5_within = false`.
+3. **CH1-A6: no per-umpire table.** tau median 0.041 in (95% CI 0.002 to 0.100) and
+   P(tau ≥ 0.20 in) = 0.000, so the rule does not fire. The D-60 curve (annex 8.5) shows the
+   reliability gate cannot be reached. Observed split-half reliability of the response is 0.169.
+   The bounded null is the reported result, and no per-umpire row is published (D-21).
+4. **CH1-A7 failed on the top edge; reported as the finding (SOP 9.6 item 8).** The top edge's 95%
+   interval covers the truth in 91 of 100 (bound 93). Its null TOST falls inside ±0.10 in on 44 of
+   50 (bound 47). The disclosure stays as D-R0-04 and DEV-67 wrote it.
+5. **CH1-A9 failed: the multiverse is incomplete.** 0 sign flips on either component over the 31
+   computed grid rows. Cell `postseason_in` is deferred because the warehouse holds no 2022 to 2025
+   postseason called pitch. W3.22 has no receipt. Sign stability is stated only over the 31
+   computed rows. The share clause is met: the sum's 95% interval, −62.78 to −49.75 sq in,
+   excludes zero.
+6. **CH1-A10 cannot be evaluated yet.** The sealed set opens after 2026-11-01 (W3.23), and
+   `R/ch1/60_sealed_run.R` does not exist. No consequence is applied.
+7. **CH1-A11 passes, r = 0.949, n = 181.** Framing stays primary.
+
+The two closing clauses of SOP 9.2:
+
+- `make ch1 && make test-ch1` exits 0 but regenerates 0 figures and 0 tables. Both targets are
+  still the W1.14 placeholders, `scripts/ch1.sh` and `scripts/test_ch1.sh`, marked
+  ABSUMP_PLACEHOLDER. The clause is not met. The fix is phase 08's build work, not an owner item.
+- `out/ch1/decision.md` does not exist, so there is no `RESULT CALL:` line. That line is an owner
+  item and no agent writes it.
+
 ## DEV-82: W6.10, six post-tag exploratory numbers in the abstract and Table 1
 
 Stamped 2026-09-30T20:51:43+02:00, Europe/Madrid. Owner W6, the abstract lane. Files:
@@ -1771,3 +1822,30 @@ Notes on the table:
    point equals T4's g to 1e-9. The baseline follows the reviewer's wording: the three-season mean
    plus one season of g.
 3. The P1 verdict and the 2025 and 2026 steps are unchanged. No frozen file was edited.
+
+## DEV-83: the placebo consequence applied to the superseded templates, the README and the F4 sidecar
+
+Stamped 2026-09-30T21:12:59+02:00, Europe/Madrid. Owner W6, the abstract lane, after the phase 08
+acceptance verifier (DEV-81, item 1). Files: `abstract/ssac2027_abstract.md`,
+`abstract/variants/ssac2027_abstract.null-buffer.md`, `abstract/variants/ssac2027_abstract.sign-reversal.md`,
+`README.md`, `tools/comms/r1_agenda.py`, `.gitignore`, `docs/ch1.md`.
+
+Applied as pre-registered, not a departure. PREREGISTRATION.md (prereg-v1) says that when P1
+fails "the causal language is removed from every artifact". DEV-77 applied that to the submission
+and the chapter tables, and DEV-81 recorded a scan that found nothing else. The scan was too narrow.
+What changed:
+
+1. The three D-66 templates written before the placebo ran (main, null-buffer, sign-reversal)
+   said "separating" in the title and "accounts for" in Results. Each now names the steps beside
+   their rule changes and states that the placebo failed, so neither step is assigned to its rule.
+   The templates stay in the tree because `quality/steps.yml`, `ops/abstract_dryrun.sh` and the
+   W6 tests read them; none is the submission (D-P6-01).
+2. `README.md` said one transition "identifies the grading change and the other identifies ABS
+   net of it" over "a genuinely untreated placebo pair". It now says the steps are measured net of
+   the 2022-2024 trend, that the placebo failed (+10.8 sq in, 90% CI 7.7 to 13.9), and that every
+   step is reported as descriptive under DEV-77.
+3. `out/tables/F4_data.csv`, committed in 0a76fd7 with 88 anonymised per-umpire rows and their
+   intervals, is removed from the index and ignored. Annex 8.5 says no per-umpire table is
+   published, whatever the fit returns. The figure F4 (anonymised, ranks only, D-21) stays.
+
+No number, fit or published result changed.

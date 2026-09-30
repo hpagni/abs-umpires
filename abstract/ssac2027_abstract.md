@@ -1,4 +1,4 @@
-# Three regimes of the called strike zone: separating MLB's 2025 umpire grading change from the 2026 ABS challenge system
+# Three regimes of the called strike zone: the steps beside MLB's 2025 umpire grading change and the 2026 ABS challenge system
 
 ## Introduction
 
@@ -10,7 +10,7 @@ We fit called-strike probability on the 2022-2026 MLB regular seasons: <<N_CALLE
 
 ## Results
 
-The buffer change accounts for <<D_BUF>> square inches of the contraction and the challenge system for <<D_ABS>>. The 2022-to-2024 pre-trend is <<D_PRE>> square inches per year. The plane change accounts for <<D_PLANE_TOP>> inches at the top edge and <<D_PLANE_BOT>> at the bottom. After that correction the 2025-to-2026 area change is <<A_CORR>> against the published <<A_PUB>>. After shrinkage the between-umpire standard deviation of the 2026 top-edge shift is <<SD_UMP>> inches, split-half reliability <<REL_UMP>> across <<N_UMP>> umpires.
+The 2025 step, beside the buffer change, is <<D_BUF>> square inches, and the 2026 step, beside the challenge system, is <<D_ABS>>. The placebo failed, so neither step is assigned to its rule. The 2022-to-2024 pre-trend is <<D_PRE>> square inches per year. The plane change moves the top edge <<D_PLANE_TOP>> inches and the bottom <<D_PLANE_BOT>>. After that correction the 2025-to-2026 area change is <<A_CORR>> against the published <<A_PUB>>. After shrinkage the between-umpire standard deviation of the 2026 top-edge shift is <<SD_UMP>> inches, split-half reliability <<REL_UMP>> across <<N_UMP>> umpires.
 
 ## Conclusion
 

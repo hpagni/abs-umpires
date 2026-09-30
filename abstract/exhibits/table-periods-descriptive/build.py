@@ -44,7 +44,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-ROOT = Path(__file__).resolve().parents[3]  # /Users/hudsonpagni/sports-project
+ROOT = Path(__file__).resolve().parents[3]  # the repository root
 OUT = Path(__file__).resolve().parent
 SLUG = "table-periods-descriptive"
 
@@ -298,7 +298,7 @@ ROWS = [
     {"label": ["2022-2024 trend, per season"], "cells": {e: t4_cell(e, "g") for e in ESTIMANDS}},
     {
         "label": [
-            "2023 to 2024, no rule change",
+            "2023 to 2024, zone rules unchanged",
             "(placebo, pre-registered on area and rate;",
             f"margins ±{p1_margin_area} sq in and ±{p1_margin_shadow} pp): FAILED",
         ],
@@ -334,8 +334,9 @@ SIGN_SENTENCE = "A positive value moves an edge up or outward, or enlarges the a
 FOOTNOTE = (
     f"Cells are point [95% interval] from coefficient draws of the fitted model; the placebo row "
     f"prints its pre-registered {P1_LEVEL} interval on area and rate, and each of its cells names "
-    f"its level. {SIGN_SENTENCE} Because a season pair with no rule change moved beyond its "
-    "margin, no step is attributed to its rule; the 2025 and 2026 labels name the period only. "
+    f"its level. {SIGN_SENTENCE} Because a season pair with no change to the zone or umpire "
+    "grading moved beyond its margin, no step is attributed to its rule; the 2025 and 2026 "
+    "labels name the period only. "
     "Top-edge intervals read slightly too narrow. The shadow band is the pitches within 3 inches, "
     "either side, of where the ball just touches the zone edge. Edge cells of the placebo row were "
     "added after the tag and are not pre-registered. Dashes: not estimated for that row."
@@ -557,8 +558,8 @@ alt = (
     "Table with six rows and five numeric columns: top edge and bottom edge and half-width "
     "in inches, area in square inches, and shadow-band strike rate in percentage points, "
     "each cell a point estimate with a 95 percent interval. Rows: the 2022-2024 trend per "
-    f"season (area {span(area['trend'])} sq in); the 2023-to-2024 change with no rule "
-    f"change, the pre-registered placebo with a {P1_LEVEL} interval, area "
+    f"season (area {span(area['trend'])} sq in); the 2023-to-2024 change with the zone "
+    f"rules unchanged, the pre-registered placebo with a {P1_LEVEL} interval, area "
     f"{span(area['placebo'])} sq in against a margin of {p1_margin_area} and shadow-band "
     f"rate {span(p1_shadow)} pp against {p1_margin_shadow}, marked FAILED; the 2025 step "
     f"net of trend, area {span(area['s2025'])} sq in; the 2026 step net of trend, area "

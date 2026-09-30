@@ -16,63 +16,345 @@
     "percent": 0
   },
   "slots": {
-    "N_CALLED": {"kind": "count", "units": "counts", "section": "Methods", "ledger_slot": "N_CALLED_P0"},
-    "N_GAMES": {"kind": "count", "units": "counts", "section": "Methods", "ledger_slot": "N_GAMES_P0"},
-    "N_CHAL": {"kind": "count", "units": "counts", "section": "Methods"},
-    "D_BUF": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "D_ABS": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "D_PRE": {"kind": "estimate", "orient": "signed", "units": "sq in per season", "section": "Results"},
-    "T1_BUF_TOP": {"kind": "estimate", "orient": "contraction", "units": "in", "section": "Results"},
-    "T1_ABS_TOP": {"kind": "estimate", "orient": "contraction", "units": "in", "section": "Results"},
-    "T1_BUF_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "T1_ABS_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "D_PLANE_TOP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "D_PLANE_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "A_CORR": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Results"},
-    "A_PUB": {"kind": "range", "orient": "signed", "units": "sq in", "digits": 0, "suffix": " square inches", "section": "Results"},
-    "SD_UMP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "REL_UMP": {"kind": "estimate", "orient": "signed", "units": "reliability", "section": "Results"},
-    "N_UMP": {"kind": "count", "units": "counts", "section": "Results"},
-    "P1_AREA": {"kind": "estimate90", "orient": "signed", "units": "sq in", "section": "Results"},
-    "P1_SHADOW": {"kind": "estimate90", "orient": "signed", "units": "pp", "section": "Results"},
-    "P2_AREA_MAX": {"kind": "value", "orient": "signed", "units": "sq in", "suffix": " square inches", "section": "Results"},
-    "A5_BUF": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "A5_ABS": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "A5_TOL": {"kind": "value", "orient": "signed", "units": "sq in", "digits": 0, "section": "Results"},
-    "N_CHAL_AGREE": {"kind": "count", "units": "counts", "section": "Methods"},
-    "AREA_2022": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
-    "AREA_2023": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
-    "AREA_2024": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
-    "AREA_2025": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
-    "AREA_2026": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
-    "D_TOTAL": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "HW_BUF_LOSS": {"kind": "estimate", "orient": "contraction", "units": "in", "section": "Results", "ledger_slot": "T1_BUF_HW"},
-    "A_CONV": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "A_CORR_LOSS": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results", "ledger_slot": "A_CORR"},
-    "A_PUB_LOSS": {"kind": "range", "orient": "contraction", "units": "sq in", "digits": 0, "section": "Results", "ledger_slot": "A_PUB"},
-    "SHARE_ABS": {"kind": "value", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion"},
-    "SHARE_ABS_CI": {"kind": "range", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion", "ledger_slot": "SHARE_ABS"},
-    "DRIFT_2223_AREA": {"kind": "estimate90", "orient": "contraction", "units": "sq in", "section": "Results"},
-    "DRIFT_2324_TOP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "DRIFT_2324_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Table 1"},
-    "DRIFT_2324_HW": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
-    "BASE_MEAN_BUF": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Table 1 footnote"},
-    "BASE_2023_BUF": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Table 1 footnote"},
-    "CALL": {"kind": "owner", "reserve_words": 25, "section": "Conclusion"},
-    "BREAK_YEAR": {"kind": "owner", "reserve_words": 1, "section": "Conclusion"}
+    "N_CALLED": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Methods",
+      "ledger_slot": "N_CALLED_P0"
+    },
+    "N_GAMES": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Methods",
+      "ledger_slot": "N_GAMES_P0"
+    },
+    "N_CHAL": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Methods"
+    },
+    "D_BUF": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "D_ABS": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "D_PRE": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "sq in per season",
+      "section": "Results"
+    },
+    "T1_BUF_TOP": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "in",
+      "section": "Results"
+    },
+    "T1_ABS_TOP": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "in",
+      "section": "Results"
+    },
+    "T1_BUF_BOT": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "T1_ABS_BOT": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "D_PLANE_TOP": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "D_PLANE_BOT": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "A_CORR": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "A_PUB": {
+      "kind": "range",
+      "orient": "signed",
+      "units": "sq in",
+      "digits": 0,
+      "suffix": " square inches",
+      "section": "Results"
+    },
+    "SD_UMP": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "REL_UMP": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "reliability",
+      "section": "Results"
+    },
+    "N_UMP": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Results"
+    },
+    "P1_AREA": {
+      "kind": "estimate90",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "P1_SHADOW": {
+      "kind": "estimate90",
+      "orient": "signed",
+      "units": "pp",
+      "section": "Results"
+    },
+    "P2_AREA_MAX": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "suffix": " square inches",
+      "section": "Results"
+    },
+    "A5_BUF": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "A5_ABS": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "A5_TOL": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "digits": 0,
+      "section": "Results"
+    },
+    "N_CHAL_AGREE": {
+      "kind": "count",
+      "units": "counts",
+      "section": "Methods"
+    },
+    "AREA_2022": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "AREA_2023": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "AREA_2024": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "AREA_2025": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "AREA_2026": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "D_TOTAL": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "HW_BUF_LOSS": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "in",
+      "section": "Results",
+      "ledger_slot": "T1_BUF_HW"
+    },
+    "A_CONV": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "A_CORR_LOSS": {
+      "kind": "estimate",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results",
+      "ledger_slot": "A_CORR"
+    },
+    "A_PUB_LOSS": {
+      "kind": "range",
+      "orient": "contraction",
+      "units": "sq in",
+      "digits": 0,
+      "section": "Results",
+      "ledger_slot": "A_PUB"
+    },
+    "SHARE_ABS": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "percent",
+      "digits": 0,
+      "section": "Conclusion"
+    },
+    "SHARE_ABS_CI": {
+      "kind": "range",
+      "orient": "signed",
+      "units": "percent",
+      "digits": 0,
+      "section": "Conclusion",
+      "ledger_slot": "SHARE_ABS"
+    },
+    "DRIFT_2223_AREA": {
+      "kind": "estimate90",
+      "orient": "contraction",
+      "units": "sq in",
+      "section": "Results"
+    },
+    "DRIFT_2324_TOP": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "DRIFT_2324_BOT": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Table 1"
+    },
+    "DRIFT_2324_HW": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results"
+    },
+    "BASE_MEAN_BUF": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Table 1 footnote"
+    },
+    "BASE_2023_BUF": {
+      "kind": "estimate",
+      "orient": "signed",
+      "units": "sq in",
+      "section": "Table 1 footnote"
+    },
+    "CALL": {
+      "kind": "owner",
+      "reserve_words": 25,
+      "section": "Conclusion"
+    },
+    "BREAK_YEAR": {
+      "kind": "owner",
+      "reserve_words": 1,
+      "section": "Conclusion"
+    },
+    "HW_BUF_PT": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "in",
+      "section": "Results",
+      "ledger_slot": "T1_BUF_HW"
+    },
+    "TOP_ABS_PT": {
+      "kind": "value",
+      "orient": "contraction",
+      "units": "in",
+      "section": "Results",
+      "ledger_slot": "T1_ABS_TOP"
+    },
+    "BOT_ABS_PT": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results",
+      "ledger_slot": "T1_ABS_BOT"
+    },
+    "DRIFT_2324_TOP_PT": {
+      "kind": "value",
+      "orient": "signed",
+      "units": "in",
+      "section": "Results",
+      "ledger_slot": "DRIFT_2324_TOP"
+    }
   },
   "table1": {
     "rows": [
-      ["PRE", "Pre-trend, per season, 2022-2024"],
-      ["BUF", "Buffer change, 2025"],
-      ["ABS", "Challenge system, 2026"],
-      ["PLANE", "Plate-plane shift, 2025"]
+      [
+        "PRE",
+        "Pre-trend, per season, 2022-2024"
+      ],
+      [
+        "BUF",
+        "Buffer change, 2025"
+      ],
+      [
+        "ABS",
+        "Challenge system, 2026"
+      ],
+      [
+        "PLANE",
+        "Plate-plane shift, 2025"
+      ]
     ],
     "cols": [
-      ["TOP", "Top edge, in", "in"],
-      ["BOT", "Bottom edge, in", "in"],
-      ["HW", "Half-width, in", "in"],
-      ["AREA", "Area, sq in", "sq in"]
+      [
+        "TOP",
+        "Top edge, in",
+        "in"
+      ],
+      [
+        "BOT",
+        "Bottom edge, in",
+        "in"
+      ],
+      [
+        "HW",
+        "Half-width, in",
+        "in"
+      ],
+      [
+        "AREA",
+        "Area, sq in",
+        "sq in"
+      ]
     ]
   },
   "_ch1_a5": "A5_BUF, A5_ABS and A5_TOL carry CH1-A5's miss on the area into the descriptive variant's Conclusion, where the frozen rule reports it as a limitation. W6.7 writes them from T4_decomposition.csv: binned_minus_bam for delta_buffer and delta_abs, and ch1_a5_tolerance. A5_BUF and A5_ABS are printed in the contraction orientation, so a binned loss larger than the smooth fit's reads as a positive number in a sentence that calls the binned losses larger. A5_TOL is printed whole, as the tolerance is written.",
