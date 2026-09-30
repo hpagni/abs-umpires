@@ -354,12 +354,12 @@ recovery_caption <- function(rc) {
     " Top-edge caveat (annex 8.7, D-R0-04): every top-edge interval here is read as slightly too narrow. ",
     "In the synthetic recovery the top edge's 95% interval covered the truth in ", rc[["top_cover_hits"]], " of ",
     rc[["top_cover_n"]], " replicates, against a bound of ", rc[["top_cover_bound"]], ". Its null 90% interval lay ",
-    "inside +/-", f_d(rc[["top_null_margin_in"]], 2), " in for ", rc[["top_null_hits"]], " of ", rc[["top_null_n"]],
+    "within ", f_d(rc[["top_null_margin_in"]], 2), " in of zero for ", rc[["top_null_hits"]], " of ", rc[["top_null_n"]],
     ", against ", rc[["top_null_bound"]], ", so a top-edge equivalence reading is underpowered. Half-width shortfall ",
     "(annex 8.7): its null 90% interval covered zero in ", rc[["hw_null_hits"]], " of ", rc[["hw_null_n"]],
     " replicates, against a bound of ", rc[["hw_null_bound"]], ".")
 }
-recovery_rows <- function(fig, rc) const_rows(fig, c(rc, recovery_ci_pct = 95, recovery_null_ci_pct = 90))
+recovery_rows <- function(fig, rc) const_rows(fig, c(rc, recovery_ci_pct = 95, recovery_null_ci_pct = 90, annex_section = 8.7))
 
 ## --- F1 ----------------------------------------------------------------------------------------
 
