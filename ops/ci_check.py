@@ -13,7 +13,10 @@ checked without a runner:
   C3  ci.yml has exactly the six jobs, each on ubuntu-latest with steps, no `needs`
       (so all six run in parallel) and timeout-minutes at most 8; seal-guard likewise
   C4  every `uses:` is one of the pinned actions and nothing else
-  C5  each job runs the SOP table's commands; the r job compiles no Stan
+  C5  each job runs the SOP table's commands; no job compiles Stan; the python and
+      guard jobs carry the prerequisites the W9.10 rehearsal showed a fresh runner
+      needs (xdist PYTHONPATH, R for the seam tests, the git hooks, -n 4 under the
+      red team); ops/ci_rehearse.py runs the jobs themselves on a clean clone
   C6  zero MLB calls: arm first and audit last in every job, the enforcement script's
       selftest, no MLB-family host named in a workflow, every MLB-family host named in
       a tracked file on the sinkhole list
@@ -219,8 +222,26 @@ def check_commands(ci: dict) -> None:
     setup_r = [s for s in r_job.get("steps", []) if str(s.get("uses", "")).startswith("r-lib/")]
     if not setup_r or str(setup_r[0].get("with", {}).get("r-version")) != "4.5.2":
         problems.append("r: setup-r is not pinned to R 4.5.2")
-    r_all = yaml.safe_dump(r_job)
-    problems += [f"r: Stan token {t!r} present" for t in STAN_TOKENS if t in r_all]
+    # No Stan compile anywhere in CI: the python job restores R too, so every job
+    # is scanned, not only r.
+    for name in JOBS:
+        dumped = yaml.safe_dump(jobs.get(name, {}))
+        problems += [f"{name}: Stan token {t!r} present" for t in STAN_TOKENS if t in dumped]
+    # The prerequisites the W9.10 rehearsal showed the SOP's own lines need on a
+    # fresh runner (see the comments above the python and guard jobs in ci.yml).
+    py_job = jobs.get("python", {})
+    py_text = job_text(py_job)
+    if "tests/guard" not in str(py_job.get("env", {}).get("PYTHONPATH", "")):
+        problems.append("python: PYTHONPATH lacks tests/guard, xdist dies on VacuousGuard")
+    if "r-lib/actions/setup-r@v2" not in uses_of(py_job) or "renv::restore(" not in py_text:
+        problems.append("python: no R and renv library for the seam tests in tests/unit")
+    if "pre-commit install" not in py_text or "ops/install_git_hooks.sh" not in py_text:
+        problems.append("python: git hooks not installed for tests/unit/test_layout.py")
+    g_env = jobs.get("guard", {}).get("env", {})
+    if "-n 4" not in str(g_env.get("PYTEST_ADDOPTS", "")):
+        problems.append("guard: no PYTEST_ADDOPTS -n 4, the serial red team is past 8 minutes")
+    if "tests/guard" not in str(g_env.get("PYTHONPATH", "")):
+        problems.append("guard: PYTHONPATH lacks tests/guard, xdist dies on VacuousGuard")
     for name in ("guard", "secrets", "python"):
         co = jobs.get(name, {}).get("steps", [{}])[0]
         if co.get("with", {}).get("fetch-depth") != 0:
@@ -233,7 +254,8 @@ def check_commands(ci: dict) -> None:
         "C5",
         "SOP commands",
         not problems,
-        "every command in the W1.16 table, r without a Stan compile, dbt on target ci only"
+        "every command in the W1.16 table, no Stan compile in any job, dbt on target ci only, "
+        "python and guard prerequisites present"
         if not problems
         else "; ".join(problems),
     )

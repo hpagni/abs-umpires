@@ -145,10 +145,31 @@ jobs:
           if-no-files-found: warn
 
   # ---------------------------------------------------------------- python
+  # The SOP's pytest line runs unchanged. Three prerequisites make it runnable on a
+  # fresh runner; without them a clean clone of HEAD fails it on this Mac (W9.10
+  # rehearsal, ops/ci_rehearse.py, 2026-09-30):
+  #   - PYTHONPATH carries tests/guard. Under -n 4 the xdist controller re-imports the
+  #     module that defines a warning's class to rebuild the warning a worker sent it;
+  #     tests/guard/test_seal_immutability.py defines VacuousGuard, which it raises on
+  #     a runner because the seal there is empty, and the controller, which never
+  #     collected tests/guard, dies with INTERNALERROR (exit 3) on the import.
+  #   - R 4.5.2 with the renv library. tests/unit crosses the R seam: RP-05
+  #     (test_arrow_seam.py), the R HTTP client (test_http_etiquette.py) and the
+  #     abstract ledger renderers call Rscript and fail by design when it is absent.
+  #     The renv cache is the r job's own key, so the two jobs share one restore.
+  #   - the git hooks, installed the way ops/bootstrap.sh installs them (steps 3 and
+  #     4): tests/unit/test_layout.py asserts the W2.1 guard and the preserved W1.13
+  #     framework hook in .git/hooks, which a fresh clone does not have.
+  # No Stan compile here either: nothing installs CmdStan and nothing fits a model.
   python:
     name: python
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      PYTHONPATH: ${{ github.workspace }}/tests/guard
+      RENV_PATHS_ROOT: /home/runner/.cache/R/renv
+      RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
+      CMDSTANR_NO_VER_CHECK: "true"
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -166,6 +187,29 @@ jobs:
 
       - name: uv sync --locked
         run: uv sync --locked
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.5.2"
+          use-public-rspm: true
+
+      - uses: actions/cache@v6.1.0
+        with:
+          path: /home/runner/.cache/R/renv
+          key: renv-${{ runner.os }}-R4.5.2-${{ hashFiles('renv.lock') }}
+          restore-keys: |
+            renv-${{ runner.os }}-R4.5.2-
+
+      - name: renv::restore(), the R side of the seam tests
+        shell: Rscript {0}
+        run: |
+          renv::restore(prompt = FALSE)
+
+      - name: git hooks, as ops/bootstrap.sh installs them
+        run: |
+          set -eu
+          uv run --locked pre-commit install
+          sh ops/install_git_hooks.sh
 
       - name: pytest unit, fixtures, guard
         run: uv run --locked pytest tests/unit tests/fixtures tests/guard -q -n 4
@@ -331,10 +375,20 @@ jobs:
           if-no-files-found: warn
 
   # ---------------------------------------------------------------- guard
+  # The two make targets run unchanged, with xdist under them. prove-guard-redteam
+  # calls `make test-guard` 34 times; serial, that took 15 s + 485 s on a clean clone
+  # of HEAD on this Mac, past the 8-minute budget before a runner's slower cores are
+  # counted (R-14). With PYTEST_ADDOPTS="-n 4" it took 5 s + 187 s and still caught
+  # 34 of 34 plants, because the red team requires the plant's own GD FAIL line and
+  # not only a non-zero exit. PYTHONPATH is the python job's xdist repair, for the
+  # same VacuousGuard warning.
   guard:
     name: guard
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      PYTEST_ADDOPTS: "-n 4"
+      PYTHONPATH: ${{ github.workspace }}/tests/guard
     steps:
       - uses: actions/checkout@v7.0.1
         with:
