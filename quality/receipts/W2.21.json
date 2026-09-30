@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "f993c28953bd6e8d52dc7111f1502eb6b407188b",
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W2.21.log",
   "owner": "W2",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W2.21",
-  "timestamp_madrid": "2026-09-30 05:34:30 CEST",
+  "timestamp_madrid": "2026-09-30 08:55:50 CEST",
   "title": "Exports and attribution, the out/ grain and size gate"
 }

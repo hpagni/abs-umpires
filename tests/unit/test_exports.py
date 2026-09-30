@@ -34,6 +34,17 @@ FILES THAT ARE NOT TABLES. Figures, model artifacts, `.gitkeep` markers and pros
 without a pipe table carry no column header, so the column rule has nothing to
 read. They are listed in the inventory with format `other` and are skipped.
 
+A JSON FILE THAT IS ONE OBJECT. A fit receipt (`out/models/<fit>/provenance.json`,
+`out/ch1/model/provenance.json`) is a single JSON object, not a list of records. It
+is read as one record: its top-level keys are its columns and it counts one row, so
+the grain and size rules apply to it as to any record. It is also walked to every
+depth, through nested objects and lists, and it fails on two more things. The first is
+a date after `absump.paths.LAST_OPEN_DATE`, written as an ISO day anywhere, in a value,
+inside prose or as a key. The second is a key that names a game, pitch, player or
+umpire identifier, or an umpire's name. Two exemptions are spelled out at
+`STAMP_KEYS` and `ISO_DAY`: a write stamp and an integer. A list of records is
+read as before, and this walk does not run on it.
+
 THE ATTRIBUTION FILE. SOP W2.21 also fixes the contents of `ATTRIBUTION.md`: the
 MLBAM notice, the posture paragraph, the Retrosheet string, credit to Baseball
 Savant for the ABS leaderboard and to `baseballsavant.mlb.com/abs-metrics-documentation`
@@ -52,6 +63,7 @@ saw, and the assertions run against a fresh scan every time.
 from __future__ import annotations
 
 import csv
+import datetime as dt
 import json
 import re
 import shutil
@@ -61,6 +73,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+
+from absump.paths import LAST_OPEN_DATE
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT_DIR = REPO_ROOT / "out"
@@ -98,10 +112,11 @@ class Table:
     """One file under out/, as the scanner read it."""
 
     path: str  # repo-relative, POSIX separators
-    fmt: str  # csv, tsv, parquet, json, jsonl, markdown, other
+    fmt: str  # csv, tsv, parquet, json, json_object, jsonl, markdown, other
     columns: tuple[str, ...]  # normalised, empty when the format carries none
     n_rows: int  # data rows, header excluded; -1 when unknown
     note: str  # why a format was not read, empty when it was
+    findings: tuple[str, ...] = ()  # a single-object JSON's late dates and identifier keys
 
     @property
     def has_game(self) -> bool:
@@ -184,7 +199,74 @@ def _table_from_json(path: Path) -> list[Table]:
                 if normalise(key) not in columns:
                     columns.append(normalise(key))
         return [Table(rel, "json", tuple(columns), len(payload), "")]
+    if isinstance(payload, dict):
+        # One object, such as a fit receipt, is one record.
+        columns = tuple(dict.fromkeys(normalise(str(k)) for k in payload))
+        return [Table(rel, "json_object", columns, 1, "", tuple(record_findings(payload)))]
     return [Table(rel, "json", (), 0, "not a list of records")]
+
+
+# A day written the ISO way, alone or at the head of a timestamp. An integer is never
+# read as a date, because the pre-registered seeds are spelled as days: every fit
+# receipt carries `seed` and `draw_seed` as eight-digit integers.
+ISO_DAY = re.compile(r"(?<!\d)(\d{4})-(\d{2})-(\d{2})(?!\d)")
+
+# The keys that stamp when a file was written, not what it holds. Every receipt
+# written after the boundary carries a stamp after it, so a stamp key is exempt, but
+# only while its whole value is one clock time. A bare day under a stamp key, or a
+# stamp inside prose, is read like any other date.
+STAMP_KEYS = frozenset({"written_madrid", "timestamp_madrid"})
+CLOCK_STAMP = re.compile(
+    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?"
+    r"(?:Z|[+-]\d{2}:?\d{2}|\s[A-Z]{3,5})?"
+)
+
+# A key that names a game, a pitch, a player or an umpire, matched whole on the
+# normalised key, so `game_pk_sha256` and `n_umpires` are not identifiers. A column
+# named inside a string value, such as `s(umpire_hp_id, bs = "re")` in a formula, is
+# text and is not read.
+IDENTIFIER_KEY = re.compile(
+    r"game_?pk"
+    r"|pitch_?(?:number|slot|id)|play_?id|sv_?id"
+    r"|(?:batter|pitcher|catcher|player|mlbam)(?:_?(?:id|name))?"
+    r"|(?:hp_)?umpire(?:_hp)?(?:_?(?:id|name|raw))?"
+)
+
+
+def _late_days(text: str, where: str) -> list[str]:
+    found = []
+    for m in ISO_DAY.finditer(text):
+        try:
+            day = dt.date(int(m[1]), int(m[2]), int(m[3]))
+        except ValueError:
+            continue  # not a calendar day, so not a date
+        if day > LAST_OPEN_DATE:
+            found.append(f"{where} carries {m[0]}, after {LAST_OPEN_DATE.isoformat()}")
+    return found
+
+
+def record_findings(node: object, where: str = "") -> list[str]:
+    """Every late date and identifier key in one JSON record, walked to every depth."""
+    found: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            path = f"{where}.{key}" if where else str(key)
+            if IDENTIFIER_KEY.fullmatch(normalise(str(key))):
+                found.append(f"{path} is an identifier key")
+            found.extend(_late_days(str(key), f"{path} (as a key)"))
+            if (
+                normalise(str(key)) in STAMP_KEYS
+                and isinstance(value, str)
+                and CLOCK_STAMP.fullmatch(value.strip())
+            ):
+                continue
+            found.extend(record_findings(value, path))
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            found.extend(record_findings(value, f"{where}[{i}]"))
+    elif isinstance(node, str):
+        found.extend(_late_days(node, where))
+    return found
 
 
 def _table_from_markdown(path: Path) -> list[Table]:
@@ -327,7 +409,9 @@ def test_no_export_exceeds_fifty_thousand_rows(tables: list[Table]) -> None:
     )
 
 
-def test_every_tabular_file_under_out_was_read(tables: list[Table]) -> None:
+def test_every_tabular_file_under_out_was_read(
+    tables: list[Table], request: pytest.FixtureRequest
+) -> None:
     """A format the scanner cannot read is a hole in the gate, not a pass."""
     unread = [
         t
@@ -338,6 +422,30 @@ def test_every_tabular_file_under_out_was_read(tables: list[Table]) -> None:
     assert not unread, "tabular file not read by the export gate: " + "; ".join(
         f"{t.path} ({t.note or 'row count unknown'})" for t in unread
     )
+    # The count goes into the step's receipt log, so a reader sees what was scanned.
+    files = {t.path.split("#")[0] for t in tables}
+    read = {t.path.split("#")[0] for t in tables if t.fmt != "other"}
+    objects = {t.path for t in tables if t.fmt == "json_object"}
+    reporter = request.config.pluginmanager.get_plugin("terminalreporter")
+    if reporter is not None:
+        reporter.write("\n")
+        reporter.write_line(
+            f"W2.21 export gate: {len(files)} files under out/, {len(read)} read as tables, "
+            f"{len(objects)} of them single-object JSON walked for dates and identifiers"
+        )
+
+
+def record_scan_failures(tables: list[Table]) -> list[str]:
+    """One line per finding, naming the file and the key path inside it."""
+    return [f"{t.path}: {f}" for t in tables for f in t.findings]
+
+
+def test_no_single_object_json_carries_a_late_date_or_an_identifier(
+    tables: list[Table],
+) -> None:
+    """A fit receipt ships under out/, so it is scanned, not skipped."""
+    bad = record_scan_failures(tables)
+    assert not bad, "single-object JSON under out/ fails the record scan: " + "; ".join(bad)
 
 
 def test_the_gate_is_not_vacuous(tmp_path: Path) -> None:
@@ -363,6 +471,90 @@ def test_the_gate_is_not_vacuous(tmp_path: Path) -> None:
         fh.writelines("2026\n" for _ in range(MAX_ROWS + 1))
     over = _table_from_delimited(long, ",")[0]
     assert over.n_rows == MAX_ROWS + 1 and over.breaks_size_rule
+
+
+# The first held-out day, computed, never written: GD-04 fails the repository on a
+# literal date on or after the seal start.
+FIRST_LATE_DAY = (LAST_OPEN_DATE + dt.timedelta(days=1)).isoformat()
+
+
+def _planted(tmp_path: Path, payload: object) -> Table:
+    path = tmp_path / "provenance.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return scan_file(path)[0]
+
+
+def test_a_fit_receipt_is_read_as_one_clean_record(tmp_path: Path) -> None:
+    """A receipt shaped like the real ones, ending on the last open day, passes."""
+    table = _planted(
+        tmp_path,
+        {
+            "fit": "surface_main",
+            "min_official_date": "2022-04-07",
+            "max_official_date": LAST_OPEN_DATE.isoformat(),
+            "game_pk_sha256": "0" * 64,
+            "seed": int(FIRST_LATE_DAY.replace("-", "")),
+            "written_madrid": f"{FIRST_LATE_DAY}T07:50:45+0200",
+            "formula": 'cs ~ s(velo, k = 10) + s(umpire_hp_id, bs = "re")',
+            "n_umpires": 114,
+            "rows_by_season": {"2022": 226513, "2026": 232815},
+            "fits": [{"max_official_date": LAST_OPEN_DATE.isoformat(), "files": ["a.rds"]}],
+        },
+    )
+    assert (table.fmt, table.n_rows, table.note) == ("json_object", 1, "")
+    assert "max_official_date" in table.columns and "fits" in table.columns
+    assert table.findings == ()
+    assert not table.breaks_grain_rule and not table.breaks_size_rule
+
+
+@pytest.mark.parametrize(
+    ("payload", "where"),
+    [
+        ({"max_official_date": FIRST_LATE_DAY}, "max_official_date carries"),
+        (
+            {"fits": [{}, {"settings": {"window": ["2022-04-07", FIRST_LATE_DAY]}}]},
+            "fits[1].settings.window[1] carries",
+        ),
+        ({"height_rule": f"refit through {FIRST_LATE_DAY}"}, "height_rule carries"),
+        ({"rows_by_day": {FIRST_LATE_DAY: 12}}, f"rows_by_day.{FIRST_LATE_DAY} (as a key)"),
+        ({"written_madrid": FIRST_LATE_DAY}, "written_madrid carries"),
+    ],
+)
+def test_a_receipt_with_a_late_date_fails(tmp_path: Path, payload: object, where: str) -> None:
+    """A day after the boundary fails wherever it sits, and the message names file and key."""
+    table = _planted(tmp_path, payload)
+    assert table.n_rows == 1 and not table.note
+    failures = record_scan_failures([table])
+    assert len(failures) == 1
+    assert failures[0].startswith(f"{table.path}: {where}")
+    assert FIRST_LATE_DAY in failures[0]
+
+
+@pytest.mark.parametrize(
+    ("payload", "where"),
+    [
+        ({"game_pk": 824466}, "game_pk"),
+        ({"fits": [{"inputs": {"gamePk": 824466}}]}, "fits[0].inputs.gamePk"),
+        ({"play_id": "planted"}, "play_id"),
+        ({"batter_id": 0}, "batter_id"),
+        ({"umpire_hp_name": "planted"}, "umpire_hp_name"),
+    ],
+)
+def test_a_receipt_with_an_identifier_key_fails(
+    tmp_path: Path, payload: object, where: str
+) -> None:
+    """A game, pitch, player or umpire key fails at any depth."""
+    table = _planted(tmp_path, payload)
+    assert record_scan_failures([table]) == [f"{table.path}: {where} is an identifier key"]
+
+
+@pytest.mark.parametrize("payload", [[1, 2], "text", 3, []])
+def test_json_that_is_neither_records_nor_one_object_stays_unread(
+    tmp_path: Path, payload: object
+) -> None:
+    """Reading one object must not turn every JSON value into a pass."""
+    table = _planted(tmp_path, payload)
+    assert table.note == "not a list of records"
 
 
 def test_out_is_the_only_generated_directory_git_tracks() -> None:
@@ -520,6 +712,6 @@ def write_inventory() -> Path:
 if __name__ == "__main__":
     path = write_inventory()
     tables = scan_out()
-    bad = [t for t in tables if t.breaks_grain_rule or t.breaks_size_rule]
+    bad = [t for t in tables if t.breaks_grain_rule or t.breaks_size_rule or t.findings]
     print(f"{path.relative_to(REPO_ROOT)}: {len(tables)} tables, {len(bad)} violations")
     sys.exit(1 if bad else 0)

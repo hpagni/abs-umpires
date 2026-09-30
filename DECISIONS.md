@@ -2619,6 +2619,22 @@ it untracked and ignored. A tracked file under `out/dev/`, and every file elsewh
 `out/`, is read as before. A new test fails if `out/dev/` stops being ignored or gains a tracked
 file. No row limit or column rule changed. Nothing under `out/dev/` was moved.
 
+Follow-up, 2026-09-30 08:58 (Europe/Madrid): the gate now reads a fit receipt. The Chapter 1
+fit chain wrote 29 `provenance.json` receipts, 28 under `out/models/<fit>/` and one at
+`out/ch1/model/`. Each is one JSON object, and the gate read `.json` only as a list of records,
+so `test_every_tabular_file_under_out_was_read` failed on all 29. It had passed only because no
+receipt existed yet. A single-object JSON is now read as one record: its top-level keys are
+its columns and it counts one row, so the grain and size rules apply to it. The record is also
+walked to every depth. It fails on an ISO day after `paths.LAST_OPEN_DATE`, whether in a value,
+inside prose or as a key. It also fails on a key that names a game, pitch, player or umpire
+identifier or an umpire's name. The failure message names the file and the key path. There
+are two exemptions, both narrow. A write stamp (`written_madrid`, `timestamp_madrid`) is exempt
+only when its whole value is one clock time. An integer is never read as a date, because the
+seeds are spelled as days. The list-of-records path is unchanged, and the walk does not run on
+it. No SOP rule was relaxed, so no deviation is raised. `bash scripts/prove.sh W2.21` passes on
+the tree holding the 29 receipts. It reads 143 files under `out/`: 75 as tables, 29 of them
+walked receipts.
+
 ## Owner answer, 2026-09-29 (Madrid): binding, taken before the prereg-v1 tag
 
 ### D-R0-04 OWNER ANSWER, W3.12 recovery: three clauses fail, all three are disclosed, and the tag goes ahead
