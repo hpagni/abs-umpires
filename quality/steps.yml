@@ -1218,6 +1218,25 @@
   owner: W3
   needs: R/ch1/26_placebos.R, out/ch1/tab/T5_placebos.csv
 
+# W3.24, the Chapter 1 figures F1 to F8, tables T1 to T9, and docs/ch1.md. Owner W3, fleet phase 08,
+# the chapter1-full lane.
+#
+# `make figures` (R/ch1/70_figures.R) and `make tables` (R/ch1/71_tables.R) are the only producers,
+# SOP section 9.1. Every figure writes out/tables/<figure-id>_data.csv; 71_tables.R also assembles
+# docs/ch1.md from the manifests, the table CSVs and the sibling prose. The verify command re-reads
+# what they wrote with tests/testthat/test-ch1-figures.R, which refits nothing, re-derives the figure
+# facts from the step outputs, traces every caption, alt-text and doc number, re-renders into a
+# temporary directory for determinism at 1e-8, and FAILS while any figure or table is a placeholder:
+# F5 waits on W3.20, F8 on W3.23 (the sealed run), T8 on W3.22's receipt. Then the prose lint on
+# docs/ch1.md and GD-04 on both scripts. `needs` names the outputs, so before the first real run the
+# step reads MISSING rather than FAIL.
+- id: W3.24
+  title: "Chapter 1 figures F1 to F8, tables T1 to T9, and docs/ch1.md"
+  verify: "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-figures\", stop_on_failure = TRUE)' && uv run --locked python quality/prose_lint.py docs/ch1.md && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/70_figures.R && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/71_tables.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/70_figures.R, R/ch1/71_tables.R, tests/testthat/test-ch1-figures.R, out/figures/figures_manifest.csv, out/tables/tables_manifest.csv, docs/ch1.md
+
 # W4.0, the Chapter 2 environment additions. Owner W4, fleet phase 04.
 #
 # The three packages the SOP installs are lme4, tidybayes and marginaleffects.

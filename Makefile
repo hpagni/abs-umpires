@@ -28,7 +28,7 @@ SHELL := /bin/sh
         backfill inseason pull-today nightly canary lint-prose \
         ch1 test-ch1 ch2 test-ch2 ch3 test-ch3 ch3-extract \
         p8 p8-test p8-odds-fetch p8-sealed \
-        sprint-status \
+        sprint-status figures tables \
         app app-deploy abstract all clean clean-out clean-warehouse
 
 # ---------------------------------------------------------------- environment
@@ -217,6 +217,16 @@ test-ch3: ## chapter 3 acceptance tests, including the BR-1 regression
 # owner: SOP W5.x, fleet phase 10 -- writes scripts/ch3_extract.sh
 ch3-extract: ## materialise the open-set extracts chapter 3 reads
 	bash scripts/ch3_extract.sh
+
+# owner: SOP W3.24, fleet phase 08 -- writes scripts/figures.sh. SOP section 9.1
+# names `make figures` as the only producer of a figure; the W1.14 list does not.
+figures: ## chapter figures and their sidecar CSVs, SOP section 9.1
+	bash scripts/figures.sh
+
+# owner: SOP W3.24, fleet phase 08 -- writes scripts/tables.sh. SOP section 9.1
+# names `make tables` as the only producer of a table; the W1.14 list does not.
+tables: ## chapter tables and docs/ch1.md, SOP section 9.1
+	bash scripts/tables.sh
 
 # ---------------------------------------------------------------- P8
 

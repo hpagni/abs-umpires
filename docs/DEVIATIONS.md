@@ -1717,3 +1717,24 @@ Stamped 2026-09-30T17:28:28+02:00, Europe/Madrid. Owner W3, fleet phase 08. File
 7. **Kept for the record.** The uncentred values stay in `framing_catcher_seasons.csv` as
    `runs_*_uncentred` columns. `framing_centring.csv` holds the removed level per season and
    variant, at beta and over the draws.
+
+## DEV-80: W3.24, the figure and table targets, and four presentation choices the SOP leaves open
+
+Stamped 2026-09-30T20:11:45+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `Makefile`,
+`tests/unit/test_makefile.py`, `scripts/figures.sh`, `scripts/tables.sh`, `R/ch1/70_figures.R`,
+`R/ch1/71_tables.R`.
+
+1. **The two targets.** SOP section 9.1 says a figure or table is "produced only by `make figures` /
+   `make tables`", and the W1.14 target list names neither. DECISIONS.md asks the step that needs them
+   to add them. They are added as W2.14 and W6.4 added theirs: one delegating line each, and an entry in
+   `EXTRA_TARGETS` of the Makefile test. The W1.14 list in the SOP is not edited.
+2. **F1 draws each regime at its decomposition anchor.** The regimes are drawn as 2024, 2025 and 2026,
+   the three seasons the headline change and its two components are measured between. A pooled
+   2022 to 2024 surface would be a new estimand. The band is a pointwise 95% interval along 120 rays.
+3. **F4 names no umpire.** CH1-A6's reliability gate was not met, so under D-21 no per-umpire row is
+   published. The caterpillar shows ranks only, with the 90% intervals D-21 sets for per-umpire rows.
+4. **F7 is in-sample.** The open window's calibration uses the primary surface's fitted values,
+   umpire effects included. Out-of-sample calibration is W3.23's, on the sealed set, and F8's.
+5. **T8 waits on W3.22's receipt.** The grid W3.22 wrote is on disk but its verifier refuted it.
+   `R/ch1/71_tables.R` reads it only once `quality/receipts/W3.22.json` is PASS. Until then T8 is a
+   placeholder, and `make tables` and the W3.24 test fail on it.

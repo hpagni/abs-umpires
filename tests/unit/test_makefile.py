@@ -51,6 +51,10 @@ EXTRA_TARGETS += ["normalize-statcast"]
 # `sprint-status` is SOP W6.4's target, added for the same reason: W6.4
 # writes ops/sprint_join_checkpoint.py, not this file.
 EXTRA_TARGETS += ["sprint-status"]
+# `figures` and `tables` are SOP section 9.1's: "Produced only by `make figures` /
+# `make tables`". SOP W3.24 builds them and writes scripts/figures.sh and
+# scripts/tables.sh; the W1.14 list itself is unchanged.
+EXTRA_TARGETS += ["figures", "tables"]
 ALL_TARGETS = SOP_TARGETS + EXTRA_TARGETS
 
 # Targets that are cheap, offline and free of side effects, so the gate may run
