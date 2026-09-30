@@ -80,6 +80,13 @@
 #   h. Robustness arms, point estimates: the framing surface on the |d| <= 8 in band only; W3.14's
 #      main surface on the same band; the framing surface on P1's band; W3.14's ABS-measured
 #      surface (H_abs heights) on the same P1 rows. The last pair is the height-source check.
+#   i. Centring, fixed after the first real run of 2026-09-30 (docs/DEVIATIONS.md, W3.19): runs are
+#      relative to the league-average catcher of the season, per called pitch, in every replicate. At
+#      beta the uncentred league-average catcher earned about +0.4 runs per 100 innings in every season:
+#      observed minus expected sums to zero within each strike class (the count_class term), but rises
+#      with balls inside it, where the run value is largest. Across the draws that level moved with SD
+#      0.16 to 0.38, the same for every catcher. Doolittle's and Savant's figures are relative to
+#      average. See variant_cs(). The uncentred values are kept.
 #
 # THE GUARD. GD-12 as ch1_fits.R's start_run() applies it: the fit must descend from the pushed
 # prereg-v1, and the code that runs must be committed so the receipt's git_sha names it. start_run()
@@ -759,8 +766,8 @@ a11_validity <- function(sav, csout) {
                                                  pass = NA, verdict = "not run: synthetic table, no Savant file",
                                                  stringsAsFactors = FALSE)))
   }
-  our <- csout[csout$season %in% A11_SEASONS, c("season", "catcher", "runs_cnt", "runs_flat", "called_pitches",
-                                                "innings", "qualified")]
+  our <- csout[csout$season %in% A11_SEASONS, c("season", "catcher", "runs_cnt", "runs_flat", "runs_cnt_uncentred",
+                                                "called_pitches", "innings", "qualified")]
   pr <- merge(sav, our, by.x = c("season", "id"), by.y = c("season", "catcher"), all.x = TRUE, sort = TRUE)
   names(pr)[names(pr) == "id"] <- "catcher"
   found <- is.finite(pr$runs_cnt)
@@ -769,8 +776,8 @@ a11_validity <- function(sav, csout) {
   rows <- list()
   for (sc in c("pooled_2022_2024", as.character(A11_SEASONS))) {
     sel <- found & (sc == "pooled_2022_2024" | pr$season == suppressWarnings(as.integer(sc)))
-    for (v in VALUE_TYPES) {
-      y <- if (v == "cnt") pr$runs_cnt[sel] else pr$runs_flat[sel]
+    for (v in c(VALUE_TYPES, "cnt_uncentred")) {
+      y <- pr[[paste0("runs_", v)]][sel]
       x <- pr$savant_rv_tot[sel]
       r <- stats::cor(x, y)
       ci <- fisher_ci(r, sum(sel))
@@ -865,6 +872,7 @@ catcher_rows <- function(csl, Vs, window) {
     V <- Vs[[nm]]
     sfx <- sub("_original$", "", nm)
     out[[paste0("runs_", sfx)]] <- V$runs[, 1]
+    out[[paste0("runs_", sfx, "_uncentred")]] <- V$runs_raw
     out[[paste0("runs_", sfx, "_per100")]] <- V$runs[, 1] / V$inn * PER_INN
     out[[paste0("se_noise_", sfx, "_per100")]] <- sqrt(V$noise) / (V$inn / PER_INN)
     if (!is.null(V$ro)) {
@@ -887,9 +895,15 @@ arm_rows <- function(arms, CS, inn_cs, groups, prim_rate) {
   out <- list()
   for (nm in names(arms)) {
     a <- arms[[nm]]
-    V <- list(runs = matrix(to_cs(CS$A, a$R)), noise = to_cs(CS$A, a$V), inn = inn_cs,
-              ro = matrix(to_cs(CS$A_odd, a$R)), no = to_cs(CS$A_odd, a$n),
-              re = matrix(to_cs(CS$A_even, a$R)), ne = to_cs(CS$A_even, a$n))
+    R <- to_cs(CS$A, a$R); n <- to_cs(CS$A, a$n)
+    ro <- to_cs(CS$A_odd, a$R); no <- to_cs(CS$A_odd, a$n)
+    re <- to_cs(CS$A_even, a$R); ne <- to_cs(CS$A_even, a$n)
+    for (se in unique(cs$season)) {           # centred as variant_cs() centres, over the arm's own pitches
+      i <- cs$season == se
+      ms <- sum(R[i]) / sum(n[i])
+      R[i] <- R[i] - n[i] * ms; ro[i] <- ro[i] - no[i] * ms; re[i] <- re[i] - ne[i] * ms
+    }
+    V <- list(runs = matrix(R), noise = to_cs(CS$A, a$V), inn = inn_cs, ro = matrix(ro), no = no, re = matrix(re), ne = ne)
     rate <- V$runs[, 1] / inn_cs * PER_INN
     rate_of[[nm]] <- rate
     cmp <- rate_of[[a$compare]]
@@ -942,11 +956,46 @@ doolittle_rows <- function(series) {
 
 # A variant's catcher-season matrices: runs (column 1 at beta, then one column per draw), the noise
 # variance at beta, innings, and the odd and even game halves with their pitch counts.
+#
+# Centring (reading i). Runs are relative to the league-average catcher of the season: in each season
+# and in each replicate column, the league's runs per called pitch (over every catcher-season of the
+# aggregation, qualified or not) times the catcher's called pitches is subtracted, from the season
+# total and from each half alike. The league total is then zero in every season and every replicate.
+# A per-season constant per pitch leaves the per-1,000-pitch split-half correlation unchanged, and
+# moves a catcher's rate per 100 innings by a near-constant, so the SDs barely move; the level
+# statistics (the mean and the top-30 mean) are what it changes. The uncentred point values are kept
+# as runs_raw and published beside the centred ones.
 variant_cs <- function(sums, cg, CS, v, cv) {
   W <- variant_cg(sums, cg, v, cv)
-  list(runs = to_cs(CS$A, W$runs), noise = to_cs(CS$A, W$noise), inn = CS$cs$innings, n = to_cs(CS$A, W$n),
-       ro = to_cs(CS$A_odd, W$runs), no = to_cs(CS$A_odd, W$n),
-       re = to_cs(CS$A_even, W$runs), ne = to_cs(CS$A_even, W$n))
+  runs <- to_cs(CS$A, W$runs); n <- to_cs(CS$A, W$n)
+  ro <- to_cs(CS$A_odd, W$runs); no <- to_cs(CS$A_odd, W$n)
+  re <- to_cs(CS$A_even, W$runs); ne <- to_cs(CS$A_even, W$n)
+  runs_raw <- runs[, 1]
+  season <- CS$cs$season
+  league <- matrix(NA_real_, length(unique(season)), ncol(runs), dimnames = list(sort(unique(season)), NULL))
+  for (se in sort(unique(season))) {
+    i <- which(season == se)
+    ms <- colSums(runs[i, , drop = FALSE]) / sum(n[i])
+    league[as.character(se), ] <- ms
+    runs[i, ] <- runs[i, , drop = FALSE] - outer(n[i], ms)
+    ro[i, ] <- ro[i, , drop = FALSE] - outer(no[i], ms)
+    re[i, ] <- re[i, , drop = FALSE] - outer(ne[i], ms)
+  }
+  list(runs = runs, noise = to_cs(CS$A, W$noise), inn = CS$cs$innings, n = n, ro = ro, no = no, re = re, ne = ne,
+       runs_raw = runs_raw, league = league)
+}
+
+# The centring constants: the league's runs per called pitch and per 100 innings, at beta and over the
+# replicate draws, per season and variant. This is the level the centring removes.
+centring_rows <- function(V, CS, nm, window) {
+  do.call(rbind, lapply(rownames(V$league), function(se) {
+    i <- CS$cs$season == as.integer(se)
+    per100 <- V$league[se, ] * sum(V$n[i]) / sum(V$inn[i]) * PER_INN
+    q <- qint(per100[-1], 0.95)
+    data.frame(window = window, season = as.integer(se), variant = nm, league_runs_per_pitch = V$league[se, 1],
+               league_runs_per100 = per100[1], draws_sd_per100 = if (length(per100) > 1L) stats::sd(per100[-1]) else NA_real_,
+               draws_lo95_per100 = q[1], draws_hi95_per100 = q[2], stringsAsFactors = FALSE)
+  }))
 }
 
 season_groups <- function(cs) {
@@ -1086,6 +1135,12 @@ write_prose <- function(ctx, T, reading, has_arms) {
                    " P0 holds ", pv(sm, ssm, "season", "all", "called_pitches", 0),
                    " called pitches of 2022 through ", format(ctx$last_open), ".",
                    " Observed minus expected strikes are summed per catcher-season.",
+                   " Runs are centred on the league-average catcher of each season, per called pitch, in every replicate.",
+                   " Uncentred, that catcher earns ", pv(T$centring$df, rel("centring"), "id", "season:2026:cnt_original",
+                                                         "league_runs_per100", 3),
+                   " runs per ", C100, " innings in 2026.",
+                   " The surface's count term is the strike count, and umpires call more strikes than it expects in",
+                   " counts with more balls.",
                    " Each pitch is priced by the count-specific run value of a strike against a ball, from",
                    " `delta_run_exp` over 2022 to 2024.",
                    " In the first-pitch count that table gives a ball ", pv(sn, ssn, "check", "tango_00_ball", "value", 3),
@@ -1248,7 +1303,7 @@ main <- function() {
                                          buffer_2025 = length(groups[["2025"]]), abs_2026 = length(groups[["2026"]])),
           stats::setNames(list(length(gdw[[1]])), DW_PERIOD))
 
-  series <- list(); Vs <- list(); Vdws <- list(); br <- list(); dec <- list(); con <- list(); csh <- list()
+  series <- list(); Vs <- list(); Vdws <- list(); br <- list(); dec <- list(); con <- list(); csh <- list(); ctr <- list()
   for (k in seq_len(nrow(VARIANTS))) {
     v <- VARIANTS$v[k]; cv <- VARIANTS$cv[k]; nm <- variant_name(v, cv)
     V <- variant_cs(sums, cg, CS, v, cv)
@@ -1261,6 +1316,7 @@ main <- function() {
     dec[[nm]] <- decomp_rows(ser, v, cv)
     con[[nm]] <- contrast_rows(ser, dec[[nm]], v, cv)
     csh[[nm]] <- cbind(variant = nm, complete_share(ser), stringsAsFactors = FALSE)
+    ctr[[nm]] <- rbind(centring_rows(V, CS, nm, "season"), centring_rows(Vdw, CSdw, nm, DW_PERIOD))
     record(sprintf("variant %s", nm), sprintf("%s; 2026 signal SD %.3f, reliability %.3f", role_of(v, cv),
                                               ser[["2026"]][1, "sd_signal_per100"], ser[["2026"]][1, "reliability_sb"]))
   }
@@ -1275,6 +1331,12 @@ main <- function() {
   relc$id <- paste("framing_rel", relc$contrast, relc$value_type, relc$convention, sep = ":")
   relc$role <- role_of(relc$value_type, relc$convention)
   csh <- do.call(rbind, csh)
+  ctr <- do.call(rbind, ctr)
+  ctr$id <- paste(ctr$window, ctr$season, ctr$variant, sep = ":")
+  ctr <- ctr[, c("id", setdiff(names(ctr), "id"))]
+  z <- ctr[ctr$window == "season" & ctr$variant == "cnt_original", ]
+  record("centring: league runs per 100 innings removed", paste(sprintf("%d %+.3f (draws SD %.3f)", z$season,
+                                                                         z$league_runs_per100, z$draws_sd_per100), collapse = "; "))
   dool <- doolittle_rows(series)
   dool$id <- paste("framing_doolittle", dool$row, dool$value_type, sep = ":")
   for (d in list(byreg, decomp, relc, dool)) if (anyDuplicated(d$id)) die("a table id repeats")
@@ -1312,6 +1374,7 @@ main <- function() {
             doolittle_all = list(df = dool, path = tabf("doolittle")),
             validity_all = list(df = va, path = tabf("validity")),
             completeness = list(df = csh, path = tabf("replicate_completeness")),
+            centring = list(df = ctr, path = tabf("centring")),
             by_regime = list(df = pub_by_regime(byreg), path = pubf("by_regime")),
             decomp = list(df = decomp, path = pubf("decomposition")),
             reliability = list(df = relc, path = pubf("reliability")),

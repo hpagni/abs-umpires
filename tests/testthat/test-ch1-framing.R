@@ -40,7 +40,7 @@ TOL <- 1e-9
 
 test_that("every output of the step is on disk", {
   for (n in c("sample", "sanity", "run_values", "catcher_seasons", "by_season", "decomposition", "reliability_change",
-              "doolittle", "validity", "replicate_completeness", "prose_numbers")) expect_true(file.exists(tabf(n)), info = n)
+              "doolittle", "validity", "replicate_completeness", "centring", "prose_numbers")) expect_true(file.exists(tabf(n)), info = n)
   for (n in c("by_regime", "decomposition", "reliability", "doolittle", "validity")) expect_true(file.exists(pubf(n)), info = n)
   expect_true(file.exists(PROSE))
   expect_true(file.exists(file.path(OUT, "models", "ch1_W3_19", "provenance.json")))
@@ -137,9 +137,28 @@ test_that("SIS drops exactly the challenged pitches, and only in 2026", {
   x <- cs_all()
   none <- x$challenged_pitches == 0
   expect_true(all(x$challenged_pitches[x$season < 2026] == 0))
-  expect_equal(x$runs_cnt_sis[none], x$runs_cnt[none], tolerance = TOL)
-  expect_equal(x$runs_flat_sis[none], x$runs_flat[none], tolerance = TOL)
-  expect_true(any(abs(x$runs_cnt_sis - x$runs_cnt)[!none] > 0))
+  expect_equal(x$runs_cnt_sis_uncentred[none], x$runs_cnt_uncentred[none], tolerance = TOL)
+  expect_equal(x$runs_flat_sis_uncentred[none], x$runs_flat_uncentred[none], tolerance = TOL)
+  expect_true(any(abs(x$runs_cnt_sis_uncentred - x$runs_cnt_uncentred)[!none] > 0))
+})
+
+test_that("runs are centred on the league-average catcher of each season, per called pitch", {
+  x <- rd(tabf("catcher_seasons"))
+  ct <- rd(tabf("centring"))
+  for (w in c("season", DW)) for (vc in VARS) {
+    s <- sfx(vc[1], vc[2])
+    nm <- paste(vc[1], vc[2], sep = "_")
+    for (se in unique(x$season[x$window == w])) {
+      q <- x[x$window == w & x$season == se, ]
+      n <- q$called_pitches - if (vc[2] == "sis") q$challenged_pitches else 0
+      expect_lt(abs(sum(q[[paste0("runs_", s)]])), 1e-6)
+      k <- (q[[paste0("runs_", s, "_uncentred")]] - q[[paste0("runs_", s)]])[n > 0] / n[n > 0]
+      c0 <- ct$league_runs_per_pitch[ct$window == w & ct$season == se & ct$variant == nm]
+      expect_equal(length(c0), 1L)
+      expect_equal(k, rep(c0, length(k)), tolerance = 1e-8, info = paste(w, se, nm))
+      expect_equal(c0, sum(q[[paste0("runs_", s, "_uncentred")]]) / sum(n), tolerance = 1e-10)
+    }
+  }
 })
 
 test_that("the decomposition re-derives from the season points and keeps its identity", {
