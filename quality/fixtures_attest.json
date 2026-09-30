@@ -1,17 +1,28 @@
 {
   "schema": "fixtures_attest/1",
   "step": "W9.3",
-  "stamp": "2026-09-23 04:49 CEST",
+  "stamp": "2026-09-30 07:22 CEST",
   "stamp_is_generation_time_not_a_data_filter": true,
   "generated_by": "tests/fixtures/synth_feed.py --attest",
-  "policy": "sha256 and shape of locally cached responses, never their content. Phase 01 may not read a 2026 datum, so only pre-2026 caches are read; 2026 caches are counted and nothing more. Nothing under data/ is ever copied into the repository, and no fixture is derived from a real response.",
+  "policy": "sha256 and shape of locally cached responses, never their content. Phase 01 may not read a 2026 datum, so only pre-2026 caches are read; 2026 caches are counted and nothing more. No raw response or row under data/ is copied; derived constants are listed under derived_copies.",
   "fixture_header_sha256": "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c",
   "fixture_header_matches_cache": true,
   "sources": [
     {
       "kind": "statcast_export_header",
+      "season": "2022",
+      "n_files": 69,
+      "n_distinct_header_sha256": 1,
+      "header_sha256": [
+        "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c"
+      ],
+      "n_columns": 119,
+      "encoding": "utf-8-sig"
+    },
+    {
+      "kind": "statcast_export_header",
       "season": "2023",
-      "n_files": 110,
+      "n_files": 183,
       "n_distinct_header_sha256": 1,
       "header_sha256": [
         "15abe7168e2a5e293574daff1c87b288364e8dcea508a4c52431d9e8fbab269c"
@@ -126,11 +137,37 @@
       ]
     }
   ],
+  "derived_copies": [
+    {
+      "fixture": "tests/ch1/fixtures/calibration_d_p4_04.json",
+      "fixture_sha256": "24519d4276d422512ed982161a5d7ae860b091654ef98991ea7868716ade016e",
+      "source": "data/interim/dim_batter_season/calibration.json",
+      "written_by": "R/ch1/03_heights.R (W3.4)",
+      "read_by": "tests/ch1/test_ch1_sprint.R",
+      "keys": [
+        "convention",
+        "max_diff_in",
+        "min_diff_in",
+        "n_overlap",
+        "offset_in",
+        "offset_noncohort_age_adjusted_in",
+        "offset_noncohort_age_adjusted_se_in",
+        "offset_noncohort_in",
+        "offset_noncohort_se_in",
+        "sd_in"
+      ],
+      "published_in": [
+        "DECISIONS.md D-P4-04, the W3.4 follow-up",
+        "PREREGISTRATION.md section 7",
+        "docs/prereg/ch1.md section 1.1"
+      ]
+    }
+  ],
   "ut20": {
-    "status": "deferred",
-    "reason": "no local real feed cached; UT-20 deferred to phase 02",
-    "pre_2026_gumbo_feeds_cached": 0,
-    "gumbo_feeds_cached_from_2026": 2195,
+    "status": "available",
+    "reason": "",
+    "pre_2026_gumbo_feeds_cached": 665,
+    "gumbo_feeds_cached_from_2026": 2342,
     "note": "UT-20 validates the generator against one locally cached real feed. It fails locally if the feed shape changes and stays green in CI, which never sees real data. A skip is recorded as a skip, not as a pass."
   }
 }

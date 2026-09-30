@@ -210,8 +210,8 @@ def test_the_ordering_script_runs_and_reports() -> None:
     assert "SEAL-ORDER OK" in done.stdout, done.stdout + done.stderr
     if not fit_receipts():
         warnings.warn(
-            "GD-12 vacuous: no fit receipts yet and "
-            f"{prereg_tag()} is not tagged yet, so no ordering has been tested",
+            "GD-12 vacuous: no fit receipts yet, so no fit has been "
+            f"checked against {prereg_tag()}",
             VacuousGuard,
             stacklevel=1,
         )

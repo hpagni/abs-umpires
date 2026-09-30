@@ -1581,6 +1581,13 @@ that branch.
 SENS-HEIGHT-SINGLE is a named fit, and the override flag works with the key present or absent.
 This entry stays OPEN and closes when that branch merges into `main` after the tag.
 
+2026-09-30 (Europe/Madrid): CLOSED by merge commit b019344, which brings `phase05/ch1-fits`
+into `main` after `prereg-v1`. The merge carries 617a75d. In `R/lib/ch1_fits.R`,
+`single_offset` is one of the six arms in `FIT_ARMS`, labelled SENS-HEIGHT-SINGLE, and
+`R/ch1/20_surfaces.R` fits it with `apply_heights()` under the single-offset rule while
+`offset_noncohort_in` is in the calibration file. `--height-rule single-offset` stays as the
+owner's override of D-P4-04 and works with the key present. No fit had run when this closed.
+
 ## DEV-76: W6.10, the abstract's opening cites two published estimates of the 2026 change
 
 Raised 2026-09-30 (Europe/Madrid). Status: CLOSED 2026-09-30 by this entry. Pre-tag. Applied

@@ -335,6 +335,61 @@ def test_attest_records_shape_and_hashes_and_no_content():
             assert not source["path"].endswith("2026.json")
 
 
+DERIVED_COPY_FIELDS = {
+    "fixture",
+    "fixture_sha256",
+    "source",
+    "written_by",
+    "read_by",
+    "keys",
+    "published_in",
+}
+
+# A path under data/ as a fixture would name it: "data/" not preceded by a word character,
+# a dot, a slash or a hyphen, so tests/data/ and app/data/ do not match.
+DATA_PATH = re.compile(r"(?<![\w./-])data/[\w.-]")
+
+
+def test_attest_lists_every_derived_copy():
+    """A fixture that copies derived constants by value from a file under data/ is listed
+    under derived_copies, with its source, its keys and where the values are published.
+    The policy says so, and a fixture that names a data/ path without an entry fails."""
+    attest = _json(REPO_ROOT / "quality" / "fixtures_attest.json")
+    assert attest["policy"].endswith(
+        "No raw response or row under data/ is copied; "
+        "derived constants are listed under derived_copies."
+    )
+    assert "Nothing under data/ is ever copied" not in attest["policy"]
+    # The committed attestation is what the generator writes now, fixture sha256 included,
+    # so editing a listed fixture without regenerating the attestation fails here.
+    assert attest["derived_copies"] == synth_feed.derived_copies(REPO_ROOT)
+    assert attest["derived_copies"], "no derived copy is listed"
+    listed = set()
+    for entry in attest["derived_copies"]:
+        assert set(entry) == DERIVED_COPY_FIELDS, entry["fixture"]
+        assert entry["source"].startswith("data/"), entry
+        assert not entry["fixture"].startswith("data/"), entry
+        fixture = _json(REPO_ROOT / entry["fixture"])
+        assert entry["keys"] == sorted(k for k in fixture if not k.startswith("_"))
+        assert entry["keys"], entry["fixture"]
+        # Constants, not rows: every copied value is a scalar.
+        for key in entry["keys"]:
+            assert isinstance(fixture[key], (str, int, float, bool)), (entry["fixture"], key)
+        assert (REPO_ROOT / entry["read_by"]).is_file(), entry["read_by"]
+        assert entry["published_in"], entry["fixture"]
+        for where in entry["published_in"]:
+            assert (REPO_ROOT / where.split()[0]).is_file(), where
+        listed.add(entry["fixture"])
+    naming_data = {
+        p.relative_to(REPO_ROOT).as_posix()
+        for p in REPO_ROOT.glob("tests/**/fixtures/**/*.json")
+        if DATA_PATH.search(p.read_text(encoding="utf-8", errors="replace"))
+    }
+    assert naming_data <= listed, (
+        f"fixtures name a path under data/ but are not in derived_copies: {naming_data - listed}"
+    )
+
+
 def test_attest_agrees_with_the_local_cache_when_there_is_one():
     attest = _json(REPO_ROOT / "quality" / "fixtures_attest.json")
     headers = [s for s in attest["sources"] if s["kind"] == "statcast_export_header"]

@@ -1509,13 +1509,54 @@ UT20_UNATTESTABLE_PATHS = {
 }
 
 
+# Derived constants copied by value from a file under data/ into a committed fixture. None
+# is a raw response or a row: each is a statistic the pipeline computed, and its value is
+# already public in the named documents. build_attest reads the committed fixture for its
+# keys and its sha256. It never opens the source under data/.
+DERIVED_COPIES = (
+    {
+        "fixture": "tests/ch1/fixtures/calibration_d_p4_04.json",
+        "source": "data/interim/dim_batter_season/calibration.json",
+        "written_by": "R/ch1/03_heights.R (W3.4)",
+        "read_by": "tests/ch1/test_ch1_sprint.R",
+        "published_in": (
+            "DECISIONS.md D-P4-04, the W3.4 follow-up",
+            "PREREGISTRATION.md section 7",
+            "docs/prereg/ch1.md section 1.1",
+        ),
+    },
+)
+
+
 def _staging_root(repo_root: pathlib.Path) -> pathlib.Path:
     return repo_root / "data" / "staging"
 
 
+def derived_copies(repo_root: pathlib.Path) -> list[dict]:
+    """One entry per DERIVED_COPIES row: the fixture, its source under data/, the keys it
+    copies (every top-level key not starting with an underscore), the fixture's sha256, and
+    where the values are published. Reads the committed fixture only."""
+    entries = []
+    for row in DERIVED_COPIES:
+        raw = (repo_root / row["fixture"]).read_bytes()
+        entries.append(
+            {
+                "fixture": row["fixture"],
+                "fixture_sha256": hashlib.sha256(raw).hexdigest(),
+                "source": row["source"],
+                "written_by": row["written_by"],
+                "read_by": row["read_by"],
+                "keys": sorted(k for k in json.loads(raw) if not k.startswith("_")),
+                "published_in": list(row["published_in"]),
+            }
+        )
+    return entries
+
+
 def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
     """Read locally cached responses for their sha256 and their shape only. No value from
-    any response is recorded, and nothing under data/ is copied anywhere."""
+    any response is recorded, and no raw response or row under data/ is copied anywhere.
+    Derived constants copied into a fixture are listed under derived_copies."""
     staging = _staging_root(repo_root)
     sources: list[dict] = []
 
@@ -1590,12 +1631,13 @@ def build_attest(repo_root: pathlib.Path, stamp: str) -> dict:
         "policy": (
             "sha256 and shape of locally cached responses, never their content. Phase 01 "
             "may not read a 2026 datum, so only pre-2026 caches are read; 2026 caches are "
-            "counted and nothing more. Nothing under data/ is ever copied into the "
-            "repository, and no fixture is derived from a real response."
+            "counted and nothing more. No raw response or row under data/ is copied; "
+            "derived constants are listed under derived_copies."
         ),
         "fixture_header_sha256": fixture_sha,
         "fixture_header_matches_cache": bool(cached_shas) and cached_shas == {fixture_sha},
         "sources": sources,
+        "derived_copies": derived_copies(repo_root),
         "ut20": {
             "status": "deferred" if pre_2026 == 0 else "available",
             "reason": UT20_DEFERRED_REASON if pre_2026 == 0 else "",
