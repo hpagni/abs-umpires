@@ -1,20 +1,43 @@
-# .github/workflows/ci.yml -- SOP step W1.16, fleet phase 01.
+# .github/workflows/ci.yml -- SOP steps W1.16 and W9.10.
 #
-# Six parallel jobs on ubuntu-latest, on push and on pull request. Budget: under
-# eight minutes wall clock. Every job is free on a public repository.
+# Parked at ops/ci-pending/ci.yml until the gh token carries the `workflow` scope;
+# ops/ci-pending/README.md is the owner's one move. Nothing in it is provisional.
 #
-# No job here reads, pulls or joins a 2026 datum, and no job talks to an MLB or
-# Savant host. The dbt job builds its warehouse from the synthetic fixtures in
-# tests/fixtures. The only outbound request in this file is the gitleaks release
-# download in the secrets job: that is a CI toolchain install, not a data pull,
-# and it is outside the scan path of ops/lint_http.sh (src, R, tools, notebooks).
+# Six parallel jobs on ubuntu-latest, on push and on pull request: lint, python, r,
+# dbt, guard, secrets. No job `needs` another, so the workflow's wall clock is its
+# slowest job. Budget: the whole workflow under 8 minutes (SOP clause 3, risk R-14),
+# and every job carries timeout-minutes: 8, so a job that creeps past the budget
+# goes red instead of quietly eating it. `make test-model` (30 to 70 minutes) is
+# deliberately outside this gate. Every job is free on a public repository.
 #
-# Action versions are pinned by the SOP: astral-sh/setup-uv@v10.2.0,
-# r-lib/actions/setup-r@v2, actions/cache@v6.1.0.
+# ZERO NETWORK CALLS TO MLB HOSTS FROM ANY RUNNER (SOP clause 3). CI sees the
+# synthetic fixtures in tests/fixtures and the fixture DuckDB built from them, and
+# nothing else. Enforced, not trusted, in every job:
+#   - the first step after checkout is `ops/ci_no_mlb.sh arm`. It sinkholes every
+#     MLB-family host the repository names in /etc/hosts, so no packet can leave for
+#     one, and starts an observer on the runner's resolver that is proved live by a
+#     canary lookup before the job's own steps run;
+#   - the last step is `ops/ci_no_mlb.sh audit`, under if: always(). It fails the job
+#     if any name in the MLB family that script defines (seven registrable domains
+#     and every subdomain of each) was looked up, or if the sinkhole was removed;
+#   - the observer log is uploaded as the job's no-mlb-dns artifact, so the claim is
+#     checkable after the fact;
+#   - ops/ci_check.py fails if a tracked file names an MLB-family host missing from
+#     the sinkhole list, or if this file names one at all.
+# The outbound requests this file does make are toolchain installs: GitHub, PyPI via
+# uv, the Posit package manager and r-universe for R binaries, and the gitleaks
+# release. None is a data pull, and none is an MLB or Savant host.
 #
-# There is no nightly.yml. The nightly is local, SOP section 2.8 and D-08. See
-# docs/runbook.md for the 60-day disablement rule that would apply to any Actions
-# cron added later.
+# Actions are pinned: actions/checkout@v7.0.1, astral-sh/setup-uv@v10.2.0,
+# actions/cache@v6.1.0, actions/upload-artifact@v7.0.1, r-lib/actions/setup-r@v2.
+# ops/ci_check.py rejects any other `uses:`.
+#
+# R-31. CI runs on Linux and never exercises the arm64 macOS build. A green run here
+# is not a reproduction; `make prove` on the Mac is the authoritative gate.
+#
+# There is no nightly.yml. The nightly is local launchd at 03:30 Europe/Madrid (SOP
+# section 2.8, D-08), and no keepalive commit is ever added. docs/runbook.md records
+# the 60-day disablement rule that would apply to any Actions cron added later.
 
 name: ci
 
@@ -42,11 +65,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
         with:
           # full history: the prose lint runs on the .md files this push or pull
           # request changed, which needs the merge base on disk.
           fetch-depth: 0
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - uses: astral-sh/setup-uv@v10.2.0
         with:
@@ -66,27 +92,35 @@ jobs:
         run: bash ops/lint_http.sh
 
       - name: ops/hook_no_raw_data.sh
-        run: bash ops/hook_no_raw_data.sh
+        # --tracked: a runner stages nothing, so the hook reads the commit's whole
+        # index instead of an empty staged list.
+        run: bash ops/hook_no_raw_data.sh --tracked
 
       - name: make lint-prose on changed .md
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
           BEFORE_SHA: ${{ github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -eu
+          zero=0000000000000000000000000000000000000000
           if [ "$EVENT_NAME" = "pull_request" ]; then
             git fetch --no-tags origin \
               "+refs/heads/$BASE_REF:refs/remotes/origin/$BASE_REF" || true
             base="origin/$BASE_REF"
             git rev-parse -q --verify "$base" >/dev/null || base=FETCH_HEAD
             changed=$(git diff --name-only --diff-filter=ACMR "$base...HEAD" -- '*.md')
-          elif [ -n "${BEFORE_SHA:-}" ] \
-            && [ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" ] \
+          elif [ -n "${BEFORE_SHA:-}" ] && [ "$BEFORE_SHA" != "$zero" ] \
             && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
             changed=$(git diff --name-only --diff-filter=ACMR "$BEFORE_SHA" HEAD -- '*.md')
+          elif git rev-parse -q --verify "origin/$DEFAULT_BRANCH" >/dev/null \
+            && mb=$(git merge-base "origin/$DEFAULT_BRANCH" HEAD) \
+            && [ "$mb" != "$(git rev-parse HEAD)" ]; then
+            # first push of a new branch: what it changed against the default branch.
+            changed=$(git diff --name-only --diff-filter=ACMR "$mb" HEAD -- '*.md')
           else
-            # first push of a branch, or a force push past the old tip: lint all of it.
+            # first push of the default branch, or a history with no common base.
             changed=$(git ls-files -- '*.md')
           fi
           if [ -z "$changed" ]; then
@@ -94,9 +128,21 @@ jobs:
             exit 0
           fi
           echo "$changed"
-          # ops/lint_prose.sh (SOP W9.13) reads ABS_PROSE_FILES, one path per line,
-          # and lints the whole human-facing corpus when it is unset.
+          # quality/prose_lint.py (SOP W9.13) reads ABS_PROSE_FILES, one path per line,
+          # and skips a listed path that no longer exists as a deletion.
           ABS_PROSE_FILES="$changed" make lint-prose
+
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-lint
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn
 
   # ---------------------------------------------------------------- python
   python:
@@ -104,11 +150,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
         with:
           # tests/guard walks git history and tags; a shallow clone makes it lie.
           fetch-depth: 0
           fetch-tags: true
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - uses: astral-sh/setup-uv@v10.2.0
         with:
@@ -121,23 +170,39 @@ jobs:
       - name: pytest unit, fixtures, guard
         run: uv run --locked pytest tests/unit tests/fixtures tests/guard -q -n 4
 
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-python
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn
+
   # ---------------------------------------------------------------- r
   r:
     name: r
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
-      RENV_PATHS_ROOT: ~/.cache/R/renv
+      RENV_PATHS_ROOT: /home/runner/.cache/R/renv
       # .Rprofile pins repos to cloud.r-project.org, which would build all 216
       # packages from source on a runner. The override points renv at the public
       # Posit binaries for the runner's Ubuntu release instead. It changes where
       # the bytes come from, never which versions: renv.lock decides that.
       RENV_CONFIG_REPOS_OVERRIDE: https://packagemanager.posit.co/cran/__linux__/noble/latest
-      # No Stan compile in this job. Nothing here installs CmdStan, and no step
-      # calls R/00_setup.R or any model fit. cmdstanr restores as an R package only.
+      # NO STAN COMPILE IN THIS JOB. Nothing here installs CmdStan, and no step calls
+      # R/00_setup.R, make r-smoke or any model fit. cmdstanr restores as an R package
+      # only. ops/ci_check.py fails if a CmdStan install or a model compile appears.
       CMDSTANR_NO_VER_CHECK: "true"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - uses: r-lib/actions/setup-r@v2
         with:
@@ -146,7 +211,7 @@ jobs:
 
       - uses: actions/cache@v6.1.0
         with:
-          path: ~/.cache/R/renv
+          path: /home/runner/.cache/R/renv
           key: renv-${{ runner.os }}-R4.5.2-${{ hashFiles('renv.lock') }}
           restore-keys: |
             renv-${{ runner.os }}-R4.5.2-
@@ -162,25 +227,34 @@ jobs:
         run: |
           testthat::test_dir("tests/testthat")
 
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-r
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn
+
   # ---------------------------------------------------------------- dbt
   dbt:
     name: dbt
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    # PRECONDITION. This job needs dbt/dbt_project.yml, dbt/packages.yml and real
-    # models under dbt/models/. Phase 01 wrote dbt/profiles.yml.example and the
-    # directory tree only, so the job is red until SOP W1.11 and W2 land them.
-    # Recorded in docs/DEVIATIONS.md and logs/evidence/W1.16.log. It is a phase
-    # ordering fact, not a broken reference: every Makefile target and script this
-    # file names does exist today.
     env:
-      # The ci target is in-memory DuckDB over a synthetic lake written to the
-      # runner's temp directory. Nothing under data/ is read or written, and the
-      # repository working tree stays clean.
+      # The ci target is in-memory DuckDB over the synthetic seed and a synthetic lake
+      # written to the runner's temp directory. Nothing under data/ is read or
+      # written, and the working tree's warehouse/ is never opened.
       ABS_DATA_ROOT: ${{ runner.temp }}/ci-lake
       DBT_PROFILES_DIR: ${{ runner.temp }}/dbt-profiles
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - uses: astral-sh/setup-uv@v10.2.0
         with:
@@ -188,7 +262,10 @@ jobs:
           enable-cache: true
 
       - name: uv sync --locked
-        run: uv sync --locked
+        run: |
+          uv sync --locked
+          # the locked environment's bin first, so the dbt line below is the SOP's own.
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: build the fixture DuckDB from synthetic Parquet
         run: |
@@ -199,9 +276,10 @@ jobs:
           """Write the synthetic fixtures out as the Parquet lake the dbt sources read.
 
           The sources in dbt/models resolve through
-          read_parquet('$ABS_DATA_ROOT/interim/{name}/**/*.parquet', hive_partitioning=true).
-          Every row here comes from tests/fixtures/generated, which is generated
-          synthetic data with no MLB or Savant content in it.
+          read_parquet('$ABS_DATA_ROOT/interim/{name}/**/*.parquet', hive_partitioning=true),
+          and dbt/macros/lake_scan.sql builds a lake table with no file as an empty,
+          typed stub. Every row here comes from tests/fixtures/generated, which is
+          generated synthetic data with no MLB or Savant content in it.
           """
           import os
           import pathlib
@@ -211,8 +289,7 @@ jobs:
           root = pathlib.Path(os.environ["ABS_DATA_ROOT"]) / "interim"
           generated = pathlib.Path("tests/fixtures/generated")
 
-          # fixture file -> lake table. Extend this map as W2's extractor lands the
-          # remaining lake tables; the SOP W1.11 source list is the target shape.
+          # fixture file -> lake table. The SOP W1.11 source list is the target shape.
           tables = {"statcast_pitch": generated / "statcast.csv"}
 
           con = duckdb.connect()
@@ -239,11 +316,19 @@ jobs:
 
       - name: dbt deps && dbt parse && dbt build --target ci
         working-directory: dbt
-        run: |
-          set -eu
-          uv run --locked dbt deps
-          uv run --locked dbt parse
-          uv run --locked dbt build --target ci
+        run: dbt deps && dbt parse && dbt build --target ci
+
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-dbt
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn
 
   # ---------------------------------------------------------------- guard
   guard:
@@ -251,12 +336,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
         with:
           # The guard is a git and file scan. It reads history and tags, and it
           # reads no data at all.
           fetch-depth: 0
           fetch-tags: true
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - uses: astral-sh/setup-uv@v10.2.0
         with:
@@ -272,16 +360,31 @@ jobs:
       - name: make prove-guard-redteam
         run: make prove-guard-redteam
 
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-guard
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn
+
   # ---------------------------------------------------------------- secrets
   secrets:
     name: secrets
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7.0.1
         with:
           # gitleaks scans the full history, so the full history has to be here.
           fetch-depth: 0
+
+      - name: no MLB host, arm (sinkhole and resolver observer)
+        run: bash ops/ci_no_mlb.sh arm
 
       - name: install gitleaks
         env:
@@ -297,3 +400,15 @@ jobs:
 
       - name: gitleaks detect --redact --no-banner
         run: gitleaks detect --redact --no-banner
+
+      - name: no MLB host, audit
+        if: always()
+        run: bash ops/ci_no_mlb.sh audit
+
+      - uses: actions/upload-artifact@v7.0.1
+        if: always()
+        with:
+          name: no-mlb-dns-secrets
+          path: ${{ runner.temp }}/ci-no-mlb/dns.log
+          retention-days: 7
+          if-no-files-found: warn

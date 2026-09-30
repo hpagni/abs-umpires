@@ -40,8 +40,10 @@ frozen and tagged, and only then is data read. `make seal-check` runs the sealed
 that need no data. `make unseal` refuses unless the pre-registration tag is an ancestor of
 the current commit. The pre-registration tag is not yet cut.
 
-Continuous integration runs on Linux. The authoritative gate is `make prove` on the
-development machine, which is arm64 macOS. A green badge is not a reproduction.
+Continuous integration runs on Linux and never exercises the arm64 macOS build. Its two
+workflows are parked in `ops/ci-pending/` until the repository owner enables them, so no run
+has been recorded yet. The authoritative gate is `make prove` on the development machine,
+which is arm64 macOS. A green badge is not a reproduction.
 
 ## Reproducing
 

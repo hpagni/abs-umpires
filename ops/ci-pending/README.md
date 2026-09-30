@@ -1,16 +1,41 @@
 # CI workflows, parked until the `workflow` token scope exists
 
-`ci.yml` and `seal-guard.yml` are the two files SOP step W1.16 specifies. They belong at
-`.github/workflows/`. They are parked here because the GitHub token on this machine carries
-`gist, read:org, repo` and not `workflow`, and GitHub rejects any push that adds or updates a
-path under `.github/workflows/` without that scope. The rule applies to every path under that
-directory, not only to `.yml` files, so `.github/` was removed from the tree rather than left
-as a `.gitkeep` that blocks the first push on its own.
+`ci.yml` and `seal-guard.yml` are the two files SOP steps W1.16 and W9.10 specify. They
+belong at `.github/workflows/`. They wait here because the GitHub token on this machine
+carries `gist, read:org, repo` and not `workflow`, and GitHub rejects any push that adds or
+updates a path under `.github/workflows/` without that scope. The rule covers every path
+under that directory, not only `.yml` files. So phase 01 took `.github/` out of the tree
+rather than leave a `.gitkeep` there that would block the first push on its own.
 
-Nothing else about these two files is provisional. Both parse as YAML, `ci.yml` declares
-exactly the six jobs W1.16 names (lint, python, r, dbt, guard, secrets), and every Makefile
-target and script they call exists in this repository. The validation is in
-`logs/evidence/W1.16.log`.
+Nothing else about these two files is provisional. `uv run --locked python ops/ci_check.py`
+checks them on this machine (W9.10's registered verify) and reads them from
+`.github/workflows/` once they are there, so it keeps working after the move:
+
+- both parse, trigger on push and pull request, and never on a schedule;
+- `ci.yml` has exactly the six jobs of the W1.16 table, lint, python, r, dbt, guard and
+  secrets, on `ubuntu-latest`, none waiting on another, each capped at 8 minutes;
+- every action is pinned: `actions/checkout@v7.0.1`, `astral-sh/setup-uv@v10.2.0`,
+  `actions/cache@v6.1.0`, `actions/upload-artifact@v7.0.1`, `r-lib/actions/setup-r@v2`
+  (`actions/setup-python@v7.0.0` is allowed and unused);
+- each job runs the table's commands, and the r job restores renv and runs testthat with no
+  Stan compile;
+- the seal-guard provenance step passes on a clean clone of HEAD and fails on each of six
+  planted violations.
+
+## Zero network calls to MLB hosts
+
+Every job's first step after checkout is `bash ops/ci_no_mlb.sh arm` and its last is
+`bash ops/ci_no_mlb.sh audit`, under `if: always()`:
+
+1. arm writes every MLB-family host the repository names into `/etc/hosts` as `0.0.0.0`,
+   so a connection to one is refused on the runner and no packet leaves;
+2. arm starts an observer on the runner's resolver, `resolvectl monitor` or a port 53
+   capture, and proves it live with a canary lookup; if neither can be proved the job fails;
+3. audit fails the job if any name in the MLB family was looked up, or if the sinkhole was
+   removed, and the observer log is uploaded as the job's `no-mlb-dns-*` artifact.
+
+`ops/ci_check.py` fails if a tracked file names an MLB-family host missing from the sinkhole
+list. `bash ops/ci_no_mlb.sh selftest` proves the matcher on any machine.
 
 ## Owner step, once
 
@@ -39,16 +64,27 @@ git push -u origin HEAD
 gh api repos/hpagni/abs-umpires/contents/.github/workflows/ci.yml --jq '.name,.size'
 gh workflow list --repo hpagni/abs-umpires        # expect ci and seal-guard
 gh run list --repo hpagni/abs-umpires --limit 5   # expect runs, then green
+gh run view <id> --repo hpagni/abs-umpires        # the measured wall clock, per job
 ```
 
-The first command answers W1.3, which asks for a push carrying a workflow file to be proved end
-to end. The second and third answer W1.16. `quality/steps.yml` still registers both steps
-against `.github/workflows/...`; those registered verify commands start passing on the same
-move, and nothing in them needs editing.
+The first command answers W1.3. The second and third answer W1.16. The fourth is the only
+place SOP clause 3, green in under 8 minutes, can be measured: until then W9.10 registers
+that clause as pending, never as passed. `quality/steps.yml` still registers W1.16 against
+`.github/workflows/...`; that verify starts passing on the same move.
 
-## Note on the dbt job
+## Known red on first enablement
 
-`ci.yml`'s dbt job needs `dbt/dbt_project.yml`, `dbt/packages.yml` and real models under
-`dbt/models/`. Phase 01 wrote `dbt/profiles.yml.example` and the directory tree only, so that
-job is red until SOP W1.11 and W2 land the project file and the models. This is a phase
-ordering fact, not a defect in the workflow file.
+A local rehearsal of each job on a clean clone of HEAD, on this Mac, is in
+`logs/evidence/W9.10.log`. Two jobs fail there for reasons outside these files, and will
+fail the same way on a runner until their owners fix them:
+
+- **dbt.** `dbt build --target ci` builds 85 nodes, then `int_challenge_resolved` errors
+  because the ci branch of `stg_abs_challenges` (W1.11, W2.17) keeps `pitch_uid` and has no
+  `pitch_slot`, which the intermediate model joins on. `--select tag:smoke`, W1.11's own gate,
+  never reaches that model, which is why W1.11 passes.
+- **r.** `tests/testthat/test-ch1-sensitivity.R` (W3.22) requires
+  `out/ch1/tab/sensitivity_grid.csv` and `out/tables/T8_sensitivity_data.csv`, which are
+  written by the grid run and not tracked, so a fresh checkout fails its first assertion.
+
+CI runs on Linux and never exercises the arm64 macOS build (R-31). A green run is not a
+reproduction; `make prove` on the Mac is the authoritative gate.

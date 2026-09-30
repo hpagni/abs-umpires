@@ -1659,3 +1659,33 @@ Two further pre-registered limitations reach the descriptive abstract in the sam
 misses on area: the binned logistic differs from the smooth fit by 6.0 and 7.6 sq in, against
 3 sq in, and the frozen rule reports that as a limitation. D-R0-04's caveat that top-edge
 intervals are slightly too narrow now sits beside the top-edge numbers.
+
+## DEV-78: W9.10, the CI workflows read against the SOP text
+
+Stamped 2026-09-30T15:44:08+02:00, Europe/Madrid. Owner W9, fleet phase 08. Files: `ops/ci-pending/ci.yml`,
+`ops/ci-pending/seal-guard.yml`, `ops/ci_no_mlb.sh`, `ops/ci_check.py`,
+`ops/hook_no_raw_data.sh`.
+
+1. **Seal-guard clause 4 now follows the SOP text.** SOP W1.16 says "no `provenance.json` has
+   `fit_started_at` earlier than the tag's commit date". The phase 01 file failed any
+   provenance.json that carried no `fit_started_at`. HEAD tracks 29 fit receipts and none
+   carries the field, so that version fails on the first push. The check now fails when the
+   field is present and earlier than the tag, or present and unreadable. A receipt without it
+   is printed as a NOTE. Clause 3 still requires the field on every sealed output. For the
+   29 open-data receipts, clause 4 therefore has nothing to compare. The fit-receipt writer
+   should stamp `fit_started_at`; that is an open item for its owner, not for W9.10.
+2. **No pre-tag skip.** `prereg-v1` is cut (W3.13) and on the remote, so a missing tag is a
+   hard failure. The phase 01 skip branch is gone.
+3. **Layer 4 is its own file.** Seal-guard runs `tests/guard/test_no_sealed_reads.py`
+   (layer 3, GD-04, GD-05) and `tests/guard/test_seal_receipts.py` (layer 4, GD-01, GD-02).
+   The whole guard suite runs in ci.yml's guard job.
+4. **`ops/hook_no_raw_data.sh --tracked` in the lint job.** With no argument the hook reads
+   the staged list, and a runner stages nothing, so the table's bare command would pass
+   without reading a path. `--tracked` reads `git ls-files`.
+5. **Steps beyond the table.** Every job runs `ops/ci_no_mlb.sh arm` after checkout and
+   `audit` last, then uploads the resolver log, to enforce clause 3's zero MLB calls. The
+   dbt job puts the locked environment's `bin` on PATH, so its line is the SOP's own,
+   `dbt deps && dbt parse && dbt build --target ci`.
+6. **Clause 3 is pending.** "CI is green on every push in under 8 minutes" needs a runner.
+   The token lacks `workflow`, so it is NOT MEASURABLE UNTIL THE OWNER ENABLES THE SCOPE,
+   and W9.10 registers it as pending, never as passed.

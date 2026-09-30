@@ -2148,6 +2148,33 @@
   owner: W9
   needs: tests/guard/gd04_scan.py, tests/guard/redteam_run.sh, tests/guard/redteam.patch, tests/guard/test_no_sealed_reads.py, tests/guard/test_seal_receipts.py, tests/guard/test_seal_immutability.py, tests/guard/test_dbt_dev_target.py, tests/guard/test_commit_guards.py, tests/guard/test_redteam.py, quality/sealed_manifest.json, quality/prereg.lock
 
+# W9.10, CI. Owner W9, fleet phase 08. SOP W9.10 implements the W1.16 workflow
+# definition and project clause 3. Registered 2026-09-30, Madrid.
+#
+# The two workflows are parked in ops/ci-pending/ because the gh token lacks the
+# `workflow` scope (W1.3); ops/ci-pending/README.md is the owner's one move. The
+# verify command is ops/ci_check.py, which reads them from .github/workflows/ once
+# they are there and from ops/ci-pending/ until then, and checks C1 to C10: YAML,
+# triggers, the six parallel jobs on ubuntu-latest with an 8-minute cap each, the
+# action pins, the SOP table's commands with no Stan compile in the r job, the
+# zero-MLB enforcement (ops/ci_no_mlb.sh arm first and audit last in every job, its
+# selftest, and every MLB-family host named in the tree on its sinkhole list), no
+# nightly.yml, the seal-guard provenance step run byte for byte on a clean clone of
+# HEAD and on six planted violations, the R-31 README wording, and actionlint when it
+# is installed (SKIP when it is not; nothing is installed to run it).
+#
+# PENDING CLAUSE. SOP clause 3, "CI is green on every push in under 8 minutes", is a
+# measurement on a GitHub runner and is NOT MEASURABLE UNTIL THE OWNER ENABLES THE
+# SCOPE. It is registered here as pending, never as passed: ops/ci_check.py prints it
+# as PENDING-OWNER on every run and its exit code does not count it. A PASS receipt
+# for this step says the workflows are built and locally sound, not that CI is green.
+- id: W9.10
+  title: "CI: ci.yml and seal-guard.yml, checked locally; clause 3 (green, under 8 minutes) pending the owner"
+  verify: "uv run --locked python ops/ci_check.py"
+  expect_exit: 0
+  owner: W9
+  needs: ops/ci_check.py, ops/ci_no_mlb.sh, ops/ci-pending/README.md, docs/runbook.md
+
 # W9.13, prose lint: the W7.1-W7.5 stack in service and the WR-01..WR-20 pack. Owner W9,
 # fleet phase 06 (abstract lane). SOP W9.13 and section 6.6. Registered 2026-09-29, Madrid.
 #

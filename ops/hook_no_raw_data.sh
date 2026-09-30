@@ -19,15 +19,26 @@
 #
 # Usage:
 #   ops/hook_no_raw_data.sh [PATH ...]
+#   ops/hook_no_raw_data.sh --tracked
 # pre-commit passes the staged paths as arguments. With no arguments the hook
-# reads the staged list itself, so it is also usable by hand and from CI.
+# reads the staged list itself, so it is also usable by hand.
+#
+# --tracked (SOP W9.10) reads every path in the index instead, `git ls-files`.
+# This is the form CI runs. A runner checks out a commit and stages nothing, so
+# the no-argument form would read an empty list there and pass without looking
+# at anything; --tracked asks the question CI can answer, whether the pushed
+# commit carries any refused path at all.
 #
 # Exit 0 clean, 1 on a refused path, 2 on a usage error.
 # POSIX sh. No network, no package load.
 
 set -u
 
-if [ "$#" -gt 0 ]; then
+if [ "${1:-}" = "--tracked" ]; then
+    [ "$#" -eq 1 ] || { echo "usage: ops/hook_no_raw_data.sh --tracked" >&2; exit 2; }
+    PATHS=$(git ls-files 2>/dev/null) || { echo "--tracked: not a git work tree" >&2; exit 2; }
+    printf 'no-raw-data: checking %s tracked paths\n' "$(printf '%s\n' "$PATHS" | grep -c .)"
+elif [ "$#" -gt 0 ]; then
     PATHS=$(printf '%s\n' "$@")
 else
     PATHS=$(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null)
