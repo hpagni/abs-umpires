@@ -1,1 +1,0 @@
-Fitted 50 percent zone edges by season for a 72-inch batter at the 2024 pitch mix, to scale over the rule-book rectangle, catcher's view. The 2022-2024 outlines nearly coincide; the 2025 outline is narrower at the sides and the 2026 outline shorter at top and bottom. Inset: edge steps net of the 2022-2024 trend, 95% intervals.
