@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 490 of 495,
+Variant filled: owner. Words counted: 493 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -134,7 +134,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 523 words with the inline table, OVER THE CAP by 28 words after every rung. Cuts: none.
+The no-upload body counts 526 words with the inline table, OVER THE CAP by 31 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -172,15 +172,14 @@ The slots as printed in this fill:
 | N_CHAL_AGREE | 10,164 | 1 |
 | N_CHAL | 10,168 | 1 |
 | P1_AREA | 10.8 (90% CI 7.7 to 13.9) | 6 |
-| D_TOTAL | 56.0 (95% CI 52.0 to 59.6) | 6 |
 | D_BUF | 23.4 (95% CI 18.6 to 28.3) | 6 |
 | D_ABS | 33.1 (95% CI 28.7 to 37.5) | 6 |
-| A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
+| P2_AREA_MAX | 6.8 square inches | 3 |
 | A_PUB_LOSS | 8 to 22 | 3 |
 | A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
+| A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
 | SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
-| CALL | The zone had already lost 23.4 (95% CI 18.6 to 28.3) square inches in 2025, before regular-season challenges began, so comparisons that start from 2025 miss that step. | 28 |
-| BREAK_YEAR | 2025 | 1 |
+| CALL | The zone had already shrunk in 2025, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step. | 23 |
 | SHARE_ABS | 59 | 1 |
 | SHARE_ABS_CI | 53 to 65 | 3 |
 | A5_TOL | 3 | 1 |
