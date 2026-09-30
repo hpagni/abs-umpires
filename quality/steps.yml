@@ -1175,6 +1175,28 @@
   owner: W3
   needs: R/ch1/25_heterogeneity.R, out/ch1/tab/T6_heterogeneity.csv, out/ch1/tab/umpire_eb.csv, out/ch1/model/umpire_me.rds
 
+# W3.19, catcher framing by regime, and CH1-A11. Owner W3, fleet phase 08, the chapter1-full lane.
+#
+# R/ch1/30_framing.R fits the catcher-free framing surface (the frozen formula, bam on P0, 1,000 Vc
+# draws, seed 20260922, cached on sha256(input frame) + seed + sha256(model code)), scores observed
+# minus expected strikes per catcher-season at the count-specific run value from delta_run_exp (Tango's
+# 0-0 figures checked, never used) and at the flat 0.125, under both pre-registered 2026 conventions,
+# and writes per regime the SD across catchers, the top-30 mean per 100 innings against Doolittle,
+# the Delta_buffer / Delta_ABS decomposition, split-half reliability and whether it fell under ABS,
+# and CH1-A11 against Savant's cached rv_tot. The real run refuses unless prereg-v1 is an ancestor
+# and the code it executes is committed (GD-12).
+#
+# The verify command re-reads what the step wrote with tests/testthat/test-ch1-framing.R, which
+# refits nothing and re-derives every table from the catcher-season sidecar, traces every prose
+# number to its CSV row and lints the prose; GD-04 then scans the script. `needs` names the step's
+# outputs, so before the real run the step reads MISSING rather than FAIL.
+- id: W3.19
+  title: "Chapter 1 catcher framing by regime, and CH1-A11"
+  verify: "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-framing\", stop_on_failure = TRUE)' && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/30_framing.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/30_framing.R, tests/testthat/test-ch1-framing.R, out/ch1/tab/framing_catcher_seasons.csv, out/ch1/tab/framing_by_season.csv, out/tables/ch1_framing_by_regime.csv, out/tables/ch1_framing_validity.csv, out/ch1/prose/framing.md
+
 # W3.21, placebos P1 to P4. Owner W3, fleet phase 05, the ch1-fits lane.
 #
 # R/ch1/26_placebos.R scores P1 as two one-sided equivalence tests on W3.15's draws (0.5 pp, 3 sq
