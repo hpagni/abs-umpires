@@ -1,0 +1,24 @@
+# W2.8 -- AAA feeds 2023-2025 and the three scans that settle D-11, D-12 and D-57. Owned
+# by W2, merged into quality/steps.yml by quality/merge_steps.py. Do not edit
+# quality/steps.yml by hand. First registered 2026-09-30, Madrid, by the phase 07
+# statsapi launcher as a hand-appended row; this file is that row moved to its source,
+# with the puller's own tests added.
+#
+# The pull runs over more than one day under the 3,000/day statsapi cap, so the step
+# reads MISSING until the harvest run writes tests/data/test_feeds_aaa.py. That test file
+# is the contract: every Final AAA 2023-2025 game that was played has a sane stored feed,
+# the scans are closed on the full corpus, the regime gate is key presence and never
+# weekday, DT-29, and the DT-08 AAA clause. The three scan tables exist from an earlier
+# partial scan with status "open", so they alone cannot make the step look built.
+#
+# tests/data/test_feeds_batch.py holds absump.ingest.feeds to the four fixes the launch
+# asked for, offline: --season takes several seasons, plan drops Cancelled games as it
+# drops Postponed ones, an http.Fatal ends the queue instead of moving to the next game,
+# and the daily cap ends the batch cleanly with exit 0 instead of sleeping out the 4 s
+# spacing once per remaining game.
+- id: W2.8
+  title: "AAA feeds 2023-2025, the D-11 regime scan, the D-12 allotment audit and the D-57 changeover date"
+  verify: "uv run --locked pytest tests/data/test_feeds_batch.py tests/data/test_feeds_aaa.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/feeds.py, tests/data/test_feeds_batch.py, tests/data/test_feeds_aaa.py, out/tables/aaa_regime_scan.csv, out/tables/aaa_allotment_audit.csv, out/tables/aaa_changeover.csv, data/raw/statsapi/feed/sport=11/season=2024, data/raw/statsapi/feed/sport=11/season=2025

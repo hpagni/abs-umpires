@@ -1,0 +1,5 @@
+re288: Retrosheet 2015-2025 regular season, 7,402,437 pitches; Statcast 2022-2025 open MLB regular season, 1,896,621 pure count moves
+re288: DT-27 max |delta_run_exp - (RE[next] - RE[this])| = 0.3539 runs at (0, '123', 2, 2); 218 of 264 cells over the 0.01 bar; median 0.0358; FAIL
+re288: reported, not gated: the same with the 2022-2025 Retrosheet table, max 0.3041; Retrosheet 2022-2025 against the warehouse's Statcast-built fct_re288, max 0.1212, median 0.0089 runs
+re288: wrote out/tables/re288_crosscheck.csv
+.........................................                                [100%]

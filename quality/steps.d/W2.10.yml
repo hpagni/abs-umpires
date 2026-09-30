@@ -1,0 +1,32 @@
+# W2.10 -- the Savant minors CSV, AAA 2023-2025. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+# Registered 2026-09-30, Madrid.
+#
+# The day URL is the SOP's, parameter for parameter, with its two mandatory parameters
+# minors=true and hfLevel=AAA%7C (absump.ingest.statcast_day.day_url, level aaa). The
+# chain is absump.ingest.pull_statcast --run with a scope, under W6.0's one-chain mutex
+# and absump.http's 10 s and 800/day Savant policy. The CSV has no level column, so a
+# day enters the lake only if its game_pk set is a subset of the sportId=11 Final games
+# the stored schedule lists for that date; a refused day is written to
+# logs/evidence/W2.10.log and never stored. A 403 ends the chain with exit 3; the daily
+# cap ends it cleanly.
+#
+# The same chain runs the W2.9 backfill, MLB 2015-2021, against the sportId=1 schedule,
+# and records and skips any season whose header is not byte-identical to the DT-02
+# fixture. That half is proved by `--verify-scope mlb` and is not part of this step.
+#
+# MISSING until the pull is complete. The chain writes logs/evidence/W2.10-aaa-complete.json
+# only when one run has judged every played day of 2023, 2024 and 2025: stored, or refused
+# by the admission check. Until then this step is not built, which is the truth for a
+# pull that takes more than one night. `--verify-scope aaa` then re-runs DT-01, DT-02,
+# UT-14 and the admission check over every stored day and fails on any day that is
+# neither stored nor recorded as refused. The pytest module is the offline half, 26
+# tests with a mocked transport: both URLs, the subset check accepting and refusing,
+# resume sending nothing for a day already in the manifest, the header skip, the
+# statsapi mutex for the schedules, and the two stops.
+- id: W2.10
+  title: "Savant minors CSV, AAA 2023-2025, admitted against the sportId=11 schedule"
+  verify: "uv run --locked python -m absump.ingest.pull_statcast --verify-scope aaa && uv run --locked pytest tests/data/test_statcast_minors.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/pull_statcast.py, src/absump/ingest/statcast_day.py, tests/data/test_statcast_minors.py, logs/evidence/W2.10-aaa-complete.json

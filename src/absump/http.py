@@ -12,7 +12,8 @@ read from ``config/throttle.yml`` and nothing else:
 * a per-host minimum interval between requests, on a process-wide monotonic
   clock;
 * a per-host daily request budget, counted in UTC days and persisted across
-  processes, which raises :class:`BudgetExceeded` at zero;
+  processes under a flock on ``data/raw/_budget.json.lock``, which raises
+  :class:`BudgetExceeded` at zero;
 * bounded retry with ``tenacity`` on 5xx and timeouts, no retry on a 4xx, and
   403 fatal on the first attempt;
 * an immutable raw cache, so a re-run of a completed pull costs zero requests;
@@ -38,7 +39,9 @@ single 2026 datum.
 
 from __future__ import annotations
 
+import contextlib
 import csv
+import fcntl
 import hashlib
 import json
 import os
@@ -113,6 +116,10 @@ _MEASURED_FEED_WIRE_BYTES = 109_623
 
 _MANIFEST_NAME = "_manifest.csv"
 _BUDGET_NAME = "_budget.json"
+#: The cross-process lock for the budget file, beside it. flock(2), so the
+#: kernel releases it when the holder exits, however it exits: a killed puller
+#: can never leave the budget locked.
+_BUDGET_LOCK_NAME = "_budget.json.lock"
 
 #: Manifest columns, in order, exactly as SOP section 2.3 states them.
 _MANIFEST_COLUMNS = (
@@ -181,6 +188,8 @@ _CACHE_DIR: Path | None = None
 _LAST_REQUEST_AT: dict[str, float] = {}
 _MANIFEST_INDEX: dict[str, dict[str, str]] = {}
 _MANIFEST_STAMP: tuple[int, int] | None = None
+#: (utc_date, host) -> the count this process last wrote. See _budget_take.
+_BUDGET_FLOOR: dict[tuple[str, str], int] = {}
 
 
 def _reset_state(
@@ -203,6 +212,7 @@ def _reset_state(
         _LAST_REQUEST_AT.clear()
         _MANIFEST_INDEX.clear()
         _MANIFEST_STAMP = None
+        _BUDGET_FLOOR.clear()
         _transport = transport
 
 
@@ -365,19 +375,63 @@ def _read_budget() -> dict[str, Any]:
 
 
 def _write_budget(state: dict[str, Any]) -> None:
+    """Replace the budget file atomically.
+
+    The temporary name carries the process id and the thread id. A fixed name
+    let two processes write the same temporary file, so one could rename the
+    other's half-written bytes into place, or find the file already renamed
+    and fail with FileNotFoundError.
+    """
     path = _budget_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    os.replace(tmp, path)
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    try:
+        tmp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
+@contextlib.contextmanager
+def _budget_file_lock() -> Any:
+    """Hold an exclusive flock on ``_budget.json.lock`` beside the budget file.
+
+    ``_LOCK`` serialises threads inside one process and nothing else. The
+    statsapi, Savant and Retrosheet pullers are separate processes that share
+    one budget file, and a read-modify-write under a thread lock alone lets one
+    process overwrite another's increment: the count comes out low and a
+    host's D-63 cap can be overshot. The kernel releases a flock when its
+    holder exits, so a killed puller never leaves the budget locked.
+    """
+    path = _cache_dir() / _BUDGET_LOCK_NAME
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o644)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        os.close(fd)
 
 
 def _budget_take(host: str) -> int:
-    """Spend one request against ``host``'s daily cap. Returns what is left."""
+    """Spend one request against ``host``'s daily cap. Returns what is left.
+
+    The read, the check and the write happen under the cross-process flock, so
+    two pullers cannot both read N and both write N + 1.
+
+    The count this process last wrote for a host is also a floor on what it
+    reads back. A writer that does not take the flock -- a process started
+    before this change and still running, or the R half, which has no flock in
+    base R -- can still replace the file with a stale count for this host. The
+    floor means this process never counts its own host down again: a lost
+    update is never a lost request against the cap.
+    """
     cap = _daily_cap(host)
-    with _LOCK:
+    with _LOCK, _budget_file_lock():
         state = _read_budget()
-        used = int(state["used"].get(host, 0))
+        key = (str(state["utc_date"]), host)
+        used = max(int(state["used"].get(host, 0)), _BUDGET_FLOOR.get(key, 0))
         if used >= cap:
             raise BudgetExceeded(
                 f"{host}: {used}/{cap} requests used on {state['utc_date']} UTC; "
@@ -385,6 +439,7 @@ def _budget_take(host: str) -> int:
             )
         state["used"][host] = used + 1
         _write_budget(state)
+        _BUDGET_FLOOR[key] = used + 1
         return cap - (used + 1)
 
 

@@ -1,0 +1,20 @@
+# W2.20 -- the B2 mirror of data/raw, content-addressed by the manifest sha256, so a
+# second sync moves nothing. Owned by W2, merged into quality/steps.yml by
+# quality/merge_steps.py. Do not edit quality/steps.yml by hand. Registered
+# 2026-09-30, Madrid.
+#
+# The mirror tooling is W1.9's (ops/b2_sync.sh, ops/b2_check.sh, tests/data/test_b2.py).
+# Without B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY the sync prints DEFERRED and exits
+# 0 and the live tests skip, so a verify built from those alone would pass on a mirror
+# that never ran. This one refuses to: it fails unless both keys are set, then runs the
+# canary and the live tests. The keys are an owner item.
+#
+# MISSING until a mirror has run. logs/evidence/W2.20.log is written by the run that
+# makes the first real sync and then a second one; its evidence is the second sync
+# moving nothing. Until that file exists the step is not built.
+- id: W2.20
+  title: "B2 mirror of data/raw, content-addressed, a second sync moves nothing"
+  verify: "test -n \"${B2_APPLICATION_KEY_ID:-}\" && test -n \"${B2_APPLICATION_KEY:-}\" && bash ops/b2_check.sh && uv run --locked pytest tests/data/test_b2.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: ops/b2_sync.sh, ops/b2_check.sh, tests/data/test_b2.py, logs/evidence/W2.20.log

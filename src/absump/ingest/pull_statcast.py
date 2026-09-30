@@ -54,6 +54,7 @@ import json
 import os
 import sys
 import tempfile
+import time
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Any, Final
@@ -65,6 +66,7 @@ from absump.ingest import schedule, statcast_day
 
 __all__ = [
     "MADRID",
+    "SCOPE_SEASONS",
     "SEASONS",
     "SOP_DAY_ESTIMATE",
     "SOP_DAY_TOLERANCE",
@@ -74,19 +76,27 @@ __all__ = [
     "ChainBusy",
     "Plan",
     "RunReport",
+    "Scope",
+    "ScopeReport",
     "all_days",
     "cap_state",
     "check",
     "done_days",
+    "ensure_schedules",
+    "final_game_pks_by_date",
+    "make_scope",
     "newest_first",
+    "parse_scope",
     "plan",
     "queue",
     "read_marker",
     "resume_marker_path",
     "run",
+    "run_scopes",
     "savant_host",
     "season_days",
     "staging_ok_days",
+    "verify_scope",
     "write_marker",
 ]
 
@@ -127,6 +137,7 @@ STOP_QUEUE_EMPTY: Final[str] = "queue-empty"
 STOP_DAILY_CAP: Final[str] = "daily-cap"
 STOP_MAX_REQUESTS: Final[str] = "max-requests"
 STOP_FAILURES: Final[str] = "consecutive-failures"
+STOP_FATAL: Final[str] = "fatal"
 
 
 class ChainBusy(RuntimeError):
@@ -186,16 +197,18 @@ def cap_state(host: str | None = None) -> CapState:
 # ---------------------------------------------------------------------------
 
 
-def season_days(season: int) -> list[_dt.date]:
-    """Every open game-day of one MLB season, ascending.
+def season_days(season: int, *, sport_id: int = SPORT_ID) -> list[_dt.date]:
+    """Every open game-day of one season at one level, ascending.
 
     A day is in scope when a game was played on it. The schedule payload is the
     source: W2.5 stores it, this reads it, and no day list is written down in
     two places. Sealed days are dropped here as well as at the URL, so the
     cutoff is enforced before a request is planned rather than after.
     """
-    payload, _source = schedule.load_payload(SPORT_ID, int(season))
-    games, _officials, _stats = schedule.extract(payload, sport_id=SPORT_ID, season=int(season))
+    payload, _source = schedule.load_payload(int(sport_id), int(season))
+    games, _officials, _stats = schedule.extract(
+        payload, sport_id=int(sport_id), season=int(season)
+    )
     return sorted(
         {
             row["official_date"]
@@ -544,6 +557,15 @@ def run(
                 report.stop_reason = STOP_DAILY_CAP
                 report.notes.append(f"{day.isoformat()}: {exc}")
                 break
+            except client.Fatal as exc:
+                # A 403 is the host telling this client to stop. Not one bad
+                # day to count towards three: the chain ends here.
+                report.failed += 1
+                report.stop_reason = STOP_FATAL
+                note = f"FATAL {day.isoformat()}: {type(exc).__name__}: {exc}"
+                report.notes.append(note)
+                print(note, file=out)
+                break
             except (
                 client.HttpError,
                 statcast_day.DayContractError,
@@ -816,6 +838,557 @@ def check(
 
 
 # ---------------------------------------------------------------------------
+# W2.10 and the W2.9 backfill: ordered scopes, admission, header skip
+# ---------------------------------------------------------------------------
+#
+# SOP W2.10 pulls the AAA minors CSV for 2023-2025 and the W2.9 backfill pulls
+# MLB 2015-2021, the seasons before W6.0's scope. Both run as one chain under
+# the same mutex as W6.0, through the same day puller and the same client, so
+# the 10 s Savant spacing is one process-wide clock across both levels and the
+# 800/day cap is the one in config/throttle.yml.
+#
+# Three rules W6.0 does not have:
+#
+#   ADMISSION. A day enters the lake only if its game_pk set is a subset of the
+#   stored schedule's Final games for that officialDate: sportId=11 for AAA,
+#   sportId=1 for MLB. The minors CSV has no level column, so for AAA this is
+#   the level check. A refused day is written to the evidence log and not
+#   stored; its bytes stay in the client's raw cache, so judging it again costs
+#   no request.
+#
+#   HEADER. DT-02 holds the header byte-identical to the committed fixture. A
+#   season whose header differs is recorded in the evidence log and skipped,
+#   one request spent, and the chain moves to the next season. The header is
+#   never "fixed".
+#
+#   STOPS. The daily cap ends the chain cleanly (exit 0). A 403, or any other
+#   http.Fatal, ends it at once with exit 3: the host has refused this client.
+
+SCOPE_STEP: Final[str] = "W2.10"
+
+#: statsapi sportId per level, the schedule the admission check reads.
+SPORT_BY_LEVEL: Final[dict[str, int]] = {"mlb": 1, "aaa": 11}
+
+#: The seasons run_scopes may pull, per level. AAA is W2.5's AAA list; MLB is
+#: the W2.9 backfill, every season before W6.0's 2022-2026 scope. No 2026 day,
+#: sealed or open, can be named here.
+SCOPE_SEASONS: Final[dict[str, tuple[int, ...]]] = {
+    "aaa": tuple(schedule.SEASONS[11]),
+    "mlb": tuple(range(2015, 2022)),
+}
+
+#: The evidence directory. logs/ is gitignored, like the night logs.
+EVIDENCE_DIR: Final[Path] = REPO_ROOT / "logs" / "evidence"
+
+#: ops/night_statsapi.sh's mutex, one statsapi chain at a time. The 2015-2021
+#: MLB schedules are statsapi calls, so they wait for it the way that script's
+#: second copy would, and take it while they run.
+STATSAPI_LOCK_NAME: Final[str] = ".statsapi_night.lock"
+SCHEDULE_WAIT_S: Final[float] = 6 * 3600.0
+SCHEDULE_POLL_S: Final[float] = 30.0
+
+STOP_SCHEDULE: Final[str] = "schedule-unavailable"
+
+
+class ScheduleUnavailable(RuntimeError):
+    """A season's schedule is not stored and could not be pulled."""
+
+
+@dataclasses.dataclass(frozen=True)
+class Scope:
+    """One level and its seasons, in the order the chain takes them."""
+
+    level: str
+    seasons: tuple[int, ...]
+
+    @property
+    def sport_id(self) -> int:
+        return SPORT_BY_LEVEL[self.level]
+
+    def label(self) -> str:
+        return f"{self.level}:{','.join(str(season) for season in self.seasons)}"
+
+
+def make_scope(level: str, seasons: Iterable[int]) -> Scope:
+    """A validated scope. Refuses a season outside SCOPE_SEASONS[level]."""
+    name = str(level).strip().lower()
+    if name not in SCOPE_SEASONS:
+        raise ValueError(f"level {level!r} is not one of {sorted(SCOPE_SEASONS)}")
+    years = tuple(int(season) for season in seasons)
+    if not years:
+        raise ValueError(f"scope {name} names no season")
+    if len(set(years)) != len(years):
+        raise ValueError(f"scope {name} names a season twice: {years}")
+    outside = [year for year in years if year not in SCOPE_SEASONS[name]]
+    if outside:
+        raise ValueError(
+            f"scope {name}: seasons {outside} are outside {SCOPE_SEASONS[name]}. "
+            "This chain never pulls 2026, and MLB 2022-2026 is W6.0's scope."
+        )
+    return Scope(level=name, seasons=years)
+
+
+def parse_scope(text: str) -> Scope:
+    """``aaa:2024,2025,2023`` -> Scope('aaa', (2024, 2025, 2023))."""
+    level, sep, years = str(text).partition(":")
+    if not sep:
+        raise ValueError(f"scope {text!r} is not LEVEL:YEAR,YEAR,...")
+    return make_scope(level, [int(year) for year in years.split(",") if year.strip()])
+
+
+def final_game_pks_by_date(sport_id: int, season: int) -> dict[_dt.date, frozenset[int]]:
+    """officialDate -> every game_pk the stored schedule lists as Final that day.
+
+    Every occurrence counts, not one row per game_pk: a suspended game is
+    listed on the day it started and on the day it finished, and its pitches
+    may carry either date. Abstract state Final also covers a cancelled game,
+    which has no pitches and so can never make a day fail a subset test.
+    Reads the stored payload only; this never sends a request.
+    """
+    payload, _source = schedule.load_payload(int(sport_id), int(season))
+    found: dict[_dt.date, set[int]] = {}
+    for block in payload.get("dates") or ():
+        for game in block.get("games") or ():
+            status = game.get("status") or {}
+            if status.get("abstractGameState") != "Final":
+                continue
+            pk, day = game.get("gamePk"), game.get("officialDate")
+            if not pk or not day:
+                continue
+            found.setdefault(paths.as_official_date(day), set()).add(int(pk))
+    return {day: frozenset(pks) for day, pks in found.items()}
+
+
+def statsapi_lock_path() -> Path:
+    return paths.tmp_dir() / STATSAPI_LOCK_NAME
+
+
+def schedule_stored(sport_id: int, season: int) -> bool:
+    return (
+        paths.raw_schedule(sport_id, season).exists()
+        or schedule.staging_payload_path(sport_id, season).exists()
+    )
+
+
+def ensure_schedules(
+    sport_id: int,
+    seasons: Iterable[int],
+    *,
+    wait_s: float = SCHEDULE_WAIT_S,
+    poll_s: float = SCHEDULE_POLL_S,
+    stream: Any = None,
+    sleep: Any = None,
+    monotonic: Any = None,
+) -> list[int]:
+    """Store every missing schedule, one statsapi call per season.
+
+    The calls go through ``absump.ingest.schedule.load_payload``, which goes
+    through ``absump.http``, under the statsapi night mutex. If a statsapi
+    batch holds it, this waits for it the way a second copy of
+    ops/night_statsapi.sh would, polling, for up to ``wait_s`` seconds, and
+    then raises ScheduleUnavailable. Returns the seasons it pulled.
+    """
+    out = stream if stream is not None else sys.stdout
+    nap = sleep if sleep is not None else time.sleep
+    clock = monotonic if monotonic is not None else time.monotonic
+    missing = [int(season) for season in seasons if not schedule_stored(sport_id, season)]
+    if not missing:
+        return []
+    lock = statsapi_lock_path()
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    deadline = clock() + float(wait_s)
+    announced = False
+    while True:
+        try:
+            lock.mkdir()
+            break
+        except FileExistsError:
+            if clock() >= deadline:
+                raise ScheduleUnavailable(
+                    f"sport {sport_id} seasons {missing}: {lock} was held for "
+                    f"{wait_s:.0f} s by another statsapi batch"
+                ) from None
+            if not announced:
+                print(
+                    f"schedules: {lock} is held by a statsapi batch; waiting for it "
+                    f"(poll {poll_s:.0f} s, up to {wait_s:.0f} s)",
+                    file=out,
+                )
+                announced = True
+            nap(poll_s)
+    try:
+        for season in missing:
+            _payload, source = schedule.load_payload(sport_id, season, allow_network=True)
+            print(f"schedules: sport {sport_id} season {season} stored from {source}", file=out)
+    finally:
+        release_lock(lock)
+    return missing
+
+
+def evidence_path(step: str = SCOPE_STEP) -> Path:
+    return EVIDENCE_DIR / f"{step}.log"
+
+
+def completion_path(level: str, step: str = SCOPE_STEP) -> Path:
+    """Written when every day of every SCOPE_SEASONS[level] season is judged."""
+    return EVIDENCE_DIR / f"{step}-{level}-complete.json"
+
+
+def _evidence(path: Path | None, line: str, out: Any) -> None:
+    text = f"{madrid_stamp()} {line}"
+    print(text, file=out)
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(text + "\n")
+
+
+@dataclasses.dataclass
+class ScopeReport:
+    """What one run over one or more scopes did."""
+
+    scopes: tuple[str, ...] = ()
+    attempted: int = 0
+    wire: int = 0
+    cached: int = 0
+    stored: int = 0
+    rechecked: int = 0
+    skipped_in_lake: int = 0
+    refused: list[str] = dataclasses.field(default_factory=list)
+    empty: list[str] = dataclasses.field(default_factory=list)
+    header_skipped: list[str] = dataclasses.field(default_factory=list)
+    failed: int = 0
+    stop_reason: str = STOP_QUEUE_EMPTY
+    next_day: str | None = None
+    cap_before: CapState | None = None
+    cap_after: CapState | None = None
+    notes: list[str] = dataclasses.field(default_factory=list)
+
+    def marker(self) -> dict[str, Any]:
+        after = self.cap_after or self.cap_before
+        return {
+            "step": SCOPE_STEP,
+            "scopes": list(self.scopes),
+            "ts_madrid": madrid_stamp(),
+            "stop_reason": self.stop_reason,
+            "days_attempted": self.attempted,
+            "requests_on_the_wire": self.wire,
+            "days_from_cache": self.cached,
+            "days_stored": self.stored,
+            "days_rechecked": self.rechecked,
+            "days_already_in_lake": self.skipped_in_lake,
+            "days_refused": list(self.refused),
+            "days_empty": list(self.empty),
+            "seasons_header_skipped": list(self.header_skipped),
+            "days_failed": self.failed,
+            "next_day": self.next_day,
+            "host": after.host if after else "",
+            "cap": after.cap if after else 0,
+            "used_before": self.cap_before.used if self.cap_before else 0,
+            "used_after": self.cap_after.used if self.cap_after else 0,
+            "notes": list(self.notes),
+        }
+
+    def lines(self) -> list[str]:
+        return [
+            f"run: attempted={self.attempted} wire={self.wire} cached={self.cached} "
+            f"stored={self.stored} rechecked={self.rechecked} refused={len(self.refused)} "
+            f"empty={len(self.empty)} header_skipped={len(self.header_skipped)} "
+            f"failed={self.failed} stop={self.stop_reason}",
+            f"run: next day {self.next_day or '-'}",
+        ]
+
+
+def scope_marker_path() -> Path:
+    return NIGHT_LOG_DIR / f"{SCOPE_STEP}-resume.json"
+
+
+def _manifested(url: str) -> bool:
+    """True when the client already paid for this URL and its body is on disk."""
+    row = client._manifest_index().get(url)
+    return row is not None and client._dest_path(url).exists()
+
+
+def run_scopes(
+    scopes: Sequence[Scope],
+    *,
+    resume: bool = True,
+    max_requests: int | None = None,
+    marker_path: Path | str | None = None,
+    evidence: Path | str | None = None,
+    stream: Any = None,
+    schedule_wait_s: float = SCHEDULE_WAIT_S,
+    schedule_poll_s: float = SCHEDULE_POLL_S,
+) -> ScopeReport:
+    """Drive the day puller over each scope's seasons, in the order given.
+
+    Inside a season the days go newest first, as in W6.0. With ``resume`` a
+    day already in the lake is skipped outright; without it the stored file is
+    read back and judged again, which costs no request. A day whose URL the
+    client already paid for is judged from the raw cache, also at no cost, so
+    a refused day stays refused and a drifted season is skipped again without
+    a second request. ``max_requests`` counts calls that reached the wire.
+    """
+    out = stream if stream is not None else sys.stdout
+    log = Path(evidence) if evidence is not None else evidence_path()
+    lock = take_lock()
+    report = ScopeReport(scopes=tuple(scope.label() for scope in scopes))
+    host = savant_host()
+    report.cap_before = cap_state(host)
+    judged: dict[str, set[_dt.date]] = {}
+    skipped_seasons: dict[str, set[int]] = {}
+    stop = False
+    try:
+        _evidence(
+            log,
+            f"{SCOPE_STEP} start scopes={' '.join(report.scopes)} resume={resume} "
+            f"cap {report.cap_before.used}/{report.cap_before.cap}",
+            out,
+        )
+        for scope in scopes:
+            if stop:
+                break
+            if scope.level == "mlb":
+                try:
+                    ensure_schedules(
+                        scope.sport_id,
+                        scope.seasons,
+                        wait_s=schedule_wait_s,
+                        poll_s=schedule_poll_s,
+                        stream=out,
+                    )
+                except (ScheduleUnavailable, client.HttpError) as exc:
+                    report.stop_reason = STOP_SCHEDULE
+                    _evidence(log, f"STOP {scope.label()}: schedules unavailable: {exc}", out)
+                    break
+            for season in scope.seasons:
+                if stop:
+                    break
+                try:
+                    allowed = final_game_pks_by_date(scope.sport_id, season)
+                    days = newest_first(season_days(season, sport_id=scope.sport_id))
+                except schedule.PayloadMissing as exc:
+                    report.stop_reason = STOP_SCHEDULE
+                    _evidence(log, f"STOP {scope.level} {season}: {exc}", out)
+                    stop = True
+                    break
+                in_lake = done_days(level=scope.level)
+                seen = judged.setdefault(scope.level, set())
+                for day in days:
+                    if day in in_lake and resume:
+                        report.skipped_in_lake += 1
+                        seen.add(day)
+                        continue
+                    url = statcast_day.day_url(day, level=scope.level)
+                    free = day in in_lake or _manifested(url)
+                    if not free:
+                        if max_requests is not None and report.wire >= max_requests:
+                            report.stop_reason = STOP_MAX_REQUESTS
+                            report.next_day = day.isoformat()
+                            stop = True
+                            break
+                        if cap_state(host).remaining <= 0:
+                            report.stop_reason = STOP_DAILY_CAP
+                            report.next_day = day.isoformat()
+                            stop = True
+                            break
+                    report.attempted += 1
+                    tag = f"{scope.level} {season} {day.isoformat()}"
+                    try:
+                        if day in in_lake:
+                            day_report = statcast_day.validate_day(
+                                statcast_day.read_day(
+                                    statcast_day.raw_path(day, level=scope.level)
+                                ),
+                                day,
+                            )
+                            statcast_day.admit(day_report, allowed.get(day, frozenset()))
+                            report.rechecked += 1
+                            seen.add(day)
+                            continue
+                        day_report = statcast_day.pull_day(
+                            day, level=scope.level, allowed_game_pks=allowed.get(day, frozenset())
+                        )
+                    except client.BudgetExceeded as exc:
+                        report.attempted -= 1
+                        report.stop_reason = STOP_DAILY_CAP
+                        report.next_day = day.isoformat()
+                        report.notes.append(f"{tag}: {exc}")
+                        stop = True
+                        break
+                    except client.Fatal as exc:
+                        report.failed += 1
+                        report.stop_reason = STOP_FATAL
+                        report.next_day = day.isoformat()
+                        _evidence(log, f"FATAL {tag}: {type(exc).__name__}: {exc}", out)
+                        stop = True
+                        break
+                    except statcast_day.HeaderDrift as exc:
+                        if not free:
+                            report.wire += 1
+                        report.header_skipped.append(f"{scope.level}:{season}")
+                        skipped_seasons.setdefault(scope.level, set()).add(season)
+                        _evidence(
+                            log,
+                            f"HEADER {tag}: DT-02 refused, season {season} skipped, the "
+                            f"header is recorded and not fixed: {exc}",
+                            out,
+                        )
+                        break
+                    except statcast_day.NotInSchedule as exc:
+                        if not free:
+                            report.wire += 1
+                        else:
+                            report.cached += 1
+                        report.refused.append(f"{scope.level}:{day.isoformat()}")
+                        seen.add(day)
+                        _evidence(log, f"REFUSED {tag}: {exc}", out)
+                        continue
+                    except (
+                        client.HttpError,
+                        statcast_day.DayContractError,
+                        paths.SealViolation,
+                        OSError,
+                        ValueError,
+                    ) as exc:
+                        report.failed += 1
+                        _evidence(log, f"FAILED {tag}: {type(exc).__name__}: {exc}", out)
+                        continue
+                    if day_report.from_cache:
+                        report.cached += 1
+                    else:
+                        report.wire += 1
+                    report.stored += 1
+                    seen.add(day)
+                    if not day_report.game_pks:
+                        report.empty.append(f"{scope.level}:{day.isoformat()}")
+                        _evidence(log, f"EMPTY {tag}: 0 rows under the header; stored", out)
+                    print(
+                        f"pull: {tag} {day_report.n_rows} rows, {len(day_report.game_pks)} "
+                        f"games, {'cache' if day_report.from_cache else 'wire'}",
+                        file=out,
+                    )
+        report.cap_after = cap_state(host)
+        for level in sorted({scope.level for scope in scopes}):
+            _write_completion(level, scopes, judged.get(level, set()), skipped_seasons, report, out)
+    finally:
+        release_lock(lock)
+
+    written = write_marker(report.marker(), marker_path or scope_marker_path())
+    for line in report.lines():
+        print(line, file=out)
+    _evidence(
+        log,
+        f"{SCOPE_STEP} stop={report.stop_reason} wire={report.wire} cached={report.cached} "
+        f"stored={report.stored} refused={len(report.refused)} "
+        f"header_skipped={','.join(report.header_skipped) or '-'} failed={report.failed} "
+        f"cap {report.cap_after.used if report.cap_after else '?'}/"
+        f"{report.cap_after.cap if report.cap_after else '?'} marker {written}",
+        out,
+    )
+    return report
+
+
+def _write_completion(
+    level: str,
+    scopes: Sequence[Scope],
+    judged: set[_dt.date],
+    skipped: dict[str, set[int]],
+    report: ScopeReport,
+    out: Any,
+) -> None:
+    """Stamp a level complete when this run judged every day of every season.
+
+    Complete means: every played day of every SCOPE_SEASONS[level] season is in
+    the lake, or was refused by the admission check, or belongs to a season
+    skipped for header drift. Only a run that covered all of those seasons can
+    say so. The stamp is what the W2.10 registration needs before its verify
+    runs, so the step reads MISSING, not FAIL, while the pull is in progress.
+    """
+    covered = {season for scope in scopes if scope.level == level for season in scope.seasons}
+    if covered != set(SCOPE_SEASONS[level]) or report.stop_reason not in (STOP_QUEUE_EMPTY,):
+        return
+    outstanding: list[str] = []
+    per_season: dict[str, int] = {}
+    for season in SCOPE_SEASONS[level]:
+        days = season_days(season, sport_id=SPORT_BY_LEVEL[level])
+        per_season[str(season)] = len(days)
+        if season in skipped.get(level, set()):
+            continue
+        outstanding.extend(day.isoformat() for day in days if day not in judged)
+    if outstanding:
+        print(f"complete: {level} not complete, {len(outstanding)} day(s) unjudged", file=out)
+        return
+    payload = {
+        "step": SCOPE_STEP,
+        "level": level,
+        "seasons": list(SCOPE_SEASONS[level]),
+        "ts_madrid": madrid_stamp(),
+        "days_in_scope": per_season,
+        "days_in_lake": len(done_days(level=level)),
+        "days_refused": sorted(d for d in report.refused if d.startswith(f"{level}:")),
+        "days_empty": sorted(d for d in report.empty if d.startswith(f"{level}:")),
+        "seasons_header_skipped": sorted(skipped.get(level, set())),
+    }
+    path = write_marker(payload, completion_path(level))
+    print(f"complete: {level} stamped {path}", file=out)
+
+
+def verify_scope(level: str, *, stream: Any = None) -> list[str]:
+    """W2.10's offline verify: every stored day of the level, and completeness.
+
+    For every day on disk: DT-01, DT-02 and UT-14 (``validate_day``), and the
+    admission check against the stored schedule. Then completeness against the
+    completion stamp: every played day of every season is in the lake or named
+    in the stamp as refused, or its season is named as header-skipped. Returns
+    the failures; sends nothing and writes nothing.
+    """
+    out = stream if stream is not None else sys.stdout
+    failures: list[str] = []
+    name = make_scope(level, SCOPE_SEASONS[level]).level
+    stamp = read_marker(completion_path(name))
+    if stamp is None:
+        failures.append(f"V-00 no completion stamp at {completion_path(name)}")
+        stamp = {}
+    refused = {d.split(":", 1)[1] for d in stamp.get("days_refused", [])}
+    skipped = {int(s) for s in stamp.get("seasons_header_skipped", [])}
+    stored = dict(statcast_day.raw_days(level=name))
+    checked = 0
+    for season in SCOPE_SEASONS[name]:
+        allowed = final_game_pks_by_date(SPORT_BY_LEVEL[name], season)
+        for day in season_days(season, sport_id=SPORT_BY_LEVEL[name]):
+            path = stored.get(day)
+            if path is None:
+                if season not in skipped and day.isoformat() not in refused:
+                    failures.append(f"V-01 {name} {day.isoformat()} neither stored nor refused")
+                continue
+            try:
+                day_report = statcast_day.validate_day(statcast_day.read_day(path), day)
+                statcast_day.admit(day_report, allowed.get(day, frozenset()))
+            except statcast_day.DayContractError as exc:
+                failures.append(f"V-02 {name} {day.isoformat()} {type(exc).__name__}: {exc}")
+                continue
+            checked += 1
+    strays = sorted(
+        day.isoformat()
+        for day in stored
+        if day.year not in SCOPE_SEASONS[name] and not (name == "mlb" and day.year >= 2022)
+    )
+    if strays:
+        failures.append(f"V-03 {name} days outside the scope seasons on disk: {strays[:5]}")
+    print(
+        f"verify {name}: {checked} stored day(s) pass DT-01, DT-02, UT-14 and admission; "
+        f"{len(refused)} refused, {len(skipped)} season(s) header-skipped, "
+        f"{len(failures)} failure(s)",
+        file=out,
+    )
+    for line in failures:
+        print(f"FAIL {line}", file=out)
+    return failures
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -849,11 +1422,100 @@ def _parser() -> argparse.ArgumentParser:
         help="the staging cache root (default: data/staging)",
     )
     parser.add_argument("--marker", default=None, help="where to write the resume marker")
+    parser.add_argument(
+        "--level",
+        choices=sorted(SCOPE_SEASONS),
+        default=None,
+        help="W2.10 aaa or the W2.9 mlb backfill; with --season, one scope for --run",
+    )
+    parser.add_argument(
+        "--season",
+        type=int,
+        nargs="+",
+        default=None,
+        help="seasons for --level, taken in the order given",
+    )
+    parser.add_argument(
+        "--scope",
+        action="append",
+        default=None,
+        metavar="LEVEL:YEAR,YEAR",
+        help="a scope for --run, repeatable, taken in order: aaa:2024,2025,2023",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="with a scope: skip days already in the lake instead of judging them again",
+    )
+    parser.add_argument(
+        "--evidence", default=None, help="the evidence log (default logs/evidence/W2.10.log)"
+    )
+    parser.add_argument(
+        "--schedules",
+        type=int,
+        nargs="+",
+        default=None,
+        metavar="YEAR",
+        help="store the MLB schedules for these backfill seasons, under the statsapi mutex",
+    )
+    parser.add_argument(
+        "--verify-scope",
+        choices=sorted(SCOPE_SEASONS),
+        default=None,
+        help="W2.10's offline verify for one level. No request, no write.",
+    )
     return parser
+
+
+def _scopes(args: argparse.Namespace) -> list[Scope]:
+    scopes = [parse_scope(text) for text in args.scope or ()]
+    if args.level or args.season:
+        if not (args.level and args.season):
+            raise ValueError("--level and --season go together")
+        scopes.append(make_scope(args.level, args.season))
+    return scopes
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    try:
+        scopes = _scopes(args)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    if args.verify_scope:
+        return 1 if verify_scope(args.verify_scope) else 0
+    if args.schedules:
+        try:
+            make_scope("mlb", args.schedules)
+            pulled = ensure_schedules(SPORT_BY_LEVEL["mlb"], args.schedules)
+        except (ValueError, ScheduleUnavailable, client.HttpError) as exc:
+            print(f"schedules: {type(exc).__name__}: {exc}", file=sys.stderr)
+            return 1
+        print(
+            f"schedules: {len(pulled)} pulled, {len(args.schedules) - len(pulled)} already stored"
+        )
+        return 0
+    if scopes:
+        if not args.run:
+            print("a scope runs only with --run", file=sys.stderr)
+            return 2
+        try:
+            scoped = run_scopes(
+                scopes,
+                resume=args.resume,
+                max_requests=args.max_requests,
+                marker_path=args.marker,
+                evidence=args.evidence,
+            )
+        except ChainBusy as exc:
+            print(str(exc), file=sys.stderr)
+            return 2
+        if scoped.stop_reason == STOP_FATAL:
+            return 3
+        if scoped.stop_reason == STOP_SCHEDULE:
+            return 4
+        return 1 if scoped.failed else 0
     if not (args.check or args.plan or args.run):
         _parser().print_help()
         return 2

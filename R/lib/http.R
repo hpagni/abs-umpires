@@ -29,6 +29,7 @@ suppressPackageStartupMessages({
 .absump_http$config_path <- NULL
 .absump_http$cache_dir <- NULL
 .absump_http$last_request_at <- list()
+.absump_http$budget_floor <- list()
 
 # Section 2.3, storage: zstandard level 10.
 .ABSUMP_ZSTD_LEVEL <- 10L
@@ -191,19 +192,38 @@ ABSUMP_SAVANT_ABS_LEADERBOARD_URL <- paste0(
   list(utc_date = today, used = state$used)
 }
 
+# The temporary name carries the process id. A fixed name let two processes
+# write the same temporary file and rename each other's bytes into place.
 .absump_write_budget <- function(state) {
   path <- .absump_budget_path()
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
-  tmp <- paste0(path, ".tmp")
+  tmp <- paste0(path, ".", Sys.getpid(), ".r.tmp")
   writeLines(jsonlite::toJSON(state, auto_unbox = TRUE, pretty = TRUE), tmp)
   file.rename(tmp, path)
   invisible(path)
 }
 
+# WHY THIS HALF TAKES NO FLOCK. The Python half holds flock(2) on
+# data/raw/_budget.json.lock around its read-modify-write. Base R has no flock,
+# the filelock package is not in renv.lock, and adding one changes the pinned
+# environment for a client that sends a handful of requests per chapter run.
+# A mkdir lock here would not exclude the Python half, which uses flock, and a
+# crashed R session would leave it held. So the R half keeps two guards that
+# need no lock: the per-process temporary name above, and the floor below,
+# which means an R session never counts its own host down after another writer
+# replaced the file with a stale count. What remains is that an R write can
+# lose a Python increment made in the microseconds between the R read and the
+# R write. The Python half's own floor stops that loss from ever lowering the
+# count the Python puller sees for its host.
 .absump_budget_take <- function(host) {
   cap <- .absump_daily_cap(host)
   state <- .absump_read_budget()
   used <- if (is.null(state$used[[host]])) 0L else as.integer(state$used[[host]])
+  key <- paste(state$utc_date, host)
+  floor <- .absump_http$budget_floor[[key]]
+  if (!is.null(floor) && floor > used) {
+    used <- as.integer(floor)
+  }
   if (used >= cap) {
     stop(sprintf(
       "BudgetExceeded: %s used %d/%d requests on %s UTC; config/throttle.yml is the only place this cap is set",
@@ -212,6 +232,7 @@ ABSUMP_SAVANT_ABS_LEADERBOARD_URL <- paste0(
   }
   state$used[[host]] <- used + 1L
   .absump_write_budget(state)
+  .absump_http$budget_floor[[key]] <- used + 1L
   invisible(cap - (used + 1L))
 }
 
@@ -495,5 +516,6 @@ absump_http_get <- function(url, host_budget = TRUE) {
   .absump_http$config_path <- config_path
   .absump_http$cache_dir <- cache_dir
   .absump_http$last_request_at <- list()
+  .absump_http$budget_floor <- list()
   invisible(NULL)
 }

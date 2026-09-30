@@ -1,0 +1,31 @@
+# W2.12 -- Retrosheet plays 2015-2025, cross-check only. Owned by W2, merged into
+# quality/steps.yml by quality/merge_steps.py. Do not edit quality/steps.yml by hand.
+# First registered 2026-09-30, Madrid, by the phase 07 Retrosheet builder, whose
+# verify sat under data/ because that builder could write nowhere else. The pull
+# script is now src/absump/ingest/retrosheet.py and the verify is
+# tests/data/test_retrosheet.py, with the same assertions R1 to R7.
+#
+# The pull ran once, twelve calls through absump.http: the eleven {YEAR}plays.zip files
+# and notice.txt. Nothing here repeats it. The tests read the files and the manifest:
+# one manifest row per URL and each raw zip is that row's body, zip CRCs, the unzipped
+# plays.csv against its zip entry, one 177-column header across all eleven years equal
+# to tests/fixtures/retrosheet_plays_header.txt (DT-27 clause one), the 2025 size
+# against the 2026-09-22 HEAD, the notice statement byte for byte in ATTRIBUTION.md, the
+# 10 s gap and the 500/day cap.
+#
+# DT-27 clause two, "RE288 built from it reproduces delta_run_exp, <=0.01 runs per
+# base-out-count cell", is absump.verify.re288_crosscheck. It runs here with --report,
+# so it writes out/tables/re288_crosscheck.csv and prints its verdict, and the tests
+# hold the table to the quoted bar cell by cell and pin the verdict it records. The
+# verdict on 2026-09-30 is FAIL: 218 of 264 comparable cells are over 0.01, the largest
+# 0.354 runs. The Retrosheet table agrees with the warehouse's Statcast-built fct_re288
+# (median 0.0089 runs), so the build is sound; Savant's delta_run_exp is a smoothed
+# table's difference. SOP risk R-35 defers the cross-check and the bar is an owner
+# decision. This PASS therefore covers the SOP W2.12 step text and DT-27 clause one, and
+# records clause two; it does not claim clause two. Without --report the module exits 1.
+- id: W2.12
+  title: "Retrosheet plays 2015-2025, the plays.csv header fixture, the notice and the DT-27 RE288 record"
+  verify: "uv run --locked python -m absump.verify.re288_crosscheck --report && uv run --locked pytest tests/data/test_retrosheet.py -q"
+  expect_exit: 0
+  owner: W2
+  needs: src/absump/ingest/retrosheet.py, src/absump/verify/re288_crosscheck.py, tests/data/test_retrosheet.py, tests/fixtures/retrosheet_plays_header.txt, data/raw/retrosheet/plays, warehouse

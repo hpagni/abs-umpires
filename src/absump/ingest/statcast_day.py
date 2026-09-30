@@ -1,7 +1,11 @@
 """W2.9. One Statcast game-day: the endpoint, the traps and the assertions.
 
 SOP W2.9. Baseball Savant's Statcast Search CSV export, one request per
-game-day, `type=details`, `player_type=batter`. This module owns that endpoint.
+game-day, `type=details`, `player_type=batter`. This module owns that endpoint,
+and W2.10's AAA endpoint beside it (`statcast-search-minors`, behind the two
+mandatory parameters `minors=true` and `hfLevel=AAA|`), and the admission check
+both W2.10 and the 2015-2021 backfill apply before a day is stored: the day's
+game_pk set must be a subset of the stored schedule's Final games for that date.
 W6.0 owns the runner that drives it across 920 days; nothing here loops over a
 season on its own.
 
@@ -68,13 +72,17 @@ __all__ = [
     "CALLED_DESCRIPTIONS",
     "COLUMN_COUNT",
     "EXCEPTION_COLUMNS",
+    "LEVELS",
+    "MINORS_REQUIRED_PARAMS",
     "ROW_CAP",
     "TRACKING_COLUMNS",
     "DayContractError",
     "DayReport",
     "HeaderDrift",
     "MissingBom",
+    "NotInSchedule",
     "RowCapReached",
+    "admit",
     "columns_of",
     "contract",
     "day_exceptions",
@@ -118,9 +126,12 @@ TRACKING_COLUMNS: Final[tuple[str, ...]] = ("pitch_type", "plate_x", "sz_bot", "
 #: level 10. Not a number from an endpoint; a storage setting, stated there.
 ZSTD_LEVEL: Final[int] = 10
 
-#: The level this module pulls. The minors CSV is the same 119-column header
-#: behind `minors=true&hfLevel=AAA|` and is a different step's day list.
+#: The default level. W2.9 pulls MLB days; W2.10 pulls AAA days through the
+#: minors endpoint below, which serves the same 119-column header.
 LEVEL: Final[str] = "mlb"
+
+#: Every level this module can build a day URL for.
+LEVELS: Final[tuple[str, ...]] = ("mlb", "aaa")
 
 _BOM: Final[bytes] = b"\xef\xbb\xbf"
 
@@ -139,6 +150,26 @@ _DAY_URL: Final[str] = (
     "&hfSea={season}%7C&game_date_gt={day}&game_date_lt={day}"
 )
 
+# SOP W2.10's URL, parameter for parameter and in the SOP's order. Two of its
+# parameters are mandatory and silent when missing. Without `minors=true` the
+# endpoint returns MLB rows, which is how a previous verification wrongly
+# concluded minors bat tracking was populated. Without `hfLevel=AAA%7C` (that
+# is "AAA|") the Florida State League comes back too; a bare `level=AAA` is
+# silently ignored. There is no level column in the CSV, so the level is
+# confirmed per game_pk against the sportId=11 schedule before a day is stored.
+_MINORS_DAY_URL: Final[str] = (
+    "https://baseballsavant.mlb.com/statcast-search-minors/csv"
+    "?all=true&type=details"
+    "&player_type=batter&min_pitches=0&min_results=0&group_by=name"
+    "&sort_col=pitches&player_event_sort=api_p_release_speed&sort_order=desc"
+    "&minors=true&hfLevel=AAA%7C"
+    "&game_date_gt={day}&game_date_lt={day}"
+)
+
+#: The two parameters SOP W2.10 calls mandatory. day_url refuses a minors URL
+#: that lacks either, so an edit to the template cannot drop one silently.
+MINORS_REQUIRED_PARAMS: Final[tuple[str, ...]] = ("minors=true", "hfLevel=AAA%7C")
+
 
 class DayContractError(ValueError):
     """One day's CSV broke the contract in contracts/statcast_csv.yml."""
@@ -154,6 +185,16 @@ class HeaderDrift(DayContractError):
 
 class RowCapReached(DayContractError):
     """UT-15 and DT-01. The day is at or above the silent 25,000-row cap."""
+
+
+class NotInSchedule(DayContractError):
+    """The admission check. The day's game_pk set is not a subset of the
+    schedule's Final games for that date, so the file does not enter the lake.
+
+    For AAA this is the only level check there is: the minors CSV carries no
+    level column, and a day holding a game_pk the sportId=11 schedule does not
+    list is a day that is not purely Triple-A.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -205,8 +246,15 @@ def expected_header_sha256(*, with_bom: bool = True) -> str:
 # ---------------------------------------------------------------------------
 
 
-def day_url(game_date: Any) -> str:
-    """The SOP W2.9 URL for one game-day.
+def _level_of(level: Any) -> str:
+    text = str(level).strip().lower()
+    if text not in LEVELS:
+        raise ValueError(f"level={level!r} is not one of {LEVELS}")
+    return text
+
+
+def day_url(game_date: Any, *, level: str = LEVEL) -> str:
+    """The SOP URL for one game-day: W2.9's for mlb, W2.10's for aaa.
 
     Raises `absump.paths.SealViolation` for a day inside the sealed window.
     The 2026 cutoff for every pull in this phase is 2026-09-21 inclusive, and a
@@ -218,7 +266,34 @@ def day_url(game_date: Any) -> str:
             f"{day.isoformat()} is past the seal at "
             f"{paths.LAST_OPEN_DATE.isoformat()}; this module never builds that URL"
         )
+    if _level_of(level) == "aaa":
+        url = _MINORS_DAY_URL.format(day=day.isoformat())
+        missing = [param for param in MINORS_REQUIRED_PARAMS if f"&{param}&" not in url]
+        if missing:
+            raise DayContractError(
+                f"the minors URL lacks {missing}; SOP W2.10 makes both mandatory "
+                "because the endpoint answers without them, with the wrong rows"
+            )
+        return url
     return _DAY_URL.format(season=day.year, day=day.isoformat())
+
+
+def admit(report: DayReport, allowed: Iterable[int]) -> DayReport:
+    """The admission check: the day's game_pk set must be a subset of `allowed`.
+
+    `allowed` is the set of game_pk the stored schedule lists as Final on that
+    officialDate, at the level being pulled. A game the schedule does not know
+    for that date means the file holds rows from another level, another date or
+    another game, and it does not enter the lake. Raises `NotInSchedule` with
+    the offending game_pk values.
+    """
+    extra = sorted(set(report.game_pks) - {int(pk) for pk in allowed})
+    if extra:
+        raise NotInSchedule(
+            f"{report.game_date.isoformat()}: {len(extra)} game_pk not among the "
+            f"schedule's Final games for that date: {extra[:10]}"
+        )
+    return report
 
 
 # ---------------------------------------------------------------------------
@@ -309,6 +384,7 @@ class DayReport:
     n_umpire: int
     description_counts: dict[str, int]
     source: str = ""
+    from_cache: bool = False
 
     @property
     def season(self) -> int:
@@ -549,18 +625,28 @@ def import_staging_tree(
 # ---------------------------------------------------------------------------
 
 
-def pull_day(game_date: Any, *, level: str = LEVEL) -> DayReport:
+def pull_day(
+    game_date: Any, *, level: str = LEVEL, allowed_game_pks: Iterable[int] | None = None
+) -> DayReport:
     """Fetch one game-day through the one HTTP chokepoint, validate it, store it.
 
     absump.http.get carries the A3 throttle, the per-host daily cap, the cache
     that makes a re-run cost zero requests, and the manifest row. Nothing here
     touches the network itself.
+
+    With `allowed_game_pks` the day must also pass `admit` before it is stored:
+    W2.10 passes the sportId=11 Final games for the date, and the 2015-2021
+    backfill the sportId=1 ones. A refused day is not stored; its bytes stay in
+    the client's raw cache, so judging it again costs no request.
     """
     day = paths.as_official_date(game_date)
-    response = client.get(day_url(day))
+    response = client.get(day_url(day, level=level))
     if response.dry_run:
         raise DayContractError("--dry-run prints a plan and returns no body")
     report = validate_day(response.content, day, source=response.url)
+    report = dataclasses.replace(report, from_cache=bool(response.from_cache))
+    if allowed_game_pks is not None:
+        admit(report, allowed_game_pks)
     store_day(response.content, day, level=level)
     return report
 
@@ -718,6 +804,12 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="fetch each day through absump.http. One request per day.",
     )
+    parser.add_argument(
+        "--level",
+        choices=LEVELS,
+        default=LEVEL,
+        help="mlb (W2.9, the default) or aaa (W2.10, the minors endpoint)",
+    )
     return parser
 
 
@@ -729,21 +821,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.plan:
         for stamp in args.plan:
-            print(day_url(stamp))
+            print(day_url(stamp, level=args.level))
 
     if args.import_staging:
-        import_staging_tree(Path(args.staging))
+        import_staging_tree(Path(args.staging), level=args.level)
 
     if args.pull:
         for stamp in args.pull:
-            report = pull_day(stamp)
+            report = pull_day(stamp, level=args.level)
             print(
                 f"pull: {report.game_date.isoformat()} {report.n_rows} rows, "
                 f"{len(report.game_pks)} games, {report.n_untracked} untracked"
             )
 
     if args.verify:
-        verify_lake()
+        verify_lake(level=args.level)
 
     return 0
 

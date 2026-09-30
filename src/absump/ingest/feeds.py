@@ -134,6 +134,20 @@ SEALED_GAME_TYPES = ("F", "D", "L", "W")
 #: SOP section 2.4, the excluded branch: spring, all-star, exhibition.
 EXCLUDED_GAME_TYPES = ("S", "A", "E")
 
+#: Detailed states that sit under abstract state Final with no game behind
+#: them. A postponement that was never made up, and a cancellation. Both
+#: bodies are the short "no plays" feed MIN_FEED_BYTES refuses: the 26
+#: Cancelled AAA 2023 games measured 186,034 to 212,946 B on 2026-09-30 and the
+#: 7 Cancelled AAA 2024 games 178 to 200 KB, all with 0 plays. Requesting them
+#: pays for a body that can never be stored.
+NEVER_PLAYED_STATES = ("Postponed", "Cancelled")
+
+#: Exit codes for the command line. A batch reads these; a person reads the
+#: stop line printed beside them.
+EXIT_OK = 0
+EXIT_FAILED_GAMES = 1
+EXIT_FATAL = 3
+
 #: SOP W2.6 ``test_feed_size_sane``: every stored file decompresses to between
 #: 0.3 and 3.0 MB. The lower bound is what catches a 200-byte "game not found"
 #: body returned with HTTP 200. Measured over the 2,343 staged 2026 feeds:
@@ -551,10 +565,10 @@ def plan(games: list[ScheduledGame], *, status: str = "Final") -> Plan:
             out.sealed.append(game)
         elif status != "any" and game.abstract_state != status:
             out.wrong_status.append(game)
-        elif status == "Final" and game.detailed_state == "Postponed":
+        elif status == "Final" and game.detailed_state in NEVER_PLAYED_STATES:
             # Abstract state Final covers a postponement that was never made
-            # up. There is no played game behind it, and its feed is the short
-            # body MIN_FEED_BYTES exists to catch.
+            # up, and a cancellation. There is no played game behind either,
+            # and the feed is the short body MIN_FEED_BYTES exists to catch.
             out.wrong_status.append(game)
         else:
             out.candidates.append(game)
@@ -656,8 +670,17 @@ def fetch_games(
     from ``config/throttle.yml``, caches the body so a re-run costs zero
     requests, and appends the manifest row. Nothing here sleeps, retries or
     counts a budget of its own: a second throttle is a second policy.
+
+    Two errors end the loop instead of moving on to the next game.
+    ``http.Fatal`` is a 403 or another 4xx: the host has refused this client,
+    and asking again for the next game is exactly what a 403 forbids. It is
+    counted under ``fatal`` and the queue stops. ``http.BudgetExceeded`` is
+    the daily cap: every later game would sleep out the 4 s spacing only to be
+    refused, so the queue stops at once under ``budget`` and the next night
+    resumes from what is on disk. Every other error is one bad game and the
+    loop continues.
     """
-    counts = {"fetched": 0, "skipped": 0, "sealed": 0, "failed": 0}
+    counts = {"fetched": 0, "skipped": 0, "sealed": 0, "failed": 0, "fatal": 0, "budget": 0}
     for game in games:
         if max_requests is not None and counts["fetched"] >= max_requests:
             counts["skipped"] += 1
@@ -679,6 +702,16 @@ def fetch_games(
             if report is not None:
                 report.append(f"refused sealed after request: {game.game_pk}: {exc}")
             continue
+        except http.BudgetExceeded as exc:
+            counts["budget"] += 1
+            if report is not None:
+                report.append(f"stopped at the daily cap before {game.game_pk}: {exc}")
+            break
+        except http.Fatal as exc:
+            counts["fatal"] += 1
+            if report is not None:
+                report.append(f"FATAL {game.game_pk}: {type(exc).__name__}: {exc}")
+            break
         except (http.HttpError, ValueError, OSError) as exc:
             counts["failed"] += 1
             if report is not None:
@@ -739,7 +772,13 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Ingest statsapi GUMBO live feeds under the SOP A3 throttle (W2.6).",
     )
     parser.add_argument("--sport", type=int, required=True, help="statsapi sportId: 1 MLB, 11 AAA")
-    parser.add_argument("--season", type=int, required=True, help="season year")
+    parser.add_argument(
+        "--season",
+        type=int,
+        nargs="+",
+        required=True,
+        help="one or more season years, run in the order given",
+    )
     parser.add_argument(
         "--status",
         default="Final",
@@ -779,37 +818,68 @@ def main(argv: list[str] | None = None) -> int:
             print(f"control {game_pk} {mark}")
         return 0 if len(stored) == len(PRE_ABS_CONTROL_GAMES) else 1
 
-    schedule = load_schedule(args.sport, args.season, allow_fetch=not args.plan_only)
+    failed = 0
+    left = args.max_requests
+    for index, season in enumerate(args.season):
+        season_report: list[str] = []
+        fetched = _run_season(args, season, left, season_report)
+        for line in season_report:
+            print(line)
+        if fetched is None:  # --plan-only
+            continue
+        failed += fetched["failed"]
+        if left is not None:
+            left = max(0, left - fetched["fetched"])
+        rest = [str(s) for s in args.season[index + 1 :]]
+        if fetched["fatal"]:
+            print(
+                f"stop: FATAL from statsapi in season {season}; the host refused this "
+                "client, so no further game or season is requested. Not retried."
+                + (f" Seasons not started: {' '.join(rest)}." if rest else "")
+            )
+            return EXIT_FATAL
+        if fetched["budget"]:
+            print(
+                f"stop: daily-cap reached in season {season}; config/throttle.yml sets "
+                "the cap. Re-run with --resume after the UTC day turns."
+                + (f" Seasons not started: {' '.join(rest)}." if rest else "")
+            )
+            break
+    return EXIT_OK if failed == 0 else EXIT_FAILED_GAMES
+
+
+def _run_season(
+    args: argparse.Namespace, season: int, max_requests: int | None, report: list[str]
+) -> dict[str, int] | None:
+    """One season of one invocation: plan, import staging, queue, fetch.
+
+    Returns the fetch counts, or None under --plan-only.
+    """
+    schedule = load_schedule(args.sport, season, allow_fetch=not args.plan_only)
     games = schedule_games(schedule)
     the_plan = plan(games, status=args.status)
 
     if not args.no_import_staging:
-        imported = import_staged(the_plan.candidates, args.sport, args.season, report=report)
+        imported = import_staged(the_plan.candidates, args.sport, season, report=report)
         print(
             "staging import: "
             + " ".join(f"{key}={value}" for key, value in sorted(imported.items()))
         )
 
     queue = (
-        remaining_after_import(the_plan.candidates, args.sport, args.season)
+        remaining_after_import(the_plan.candidates, args.sport, season)
         if args.resume
         else list(the_plan.candidates)
     )
-    for line in _format_plan(the_plan, len(queue), args.sport, args.season, args.status):
+    for line in _format_plan(the_plan, len(queue), args.sport, season, args.status):
         print(line)
 
     if args.plan_only:
-        for line in report:
-            print(line)
-        return 0
+        return None
 
-    fetched = fetch_games(
-        queue, args.sport, args.season, max_requests=args.max_requests, report=report
-    )
+    fetched = fetch_games(queue, args.sport, season, max_requests=max_requests, report=report)
     print("fetch: " + " ".join(f"{key}={value}" for key, value in sorted(fetched.items())))
-    for line in report:
-        print(line)
-    return 0 if fetched["failed"] == 0 else 1
+    return fetched
 
 
 if __name__ == "__main__":  # pragma: no cover - exercised through the CLI

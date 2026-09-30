@@ -483,7 +483,8 @@ def test_the_sop_command_line_parses_and_the_launcher_exists():
     parser = feeds._build_parser()
     args = parser.parse_args(["--sport", "1", "--season", "2026", "--status", "Final", "--resume"])
     assert args.sport == SPORT_MLB
-    assert args.season == SEASON
+    # --season takes one or more seasons since the W2.8 fix (a); one is a list of one.
+    assert args.season == [SEASON]
     assert args.status == "Final"
     assert args.resume is True
     assert args.plan_only is False

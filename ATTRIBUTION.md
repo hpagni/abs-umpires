@@ -42,7 +42,11 @@ under a throttle of their own.
 
 Play-by-play data for 2015 to 2025 comes from Retrosheet and is read as a
 cross-check on the feed. The notice is carried verbatim from
-`https://www.retrosheet.org/notice.txt`:
+`https://www.retrosheet.org/notice.txt`, checked against the file as served on
+2026-09-30. Whitespace is the one difference: the served file opens with a blank
+line and ends six lines with a space, and the repository's whitespace hook strips
+both. The statement the notice requires is byte-for-byte as served, line breaks
+and indentation included:
 
 ```
 Recipients of Retrosheet data are free to make any desired use of
