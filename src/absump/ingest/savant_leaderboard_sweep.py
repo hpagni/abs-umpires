@@ -74,7 +74,11 @@ runs with no network and no datum on disk, so a clean clone proves it. It:
      passes steps 1 to 3 and fails here;
   5. runs the refresh over whatever the launcher has actually swept onto disk;
   6. proves the whole offline path opened no connection, by refusing
-     `absump.http.get` for its duration and by re-reading the manifest.
+     `absump.http.get` for its duration and by charging it, through
+     `absump.ledger`, with every manifest row added while it ran that is not a
+     running puller's. A detached pull appends to the same manifest, so the
+     clause is attribution, not "unchanged"; a quiet ledger still reads
+     unchanged, and any of the 28 view addresses is charged whoever added it.
 """
 
 from __future__ import annotations
@@ -90,7 +94,7 @@ from typing import Any
 
 import yaml
 
-from absump import http
+from absump import http, ledger
 from absump import paths as lake
 from absump.ingest import savant_leaderboard as board
 
@@ -643,8 +647,9 @@ def _offline() -> Iterator[None]:
     """Refuse the chokepoint for the duration, so an offline claim is proved.
 
     The self-check says it opens no connection. This makes that a test rather
-    than a promise: `absump.http.get` raises for the whole offline path, and the
-    manifest is re-read afterwards to show no row was added.
+    than a promise: `absump.http.get` raises for the whole offline path, and
+    W4.3.13 afterwards charges the check with any manifest row added meanwhile
+    that a running puller does not explain (absump.ledger).
     """
     original = http.get
 
@@ -739,7 +744,11 @@ def self_check(stream: Any) -> int:
             failures += 0 if finding.passed else 1
             emit(indent + finding.line())
 
-    manifest_rows_before = len(http._manifest_index())
+    # W4.3.13's mark. Not a row count: a detached pull appends to the same
+    # manifest while this runs, so "unchanged" was never the claim that mattered.
+    # absump.ledger charges this check with every row added after the mark that
+    # is not a running puller's, and with any of the 28 addresses below.
+    ledger_mark = ledger.mark()
 
     emit("W4.3 Savant ABS leaderboard sweep, 28 views")
     emit(f"enumeration   {CONFIG_PATH.relative_to(lake.REPO_ROOT)}")
@@ -910,16 +919,46 @@ def self_check(stream: Any) -> int:
             failures += 0 if finding.passed else 1
         emit()
 
+    emit("the ledger, planted rows must be charged to this check")
+    own = [row.url for row in rows]
+    today = date.fromisoformat(ledger_mark.utc_day)
+    puller = "baseballsavant.mlb.com"
+
+    def planted(url: str, host: str = puller, day: date = today) -> dict[str, str]:
+        return {"fetched_at_utc": f"{day.isoformat()}T00:00:00Z", "host": host, "url": url}
+
+    ledger_plants = (
+        ("one of the 28 view addresses", planted(own[0]), True),
+        ("a host no puller works", planted("https://example.org/x", host="example.org"), True),
+        (
+            "a day the check did not span",
+            planted(own[0] + "#", day=today - timedelta(days=1)),
+            True,
+        ),
+        ("a puller's row, the control", planted(own[0] + "#"), False),
+    )
+    for label, row, charge in ledger_plants:
+        checks += 1
+        charged = ledger.attribute_rows(
+            [row], held=ledger.PULLER_LOCKS, days=[today.isoformat()], own_urls=own
+        )
+        ok = bool(charged) == charge
+        failures += 0 if ok else 1
+        verdict = "charged" if charged else "attributed to the puller"
+        emit(f"  {'PASS' if ok else 'FAIL':4s} W4.3.13 {label}: {verdict}")
+
     checks += 1
-    manifest_rows_after = len(http._manifest_index())
-    if manifest_rows_after == manifest_rows_before:
-        emit(f"  PASS W4.3.13 offline: manifest unchanged at {manifest_rows_after} rows")
+    growth = ledger.since(ledger_mark, own_urls=own)
+    if growth.quiet:
+        emit(f"  PASS W4.3.13 offline: {growth.lines()[0]}")
+    elif growth.passed:
+        emit("  PASS W4.3.13 offline: nothing the ledger gained during the check is this check's")
     else:
         failures += 1
-        emit(
-            f"  FAIL W4.3.13 the manifest grew from {manifest_rows_before} to "
-            f"{manifest_rows_after} rows"
-        )
+        emit("  FAIL W4.3.13 the ledger gained what no running puller explains")
+    if not growth.quiet:
+        for line in growth.lines():
+            emit(f"         {line}")
     emit()
 
     emit(f"W4.3: {checks} checks, {checks - failures} passed, {failures} failed")

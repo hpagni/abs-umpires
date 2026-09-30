@@ -15,8 +15,17 @@
 # per-UTC-day counter, and data/raw/_manifest.csv, the append-only audit trail.
 # Every request this repository is allowed to make goes through absump.http or
 # R/lib/http.R and moves both. This script digests both before the first check
-# and after the last, and a changed digest fails the run. A check that reached a
-# host through the chokepoint is therefore caught, and a check that reached one
+# and after the last. An unchanged digest is the exact claim. A changed digest
+# fails the run unless absump.ledger attributes every change to a detached
+# puller: the manifest bytes marked at the start are intact, and each row added
+# after them, and each budget count that moved, is on statsapi.mlb.com or
+# baseballsavant.mlb.com, dated a UTC day the run spanned, while that host's
+# puller mutex under data/tmp was held. A pull running beside the smoke test
+# appends to the same ledger, and before this a W2.8 or W2.10 batch failed every
+# smoke run it overlapped. The price is stated in the run's own output: during a
+# pull, a request this run made to one of those two hosts would read as the
+# puller's, so only a quiet ledger carries the exact claim. A check that reached
+# a host through the chokepoint is therefore caught, and a check that reached one
 # around the chokepoint is what ops/lint_http.sh exists for, which check 11 runs.
 #
 # THE TWELVE CHECKS, in SOP order.
@@ -51,7 +60,8 @@
 #
 # THE DATA LAKE. No check reads it. Every check that needs bytes makes its own
 # under data/tmp/, and the one lake path this script touches at all is the
-# request ledger, which it digests as "absent" when it is absent. So a fresh
+# request ledger, which it digests as "absent" when it is absent (the attribution
+# above also asks whether the two puller mutex directories exist). So a fresh
 # clone with no data/ directory runs all twelve, and the header says so rather
 # than leaving the reader to infer it from a run that did not fail.
 #
@@ -286,6 +296,12 @@ run_check() {
 # ---------------------------------------------------------------- the run
 
 started=$(date +%s)
+# The attribution mark first, then the digest, so a row a puller appends between
+# the two is inside the window the mark accounts for. A mark that cannot be taken
+# (no environment yet on a fresh clone) leaves only the digest, which is the
+# exact claim and fails on any movement.
+uv run --locked python -m absump.ledger mark "$RUN/ledger.mark" >/dev/null 2>&1 \
+  || rm -f "$RUN/ledger.mark"
 ledger_digest >"$RUN/ledger.before"
 
 printf 'smoke: SOP W1.15, %d checks, zero requests to any MLB or Savant host\n' "$TOTAL"
@@ -318,9 +334,16 @@ elapsed=$(($(date +%s) - started))
 printf '\n'
 if cmp -s "$RUN/ledger.before" "$RUN/ledger.after"; then
   printf 'smoke: request ledger unchanged, so no host was reached through the chokepoint\n'
+elif [ -f "$RUN/ledger.mark" ] \
+  && uv run --locked python -m absump.ledger since "$RUN/ledger.mark" >"$RUN/ledger.since" 2>&1; then
+  printf 'smoke: the request ledger moved during the run, and a running puller explains all of it\n'
+  sed 's/^/          /' "$RUN/ledger.since"
 else
   printf 'smoke: THE REQUEST LEDGER MOVED. A check reached a host.\n' >&2
   diff "$RUN/ledger.before" "$RUN/ledger.after" | sed 's/^/          /' >&2
+  if [ -f "$RUN/ledger.since" ]; then
+    sed 's/^/          /' "$RUN/ledger.since" >&2
+  fi
   FAILED="$FAILED ledger"
 fi
 

@@ -127,6 +127,29 @@ def test_the_rendered_patch_plants_one_violation_in_each_file() -> None:
         assert relative not in ALLOWLIST, f"{relative} is allowlisted; the plant would be silenced"
 
 
+def test_the_rendered_patch_applies_to_the_committed_files() -> None:
+    """The plant still fits the files it plants into, checked without applying it.
+
+    The other tests read the patch as text, so a hunk whose context no longer
+    matches its file passed all of them while `redteam_run.sh` stopped at
+    `git apply` and never reached the guard. That is how W9.7 went red when the
+    fit branch rewrote R/ch1/20_surfaces.R. `git apply --check` reads the
+    rendered patch from stdin and touches nothing, so the drift is named here.
+    """
+    done = subprocess.run(
+        ["git", "apply", "--check", "-"],
+        input=rendered_patch(),
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    assert done.returncode == 0, (
+        "tests/guard/redteam.patch no longer applies to the files it plants into; "
+        "regenerate the hunk against the current file:\n" + done.stderr
+    )
+
+
 @pytest.mark.parametrize("relative", TARGETS)
 def test_the_planted_line_is_reported_by_file_and_line(relative: str) -> None:
     """The line number the run script asserts on is the line the plant lands on."""

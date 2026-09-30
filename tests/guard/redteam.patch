@@ -21,17 +21,24 @@
 # planted line moves. The run script
 # reads the planted line numbers back from the files, so nothing here needs a
 # line number written by hand.
+#
+# The R hunk was regenerated against the file as commit 617a75d left it:
+# fit_one gained rule_key and fit_surfaces lost its allow_single line, so the old
+# context no longer matched and `git apply` refused. The plant is the same line
+# in the same place, the first statement after the one read in fit_surfaces.
+# tests/guard/test_redteam.py now checks that the rendered patch applies to the
+# committed files, so the next drift fails `pytest tests/guard` by name.
 diff --git a/R/ch1/20_surfaces.R b/R/ch1/20_surfaces.R
 --- a/R/ch1/20_surfaces.R
 +++ b/R/ch1/20_surfaces.R
-@@ -91,6 +91,7 @@ fit_one <- function(ctx, name, rows, height_rule, kind = "main") {
+@@ -98,6 +98,7 @@ fit_one <- function(ctx, name, rows, height_rule, rule_key, kind = "main") {
 
  fit_surfaces <- function(ctx, opt) {
    d <- surface_frame(ctx)
 +  d <- dplyr::filter(d, analysis_set == '@H@')
    cal <- read_calibration(ctx, opt)
-   allow_single <- identical(opt_get(opt, "height-rule"), "single-offset")
    fits <- strsplit(opt_get(opt, "fits", paste(ALL_FITS, collapse = ",")), ",")[[1]]
+   if (!all(fits %in% ALL_FITS)) die("unknown fit in --fits: ", paste(setdiff(fits, ALL_FITS), collapse = ","))
 diff --git a/src/absump/ch3/dp_fast.py b/src/absump/ch3/dp_fast.py
 --- a/src/absump/ch3/dp_fast.py
 +++ b/src/absump/ch3/dp_fast.py
