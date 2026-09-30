@@ -1,0 +1,5 @@
+# The two exhibits chosen on 2026-09-30 for the SSAC 2027 abstract, one per line:
+# "<kind> <folder under abstract/exhibits/>". scripts/abstract.sh copies each over the
+# generated abstract/<kind>.png (and figure1.alt.txt or table1.md) on the real run.
+figure1 area-trajectory-drift
+table1 table-periods-descriptive

@@ -6,7 +6,8 @@
 #      R1 agenda, draw the exhibits
 #   2. the SOP word counter on the filled text as written, "#" marks included, with
 #      <<CALL>> counted as 25 words and <<BREAK_YEAR>> as 1 while the owner has not
-#      written them; cap 470
+#      written them; cap 495 (the owner's decision of 2026-09-30, DECISIONS.md, raised
+#      from the SOP's 470 under SSAC's "fewer than 500")
 #   3. no slot other than CALL and BREAK_YEAR left unfilled
 #   4. SSAC format: one title, exactly the four sections in order, no fifth heading, the
 #      inline prior-art citation, and at least one 95% interval in Results
@@ -50,9 +51,10 @@ other = sorted(set(slots) - {"CALL", "BREAK_YEAR"})
 if other:
     print("FAIL: unfilled non-owner slot(s): " + ", ".join(other)); sys.exit(1)
 n = len(t.split()) + 24 * slots.count("CALL")  # the SOP counter; a slot is one word
-print(f"words: {n} of 470 (CALL {'pending, 25 reserved' if 'CALL' in slots else 'written'}, "
+CAP = 495  # the owner's decision of 2026-09-30 (DECISIONS.md), raised from the SOP's 470
+print(f"words: {n} of {CAP} (CALL {'pending, 25 reserved' if 'CALL' in slots else 'written'}, "
       f"BREAK_YEAR {'pending, 1 reserved' if 'BREAK_YEAR' in slots else 'written'})")
-ok = n <= 470
+ok = n <= CAP
 heads = re.findall(r"^#{2,6}\s+(.*?)\s*$", t, re.M)
 if heads != ["Introduction", "Methods", "Results", "Conclusion"]:
     print(f"FAIL: SSAC sections are {heads}"); ok = False
@@ -97,7 +99,7 @@ fi
 
 echo
 if [ "$fails" -eq 0 ]; then
-  echo "W6.10 OK: filled, within 470 words, four sections, at most two exhibits, gates green"
+  echo "W6.10 OK: filled, within 495 words, four sections, at most two exhibits, gates green"
   exit 0
 fi
 echo "W6.10 FAILED: $fails check(s)"

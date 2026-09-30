@@ -1,0 +1,1 @@
+Figure 1. Area of the 50 percent strike contour, 2022–2026 (72-inch batter, 2024 pitch mix), 95% intervals. Steps net of the 2022–2024 trend: 2025, −23.4 sq in; 2026, −33.1 sq in. From 2023 to 2024, with no rule change, the area rose 10.8 sq in (90%: 7.7 to 13.9), failing the pre-registered placebo; the shaded band shows that swing.

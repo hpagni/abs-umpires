@@ -88,8 +88,8 @@ plant() {  # name, file to copy, python replace (old, new), gate command with {}
     bad "$name was NOT caught (exit $rc, no $rule)"
   fi
 }
-counter='ABS_SUBMITTED={} python3.12 -c "import os,re,sys;t=open(os.environ[\"ABS_SUBMITTED\"]).read();n=len(t.split());print(\"FAIL: unfilled slot\" if re.search(r\"<<[A-Z_]+>>\",t) else \"words: %d\" % n);sys.exit(1 if re.search(r\"<<[A-Z_]+>>\",t) or n>470 else 0)"'
-pad=$(printf 'padding %.0s' $(seq 1 12))
+counter='ABS_SUBMITTED={} python3.12 -c "import os,re,sys;t=open(os.environ[\"ABS_SUBMITTED\"]).read();n=len(t.split());print(\"FAIL: unfilled slot\" if re.search(r\"<<[A-Z_]+>>\",t) else \"words: %d\" % n);sys.exit(1 if re.search(r\"<<[A-Z_]+>>\",t) or n>495 else 0)"'
+pad=$(printf 'padding %.0s' $(seq 1 40))  # 40 words: enough to push the synthetic text over the 495 cap
 plant over-cap "$T" "Games from 22 September" "$pad Games from 22 September" "$counter" "words: 4"
 plant unfilled-slot "$T" "10.0 (95% CI 5.0 to 15.0)" "<<D_BUF>>" "$counter" "unfilled slot"
 plant wr20-buffer "$F" "two inches outside the zone edge" "two inches of the zone edge" \

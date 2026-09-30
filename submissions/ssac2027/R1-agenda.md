@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR are still slots: CALL, BREAK_YEAR. No agent writes them.
 
-Variant filled: descriptive. Words counted: 468 of 470,
+Variant filled: owner. Words counted: 494 of 495,
 with 24 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -134,7 +134,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 491 words with the inline table, OVER THE CAP by 21 words after every rung. Cuts: the pre-trend clause, the reliability clause, the second edge in the plane sentence.
+The no-upload body counts 527 words with the inline table, OVER THE CAP by 32 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -157,7 +157,7 @@ The conference page says "Oct. 1, 2026 11:59 p.m. EST".
   evaluated. The five arms present agree in sign on all eight geometric components.
 - CH1-A5 misses on area. The binned estimates exceed the smooth fit by 6.0 and 7.6 sq in,
   against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up. The Conclusion names it, from A5_BUF, A5_ABS and A5_TOL.
-- D-R0-04's top-edge caveat: the Results say top-edge intervals are slightly too narrow. The caveat that the study cannot declare no change at the top edge is not needed, because the abstract makes no such claim.
+- D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it.
 - The RESULT CALL line in `out/ch1/decision.md`, and CALL and BREAK_YEAR.
 - `make abstract` then `bash quality/w612_check.sh`, then RP-08 and the numbers freeze.
 
@@ -169,32 +169,33 @@ The slots as printed in this fill:
 |---|---|---:|
 | N_CALLED | 1,830,231 | 1 |
 | N_GAMES | 12,060 | 1 |
+| N_CHAL_AGREE | 10,164 | 1 |
 | N_CHAL | 10,168 | 1 |
 | P1_AREA | 10.8 (90% CI 7.7 to 13.9) | 6 |
-| P1_SHADOW | 1.54 (90% CI 1.03 to 2.04) | 6 |
+| AREA_2022 | 494.6 | 1 |
+| AREA_2023 | 484.3 | 1 |
+| AREA_2024 | 495.1 | 1 |
+| AREA_2025 | 471.9 | 1 |
+| AREA_2026 | 439.1 | 1 |
+| D_TOTAL | 56.0 (95% CI 52.0 to 59.6) | 6 |
 | D_BUF | 23.4 (95% CI 18.6 to 28.3) | 6 |
 | D_ABS | 33.1 (95% CI 28.7 to 37.5) | 6 |
-| P2_AREA_MAX | 6.8 square inches | 3 |
-| D_PRE | 0.3 (95% CI -1.6 to 2.2) | 6 |
-| T1_BUF_TOP | 0.18 (95% CI 0.05 to 0.32) | 6 |
+| HW_BUF_LOSS | 0.41 (95% CI 0.33 to 0.49) | 6 |
 | T1_ABS_TOP | 0.63 (95% CI 0.50 to 0.76) | 6 |
-| T1_BUF_BOT | 0.18 (95% CI 0.08 to 0.29) | 6 |
 | T1_ABS_BOT | 0.65 (95% CI 0.55 to 0.74) | 6 |
-| D_PLANE_TOP | -0.77 (95% CI -0.94 to -0.61) | 6 |
-| D_PLANE_BOT | -1.11 (95% CI -1.24 to -0.98) | 6 |
-| A_CORR | -32.8 (95% CI -36.6 to -29.3) | 6 |
-| A_PUB | -22 to -8 square inches | 5 |
+| A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
+| A_PUB_LOSS | 8 to 22 | 3 |
+| A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
 | SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
-| REL_UMP | 0.17 (95% CI -0.27 to 0.46) | 6 |
-| N_UMP | 88 | 1 |
+| SHARE_ABS | 59 | 1 |
+| SHARE_ABS_CI | 53 to 65 | 3 |
 | A5_TOL | 3 | 1 |
 | A5_BUF | 6.0 | 1 |
 | A5_ABS | 7.6 | 1 |
 
 Cut ladder, SOP order. Rungs applied in this fill:
 
-- the pre-trend clause: cut
-- the reliability clause: cut
+- none; the fill is within the cap
 
 Chapter 2: the ledger holds no CH2_ slot, so rung 2 of the cut ladder applies and there is no Chapter 2 sentence.
 
@@ -203,6 +204,6 @@ Chapter 2: the ledger holds no CH2_ slot, so rung 2 of the cut ladder applies an
 - docs/harmonized_zone.md F1: the zone the W3.8 gate scored uses measured height, and
   the Chapter 1 primary uses roster height. Decide whether Methods says so.
 - N_CALLED prints P0 as T1 counts it. The fits drop the four games without ABS
-  hardware (621 pitches), so the fitted sample is slightly smaller. Methods says the fits use samples drawn from P0.
+  hardware (621 pitches), so the fitted sample is slightly smaller, and Methods does not say so.
 
 Missing slots: none.

@@ -19,7 +19,12 @@
 # and CH1-A3 then make the decomposition descriptive, remove the causal language and make
 # the failure the headline finding. The three D-66 variants all say "accounts for", so
 # none can carry that case. P1 failed, and DECISIONS.md (2026-09-30, under D-R0-03's
-# delegation) records the fourth variant; scripts/abstract.sh fills it by default.
+# delegation) records the fourth variant.
+# A fifth, owner, is the descriptive case written in the owner's own voice from his
+# template (DECISIONS.md, 2026-09-30, the owner's instruction). It replaces the
+# agent-written descriptive draft, and scripts/abstract.sh fills it by default. Its extra
+# slots (the five season areas, D_TOTAL, SHARE_ABS, A_CONV and the *_LOSS readers of
+# existing entries) are listed in tools/comms/abstract_slots.json.
 #
 # Every number comes from docs/numbers.json, as the string tools/comms/export_numbers.R
 # printed there. This script does no arithmetic and no rounding, so the number gate
@@ -37,14 +42,16 @@
 # the caller passes --prereg-sentence wide AND --seal-order-ok, which scripts/abstract.sh
 # passes only after tools/comms/check_seal_order.sh exits 0 (GD-12, D-67).
 #
-# The cap is 470 words, counted by the SOP word counter on this markdown as written, so
-# the "#" marks count and the pasted text (title, section names, body) is 5 words under.
+# The cap is 495 words (the owner's decision of 2026-09-30, DECISIONS.md, raised from the
+# SOP's 470 under SSAC's "fewer than 500"), counted by the SOP word counter on this
+# markdown as written, so the "#" marks count and the pasted text (title, section names,
+# body) is 5 words under.
 # Over the cap, the SOP cut ladder is applied in its order and no other: the pre-trend clause, then the reliability clause,
 # then the second edge in the plane sentence. Every cut is recorded in the report.
 #
-#   Rscript tools/comms/fill_slots.R [--ledger F] [--variant main|null-buffer|sign-reversal|descriptive]
+#   Rscript tools/comms/fill_slots.R [--ledger F] [--variant main|null-buffer|sign-reversal|descriptive|owner]
 #       [--calls F] [--out F] [--report F] [--prereg-sentence narrow|wide] [--seal-order-ok]
-#       [--extra-words N]
+#       [--extra-words N] [--cap N]
 #
 # --extra-words N counts N more words against the cap. scripts/abstract.sh passes the
 # inline table's length for the body a form with no upload field receives (SOP W6.12),
@@ -74,7 +81,8 @@ WIDE <- paste("The analysis plan, acceptance criteria and sealed-set definition 
 VARIANTS <- c(main = "abstract/ssac2027_abstract.md",
               "null-buffer" = "abstract/variants/ssac2027_abstract.null-buffer.md",
               "sign-reversal" = "abstract/variants/ssac2027_abstract.sign-reversal.md",
-              descriptive = "abstract/variants/ssac2027_abstract.descriptive.md")
+              descriptive = "abstract/variants/ssac2027_abstract.descriptive.md",
+              owner = "abstract/variants/ssac2027_abstract.owner.md")
 
 # The SOP cut ladder, in order. Each rung is a clause of the filled text.
 LADDER <- list(
@@ -129,7 +137,7 @@ main <- function(args) {
   calls_path <- rp(opt(args, "--calls", "abstract/owner-calls.json"))
   out_path <- rp(opt(args, "--out", "abstract/ssac2027_abstract.filled.md"))
   report_path <- rp(opt(args, "--report", "out/tables/abstract_fill_report.json"))
-  cap <- as.integer(opt(args, "--cap", "470"))
+  cap <- as.integer(opt(args, "--cap", "495"))
   extra <- as.integer(opt(args, "--extra-words", "0"))
   want_wide <- identical(opt(args, "--prereg-sentence", "narrow"), "wide")
   seal_ok <- "--seal-order-ok" %in% args

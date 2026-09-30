@@ -4,7 +4,8 @@
 # It checks the package, not the submission. The form is sign-in gated and the submit is
 # the owner's; this script never reaches the form.
 #   1. the SOP word counter, verbatim, on submissions/ssac2027/submitted-abstract.txt:
-#      the file exists, no <<SLOT>> is left, and it is at or under 470 words. The same
+#      the file exists, no <<SLOT>> is left, and it is at or under 495 words (the owner's
+#      decision of 2026-09-30, DECISIONS.md, raised from the SOP's 470). The same
 #      counter runs on the no-upload copy, submitted-abstract.inline-table.txt. Until
 #      abstract/FORM-FIELDS.md answers the upload question both must pass; after it,
 #      only the copy that will be pasted must.
@@ -52,7 +53,7 @@ if re.search(r'<<[A-Z_]+>>', t):
     print('FAIL: unfilled slot in submitted-abstract.txt'); sys.exit(1)
 n = len(t.split())
 print('words:', n)
-sys.exit(0 if n <= 470 else 1)
+sys.exit(0 if n <= 495 else 1)  # cap 495, the owner's decision of 2026-09-30 (DECISIONS.md)
 PY
   rc=$?
   if [ "$rc" -ne 0 ]; then

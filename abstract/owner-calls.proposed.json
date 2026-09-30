@@ -1,0 +1,6 @@
+{
+  "_what": "PROPOSED by the abstract writer on 2026-09-30 for review R1. Not the owner's file: the frozen plan (PREREGISTRATION.md section 14 item 13; submissions/ssac2027/R1-agenda.md section c) has the owner write the result call. The owner accepts, edits or rejects these, then writes abstract/owner-calls.json himself. ABS_CALLS=abstract/owner-calls.proposed.json make abstract fills them for a real word count.",
+  "_basis": "CALL follows R1 proposal 2, worded as a measurement and not a ranking of rules, since the 2026 share's 95% interval (0.527 to 0.647) sits above one half while the gap between the steps is about the size of the 2023-to-2024 drift. BREAK_YEAR follows the R1 rule: 2025 when the 2025 step's interval excludes zero.",
+  "CALL": "Measured against 2022-2024, more of the zone's contraction came in 2026 than in 2025, which is a measurement and not a ranking of the rules.",
+  "BREAK_YEAR": "2025"
+}

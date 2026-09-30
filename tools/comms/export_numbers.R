@@ -18,6 +18,13 @@
 #                                       prints: P1_AREA and P1_SHADOW (90% intervals, the
 #                                       CH1-A3 test level, with their margins) and
 #                                       P2_AREA_MAX, the largest of the five P2 area placebos
+#   out/ch1/tab/T3_estimands.csv        W3.15, AREA_2022 to AREA_2026: the fitted area of
+#                                       each season's zone (fit main, arm primary)
+# The owner-voice variant (abstract/variants/ssac2027_abstract.owner.md, 2026-09-30) also
+# prints, from tables already read: D_TOTAL and SHARE_ABS from T4's delta_total and
+# share_abs area rows (share_abs is carried as a percentage, 100 times T4's ratio, with the
+# ratio kept beside it and the CH1-A9 test on the sum's interval recorded), A_CONV from the
+# plane table's published-convention column, and N_CHAL_AGREE from T2's n_agree.
 # The Methods counts are P0's, the primary sample (D-R0-02, D-P4-05, DEV-47). The ledger's
 # N_CALLED and N_GAMES are W6.4's ABS-measured-cohort counts, which W6.4's --check owns, so
 # these are written under their own names and abstract_slots.json maps the slots to them.
@@ -147,6 +154,15 @@ fmt <- function(x, d) {
   sub("^-(0(\\.0+)?)$", "\\1", s)
 }
 
+# A ledger entry carries print_contraction when the abstract slot of the same name asks
+# for it, or when any abstract slot that reads this entry through ledger_slot does
+# (A_CORR_LOSS reads A_CORR, A_PUB_LOSS reads A_PUB, HW_BUF_LOSS reads T1_BUF_HW). The
+# signed print stays beside it, so the other variants print the entry as before.
+CONTRACTION_ENTRIES <- unique(unlist(lapply(names(spec$slots), function(k) {
+  s <- spec$slots[[k]]
+  if (identical(s$orient, "contraction")) s$ledger_slot %||% k else character()
+})))
+
 # An interval is stored under keys that name its level: lo95/hi95, or lo90/hi90 for the
 # 90% intervals of the CH1-A3 equivalence tests. A 90% interval is never filed as a 95% one.
 print_block <- function(p, lo, hi, d, negate = FALSE, level = 95) {
@@ -175,8 +191,7 @@ make_entry <- function(slot, p, lo, hi, units, what, source, row, step, syntheti
   e$produced_by <- step
   e$carried_by <- "W7.24"
   e$print <- print_block(p, lo, hi, d, level = level)
-  s <- spec$slots[[slot]]
-  if (!is.null(s) && identical(s$orient, "contraction")) {
+  if (slot %in% CONTRACTION_ENTRIES) {
     e$print_contraction <- print_block(p, lo, hi, d, negate = TRUE, level = level)
   }
   if (synthetic) e$synthetic <- TRUE
@@ -246,7 +261,67 @@ read_cells <- function(path, rel, step, synthetic, plane) {
     out[[slot]] <- make_entry(slot, p[i], lo[i] %||% NA, hi[i] %||% NA, units,
                               paste(q[i], if (plane) "plane" else comp[i]), rel, i, step, synthetic)
   }
+  area <- grepl("area", tolower(q))
+  if (!plane) {
+    # The owner-voice variant's two extra T4 rows, area only. A T4 without them (the
+    # synthetic dry run's) writes neither. The fit and arm columns, where present, keep
+    # the read on the main fit's primary arm.
+    fit <- pick(df, c("fit")); arm <- pick(df, c("arm"))
+    primary <- if (is.null(fit) || is.null(arm)) rep(TRUE, nrow(df)) else (fit == "main" & arm == "primary")
+    i_tot <- which(primary & area & comp == "delta_total")
+    i_sum <- which(primary & area & comp == "sum_components")
+    i_sh <- which(primary & area & comp == "share_abs")
+    if (length(i_tot) == 1L) {
+      out[["D_TOTAL"]] <- make_entry(
+        "D_TOTAL", p[i_tot], lo[i_tot], hi[i_tot], "sq in",
+        "delta_total, area: the 2024-to-2026 change in the 50 percent contour's area (delta_buffer + delta_abs + 2 g)",
+        rel, i_tot, step, synthetic)
+    }
+    if (length(i_sh) == 1L && length(i_sum) == 1L) {
+      # CH1-A9: share_abs is reported only when the 95% interval on delta_buffer + delta_abs
+      # excludes zero. The entry records that test beside the number.
+      reportable <- isTRUE(hi[i_sum] < 0) || isTRUE(lo[i_sum] > 0)
+      out[["SHARE_ABS"]] <- make_entry(
+        "SHARE_ABS", 100 * p[i_sh], 100 * lo[i_sh], 100 * hi[i_sh], "percent",
+        paste("share_abs, area: the 2026 step as a percentage of the two steps combined,",
+              "delta_abs / (delta_abs + delta_buffer), 100 times T4's ratio (kept as ratio);",
+              "CH1-A9 reportable only when the 95% interval on the sum (sum_lo95, sum_hi95) excludes zero"),
+        rel, i_sh, step, synthetic,
+        extra = list(ratio = p[i_sh], ratio_lo95 = lo[i_sh], ratio_hi95 = hi[i_sh],
+                     sum_lo95 = lo[i_sum], sum_hi95 = hi[i_sum], sum_row = i_sum,
+                     reportable = reportable))
+    }
+  } else {
+    # The published-convention change, 2025 at the plate front against 2026 at mid-plate,
+    # area row. Absent from a plane table without the column (the synthetic dry run's).
+    pc <- num(pick(df, c("published_convention_change_point")))
+    pl <- num(pick(df, c("published_convention_change_lo95")))
+    ph <- num(pick(df, c("published_convention_change_hi95")))
+    i_area <- which(area)
+    if (length(pc) == nrow(df) && length(pl) == nrow(df) && length(ph) == nrow(df) && length(i_area) == 1L) {
+      out[["A_CONV"]] <- make_entry(
+        "A_CONV", pc[i_area], pl[i_area], ph[i_area], "sq in",
+        paste("2025-to-2026 area change on the published convention, 2025 at the plate front and",
+              "2026 at mid-plate; T9_published_comparison.csv row 1 carries the same numbers"),
+        rel, i_area, step, synthetic)
+    }
+  }
   unname(out)
+}
+
+# W3.15's T3_estimands.csv: the fitted area of each season's zone, main fit, primary arm.
+read_t3 <- function(path, rel, step, synthetic) {
+  df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  need <- c("fit", "arm", "season", "estimand", "point", "lo95", "hi95", "units")
+  if (!all(need %in% names(df))) stop(rel, ": needs the columns ", paste(need, collapse = ", "))
+  lapply(2022:2026, function(yr) {
+    i <- which(df$fit == "main" & df$arm == "primary" & df$estimand == "area_sqin" & df$season == yr)
+    if (length(i) != 1L) stop(rel, ": expected one main/primary area_sqin row for ", yr, ", found ", length(i))
+    make_entry(paste0("AREA_", yr), num(df$point[i]), num(df$lo95[i]), num(df$hi95[i]), df$units[i],
+               paste0("fitted area of the 50 percent contour, ", yr,
+                      ", 72-inch batter, 2024 pitch mix, mid-plate"),
+               rel, i, step, synthetic)
+  })
 }
 
 # One count from a keyed table: the row whose `key` is `id`, the column `col`. A missing
@@ -276,7 +351,9 @@ read_t1 <- function(path, rel, step, synthetic) {
 read_t2 <- function(path, rel, step, synthetic) {
   df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
   list(read_count(df, rel, "row_id", "overall", "n", "N_CHAL",
-                  "MLB 2026 challenged pitches the zone-truth gate scored, overall row", step, synthetic))
+                  "MLB 2026 challenged pitches the zone-truth gate scored, overall row", step, synthetic),
+       read_count(df, rel, "row_id", "overall", "n_agree", "N_CHAL_AGREE",
+                  "of those, pitches on which the zone agreed with the ABS verdict, overall row", step, synthetic))
 }
 
 # W3.21's T5_placebos.csv. CH1-A3 tests P1 with 90% intervals against fixed margins, so
@@ -336,7 +413,8 @@ SOURCES <- list(
   list("out/ch1/tab/T4_plane_component.csv", "W3.17", "plane", TRUE),
   list("out/ch1/tab/T1_sample.csv", "W3.5", "t1", FALSE),
   list("out/ch1/tab/T2_zone_gate.csv", "W3.8", "t2", FALSE),
-  list("out/ch1/tab/T5_placebos.csv", "W3.21", "t5", TRUE)
+  list("out/ch1/tab/T5_placebos.csv", "W3.21", "t5", TRUE),
+  list("out/ch1/tab/T3_estimands.csv", "W3.15", "t3", TRUE)
 )
 
 main <- function(args) {
@@ -398,6 +476,7 @@ main <- function(args) {
       slots = read_slots(path, in_name(s[[1]]), s[[2]], synthetic),
       t1 = read_t1(path, in_name(s[[1]]), s[[2]], synthetic),
       t2 = read_t2(path, in_name(s[[1]]), s[[2]], synthetic),
+      t3 = read_t3(path, in_name(s[[1]]), s[[2]], synthetic),
       t5 = read_t5(path, in_name(s[[1]]), s[[2]], synthetic),
       read_cells(path, in_name(s[[1]]), s[[2]], synthetic, s[[3]] == "plane"))
     cat(sprintf("export_numbers: read %s, %d entr%s\n", in_name(s[[1]]), length(got),

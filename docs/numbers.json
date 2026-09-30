@@ -240,6 +240,11 @@
         "point": "-32.8",
         "lo95": "-36.6",
         "hi95": "-29.3"
+      },
+      "print_contraction": {
+        "point": "32.8",
+        "lo95": "29.3",
+        "hi95": "36.6"
       }
     },
     {
@@ -256,6 +261,10 @@
       "print": {
         "lo95": "-22",
         "hi95": "-8"
+      },
+      "print_contraction": {
+        "lo95": "8",
+        "hi95": "22"
       }
     },
     {
@@ -402,6 +411,11 @@
         "point": "-0.41",
         "lo95": "-0.49",
         "hi95": "-0.33"
+      },
+      "print_contraction": {
+        "point": "0.41",
+        "lo95": "0.33",
+        "hi95": "0.49"
       }
     },
     {
@@ -680,6 +694,172 @@
       "carried_by": "W7.24",
       "print": {
         "point": "3"
+      }
+    },
+    {
+      "slot": "D_TOTAL",
+      "value": -56.022505931417,
+      "lo95": -59.5682473944862,
+      "hi95": -51.9793814290132,
+      "units": "sq in",
+      "what": "delta_total, area: the 2024-to-2026 change in the 50 percent contour's area (delta_buffer + delta_abs + 2 g)",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 22,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-56.0",
+        "lo95": "-59.6",
+        "hi95": "-52.0"
+      },
+      "print_contraction": {
+        "point": "56.0",
+        "lo95": "52.0",
+        "hi95": "59.6"
+      }
+    },
+    {
+      "slot": "SHARE_ABS",
+      "value": 58.552176449245195,
+      "lo95": 52.7039690903951,
+      "hi95": 64.7026321106358,
+      "ratio": 0.585521764492452,
+      "ratio_lo95": 0.527039690903951,
+      "ratio_hi95": 0.647026321106358,
+      "sum_lo95": -62.7822406828654,
+      "sum_hi95": -49.7466322542741,
+      "sum_row": 23,
+      "reportable": true,
+      "units": "percent",
+      "what": "share_abs, area: the 2026 step as a percentage of the two steps combined, delta_abs / (delta_abs + delta_buffer), 100 times T4's ratio (kept as ratio); CH1-A9 reportable only when the 95% interval on the sum (sum_lo95, sum_hi95) excludes zero",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 24,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "59",
+        "lo95": "53",
+        "hi95": "65"
+      }
+    },
+    {
+      "slot": "A_CONV",
+      "value": -19.9876821401359,
+      "lo95": -28.2045160963776,
+      "hi95": -12.9858303908721,
+      "units": "sq in",
+      "what": "2025-to-2026 area change on the published convention, 2025 at the plate front and 2026 at mid-plate; T9_published_comparison.csv row 1 carries the same numbers",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 4,
+      "produced_by": "W3.17",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-20.0",
+        "lo95": "-28.2",
+        "hi95": "-13.0"
+      },
+      "print_contraction": {
+        "point": "20.0",
+        "lo95": "13.0",
+        "hi95": "28.2"
+      }
+    },
+    {
+      "slot": "N_CHAL_AGREE",
+      "value": 10164,
+      "units": "counts",
+      "what": "of those, pitches on which the zone agreed with the ABS verdict, overall row",
+      "source": "out/ch1/tab/T2_zone_gate.csv",
+      "source_row": 1,
+      "produced_by": "W3.8",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "10,164"
+      }
+    },
+    {
+      "slot": "AREA_2022",
+      "value": 494.641598639206,
+      "lo95": 490.38447945468,
+      "hi95": 498.655537892861,
+      "units": "sq in",
+      "what": "fitted area of the 50 percent contour, 2022, 72-inch batter, 2024 pitch mix, mid-plate",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 4,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "494.6",
+        "lo95": "490.4",
+        "hi95": "498.7"
+      }
+    },
+    {
+      "slot": "AREA_2023",
+      "value": 484.309032220194,
+      "lo95": 480.128223694652,
+      "hi95": 488.0753700111,
+      "units": "sq in",
+      "what": "fitted area of the 50 percent contour, 2023, 72-inch batter, 2024 pitch mix, mid-plate",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 10,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "484.3",
+        "lo95": "480.1",
+        "hi95": "488.1"
+      }
+    },
+    {
+      "slot": "AREA_2024",
+      "value": 495.095379572909,
+      "lo95": 490.814981032057,
+      "hi95": 499.120907599294,
+      "units": "sq in",
+      "what": "fitted area of the 50 percent contour, 2024, 72-inch batter, 2024 pitch mix, mid-plate",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 16,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "495.1",
+        "lo95": "490.8",
+        "hi95": "499.1"
+      }
+    },
+    {
+      "slot": "AREA_2025",
+      "value": 471.918904060984,
+      "lo95": 468.008368249086,
+      "hi95": 475.722053906828,
+      "units": "sq in",
+      "what": "fitted area of the 50 percent contour, 2025, 72-inch batter, 2024 pitch mix, mid-plate",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 22,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "471.9",
+        "lo95": "468.0",
+        "hi95": "475.7"
+      }
+    },
+    {
+      "slot": "AREA_2026",
+      "value": 439.072873641492,
+      "lo95": 435.25673165123,
+      "hi95": 442.383231215663,
+      "units": "sq in",
+      "what": "fitted area of the 50 percent contour, 2026, 72-inch batter, 2024 pitch mix, mid-plate",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 28,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "439.1",
+        "lo95": "435.3",
+        "hi95": "442.4"
       }
     },
     {

@@ -17,11 +17,22 @@
 #
 # Environment:
 #   ABS_LEDGER           the ledger (default docs/numbers.json)
-#   ABS_VARIANT          main | null-buffer | sign-reversal | descriptive (default
-#                        descriptive). D-66 wrote the first three. Placebo P1 failed, so
-#                        the frozen CH1-A3 consequence applies and only the descriptive
-#                        variant carries it (DECISIONS.md, 2026-09-30)
-#   ABS_CALLS            the owner's CALL and BREAK_YEAR (default abstract/owner-calls.json)
+#   ABS_VARIANT          main | null-buffer | sign-reversal | descriptive | owner (default
+#                        owner). D-66 wrote the first three. Placebo P1 failed, so the
+#                        frozen CH1-A3 consequence applies; descriptive carried it first
+#                        (DECISIONS.md, 2026-09-30) and owner is the same case written in
+#                        the owner's own voice, which replaces it (DECISIONS.md, 2026-09-30,
+#                        the owner's instruction)
+#   ABS_CALLS            the owner's CALL and BREAK_YEAR (default abstract/owner-calls.json;
+#                        abstract/owner-calls.proposed.json holds the writer's proposal
+#                        for review R1, filled only when named here)
+#   ABS_EXHIBITS         a file naming the chosen exhibits, "figure1 <dir>" and "table1 <dir>"
+#                        under abstract/exhibits/ (default abstract/exhibits/chosen.txt).
+#                        On the real run, after build_exhibits.R, each chosen folder's PNG,
+#                        alt text and caption are copied over abstract/figure1.png,
+#                        abstract/figure1.alt.txt, abstract/table1.png and abstract/table1.md,
+#                        so the checks read the exhibits that will be uploaded. The dry run
+#                        (ABS_TAG set) keeps the generated ones.
 #   ABS_PREREG_SENTENCE  narrow | wide (default narrow); wide needs GD-12 to pass
 #   ABS_OUTDIR           where abstract/, out/tables/ and submissions/ssac2027/ are
 #                        written (default the repository). The dry run points it under
@@ -29,14 +40,15 @@
 #   ABS_TAG              a dry-run tag inserted into every output file name
 #
 # Exit 0 drafted (owner slots may still be pending); 1 a ledger slot is missing; 3 over
-# the 470-word cap after the SOP cut ladder; 4 refused by GD-12 (a real run from a commit
+# the 495-word cap after the SOP cut ladder; 4 refused by GD-12 (a real run from a commit
 # that does not descend from prereg-v1); 2 anything else.
 set -uo pipefail
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root" || exit 2
 LEDGER=${ABS_LEDGER:-docs/numbers.json}
-VARIANT=${ABS_VARIANT:-descriptive}
+VARIANT=${ABS_VARIANT:-owner}
 CALLS=${ABS_CALLS:-abstract/owner-calls.json}
+EXHIBITS=${ABS_EXHIBITS:-abstract/exhibits/chosen.txt}
 PREREG=${ABS_PREREG_SENTENCE:-narrow}
 OUT=${ABS_OUTDIR:-$root}
 TAG=${ABS_TAG:-}
@@ -85,6 +97,32 @@ fi
 Rscript tools/comms/build_exhibits.R --ledger "$LEDGER" ${TAG:+--tag "$TAG"} \
   --abstract-dir "$OUT/abstract" --tables-dir "$OUT/out/tables"
 ex=$?
+
+# The chosen exhibits (2026-09-30): the exhibit lane keeps each candidate under
+# abstract/exhibits/<dir>/ with its script, PNG, SVG, caption.md, alt.txt and
+# data-sources.md. The two named in $EXHIBITS replace the generated figure1 and table1
+# files, so W6.10 and W6.12 check the PNGs, alt text and caption that go to the form.
+# table1.md becomes the chosen caption plus a pointer to the folder; the generated inline
+# table (table1.inline.md) and the sidecar CSVs stay as built.
+if [ "$ex" -eq 0 ] && [ -z "$TAG" ] && [ -s "$EXHIBITS" ]; then
+  while read -r kind dir; do
+    case "$kind" in figure1|table1) ;; ''|'#'*) continue ;; *) echo "abstract: $EXHIBITS names an unknown exhibit '$kind'"; exit 2 ;; esac
+    src="abstract/exhibits/$dir"
+    for f in "$src/$dir.png" "$src/alt.txt" "$src/caption.md"; do
+      [ -s "$f" ] || { echo "abstract: chosen exhibit file missing: $f"; exit 2; }
+    done
+    cp "$src/$dir.png" "$OUT/abstract/$kind.png"
+    if [ "$kind" = figure1 ]; then
+      cp "$src/alt.txt" "$OUT/abstract/figure1.alt.txt"
+    else
+      { cat "$src/caption.md"; echo
+        echo "The table is abstract/table1.png, copied from $src/$dir.png; its cells and their"
+        echo "sources are listed in $src/data-sources.md, and its alt text is $src/alt.txt."; } \
+        > "$OUT/abstract/table1.md"
+    fi
+    echo "abstract: $kind is the chosen exhibit $src"
+  done < "$EXHIBITS"
+fi
 
 # Two fills from the same ledger: the body as pasted with the table uploaded, and the
 # body for a form with no upload field, which must also hold the inline table.

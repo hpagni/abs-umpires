@@ -141,7 +141,8 @@ def test_list_inputs_names_every_input():
     listed = r.stdout.split()
     assert "out/ch1/tab/T1_sample.csv" in listed and "out/ch1/tab/T2_zone_gate.csv" in listed
     assert "out/ch1/tab/T5_placebos.csv" in listed
-    assert len(listed) == 8
+    assert "out/ch1/tab/T3_estimands.csv" in listed  # AREA_2022..AREA_2026, the owner-voice variant
+    assert len(listed) == 9
 
 
 def test_gd12_refuses_a_fit_result_before_the_tag(dry, tmp_path):

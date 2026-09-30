@@ -3069,3 +3069,79 @@ failed placebo, so none can carry the consequence. The fourth,
 `scripts/abstract.sh` now fills the descriptive variant by default. The CALL and BREAK_YEAR
 slots, and the RESULT CALL line, stay the owner's. The owner may still reword the variant at
 review R1. He may not restore causal wording: that would be a deviation from section 8.
+
+### D-P6-02 OWNER DECISION, applied 2026-09-30 15:31 CEST: the abstract is written in the owner's voice, and its cap is 495 words
+
+Applied on 2026-09-30 (Europe/Madrid) on the branch `phase01/public`, at the owner's
+instruction. Status: **owner decision, recorded and applied.** Two decisions, both his:
+
+1. **The word cap is 495, counted as `quality/w610_check.sh` counts** (title, headings and
+   the `#` marks included; `<<CALL>>` counted as 25 words while pending). SSAC's rule is
+   "fewer than 500 words, including title and body"; the SOP's 470 was the project's own
+   margin, and the owner set the margin at 5. The cap is raised in these files:
+   `quality/w610_check.sh`, `quality/w612_check.sh`, `tools/comms/fill_slots.R` (the
+   `--cap` default), `tools/comms/r1_agenda.py`, `tools/comms/build_submission.py` and
+   `ops/abstract_dryrun.sh`, whose over-cap plant now pads 40 words. `docs/numbers-allow.txt`
+   allows 495 and keeps 470, since the scripts' comments still quote it. The comments in
+   `quality/steps.yml` and `quality/steps.d/W6.10.yml` still say 470. They are phase 08's
+   files and are not touched here.
+2. **The owner-voice variant replaces the agent-written descriptive draft.** The owner asked
+   for the abstract in his own voice from his five-part template (background and purpose
+   as the Introduction; methods; findings; conclusion). The new template is
+   `abstract/variants/ssac2027_abstract.owner.md`, and `scripts/abstract.sh` fills it by
+   default (`ABS_VARIANT=owner`). It keeps every frozen obligation of D-P6-01. The failed
+   placebo P1 is the headline finding, and every comparison is descriptive with no causal
+   wording. The narrow pre-registration sentence is verbatim. The Conclusion names the
+   failed placebo as its limit, and the CH1-A5 binned miss (6.0 and 7.6 sq in against a 3 sq
+   in tolerance) as a second. The one top-edge number carries D-R0-04's "reads slightly too
+   narrow" caveat in the same sentence. No per-umpire figure appears, and games from
+   2026-09-22 and the postseason are held out. The register is impersonal with "I" only
+   where a choice was his ("To put five seasons on one zone, I re-projected ..."), never
+   "we". The descriptive variant stays on disk for the record.
+
+**Three departures from his own habits, on purpose.** (a) Every result number carries a
+95% interval in parentheses, "P (95% CI L to H)", which his papers never print. SSAC asks
+for actual results with statistics, and the project's rule 5 requires a bound in every
+sentence with a decimal. (b) He pairs an intensifier with each hedge; the ban list forbids
+the intensifiers, so the caveats stand plain ("an interval that reads slightly too
+narrow"). (c) His median sentence runs 22 to 25 words. The project's rule 1 caps the
+file's median at 22, so several sentences are short ("The placebo failed: ...", "On one
+plane it is ..."), which he rarely does.
+
+**The share is reported.** `share_abs` on area is 0.586 (95% CI 0.527 to 0.647), printed
+as 59 percent (95% CI 53 to 65). Its CH1-A9 condition holds: the 95% interval on
+delta_buffer + delta_abs, -62.8 to -49.7, excludes zero (T4 row 23). The ledger entry
+SHARE_ABS records that test beside the number.
+
+**The ledger.** `tools/comms/export_numbers.R` now also carries five kinds of entry, from
+committed tables and never by hand. AREA_2022 to AREA_2026 come from T3_estimands.csv (fit
+main, arm primary, area). D_TOTAL and SHARE_ABS come from T4 rows 22 and 24, the share as
+a percentage, 100 times T4's ratio, with the ratio kept. A_CONV is the plane table's
+published-convention area change, T9 row 1's numbers, and N_CHAL_AGREE is T2's n_agree.
+Three abstract slots read existing entries in the contraction orientation through
+`ledger_slot` (A_CORR_LOSS, A_PUB_LOSS, HW_BUF_LOSS), so those entries gain
+`print_contraction` beside their signed print. The ledger holds 61 entries;
+`export_numbers.R --check` is unchanged on a second run, and W6.3 and W6.4's byte checks
+are green.
+
+**The exhibits.** The exhibit lane chose Figure 1 = `abstract/exhibits/area-trajectory-drift`
+and Table 1 = `abstract/exhibits/table-periods-descriptive`, listed in
+`abstract/exhibits/chosen.txt`. On the real run `scripts/abstract.sh` copies each chosen
+PNG, the figure's alt text and the table's caption over the generated `abstract/figure1.*`
+and `abstract/table1.*`, so W6.10 and W6.12 check what is uploaded. The provenance tables in
+the two chosen `data-sources.md` files are fenced as code, since they list raw table cells
+the number gate cannot vouch for. `docs/numbers-allow.txt` gains 0.75, the 2025 grading
+buffer the figure's period label names. The two unchosen candidate folders stay
+uncommitted; while they sit on disk the bare `quality/check_numbers.py` scan reads them
+and reports their raw values as untraced.
+
+**The form.** The owner said the abstract is uploaded as a file with the two exhibits
+embedded, so `abstract/FORM-FIELDS.md` item 5 now answers "yes" to the upload field. The
+no-upload copy (the body with the inline table) is 527 words, 32 over the cap; bringing
+it under would cost the same 32 words of text, so it is left over and advisory.
+
+**Still the owner's.** CALL and BREAK_YEAR. The writer's proposal is in
+`abstract/owner-calls.proposed.json` (CALL, 25 words, R1 proposal 2 worded as a
+measurement; BREAK_YEAR 2025 by the R1 rule). The owner writes `abstract/owner-calls.json`
+himself; the tracked filled abstract keeps the two slots pending. Filled with the proposal
+the count is 494 of 495; pending, with the 25-word reserve, it is also 494.

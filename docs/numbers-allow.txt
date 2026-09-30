@@ -9,7 +9,8 @@
 # Conference constraints, read from sloansportsconference.com on 2026-09-22 and recorded in
 # abstract/FORM-FIELDS.md section 2.
 500   # the abstract word limit, "fewer than 500 words, including title and body"
-470   # the project's own drafting ceiling under that limit, SOP W6 abstract budget
+495   # the project's drafting ceiling under that limit: the owner raised it from the SOP's 470 on 2026-09-30 (DECISIONS.md)
+470   # the SOP W6 abstract budget the ceiling was raised from; still quoted in the check scripts' comments
 
 # Owner budgets and in-file cross-references, abstract/FORM-FIELDS.md.
 20    # minutes budgeted for the owner's form survey
@@ -27,6 +28,7 @@
 
 # Definitions the SSAC abstract states, SOP W6 abstract template. W9.13 and W6.10, phase 06.
 # Each is a rule or an estimand's definition, fixed before any fit, so nothing produces it.
+0.75  # the 2025 umpire grading buffer, three-quarters of an inch either side of the edge, PREREGISTRATION.md section 3; printed on the chosen Figure 1's alt text
 53.5  # Statcast's 2026 top-of-zone rule, 53.5 percent of batter height (the ABS zone)
 27    # Statcast's 2026 bottom-of-zone rule, 27 percent of batter height (the ABS zone)
 50    # "the 50 percent contour", the called-strike estimand's definition, SOP W3.15

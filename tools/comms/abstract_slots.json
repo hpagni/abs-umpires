@@ -5,13 +5,15 @@
   "_ledger_slot": "ledger_slot names the ledger entry a slot prints when the two names differ. N_CALLED and N_GAMES print P0, the Chapter 1 primary sample (D-R0-02, D-P4-05, DEV-47), which export_numbers.R carries from W3.5's T1_sample.csv as N_CALLED_P0 and N_GAMES_P0. The ledger's own N_CALLED and N_GAMES are W6.4's ABS-measured-cohort counts; W6.4's --check owns them, and the abstract does not print them.",
   "_digits": "digits sets decimals by units; a slot's own digits overrides it. A_PUB is printed whole, as Clemens published it (8 to 22), signed like A_CORR beside it.",
   "_owner_review": "Orientation, digits and suffixes are presentation choices fixed before any real number exists. Review R1 may change them here, never in the abstract text.",
+  "_owner_variant": "The owner-voice variant (abstract/variants/ssac2027_abstract.owner.md, the owner's instruction recorded in DECISIONS.md D-P6-02) adds the slots below D_TOTAL. Three of them read an existing entry through ledger_slot in the contraction orientation (A_CORR_LOSS, A_PUB_LOSS, HW_BUF_LOSS), so export_numbers.R writes print_contraction on A_CORR, A_PUB and T1_BUF_HW beside their signed print; the older variants still print those entries signed. AREA_2022 to AREA_2026 print the point alone (kind value), in a sentence whose bound is D_TOTAL's interval. SHARE_ABS is a percentage (100 times T4's share_abs ratio, digits 0) printed as a point, and SHARE_ABS_CI prints its interval as a range so the sentence can read 'N percent ... (95% CI L to H)'. N_CHAL_AGREE is T2's n_agree beside N_CHAL.",
   "digits": {
     "sq in": 1,
     "sq in per season": 1,
     "in": 2,
     "reliability": 2,
     "counts": 0,
-    "pp": 2
+    "pp": 2,
+    "percent": 0
   },
   "slots": {
     "N_CALLED": {"kind": "count", "units": "counts", "section": "Methods", "ledger_slot": "N_CALLED_P0"},
@@ -37,6 +39,19 @@
     "A5_BUF": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
     "A5_ABS": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
     "A5_TOL": {"kind": "value", "orient": "signed", "units": "sq in", "digits": 0, "section": "Conclusion"},
+    "N_CHAL_AGREE": {"kind": "count", "units": "counts", "section": "Methods"},
+    "AREA_2022": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
+    "AREA_2023": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
+    "AREA_2024": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
+    "AREA_2025": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
+    "AREA_2026": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
+    "D_TOTAL": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "HW_BUF_LOSS": {"kind": "estimate", "orient": "contraction", "units": "in", "section": "Results", "ledger_slot": "T1_BUF_HW"},
+    "A_CONV": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "A_CORR_LOSS": {"kind": "estimate", "orient": "contraction", "units": "sq in", "section": "Results", "ledger_slot": "A_CORR"},
+    "A_PUB_LOSS": {"kind": "range", "orient": "contraction", "units": "sq in", "digits": 0, "section": "Results", "ledger_slot": "A_PUB"},
+    "SHARE_ABS": {"kind": "value", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion"},
+    "SHARE_ABS_CI": {"kind": "range", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion", "ledger_slot": "SHARE_ABS"},
     "CALL": {"kind": "owner", "reserve_words": 25, "section": "Conclusion"},
     "BREAK_YEAR": {"kind": "owner", "reserve_words": 1, "section": "Conclusion"}
   },

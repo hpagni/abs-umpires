@@ -111,7 +111,7 @@ If a field exists that is not listed here, add it to section 4.
      `________________`
 
 5. **Tables and figures.** Up to two combined.
-   - Whether there is an upload field at all: `________________`
+   - Whether there is an upload field at all: `yes, the abstract is uploaded as a file with Table 1 and Figure 1 embedded (owner, 2026-09-30)`
    - Accepted file types: `________________`
    - Size cap: `________________`
    - Maximum number of files: `________________`

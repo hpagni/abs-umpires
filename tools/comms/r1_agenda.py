@@ -23,7 +23,7 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-CAP = 470
+CAP = 495  # the owner's decision of 2026-09-30 (DECISIONS.md), raised from the SOP's 470
 
 
 def words(text: str) -> int:
