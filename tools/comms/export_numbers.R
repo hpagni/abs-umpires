@@ -19,7 +19,11 @@
 #                                       CH1-A3 test level, with their margins) and
 #                                       P2_AREA_MAX, the largest of the five P2 area placebos
 #   out/ch1/tab/T3_estimands.csv        W3.15, AREA_2022 to AREA_2026: the fitted area of
-#                                       each season's zone (fit main, arm primary)
+#                                       each season's zone (fit main, arm primary); with
+#                                       out/ch1/model/estimand_draws_main.csv beside it, also
+#                                       the six post-tag exploratory entries of DEV-82
+#                                       (DRIFT_2223_AREA, DRIFT_2324_TOP/_BOT/_HW,
+#                                       BASE_MEAN_BUF, BASE_2023_BUF), not pre-registered
 # The owner-voice variant (abstract/variants/ssac2027_abstract.owner.md, 2026-09-30) also
 # prints, from tables already read: D_TOTAL and SHARE_ABS from T4's delta_total and
 # share_abs area rows (share_abs is carried as a percentage, 100 times T4's ratio, with the
@@ -310,11 +314,14 @@ read_cells <- function(path, rel, step, synthetic, plane) {
 }
 
 # W3.15's T3_estimands.csv: the fitted area of each season's zone, main fit, primary arm.
-read_t3 <- function(path, rel, step, synthetic) {
+# With W3.15's committed draws beside it (out/ch1/model/estimand_draws_main.csv), the six
+# post-tag exploratory entries below are re-derived too; without them (the synthetic dry run)
+# only the five areas are written.
+read_t3 <- function(path, rel, step, synthetic, draws = NULL, draws_rel = NULL, t4 = NULL) {
   df <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
   need <- c("fit", "arm", "season", "estimand", "point", "lo95", "hi95", "units")
   if (!all(need %in% names(df))) stop(rel, ": needs the columns ", paste(need, collapse = ", "))
-  lapply(2022:2026, function(yr) {
+  out <- lapply(2022:2026, function(yr) {
     i <- which(df$fit == "main" & df$arm == "primary" & df$estimand == "area_sqin" & df$season == yr)
     if (length(i) != 1L) stop(rel, ": expected one main/primary area_sqin row for ", yr, ", found ", length(i))
     make_entry(paste0("AREA_", yr), num(df$point[i]), num(df$lo95[i]), num(df$hi95[i]), df$units[i],
@@ -322,6 +329,92 @@ read_t3 <- function(path, rel, step, synthetic) {
                       ", 72-inch batter, 2024 pitch mix, mid-plate"),
                rel, i, step, synthetic)
   })
+  if (is.null(draws) || !file.exists(draws)) return(out)
+  c(out, read_exploratory(df, rel, draws, draws_rel, t4, step, synthetic))
+}
+
+# POST-TAG EXPLORATORY ADDITIONS (docs/DEVIATIONS.md, DEV-82), added 2026-09-30 at an
+# external reviewer's request and not pre-registered. They are re-derivations from W3.15's
+# committed outputs, not fits: each point is a difference of T3 points (main fit, primary
+# arm), and each interval is the type-7 percentile interval of the same difference over the
+# 1,000 joint draws, the way W3.21 reads P1 (R/ch1/26_placebos.R). The level is in the key.
+#   DRIFT_2223_AREA  area, 2023 minus 2022, 90% (the other old-rule season pair, read as P1 is)
+#   DRIFT_2324_TOP, _BOT, _HW  the 2024 minus 2023 edge changes, 95% (P1 by edge)
+#   BASE_MEAN_BUF    the 2025 area step against the mean of the 2022-2024 areas plus one
+#                    season of the trend g, 95%; g per draw exactly as R/lib/ch1_decomp.R
+#   BASE_2023_BUF    the 2025 area step against the 2023 area alone, 95%
+EXPLORATORY <- paste("POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's",
+                     "committed T3 points and draws, added after the tag at an external reviewer's",
+                     "request; docs/DEVIATIONS.md, DEV-82")
+
+read_exploratory <- function(df, rel, draws, draws_rel, t4, step, synthetic) {
+  dr <- utils::read.csv(draws, check.names = FALSE)
+  row <- function(yr, q) {
+    i <- which(df$fit == "main" & df$arm == "primary" & df$estimand == q & df$season == yr)
+    if (length(i) != 1L) stop(rel, ": expected one main/primary ", q, " row for ", yr)
+    i
+  }
+  col <- function(yr, q) {
+    k <- paste(yr, q, sep = "_")
+    if (!k %in% names(dr)) stop(draws_rel, ": no column ", k)
+    num(dr[[k]])
+  }
+  qint <- function(v, lev) {
+    a <- (1 - lev) / 2
+    unname(stats::quantile(v[is.finite(v)], c(a, 1 - a), names = FALSE, type = 7))
+  }
+  entry <- function(slot, p, v, lev, units, what, rows, cols) {
+    iv <- qint(v, lev)
+    make_entry(slot, p, iv[1], iv[2], units, paste0(what, ". ", EXPLORATORY), rel, rows[length(rows)],
+               step, synthetic, level = round(100 * lev),
+               extra = list(source_rows = paste0(rel, " rows ", paste(rows, collapse = " and "), "; ",
+                                                 draws_rel, " columns ", paste(cols, collapse = ", ")),
+                            n_draws = sum(is.finite(v)), not_preregistered = TRUE))
+  }
+  pair <- function(slot, q, y0, y1, lev, units, what) {
+    i0 <- row(y0, q); i1 <- row(y1, q)
+    entry(slot, num(df$point[i1]) - num(df$point[i0]), col(y1, q) - col(y0, q), lev, units, what,
+          c(i0, i1), paste(c(y0, y1), q, sep = "_"))
+  }
+  out <- list(
+    pair("DRIFT_2223_AREA", "area_sqin", 2022, 2023, 0.90, "sq in",
+         "called-zone area, 2023 minus 2022, the other pair of old-rule seasons"),
+    pair("DRIFT_2324_TOP", "top_in", 2023, 2024, 0.95, "in", "top edge, 2024 minus 2023 (P1 by edge)"),
+    pair("DRIFT_2324_BOT", "bot_in", 2023, 2024, 0.95, "in", "bottom edge, 2024 minus 2023 (P1 by edge)"),
+    pair("DRIFT_2324_HW", "half_width_in", 2023, 2024, 0.95, "in", "half-width, 2024 minus 2023 (P1 by edge)")
+  )
+  # The 2025 area step against two other baselines. g is R/lib/ch1_decomp.R's precision-weighted
+  # 2022-2024 slope, weights 1 / var over the draws, applied to the point and to every draw.
+  yrs <- 2022:2025
+  i_a <- vapply(yrs, row, 0L, q = "area_sqin")
+  a <- num(df$point[i_a])
+  D <- vapply(yrs, col, numeric(nrow(dr)), q = "area_sqin")
+  w <- 1 / apply(D[, 1:3, drop = FALSE], 2, stats::var)
+  s <- 2022:2024
+  sb <- sum(w * s) / sum(w)
+  slope <- function(pre) {
+    tb <- as.vector(pre %*% w) / sum(w)
+    as.vector((pre - tb) %*% (w * (s - sb))) / sum(w * (s - sb)^2)
+  }
+  g <- slope(matrix(a[1:3], nrow = 1L))
+  gd <- slope(D[, 1:3, drop = FALSE])
+  if (!is.null(t4) && file.exists(t4)) {
+    t4d <- utils::read.csv(t4, stringsAsFactors = FALSE, check.names = FALSE)
+    k <- which(t4d$fit == "main" & t4d$arm == "primary" & t4d$estimand == "area_sqin" & t4d$component == "g")
+    if (length(k) == 1L && abs(num(t4d$point[k]) - g) > 1e-9) {
+      stop(draws_rel, ": the re-derived g ", g, " is not T4's ", t4d$point[k])
+    }
+  }
+  cols <- paste(yrs, "area_sqin", sep = "_")
+  c(out, list(
+    entry("BASE_MEAN_BUF", a[4] - (mean(a[1:3]) + g), D[, 4] - (rowMeans(D[, 1:3]) + gd), 0.95, "sq in",
+          paste("the 2025 area step against the mean of the 2022-2024 areas plus one season of the",
+                "2022-2024 trend g: area 2025 - (mean(area 2022, 2023, 2024) + g)"),
+          i_a, cols),
+    entry("BASE_2023_BUF", a[4] - a[2], D[, 4] - D[, 2], 0.95, "sq in",
+          "the 2025 area step against the 2023 area alone: area 2025 - area 2023",
+          i_a[c(2, 4)], cols[c(2, 4)])
+  ))
 }
 
 # One count from a keyed table: the row whose `key` is `id`, the column `col`. A missing
@@ -404,6 +497,11 @@ gd12_ancestry <- function() {
 
 # ------------------------------------------------------------------ main
 
+# W3.15's committed draws, read beside T3 (not a SOURCES entry of its own: the cold build
+# rebuilds it with T3, and the dry run has neither). Only the post-tag exploratory entries
+# read it (read_exploratory, DEV-82).
+DRAWS_T3 <- "out/ch1/model/estimand_draws_main.csv"
+
 # path, producing step, reader kind, fit result (gated by GD-12)
 SOURCES <- list(
   list("out/tables/abstract_slots_ch1.csv", "W6.7", "slots", TRUE),
@@ -476,7 +574,9 @@ main <- function(args) {
       slots = read_slots(path, in_name(s[[1]]), s[[2]], synthetic),
       t1 = read_t1(path, in_name(s[[1]]), s[[2]], synthetic),
       t2 = read_t2(path, in_name(s[[1]]), s[[2]], synthetic),
-      t3 = read_t3(path, in_name(s[[1]]), s[[2]], synthetic),
+      t3 = read_t3(path, in_name(s[[1]]), s[[2]], synthetic,
+                   draws = file.path(inputs, in_name(DRAWS_T3)), draws_rel = in_name(DRAWS_T3),
+                   t4 = file.path(inputs, in_name("out/ch1/tab/T4_decomposition.csv"))),
       t5 = read_t5(path, in_name(s[[1]]), s[[2]], synthetic),
       read_cells(path, in_name(s[[1]]), s[[2]], synthetic, s[[3]] == "plane"))
     cat(sprintf("export_numbers: read %s, %d entr%s\n", in_name(s[[1]]), length(got),

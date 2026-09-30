@@ -36,9 +36,9 @@
     "P1_AREA": {"kind": "estimate90", "orient": "signed", "units": "sq in", "section": "Results"},
     "P1_SHADOW": {"kind": "estimate90", "orient": "signed", "units": "pp", "section": "Results"},
     "P2_AREA_MAX": {"kind": "value", "orient": "signed", "units": "sq in", "suffix": " square inches", "section": "Results"},
-    "A5_BUF": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
-    "A5_ABS": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
-    "A5_TOL": {"kind": "value", "orient": "signed", "units": "sq in", "digits": 0, "section": "Conclusion"},
+    "A5_BUF": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "A5_ABS": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "A5_TOL": {"kind": "value", "orient": "signed", "units": "sq in", "digits": 0, "section": "Results"},
     "N_CHAL_AGREE": {"kind": "count", "units": "counts", "section": "Methods"},
     "AREA_2022": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
     "AREA_2023": {"kind": "value", "orient": "signed", "units": "sq in", "section": "Results"},
@@ -52,6 +52,12 @@
     "A_PUB_LOSS": {"kind": "range", "orient": "contraction", "units": "sq in", "digits": 0, "section": "Results", "ledger_slot": "A_PUB"},
     "SHARE_ABS": {"kind": "value", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion"},
     "SHARE_ABS_CI": {"kind": "range", "orient": "signed", "units": "percent", "digits": 0, "section": "Conclusion", "ledger_slot": "SHARE_ABS"},
+    "DRIFT_2223_AREA": {"kind": "estimate90", "orient": "contraction", "units": "sq in", "section": "Results"},
+    "DRIFT_2324_TOP": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
+    "DRIFT_2324_BOT": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Table 1"},
+    "DRIFT_2324_HW": {"kind": "estimate", "orient": "signed", "units": "in", "section": "Results"},
+    "BASE_MEAN_BUF": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Table 1 footnote"},
+    "BASE_2023_BUF": {"kind": "estimate", "orient": "signed", "units": "sq in", "section": "Table 1 footnote"},
     "CALL": {"kind": "owner", "reserve_words": 25, "section": "Conclusion"},
     "BREAK_YEAR": {"kind": "owner", "reserve_words": 1, "section": "Conclusion"}
   },
@@ -70,5 +76,7 @@
     ]
   },
   "_ch1_a5": "A5_BUF, A5_ABS and A5_TOL carry CH1-A5's miss on the area into the descriptive variant's Conclusion, where the frozen rule reports it as a limitation. W6.7 writes them from T4_decomposition.csv: binned_minus_bam for delta_buffer and delta_abs, and ch1_a5_tolerance. A5_BUF and A5_ABS are printed in the contraction orientation, so a binned loss larger than the smooth fit's reads as a positive number in a sentence that calls the binned losses larger. A5_TOL is printed whole, as the tolerance is written.",
+  "_exploratory": "POST-TAG EXPLORATORY ADDITIONS (docs/DEVIATIONS.md, DEV-82), added after the tag at an external reviewer's request and not pre-registered; every place that prints one says so. export_numbers.R re-derives them from W3.15's committed T3 points and its 1,000 draws (out/ch1/model/estimand_draws_main.csv), a difference of points with a type-7 percentile interval of the same difference over the draws. DRIFT_2223_AREA is the area change 2022 to 2023, the other old-rule pair, at 90% as P1_AREA is printed, in the contraction orientation so a shrinking zone reads as a positive number in a sentence that says it shrank. DRIFT_2324_TOP, _BOT and _HW are P1 by edge, 2024 minus 2023, at 95% to match the other edge rows of Table 1, printed signed. BASE_MEAN_BUF and BASE_2023_BUF are the 2025 area step against two other baselines (the 2022-2024 mean plus one season of g, and 2023 alone), printed signed in Table 1's footnote.",
+  "_ch1_a5_owner": "The owner variant prints A5_BUF, A5_ABS and A5_TOL in Results, grouped with the placebo result and the top-edge caveat as the pre-registered checks (an owner-approved change after the external review).",
   "_descriptive": "P1_AREA, P1_SHADOW, P2_AREA_MAX and the four T1_ edge slots are read only by the descriptive variant (DECISIONS.md D-P6-01), written because placebo P1 failed and the frozen consequence of CH1-A3 applies. The two top-edge slots are printed as drops (orient contraction), so a top edge that moved down reads as a positive number in a sentence that says it came down. The two bottom-edge slots are printed signed, and a positive bottom edge moved up. Both orientations are fixed here, not in the text."
 }

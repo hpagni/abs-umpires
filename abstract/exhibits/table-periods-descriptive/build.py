@@ -2,13 +2,23 @@
 """Candidate exhibit `table-periods-descriptive`: a rebuilt Table 1 with period
 labels, the 2024-to-2026 total and the failed pre-registered placebo as a row.
 
-Reads ONLY committed tables under out/ (no model object, no new fit):
+Reads ONLY committed files (no model object, no new fit):
   out/ch1/tab/T4_decomposition.csv    fit=main, arm=primary; components g,
                                       delta_buffer, delta_abs, delta_total
   out/ch1/tab/T5_placebos.csv         placebo=P1, both quantities
   out/ch1/tab/T4_plane_component.csv  all four estimands
   out/tables/table1_data.csv          print_* columns, used only to assert that
                                       this script's rounding reproduces them
+  out/ch1/tab/T3_estimands.csv        fit=main, arm=primary, 2022-2025 rows: the
+                                      points of the post-tag exploratory cells
+  out/ch1/model/estimand_draws_main.csv  W3.15's 1,000 joint draws: their intervals
+  docs/numbers.json                   DRIFT_2324_*, BASE_MEAN_BUF, BASE_2023_BUF, used
+                                      to assert that the printed cells equal the ledger
+
+POST-TAG EXPLORATORY ADDITIONS (docs/DEVIATIONS.md, DEV-82), added 2026-09-30 at an
+external reviewer's request and not pre-registered, and marked so on the table: the
+placebo row's three edge cells (2024 minus 2023, 95% from the draws) and the footnote's
+line on the 2025 step against two other baselines.
 
 Writes, next to this script:
   table-periods-descriptive.png (300 dpi, 6.5 in wide), .svg,
@@ -21,10 +31,13 @@ Run from the repository root:
 from __future__ import annotations
 
 import csv
+import json
 import sys
+import textwrap
 from pathlib import Path
 
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -39,6 +52,9 @@ T4 = ROOT / "out/ch1/tab/T4_decomposition.csv"
 T5 = ROOT / "out/ch1/tab/T5_placebos.csv"
 TP = ROOT / "out/ch1/tab/T4_plane_component.csv"
 T1 = ROOT / "out/tables/table1_data.csv"
+T3 = ROOT / "out/ch1/tab/T3_estimands.csv"
+DRAWS = ROOT / "out/ch1/model/estimand_draws_main.csv"
+NUMBERS = ROOT / "docs/numbers.json"
 
 MINUS = "\u2212"  # typographic minus in the rendered image; ASCII '-' in the CSVs
 
@@ -75,6 +91,9 @@ t4 = read_csv(T4)
 t5 = read_csv(T5)
 tp = read_csv(TP)
 t1 = read_csv(T1)
+t3 = read_csv(T3)
+draws = read_csv(DRAWS)
+numbers = {e["slot"]: e for e in json.loads(NUMBERS.read_text())["entries"]}
 
 # Rounding rule: table1_data.csv prints inches to 2 decimals and sq in to 1.
 # Percentage points are not in table1_data.csv; the abstract text quotes the
@@ -177,7 +196,96 @@ def tp_cell(estimand: str) -> dict:
     }
 
 
-# Placebo row: pre-registered on area and shadow-band rate only.
+def rel(path: Path) -> str:
+    return str(path.relative_to(ROOT))
+
+
+def ledger_print(slot: str, point: str, lo: str, hi: str) -> None:
+    """Assert a printed cell equals the ledger's printed string for its slot."""
+    pr = numbers[slot]["print"]
+    got, want = (point, lo, hi), (pr["point"], pr["lo95"], pr["hi95"])
+    if got != want:
+        sys.exit(f"{slot}: table prints {got}, docs/numbers.json prints {want}")
+    FILES_READ.setdefault(rel(NUMBERS), set()).add(f"{slot}.print")
+
+
+def t3_point(estimand: str, season: int) -> float:
+    where = {"fit": "main", "arm": "primary", "estimand": estimand, "season": str(season)}
+    return float(take(pick(t3, where, T3), ["point", "units"], where, T3)["point"])
+
+
+def draw_diff(estimand: str, y1: int, y0: int) -> np.ndarray:
+    cols = [f"{y1}_{estimand}", f"{y0}_{estimand}"]
+    FILES_READ.setdefault(rel(DRAWS), set()).update(cols)
+    return np.array([float(r[cols[0]]) - float(r[cols[1]]) for r in draws])
+
+
+# Post-tag exploratory (DEV-82): the placebo pair by edge, 2024 minus 2023, with the 95%
+# percentile interval of the same difference over the draws (R's type 7, numpy's linear).
+EDGE_SLOT = {
+    "top_in": "DRIFT_2324_TOP",
+    "bot_in": "DRIFT_2324_BOT",
+    "half_width_in": "DRIFT_2324_HW",
+}
+
+
+def drift_cell(estimand: str) -> dict:
+    point = t3_point(estimand, 2024) - t3_point(estimand, 2023)
+    lo, hi = (float(x) for x in np.quantile(draw_diff(estimand, 2024, 2023), [0.025, 0.975]))
+    cell = {
+        "point": fmt(point, "in"),
+        "lo": fmt(lo, "in"),
+        "hi": fmt(hi, "in"),
+        "level": "95%",
+        "raw": (point, lo, hi),
+    }
+    ledger_print(EDGE_SLOT[estimand], cell["point"], cell["lo"], cell["hi"])
+    LEDGER.append(
+        {
+            "file": rel(DRAWS),
+            "where": {
+                "estimand": estimand,
+                "draws": f"2024_{estimand} minus 2023_{estimand}, 1,000 rows",
+                "post-tag": "DEV-82, not pre-registered",
+            },
+            "cols": {"point": str(point), "lo95": str(lo), "hi95": str(hi)},
+        }
+    )
+    return cell
+
+
+# Post-tag exploratory (DEV-82): the 2025 area step against two other baselines. The points
+# are recomputed here from T3 and T4's g and must equal the ledger's; the printed strings are
+# the ledger's.
+def base_cell(slot: str, point: float) -> dict:
+    e = numbers[slot]
+    if abs(e["value"] - point) > 1e-9:
+        sys.exit(f"{slot}: ledger value {e['value']} is not the recomputed {point}")
+    cell = {
+        "point": fmt(e["value"], "sq in"),
+        "lo": fmt(e["lo95"], "sq in"),
+        "hi": fmt(e["hi95"], "sq in"),
+    }
+    ledger_print(slot, cell["point"], cell["lo"], cell["hi"])
+    LEDGER.append(
+        {
+            "file": rel(NUMBERS),
+            "where": {"slot": slot, "post-tag": "DEV-82, not pre-registered"},
+            "cols": {"value": str(e["value"]), "lo95": str(e["lo95"]), "hi95": str(e["hi95"])},
+        }
+    )
+    return cell
+
+
+_area = {y: t3_point("area_sqin", y) for y in (2022, 2023, 2024, 2025)}
+_g_where = {"fit": "main", "arm": "primary", "estimand": "area_sqin", "component": "g"}
+_g = float(pick(t4, _g_where, T4)["point"])
+base_mean = base_cell(
+    "BASE_MEAN_BUF", _area[2025] - ((_area[2022] + _area[2023] + _area[2024]) / 3 + _g)
+)
+base_2023 = base_cell("BASE_2023_BUF", _area[2025] - _area[2023])
+
+# Placebo row: pre-registered on area and shadow-band rate only; its edge cells are post-tag.
 p1_area = t5_cell("area_sqin 2024 minus 2023")
 p1_shadow = t5_cell("shadow_rate 2024 minus 2023")
 if p1_area["level"] != p1_shadow["level"]:
@@ -191,10 +299,14 @@ ROWS = [
     {
         "label": [
             "2023 to 2024, no rule change",
-            f"(pre-registered placebo, {P1_LEVEL} interval;",
+            "(placebo, pre-registered on area and rate;",
             f"margins ±{p1_margin_area} sq in and ±{p1_margin_shadow} pp): FAILED",
         ],
-        "cells": {"area_sqin": p1_area, "shadow_rate": p1_shadow},
+        "cells": {
+            **{e: drift_cell(e) for e in ("top_in", "bot_in", "half_width_in")},
+            "area_sqin": p1_area,
+            "shadow_rate": p1_shadow,
+        },
         "shade": True,
     },
     {
@@ -207,8 +319,13 @@ ROWS = [
     },
     {"label": ["2024 to 2026, total"], "cells": {e: t4_cell(e, "delta_total") for e in ESTIMANDS}},
     {
-        "label": ["Plate-plane component, 2025", "read at mid-plate minus at the front"],
+        "label": [
+            "Measurement-plane adjustment,",
+            "not a period change: 2025 read at",
+            "mid-plate minus at the front",
+        ],
         "cells": {e: tp_cell(e) for e in ESTIMANDS if e != "shadow_rate"},
+        "rule_above": True,
     },
 ]
 
@@ -216,11 +333,22 @@ ROWS = [
 SIGN_SENTENCE = "A positive value moves an edge up or outward, or enlarges the area."
 FOOTNOTE = (
     f"Cells are point [95% interval] from coefficient draws of the fitted model; the placebo row "
-    f"prints its pre-registered {P1_LEVEL} interval. {SIGN_SENTENCE} Because a season pair with "
-    "no rule change moved beyond its margin, no step is attributed to its rule; the 2025 and 2026 "
-    "labels name the period only. Top-edge intervals read slightly too narrow. Dashes: not "
-    "estimated for that row."
+    f"prints its pre-registered {P1_LEVEL} interval on area and rate, and each of its cells names "
+    f"its level. {SIGN_SENTENCE} Because a season pair with no rule change moved beyond its "
+    "margin, no step is attributed to its rule; the 2025 and 2026 labels name the period only. "
+    "Top-edge intervals read slightly too narrow. The shadow band is the pitches within 3 inches, "
+    "either side, of where the ball just touches the zone edge. Edge cells of the placebo row were "
+    "added after the tag and are not pre-registered. Dashes: not estimated for that row."
 )
+
+
+def signed(c: dict) -> str:
+    return f"{num(c['point'])} [{num(c['lo'])}, {num(c['hi'])}]"
+
+
+# The labelled exploratory line, drawn after the footnote on its own line. num() is defined
+# with the layout below, so the line is built there.
+
 
 # ----------------------------------------------------------------------------
 # Layout, in inches from the top-left of a 6.5 in wide page strip.
@@ -248,9 +376,22 @@ plt.rcParams.update(
     }
 )
 
+
+def num(s: str) -> str:
+    return s.replace("-", MINUS)
+
+
+EXPLORATORY = (
+    "Exploratory, not pre-registered: against the 2022-2024 mean plus one season of trend, the "
+    f"2025 area step is {signed(base_mean)} sq in; against 2023 alone, {signed(base_2023)} sq in."
+)
+WRAP = 118
+wrapped = textwrap.wrap(FOOTNOTE, width=WRAP, break_on_hyphens=False)
+wrapped += textwrap.wrap(EXPLORATORY, width=WRAP, break_on_hyphens=False)
+
 hdr_h = 0.44
 row_h = [max(2, len(r["label"])) * LINE + 0.14 for r in ROWS]
-foot_lines = 4
+foot_lines = len(wrapped)
 foot_h = foot_lines * 0.135 + 0.10
 H = 0.06 + hdr_h + sum(row_h) + foot_h + 0.05
 
@@ -275,10 +416,6 @@ def hline(y, x0=LEFT, x1=RIGHT, lw=0.8, color=RULE):
     )
 
 
-def num(s: str) -> str:
-    return s.replace("-", MINUS)
-
-
 # Header
 y = 0.06
 hline(y, lw=1.0)
@@ -300,6 +437,9 @@ hline(y, lw=0.6)
 
 # Body
 for r, h in zip(ROWS, row_h, strict=True):
+    if r.get("rule_above"):
+        # the plate-plane row is a measurement adjustment, not a period: a full rule sets it off
+        hline(y, lw=0.8)
     if r.get("shade"):
         fig.add_artist(
             Rectangle(
@@ -329,6 +469,7 @@ for r, h in zip(ROWS, row_h, strict=True):
         else:
             text(LEFT, y0 + k * LINE, line, fontsize=fs, ha="left", color=col)
     # numeric cells: point decimal-aligned on an anchor, interval centred below
+    # a row whose cells are not all 95% names the level under every cell
     three = any(c["level"] != "95%" for c in r["cells"].values())
     yp = y + h / 2 - (1.0 if three else 0.5) * LINE + 0.01
     yi = y + h / 2 + (0.0 if three else 0.5) * LINE - 0.01
@@ -345,19 +486,14 @@ for r, h in zip(ROWS, row_h, strict=True):
         text(anchor, yp, ip + ".", fontsize=FS_POINT, ha="right", color=INK)
         text(anchor, yp, fp, fontsize=FS_POINT, ha="left", color=INK)
         text(cx, yi, f"[{num(c['lo'])}, {num(c['hi'])}]", fontsize=FS_INT, ha="center", color=INK2)
-        if c["level"] != "95%":
+        if three:
             text(cx, yl, f"{c['level']} interval", fontsize=FS_INT, ha="center", color=INK2)
     y += h
     hline(y, lw=0.4, color="#9a9a9a")
 # bottom rule over the last light one
 hline(y, lw=1.0)
 
-# Footnote, wrapped to the strip width
-import textwrap  # noqa: E402
-
-wrapped = textwrap.wrap(FOOTNOTE, width=118, break_on_hyphens=False)
-if len(wrapped) > foot_lines:
-    sys.exit(f"footnote needs {len(wrapped)} lines, layout allows {foot_lines}")
+# Footnote, wrapped to the strip width; the exploratory line starts on its own line
 y += 0.10
 for k, line in enumerate(wrapped):
     text(LEFT, y + k * 0.135 + 0.06, line, fontsize=FS_FOOT, ha="left", color=INK2)
@@ -399,11 +535,10 @@ area = {
 }
 
 caption = (
-    "Table 1. Measured changes in the fitted 50 percent strike contour, 72-inch batter, "
-    "2024 pitch mix, read at mid-plate. Cells are point [95% interval]; the placebo row uses "
-    f"its pre-registered {P1_LEVEL} interval. The 2023-to-2024 change, with no rule change, "
-    "exceeded its margin, so the 2025 and 2026 steps are labelled by period and not "
-    "attributed to a rule."
+    "Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, "
+    "mid-plate). Cells are point [95% interval]; the placebo row's area and rate use their "
+    f"pre-registered {P1_LEVEL} interval, and its edge cells are not pre-registered. The "
+    "2023-to-2024 change exceeded its margin, so no step is attributed to a rule."
 )
 n_words = len(caption.split())
 if n_words >= 60:
@@ -417,6 +552,7 @@ def span(c, ascii_=True):
     return f"{c['point']} [{c['lo']}, {c['hi']}]"
 
 
+rows_placebo = ROWS[1]["cells"]
 alt = (
     "Table with six rows and five numeric columns: top edge and bottom edge and half-width "
     "in inches, area in square inches, and shadow-band strike rate in percentage points, "
@@ -427,9 +563,16 @@ alt = (
     f"rate {span(p1_shadow)} pp against {p1_margin_shadow}, marked FAILED; the 2025 step "
     f"net of trend, area {span(area['s2025'])} sq in; the 2026 step net of trend, area "
     f"{span(area['s2026'])} sq in; the 2024-to-2026 total, area {span(area['total'])} sq in; "
-    "and the plate-plane component, 2025 read at mid-plate minus at the front, area "
-    f"{span(area['plane'])} sq in. A footnote states that no step is attributed to its rule "
-    "and that top-edge intervals read slightly too narrow."
+    "and, below a rule, the measurement-plane adjustment, not a period change, 2025 read at "
+    f"mid-plate minus at the front, area {span(area['plane'])} sq in. The placebo row also "
+    "carries edge cells added after the tag and not pre-registered, each with a 95 percent "
+    f"interval: top {span(rows_placebo['top_in'])}, bottom {span(rows_placebo['bot_in'])} and "
+    f"half-width {span(rows_placebo['half_width_in'])} inches. A footnote states that no step "
+    "is attributed to its rule, that top-edge intervals read slightly too narrow, and that the "
+    "shadow band is the pitches within 3 inches either side of where the ball just touches the "
+    "zone edge. Its last line, exploratory and not pre-registered, gives the 2025 area step "
+    f"against the 2022-2024 mean plus one season of trend, {span(base_mean)} sq in, and against "
+    f"2023 alone, {span(base_2023)} sq in."
 )
 assert len(alt) >= 40
 (OUT / "alt.txt").write_text(alt + "\n")
@@ -438,7 +581,8 @@ lines = [
     f"# Data sources for `{SLUG}`",
     "",
     "Generated by build.py from the reads it performed; nothing here is typed by hand.",
-    "No model object was loaded and no fit was run. All files are committed tables under out/.",
+    "No model object was loaded and no fit was run. All files are committed: tables and draws",
+    "under out/, and the ledger docs/numbers.json, read only to assert the post-tag cells.",
     "",
     "## Files and columns read",
     "",
@@ -501,6 +645,15 @@ lines += [
     "pre-registered period names. The sign-convention sentence in the footnote is reused "
     "from line 1 of the `abstract/table1.md` that `tools/comms/build_exhibits.R` writes, "
     "and the caption's batter height and reference mix are from the same line.",
+    "- The shadow band's 3 inches in the footnote is the W3.15 estimand's band, "
+    "`BAND_SHADOW` in `R/lib/ch1_fits.R` (D-P4-09: |d - 1.45| <= 3.0 in, the signed edge "
+    "distance with the ball radius taken off).",
+    "- Post-tag exploratory additions (docs/DEVIATIONS.md, DEV-82, not pre-registered): the "
+    "placebo row's three edge cells, 2024 minus 2023 from `T3_estimands.csv` points with the "
+    "95% percentile interval over the 1,000 draws, asserted equal to the ledger's "
+    "DRIFT_2324_TOP, DRIFT_2324_BOT and DRIFT_2324_HW; and the footnote's last line, the "
+    "ledger's BASE_MEAN_BUF and BASE_2023_BUF, whose points are recomputed here from T3 and "
+    "T4's g and asserted equal.",
     "```",
     "",
     "## Full ledger of reads",

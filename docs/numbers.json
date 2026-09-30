@@ -863,6 +863,131 @@
       }
     },
     {
+      "slot": "DRIFT_2223_AREA",
+      "value": -10.332566419011982,
+      "lo90": -13.398514017982354,
+      "hi90": -7.261303443840504,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 4 and 10; out/ch1/model/estimand_draws_main.csv columns 2022_area_sqin, 2023_area_sqin",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "sq in",
+      "what": "called-zone area, 2023 minus 2022, the other pair of old-rule seasons. POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 10,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-10.3",
+        "lo90": "-13.4",
+        "hi90": "-7.3"
+      },
+      "print_contraction": {
+        "point": "10.3",
+        "lo90": "7.3",
+        "hi90": "13.4"
+      }
+    },
+    {
+      "slot": "DRIFT_2324_TOP",
+      "value": 0.4734876084812001,
+      "lo95": 0.3709730869654772,
+      "hi95": 0.5718722252201859,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 7 and 13; out/ch1/model/estimand_draws_main.csv columns 2023_top_in, 2024_top_in",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "in",
+      "what": "top edge, 2024 minus 2023 (P1 by edge). POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 13,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.47",
+        "lo95": "0.37",
+        "hi95": "0.57"
+      }
+    },
+    {
+      "slot": "DRIFT_2324_BOT",
+      "value": 0.15909564817440014,
+      "lo95": 0.08103946256468483,
+      "hi95": 0.24460674856343684,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 8 and 14; out/ch1/model/estimand_draws_main.csv columns 2023_bot_in, 2024_bot_in",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "in",
+      "what": "bottom edge, 2024 minus 2023 (P1 by edge). POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 14,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.16",
+        "lo95": "0.08",
+        "hi95": "0.24"
+      }
+    },
+    {
+      "slot": "DRIFT_2324_HW",
+      "value": 0.11876735744459843,
+      "lo95": 0.06059382490784221,
+      "hi95": 0.1769760711570965,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 9 and 15; out/ch1/model/estimand_draws_main.csv columns 2023_half_width_in, 2024_half_width_in",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "in",
+      "what": "half-width, 2024 minus 2023 (P1 by edge). POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 15,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.12",
+        "lo95": "0.06",
+        "hi95": "0.18"
+      }
+    },
+    {
+      "slot": "BASE_MEAN_BUF",
+      "value": -19.684870123001986,
+      "lo95": -23.25064957329134,
+      "hi95": -16.057315048868205,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 4 and 10 and 16 and 22; out/ch1/model/estimand_draws_main.csv columns 2022_area_sqin, 2023_area_sqin, 2024_area_sqin, 2025_area_sqin",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "sq in",
+      "what": "the 2025 area step against the mean of the 2022-2024 areas plus one season of the 2022-2024 trend g: area 2025 - (mean(area 2022, 2023, 2024) + g). POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 22,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-19.7",
+        "lo95": "-23.3",
+        "hi95": "-16.1"
+      }
+    },
+    {
+      "slot": "BASE_2023_BUF",
+      "value": -12.390128159210008,
+      "lo95": -15.78158170659771,
+      "hi95": -8.535041512215,
+      "source_rows": "out/ch1/tab/T3_estimands.csv rows 10 and 22; out/ch1/model/estimand_draws_main.csv columns 2023_area_sqin, 2025_area_sqin",
+      "n_draws": 1000,
+      "not_preregistered": true,
+      "units": "sq in",
+      "what": "the 2025 area step against the 2023 area alone: area 2025 - area 2023. POST-TAG EXPLORATORY ADDITION, not pre-registered: re-derived from W3.15's committed T3 points and draws, added after the tag at an external reviewer's request; docs/DEVIATIONS.md, DEV-82",
+      "source": "out/ch1/tab/T3_estimands.csv",
+      "source_row": 22,
+      "produced_by": "W3.15",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-12.4",
+        "lo95": "-15.8",
+        "hi95": "-8.5"
+      }
+    },
+    {
       "slot": "N_CALLED",
       "value": 1492502,
       "units": "counts",

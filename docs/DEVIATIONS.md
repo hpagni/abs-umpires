@@ -1738,3 +1738,36 @@ Stamped 2026-09-30T20:11:45+02:00, Europe/Madrid. Owner W3, fleet phase 08. File
 5. **T8 waits on W3.22's receipt.** The grid W3.22 wrote is on disk but its verifier refuted it.
    `R/ch1/71_tables.R` reads it only once `quality/receipts/W3.22.json` is PASS. Until then T8 is a
    placeholder, and `make tables` and the W3.24 test fail on it.
+
+## DEV-82: W6.10, six post-tag exploratory numbers in the abstract and Table 1
+
+Stamped 2026-09-30T20:51:43+02:00, Europe/Madrid. Owner W6, the abstract lane. Files:
+`tools/comms/export_numbers.R`, `tools/comms/abstract_slots.json`, `docs/numbers.json`,
+`abstract/variants/ssac2027_abstract.owner.md`, `abstract/exhibits/table-periods-descriptive/build.py`.
+
+**POST-TAG EXPLORATORY ADDITIONS, not pre-registered.** An external reviewer asked for these six
+numbers after the tag `prereg-v1`, and the owner approved them on 2026-09-30. None is a fit. Each
+point is a difference of points in `out/ch1/tab/T3_estimands.csv` (fit main, arm primary). Each
+interval is the type-7 percentile interval of the same difference over the 1,000 joint draws in
+`out/ch1/model/estimand_draws_main.csv`, which is how W3.21 reads P1. `tools/comms/export_numbers.R`
+writes them to the ledger with `not_preregistered` set, and every place that prints one says so.
+
+| Slot | Quantity | Point | Interval | T3 rows | Draw columns | Printed in |
+|---|---|---|---|---|---|---|
+| `DRIFT_2223_AREA` | area, 2023 minus 2022, the other old-rule pair | -10.3 sq in | 90%, -13.4 to -7.3 | 4, 10 | `2022_area_sqin`, `2023_area_sqin` | Results |
+| `DRIFT_2324_TOP` | top edge, 2024 minus 2023 | +0.47 in | 95%, 0.37 to 0.57 | 7, 13 | `2023_top_in`, `2024_top_in` | Results, Table 1 |
+| `DRIFT_2324_BOT` | bottom edge, 2024 minus 2023 | +0.16 in | 95%, 0.08 to 0.24 | 8, 14 | `2023_bot_in`, `2024_bot_in` | Table 1 |
+| `DRIFT_2324_HW` | half-width, 2024 minus 2023 | +0.12 in | 95%, 0.06 to 0.18 | 9, 15 | `2023_half_width_in`, `2024_half_width_in` | Results, Table 1 |
+| `BASE_MEAN_BUF` | the 2025 area step against the mean of the 2022-2024 areas plus one season of the trend g | -19.7 sq in | 95%, -23.3 to -16.1 | 4, 10, 16, 22 | `2022_area_sqin` to `2025_area_sqin` | Table 1 footnote |
+| `BASE_2023_BUF` | the 2025 area step against the 2023 area alone | -12.4 sq in | 95%, -15.8 to -8.5 | 10, 22 | `2023_area_sqin`, `2025_area_sqin` | Table 1 footnote |
+
+Notes on the table:
+
+1. The 2022-to-2023 area change is read at 90%, the level P1 uses, so it prints beside P1 on
+   the same terms. The three edge changes are read at 95%, the level of every other edge cell in
+   Table 1, and each cell of the placebo row names its level.
+2. For `BASE_MEAN_BUF`, g is recomputed on every draw as `R/lib/ch1_decomp.R` computes it, a
+   precision-weighted slope with weights 1 / var over the draws. The exporter stops unless the
+   point equals T4's g to 1e-9. The baseline follows the reviewer's wording: the three-season mean
+   plus one season of g.
+3. The P1 verdict and the 2025 and 2026 steps are unchanged. No frozen file was edited.
