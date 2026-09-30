@@ -1,16 +1,19 @@
-# W7.10, the seal-order tripwire (GD-12, D-67). Owner W7, fleet phase 06 (abstract lane).
-# Registered 2026-09-29, Madrid.
+# W7.10, the seal-order tripwire (GD-12, D-67). Owner W7. Registered 2026-09-29, Madrid;
+# rebuilt 2026-09-30 in fleet phase 04.
 #
-# tools/comms/check_seal_order.sh is the W7 path; it runs ops/check_seal_order.sh (W1.8),
-# so the two cannot drift. W7.10 fixed that script for a git worktree, where .git is a
-# file. tests/guard/test_seal_order_tripwire.py plants eight orderings in a scratch repo
-# with its own bare origin and asserts each exit status, so the tripwire is proven to fire
-# before any real receipt exists. On the real repository the check passes vacuously until
-# the first fit receipt; scripts/abstract.sh allows the wide pre-registration sentence
-# only on a non-vacuous pass.
+# tools/comms/check_seal_order.sh walks every out/**/provenance.json, sealed or open, and
+# requires its git_sha to descend from prereg-v1 as pushed to origin. The ancestry base is
+# the peeled commit read with one git ls-remote, not the local tag. A local tag that
+# differs from origin fails. When origin is a network host, that request goes through the
+# D-63 throttle in quality/check_prereg.py and is logged to data/ops/git_remote_ledger.jsonl.
+# tests/guard/test_seal_order_tripwire.py plants eight orderings in a scratch repo with its
+# own bare origin and asserts each exit status. make test-guard runs it, and so does the CI
+# guard job, parked at ops/ci-pending/ci.yml until the workflow scope exists (DEV-04). On
+# the real repository the check passes vacuously until the first fit receipt;
+# scripts/abstract.sh allows the wide sentence only on a non-vacuous pass.
 - id: W7.10
   title: "The seal-order tripwire, GD-12"
   verify: "uv run --locked pytest tests/guard/test_seal_order_tripwire.py -q && bash tools/comms/check_seal_order.sh"
   expect_exit: 0
   owner: W7
-  needs: tools/comms/check_seal_order.sh, ops/check_seal_order.sh, tests/guard/test_seal_order_tripwire.py, config/seal.yml
+  needs: tools/comms/check_seal_order.sh, ops/check_seal_order.sh, tests/guard/test_seal_order_tripwire.py, config/seal.yml, config/throttle.yml, quality/check_prereg.py

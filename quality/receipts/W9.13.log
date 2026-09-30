@@ -35,7 +35,7 @@ docs/prior-art.md:476: WR-06: percentage '8%' with no denominator (warn)
 docs/prior-art.md:485: WR-06: percentage '10%' with no denominator (warn)
 docs/prior-art.md:605: WR-06: percentage '99.75%' with no denominator (warn)
 docs/slide-requests.md:0: WR-08: passive voice in 8 of 31 sentences, 26%, above 20% (warn)
-prose-lint: 23 file(s) from the default scope, 0 violation(s), 25 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+prose-lint: 24 file(s) from the default scope, 0 violation(s), 25 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
 check_numbers selftest: OK, 27 cases
 check_numbers: 5 file(s), 77 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
-check_blind: 23 file(s) from the default scope, 0 blind-review violation(s); review window open
+check_blind: 24 file(s) from the default scope, 0 blind-review violation(s); review window open

@@ -4,7 +4,7 @@ PASS    file present for comparison                  /Users/hudsonpagni/sports-p
 PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_regime_scan.csv
 PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_changeover.csv
 PASS    file present for comparison                  /Users/hudsonpagni/sports-project/out/tables/aaa_format.csv
-RECORD  prereg-v1 tag                                absent: 2025 is not read for S4
+RECORD  prereg-v1 tag                                present
 RECORD  schedule, Final regular-season games         2023: 2,224; 2024: 2,232; 2025: 2,232
 RECORD  feeds on disk                                2,229 in the lake, 665 in staging only
 PASS    every T5 game has a feed on disk             934 games in T5, 0 without a feed

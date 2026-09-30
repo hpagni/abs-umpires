@@ -9,4 +9,4 @@ export_numbers: read out/ch1/tab/T2_zone_gate.csv, 1 entry
 export_numbers --check: /Users/hudsonpagni/sports-project/docs/numbers.json unchanged
 check_numbers selftest: OK, 27 cases
 check_numbers: 5 file(s), 77 traceable value(s), 0 untraced literal(s), 0 bad source line(s), 0 word-number warning(s)
-.......                                                                  [100%]
+......s                                                                  [100%]

@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "6646087b4e19f4315114a962f4dd47d079ba8d09",
+  "git_sha": "f993c28953bd6e8d52dc7111f1502eb6b407188b",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.12.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.12",
-  "timestamp_madrid": "2026-09-30 00:19:14 CEST",
+  "timestamp_madrid": "2026-09-30 05:29:52 CEST",
   "title": "Secrets, gitleaks clean over full history"
 }

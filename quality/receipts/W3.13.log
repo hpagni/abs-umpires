@@ -1,0 +1,15 @@
+SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add919004dda9868932d49ae02efea1886dff, pushed=1, read from origin)
+PREREG 1/6 PASS tag prereg-v1 exists: annotated tag object a1b06d1254cc on commit 7c2add919004
+PREREG 2/6 PASS tag prereg-v1 is pushed to origin: origin returns a1b06d1254cc for refs/tags/prereg-v1, the local tag object
+PREREG 3/6 PASS tag prereg-v1 is an ancestor of HEAD: tagged commit 7c2add919004 is an ancestor of HEAD
+PREREG 5/6 PASS quality/prereg.lock matches prereg-v1: 7 files, each sha256 equal to its blob at prereg-v1; covers PREREGISTRATION.md, the 4 annexes it names and the 6 docs/prereg/*.md files
+PREREG CHECK OK: 4 of 4 selected preconditions hold; not checked: 4, 6
+CROSS-CHECK absump.seal: consistent on clauses 1, 3, 5; no clause passes here that absump.seal fails. Clause 2 is not asked twice, so a run sends at most one request
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
+docs/prereg/ch1.md:285: WR-06: percentage '50%' with no denominator (warn)
+docs/prereg/ch1.md:381: WR-06: percentage '7%' with no denominator (warn)
+docs/prereg/ch1.md:445: WR-06: percentage '50%' with no denominator (warn)
+docs/prereg/ch2.md:19: WR-06: percentage '49.0%' with no denominator (warn)
+prose-lint: 6 file(s) from the arguments, 0 violation(s), 4 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+W3.13 OK: prereg-v1 is an annotated tag a1b06d1254cc on commit 7c2add919004, the same object on origin; lock 7 files equal to the tagged blobs; release non-draft with 2 assets byte-equal to the tagged files; out/ch1/log/prereg_hashes.txt lists 21 scripts at the tag, committed in f993c28953bd, on origin main

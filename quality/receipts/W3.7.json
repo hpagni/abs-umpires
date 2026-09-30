@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript R/ch1/10_build_analysis_table.R --check && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/10_build_analysis_table.R",
-  "duration_s": 15,
+  "duration_s": 14,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "f790ae39d913bd0cfefdd11355740f44860e571d",
+  "git_sha": "f993c28953bd6e8d52dc7111f1502eb6b407188b",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.7.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.7",
-  "timestamp_madrid": "2026-09-30 01:16:16 CEST",
+  "timestamp_madrid": "2026-09-30 05:35:58 CEST",
   "title": "The analysis table, data/marts/ch1_called.parquet"
 }

@@ -1,15 +1,15 @@
 ........................................................................ [ 68%]
 .................................                                        [100%]
 SEAL MODULE OK (9/9) boundary 2026-09-22, tag prereg-v1, gate shut
-SEAL-ORDER OK (0 fit receipts, prereg-v1 not tagged yet, nothing has been fit)
+SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add919004dda9868932d49ae02efea1886dff, pushed=1)
 MILESTONE M1 preconditions (SOP phase 04, D3 end of day):
   OK      prereg_tag in config/seal.yml
   OK      PREREGISTRATION.md on disk
-  OK      four chapter annexes under docs/prereg/ (found 4)
+  OK      four chapter annexes under docs/prereg/ (found 5)
   OK      quality/sealed_manifest.json frozen
   OK      docs/prereg/RELEASE_NOTES.md written
   OK      git repository
   MISSING worktree clean
-  OK      tag prereg-v1 not yet created
+  DONE    tag prereg-v1 already exists; the door is closed behind you
   OK      remote origin configured
-preregister --check: 1 precondition(s) outstanding. Nothing was changed.
+preregister --check: 2 precondition(s) outstanding. Nothing was changed.

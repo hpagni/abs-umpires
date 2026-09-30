@@ -64,7 +64,7 @@ record  2023 measurement (cohort_measured - cohort_roster): area -0.09 sq in, to
 record  2024 selection (cohort_roster - all_roster): area +1.01 sq in [-1.22, +3.14], top +0.056 in, bot +0.013 in, half-width +0.028 in
 record  2024 measurement (cohort_measured - cohort_roster): area -0.16 sq in, top -0.012 in, bot -0.001 in, half-width +0.000 in
 record  D-13 owner answer on file: D-R0-02 OWNER ANSWER, D-13: roster height plus offset is primary, ABS-measured is a pre-registered robustness arm
-PASS    prereg-v1 is not tagged yet; the DT-30 table is on disk ahead of the tag
+PASS    prereg-v1 carries out/tables/height_coverage.csv byte for byte, and D-13 has an owner answer
 
 W3.4 check: 15 PASS, 0 FAIL, elapsed <elapsed> s
 RECORD layout                                         warehouse /Users/hudsonpagni/sports-project/warehouse/abs.duckdb; last open day 2026-09-21; analysis table /Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet

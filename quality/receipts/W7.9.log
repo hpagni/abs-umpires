@@ -1,0 +1,18 @@
+SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add919004dda9868932d49ae02efea1886dff, pushed=1, read from origin)
+PREREG 1/6 PASS tag prereg-v1 exists: annotated tag object a1b06d1254cc on commit 7c2add919004
+PREREG 2/6 PASS tag prereg-v1 is pushed to origin: origin returns a1b06d1254cc for refs/tags/prereg-v1, the local tag object
+PREREG 3/6 PASS tag prereg-v1 is an ancestor of HEAD: tagged commit 7c2add919004 is an ancestor of HEAD
+PREREG 4/6 FAIL the worktree is clean: git status --porcelain is not empty: a tracked change or an untracked file is present
+PREREG 5/6 PASS quality/prereg.lock matches prereg-v1: 7 files, each sha256 equal to its blob at prereg-v1; covers PREREGISTRATION.md, the 4 annexes it names and the 6 docs/prereg/*.md files
+PREREG 6/6 FAIL ABS_SEAL_UNLOCK=1 and its DECISIONS.md line: ABS_SEAL_UNLOCK is not set in this environment; DECISIONS.md has no line carrying ABS_SEAL_UNLOCK=1; at the unseal the owner appends one such as '- YYYY-MM-DD: `ABS_SEAL_UNLOCK=1` set in one shell. Manifest sha256 `a52ebf469aaafb3b37c18dcca68f01a421a7cd5a2995bd08e6af40a470904dfb`.'
+PREREG CHECK FAILED: 2 of 6 preconditions do not hold (4, 6)
+CROSS-CHECK absump.seal: consistent on clauses 1, 3, 4, 5, 6 (environment half); no clause passes here that absump.seal fails. Clause 2 is not asked twice, so a run sends at most one request
+W7.9 PRECONDITIONS 1 PASS, 2 PASS, 3 PASS, 5 PASS (gated for M1); 4 FAIL, 6 FAIL (recorded, not gated: SOP 2.4 phase 5 asks them at the unseal)
+W7.9 RECORD tag prereg-v1: annotated object a1b06d1254cc3a48c7ba0e863a6b99ea58ca5306 on commit 7c2add919004dda9868932d49ae02efea1886dff, frozen 2026-09-30T04:17:58+02:00
+W7.9 RECORD pushed: origin refs/tags/prereg-v1 = a1b06d1254cc3a48c7ba0e863a6b99ea58ca5306, peeled 7c2add919004dda9868932d49ae02efea1886dff; origin main contains f993c28953bd6e8d52dc7111f1502eb6b407188b, the hashes commit pushed with the tag
+W7.9 RECORD release: id 399665104 (node RE_kwDOUmfLys4X0mfQ), non-draft, title Pre-registration v1.0, published 2026-09-30T02:18:06Z, 2 assets
+W7.9 RECORD asset PREREGISTRATION.md: 61985 B, sha256:7fe24c0e46ee5388c88f664252888468c0202308d2cbb9041ce6ead4617f0205, equal to the tagged PREREGISTRATION.md
+W7.9 RECORD asset sealed_manifest.json: 4822 B, sha256:a52ebf469aaafb3b37c18dcca68f01a421a7cd5a2995bd08e6af40a470904dfb, equal to the tagged quality/sealed_manifest.json
+W7.9 RECORD quality/prereg.lock: 7 lines, sha256 1a91ec38a9a07de3ebaa603f8b46f192d34b098cdf1fd7ab77bff9014c09f1ce, equal to the lock at prereg-v1
+W7.9 RECORD out/ch1/log/prereg_hashes.txt: 21 lines, sha256 857e4e588e61136bdce45c50e95afa1a70165c249896b1afbd50af39a9b41f4f, added in f993c28953bd6e8d52dc7111f1502eb6b407188b, child of 7c2add919004dda9868932d49ae02efea1886dff
+W7.9 OK: the M1 ceremony record holds

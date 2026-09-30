@@ -19,7 +19,7 @@ smoke: a data lake is present and no check reads it; all twelve run
           smoke-joinkey OK: 17 pitch slots over 4 at-bats, corrected key gives 17 distinct keys, naive key gives 10 and loses 7
  7/12  plateplane  OK       <elapsed> s
           smoke-plateplane OK: 144 pitches, round trip front-mid-front 4.441e-16 ft (tolerance 1e-12), roots 0.3707 s and 9.1840 s, wrong root off by 30.18 in, dz negative on 144/144, release_pos_y 54.18 != y0 50.0022 refused, absump.geometry present and agrees
- 8/12  dbt         OK      <elapsed> s
+ 8/12  dbt         OK       <elapsed> s
           dbt: Done. PASS=22 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=22
  9/12  b2          SKIP     <elapsed> s
           b2: B2_APPLICATION_KEY_ID or B2_APPLICATION_KEY is unset, so the canary is skipped.
