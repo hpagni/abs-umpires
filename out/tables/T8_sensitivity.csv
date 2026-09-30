@@ -1,0 +1,2 @@
+"table","element","key","blocked_by","note"
+"T8","placeholder","status","W3.22","PLACEHOLDER, not a result. W3.22 has not landed: quality/receipts/W3.22.json is absent, and the verifier refuted the grid. T8 is built from W3.22's grid only once that receipt is PASS; no row of the unverified grid is read or printed here."

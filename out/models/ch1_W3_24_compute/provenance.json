@@ -1,0 +1,40 @@
+{
+  "step": "W3.24",
+  "what": "run receipt of one Chapter 1 entry point",
+  "n_games": 12056,
+  "n_rows": 1153067,
+  "min_official_date": "2022-04-07",
+  "max_official_date": "2026-09-21",
+  "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": 20260922,
+  "code_sha256": "529fe5f3af25412428ae621771347e98a4323e68fbbc7a56c7cb3ba0a8802335",
+  "code_files": {
+    "R/ch1/70_figures.R": "90efdcf26d5c71411f33087904cc0b29d9dbb8d034cbc96a29e7684d6e102906",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "efb6c1fc571a1ad6c99200c281feb5e5774d9849",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD efb6c1fc571a; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "inputs": {
+    "out/ch1/model/surface_main.rds": "8065ce8cb60741f21b2d771f3feb45f707f7a72072f202b728365416cb49ae0d",
+    "out/ch1/model/draws_vc_main.rds": "d36dda23039091a38ea1d03709d7f128e1ed98b679108e56505387012f1fae72",
+    "out/ch1/tab/T3_estimands.csv": "5a722d5db1ed48ce314e844b831b5f5b8ead35b908c3048262dcb864add62a6a"
+  },
+  "outputs": {
+    "out/ch1/fig/W3_24_F1_rays.csv": "3b0577581d28d2f5bdf181736493a5c49946efa7ce10e3b5b6d71d053e8fc815",
+    "out/ch1/fig/W3_24_F1_contours.csv": "8627e71a4bb3c3203c2b23ccda4113dae7e6d5acda93926f0a21a5a2fdd0f147",
+    "out/ch1/fig/W3_24_F7_bins.csv": "e74a035658e8954c29dc2710efd395799e617cbd25a64e689d01849444a23730",
+    "out/ch1/fig/W3_24_fit_sample.csv": "d2ef3886bd7736ca2076bfd8af9c4f6dcdf047173fe17b7950262cb553c5122a"
+  },
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "written_madrid": "2026-09-30T20:17:56+0200"
+}

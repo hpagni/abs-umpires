@@ -1,0 +1,23 @@
+{
+  "key": {
+    "step": "W3.24",
+    "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+    "surface_main_sha256": "8065ce8cb60741f21b2d771f3feb45f707f7a72072f202b728365416cb49ae0d",
+    "draws_vc_main_sha256": "d36dda23039091a38ea1d03709d7f128e1ed98b679108e56505387012f1fae72",
+    "t3_sha256": "5a722d5db1ed48ce314e844b831b5f5b8ead35b908c3048262dcb864add62a6a",
+    "code_sha256": "529fe5f3af25412428ae621771347e98a4323e68fbbc7a56c7cb3ba0a8802335",
+    "rays": {
+      "k": 120,
+      "half_in": 0.6,
+      "step_in": 0.03,
+      "seasons": ["2024", "2025", "2026"]
+    }
+  },
+  "outputs": [
+    "3b0577581d28d2f5bdf181736493a5c49946efa7ce10e3b5b6d71d053e8fc815",
+    "8627e71a4bb3c3203c2b23ccda4113dae7e6d5acda93926f0a21a5a2fdd0f147",
+    "e74a035658e8954c29dc2710efd395799e617cbd25a64e689d01849444a23730",
+    "d2ef3886bd7736ca2076bfd8af9c4f6dcdf047173fe17b7950262cb553c5122a"
+  ],
+  "written_madrid": "2026-09-30T20:17:55+0200"
+}
