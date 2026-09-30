@@ -847,7 +847,7 @@ headline_panel <- function(p, t4res) {
       sprintf("Balanced-panel robustness row (CH1-A14): over the %d umpires with at least %d home-plate games in every season 2022 to 2026,",
               as.integer(t4res$panel$n), as.integer(t4res$panel$min_games))
     } else "In the same balanced panel (CH1-A14),"
-    sent <- sprintf("%s %s on area is %.1f sq in (95%% CI %.1f to %.1f). Panel minus primary: %+.2f sq in, against the primary's %.1f.",
+    sent <- sprintf("%s %s on area is %.1f sq in (95%% CI %.1f to %.1f). Panel minus primary: %+.2f sq in, against the primary's %.1f (T4).",
                     lead, lab[[k]], r$panel_point, r$panel_lo95, r$panel_hi95, r$panel_minus_primary, r$point)
     row <- data.frame(id = ids[[k]], step = "W3.24", chapter = "1", sentence = sent,
                       estimand = sprintf("area_sqin %s, balanced panel", k), point = r$panel_point, lo95 = r$panel_lo95,
