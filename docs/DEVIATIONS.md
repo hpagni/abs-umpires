@@ -1849,3 +1849,43 @@ What changed:
    published, whatever the fit returns. The figure F4 (anonymised, ranks only, D-21) stays.
 
 No number, fit or published result changed.
+
+## DEV-84: D-11 and D-57, the AAA regime scans closed, and the consequences they apply
+
+Stamped 2026-09-30T21:48:52+02:00, Europe/Madrid. Owner W2 (the W2.8 scans), for W3.20. Files:
+`src/absump/ingest/aaa_scan.py`, `tests/data/test_aaa_changeover.py`,
+`out/tables/aaa_regime_scan.csv`, `out/tables/aaa_changeover.csv`, `out/tables/aaa_format.csv`.
+
+Applied as pre-registered; items 4 to 6 are the departures in how it landed. What changed:
+
+1. D-11 is closed on every one of the 2,224 Final 2023 AAA games, all on disk, none pulled. The
+   `absChallenges` key is on 977 of them, first on 2023-04-28, and never on a Tuesday, Wednesday
+   or Thursday (0 of 1,043). It is on 977 of 1,004 Friday-to-Monday games from that date and on 0
+   of 177 before it. 6,119 MJ reviews, none on a keyless game. The two sampled games the SOP cites
+   (722770, 723056) were early-season and keyless, which is why R-10 expected none. The SOP's
+   zero-key branch does not apply: the AAA challenge arm includes 2023 from 2023-04-28, and a 2023
+   game's format is read from its key. Recorded as a 2023 row of `out/tables/aaa_format.csv`.
+2. D-57 is closed by the SOP's binary search: the first Tue/Wed/Thu 2024 game with the key is
+   on 2024-06-25. 6 probes of two games each, then both boundary days in full. All 15 games on
+   2024-06-25 carry the key. None of the 15 on 2024-06-20, the Tue/Wed/Thu date before it, carries
+   the key or an MJ review. 38 feeds pulled through `absump.ingest.feeds.fetch_games`, 38 statsapi requests on
+   the budget file. W3.20's within-week contrast uses dates strictly before 2024-06-25. W3.20
+   reads that date from the `format_challenge_tue_thu` row of `out/tables/aaa_format.csv`.
+3. DT-29 is `tests/data/test_aaa_changeover.py -k dt29`: 6 clauses pass. The DiD-frame clause
+   skips while W3.20 is unregistered and fails once W3.20 registers, until W3.20 points it at its
+   frame.
+4. DT-29 is not a registry id. `quality/write_receipt.py` accepts only `W<n>.<n>` ids and
+   `quality/steps.yml` has no DT entries, so `scripts/prove.sh DT-29` cannot exist. The test
+   still needs a W step's verify command. Fleet phase 07 maps DT-29 to W2.8, whose
+   `quality/steps.d/W2.8.yml` belongs to that phase and was not edited here.
+5. `R/ch1/12_aaa_formats.R` (W3.9) also writes `aaa_regime_scan.csv` and
+   `aaa_changeover.csv`, and its `--check` compares both, byte for byte, with a rebuild
+   restricted to the 934 games in `out/ch1/tab/T5_aaa_formats.csv`. Those two clauses now fail,
+   so W3.9 reads FAIL until that script stops writing the two tables W2.8 owns. A W3.9 build run
+   before that change would reopen D-57 and write D-11 as "settled". T5 and W3.9's own
+   `aaa_format.csv` rows are unchanged, and that script was not edited here.
+6. The D-57 row counts 343 scanned Tue/Wed/Thu games against 1,054 scheduled. The search reads
+   only what it needs by design (SOP: "not a full-season feed pull"). "Closed" means that the
+   bracket is tight and that every Tue/Wed/Thu game read fits the pattern.
+
+No frozen file was edited, and no fit was run.
