@@ -74,17 +74,31 @@ that clause as pending, never as passed. `quality/steps.yml` still registers W1.
 
 ## Known red on first enablement
 
-A local rehearsal of each job on a clean clone of HEAD, on this Mac, is in
-`logs/evidence/W9.10.log`. Two jobs fail there for reasons outside these files, and will
-fail the same way on a runner until their owners fix them:
+`uv run --locked python ops/ci_rehearse.py` runs each job's `run:` blocks from `ci.yml` on
+its own clean clone of HEAD, on this Mac, and prints each job's exit and seconds. It is a
+proxy: jobs run one after another, `uses:` steps are emulated, and the MLB sinkhole and the
+gitleaks download are skipped because they need a Linux runner. It never measures clause 3.
+The latest run is in `logs/evidence/W9.10-rehearsal.log`.
+
+Four jobs are green there: lint, python, guard and secrets. The python and guard jobs needed
+repairs in `ci.yml`, each explained in a comment above its job. `PYTHONPATH` carries
+`tests/guard`, without which the xdist controller dies on the `VacuousGuard` warning. The
+python job restores R with its renv library and installs the git hooks, which `tests/unit`
+needs. The guard job sets `PYTEST_ADDOPTS=-n 4`, because the red team took 485 seconds
+serial and takes 189 with it. The dbt job's fixture step also bound its two paths in the
+wrong order until it used named parameters.
+
+Two jobs stay red for reasons outside these files, and will fail the same way on a runner
+until their owners fix them:
 
 - **dbt.** `dbt build --target ci` builds 85 nodes, then `int_challenge_resolved` errors
   because the ci branch of `stg_abs_challenges` (W1.11, W2.17) keeps `pitch_uid` and has no
   `pitch_slot`, which the intermediate model joins on. `--select tag:smoke`, W1.11's own gate,
   never reaches that model, which is why W1.11 passes.
-- **r.** `tests/testthat/test-ch1-sensitivity.R` (W3.22) requires
-  `out/ch1/tab/sensitivity_grid.csv` and `out/tables/T8_sensitivity_data.csv`, which are
-  written by the grid run and not tracked, so a fresh checkout fails its first assertion.
+- **r.** `tests/testthat/test-ch1-framing.R` (W3.19) and `test-ch1-sensitivity.R` (W3.22)
+  assert that Chapter 1 outputs under `out/ch1/` exist. Those files are written by the model
+  runs on the Mac and are not tracked, so a fresh checkout fails at the first
+  `file.exists()`. Each test needs a skip when its output is absent.
 
 CI runs on Linux and never exercises the arm64 macOS build (R-31). A green run is not a
 reproduction; `make prove` on the Mac is the authoritative gate.
