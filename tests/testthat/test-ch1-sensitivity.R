@@ -260,4 +260,18 @@ test_that("the prose names every cell whose 95% interval excludes a primary, the
   vals <- vals[is.finite(vals)]
   traced <- vapply(nums, function(x) any(abs(vals - x) <= 0.05 + 1e-9), logical(1))
   expect_true(all(traced), info = paste("prose numbers not in the grid:", paste(nums[!traced], collapse = ", ")))
+  # Any-value tracing lets a nudged decimal through when some other grid value sits near it. A quoted
+  # estimate "x [lo, hi]" is held tighter: all three numbers must be one row's point, lo95 and hi95 of
+  # one component column, each to its printed precision (half a unit in the last printed digit).
+  trip <- regmatches(bare, gregexpr("-?[0-9]+\\.[0-9]+ \\[-?[0-9]+\\.[0-9]+, -?[0-9]+\\.[0-9]+\\]", bare))[[1]]
+  expect_true(length(trip) > 0L, info = "the prose quotes no estimate with its 95% interval")
+  cols <- c("delta_buffer", "delta_abs", as.vector(outer(EDGES, c("delta_buffer", "delta_abs"), paste, sep = "_")))
+  near <- function(v, s) abs(v - as.numeric(s)) <= 0.5 * 10^-nchar(sub("^[^.]*\\.", "", s)) + 1e-9
+  whole <- vapply(trip, function(t) {
+    s <- regmatches(t, gregexpr("-?[0-9]+\\.[0-9]+", t))[[1]]
+    any(vapply(cols, function(k) any(near(ok[[k]], s[1]) & near(ok[[paste0(k, "_lo95")]], s[2]) &
+                                       near(ok[[paste0(k, "_hi95")]], s[3]), na.rm = TRUE), logical(1)))
+  }, logical(1))
+  expect_true(all(whole), info = paste("quoted estimates that are no single grid row's point and interval:",
+                                       paste(trip[!whole], collapse = "; ")))
 })
