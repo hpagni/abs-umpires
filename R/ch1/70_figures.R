@@ -6,7 +6,7 @@
 #   Rscript R/ch1/70_figures.R --stage compute [--force]
 #   Rscript R/ch1/70_figures.R --stage render [--dest <dir>]
 #
-# THE EIGHT FIGURES, as SOP W3.24 lists them:
+# THE EIGHT FIGURES, as SOP W3.24 lists them, plus F2b (CH1-A13):
 #   F1  50% contours by regime with 95% bands and the ABS rectangle. The regimes are drawn at their
 #       decomposition anchors: 2024 (pre-buffer, the season Delta_total starts from), 2025 (buffer
 #       cut) and 2026 (ABS challenge). Point contour: marching squares on the W3.15 grid, the same
@@ -15,6 +15,10 @@
 #       the top, bottom and side edges, where the bands are wide enough to see.
 #   F2  the decomposition waterfall per edge and area: 2g, Delta_buffer, Delta_ABS, Delta_total,
 #       and the mechanical plane component (W3.17, D-56, CH1-A13) as a separate bar outside the sum.
+#   F2b the dz-by-pitch-type figure CH1-A13 and D-56 ask for beside the plane component: the drop
+#       between the front of the plate and mid-plate, 2025 called pitches, from W3.17's table
+#       out/ch1/fig/F_dz_by_pitch_type.csv. The id follows F2, whose plane bar it explains; no
+#       existing figure is renumbered.
 #   F3  the edge event study: theta_s - theta_2024 per edge, 95% intervals from the joint draws,
 #       with the 2023->2024 placebo boundary (P1) marked, and the two regime boundaries.
 #   F4  the umpire caterpillar of the 2025->2026 response (W3.18's sop fit) with the tau posterior
@@ -29,6 +33,12 @@
 #   F8  sealed prediction versus outcome. W3.23, the sealed run, has not happened: a placeholder that fails
 #       loudly.
 #
+# ANNEX 8.7 (D-R0-04). Every top-edge interval is read as slightly too narrow, every top-edge
+# statement carries that caveat, and the half-width's recovery shortfall is stated beside its
+# interval. F1, F2 and F3 print edge numbers, so their captions carry both sentences. The counts
+# are parsed from T4's recovery_disclosure column (W3.16, from R/lib/ch1_decomp.R), never typed
+# here, and each lands in the sidecar as a constant row.
+#
 # DESIGN (the dataviz skill, loaded before this file was written). Every figure is drawn at 8 cm
 # width, base type 7 pt, so "legible at 8 cm" holds by construction. Grayscale: the three regimes use
 # one ordinal blue ramp (#86b6ef, #2a78d6, #104281; the skill's validator passes it with --ordinal
@@ -40,14 +50,18 @@
 # `constant` rows for every number a caption or alt text prints, so the test can trace them.
 # Determinism is checked on the sidecars, never on the images.
 #
-# EXIT STATUS. 0 when all eight figures are built. 3 when every buildable figure was written but
+# EXIT STATUS. 0 when all nine figures (F1 to F8 and F2b) are built. 3 when every buildable figure was written but
 # at least one is a placeholder (F5, F8 today), so `make figures` fails loudly until they land.
 #
 # WRITES
 #   --stage compute   out/ch1/fig/W3_24_F1_rays.csv, W3_24_F1_contours.csv, W3_24_F7_bins.csv,
 #                     W3_24_fit_sample.csv, W3_24_compute_key.json; receipt models/ch1_W3_24_compute
-#   --stage render    <dest>/figures/F<n>.png and .pdf, <dest>/tables/F<n>_data.csv,
+#   --stage render    <dest>/figures/F<n>.png and .pdf, <dest>/tables/F<n>_data.csv (F2b included),
 #                     <dest>/figures/figures_manifest.csv; receipt models/ch1_W3_24_figures
+#
+# F4's sidecar, out/tables/F4_data.csv, holds 88 anonymised per-umpire rows with intervals. Under
+# D-21 and annex 8.5 no per-umpire table is published, so .gitignore keeps it local (DEV-83) and
+# nothing here stages any file.
 
 ROOT <- local({
   r <- Sys.getenv("ABSUMP_ROOT", "")
@@ -60,8 +74,9 @@ setwd(ROOT)
 source(file.path(ROOT, "R", "lib", "ch1_fits.R"))
 
 SCRIPT <- "R/ch1/70_figures.R"
-FIG_IDS <- sprintf("F%d", 1:8)
+FIG_IDS <- c("F1", "F2", "F2b", sprintf("F%d", 3:8))
 FIG_TITLES <- c(F1 = "Called-zone contours by regime", F2 = "Decomposition waterfall",
+                F2b = "Plate-plane drop by pitch type",
                 F3 = "Edge event study", F4 = "Umpire caterpillar",
                 F5 = "AAA challenge format versus full ABS", F6 = "Framing by regime",
                 F7 = "Surface calibration by d bin", F8 = "Sealed prediction versus outcome")
@@ -313,6 +328,39 @@ min_lgap <- function(hex) {
 }
 f_d <- function(x, d) formatC(x, format = "f", digits = d)
 
+# Annex 8.7's three unmet recovery clauses, parsed from T4's recovery_disclosure column. A change in
+# that wording stops the run rather than printing a stale count.
+recovery_counts <- function(p) {
+  t4 <- read_csv_plain(file.path(p$tab, "T4_decomposition.csv"))
+  txt <- function(e) {
+    x <- unique(t4$recovery_disclosure[t4$estimand == e & !is.na(t4$recovery_disclosure) & nzchar(t4$recovery_disclosure)])
+    if (length(x) != 1L) die("T4 carries ", length(x), " recovery_disclosure texts for ", e, "; annex 8.7 gives one")
+    x
+  }
+  m1 <- regmatches(txt("top_in"), regexec(paste0(
+    "covered the truth in ([0-9]+) of ([0-9]+) injected replicates \\(bound ([0-9]+)\\).*",
+    "inside \\+/-([0-9.]+) in in ([0-9]+) of ([0-9]+) \\(bound ([0-9]+)\\)"), txt("top_in")))[[1]]
+  m2 <- regmatches(txt("half_width_in"), regexec("covered zero in ([0-9]+) of ([0-9]+) replicates \\(bound ([0-9]+)\\)",
+                                                  txt("half_width_in")))[[1]]
+  if (length(m1) != 8L || length(m2) != 4L) die("T4's recovery_disclosure no longer reads as annex 8.7's three clauses")
+  stats::setNames(as.numeric(c(m1[-1], m2[-1])),
+                  c("top_cover_hits", "top_cover_n", "top_cover_bound", "top_null_margin_in", "top_null_hits",
+                    "top_null_n", "top_null_bound", "hw_null_hits", "hw_null_n", "hw_null_bound"))
+}
+
+# The caption sentences annex 8.7 requires beside top-edge and half-width numbers.
+recovery_caption <- function(rc) {
+  paste0(
+    " Top-edge caveat (annex 8.7, D-R0-04): every top-edge interval here is read as slightly too narrow. ",
+    "In the synthetic recovery the top edge's 95% interval covered the truth in ", rc[["top_cover_hits"]], " of ",
+    rc[["top_cover_n"]], " replicates, against a bound of ", rc[["top_cover_bound"]], ". Its null 90% interval lay ",
+    "inside +/-", f_d(rc[["top_null_margin_in"]], 2), " in for ", rc[["top_null_hits"]], " of ", rc[["top_null_n"]],
+    ", against ", rc[["top_null_bound"]], ", so a top-edge equivalence reading is underpowered. Half-width shortfall ",
+    "(annex 8.7): its null 90% interval covered zero in ", rc[["hw_null_hits"]], " of ", rc[["hw_null_n"]],
+    " replicates, against a bound of ", rc[["hw_null_bound"]], ".")
+}
+recovery_rows <- function(fig, rc) const_rows(fig, c(rc, recovery_ci_pct = 95, recovery_null_ci_pct = 90))
+
 ## --- F1 ----------------------------------------------------------------------------------------
 
 rounded_rect <- function(hw, bot, top, r, n = 16L) {
@@ -326,6 +374,7 @@ rounded_rect <- function(hw, bot, top, r, n = 16L) {
 
 fig_f1 <- function(p) {
   fp <- fig_paths(p)
+  rc <- recovery_counts(p)
   rays <- read_csv_plain(fp$rays)
   cont <- read_csv_plain(fp$contours)
   t3 <- read_csv_plain(file.path(p$tab, "T3_estimands.csv"))
@@ -388,14 +437,14 @@ fig_f1 <- function(p) {
                xmax = vapply(win, `[`, 0, 2), ymin = vapply(win, `[`, 0, 3), ymax = vapply(win, `[`, 0, 4)),
     data.frame(figure = "F1", element = "edge", season = t3$season, regime = t3$regime, key = t3$estimand,
                value = t3$point, lo95 = t3$lo95, hi95 = t3$hi95, stringsAsFactors = FALSE),
-    const_rows("F1", consts))
+    const_rows("F1", consts), recovery_rows("F1", rc))
   e <- function(s, k) t3$point[t3$season == s & t3$estimand == k]
   caption <- paste0(
     "Contours where the called-strike probability is 50% for a 72-inch batter, standardised to the 2024 pitch mix, ",
     "in 2024 (pre-buffer), 2025 (buffer cut) and 2026 (ABS challenge). Shading is the pointwise 95% interval of ",
     "the contour along 120 rays from the zone centre, from 1,000 coefficient draws. The grey rectangle is the ABS ",
     "zone, 17 in wide and 27% to 53.5% of height; the dotted line is where the ball touches it, 1.45 in outside. ",
-    "The lower panels enlarge the top, bottom and side edges and do not keep the aspect ratio.")
+    "The lower panels enlarge the top, bottom and side edges and do not keep the aspect ratio.", recovery_caption(rc))
   alt <- paste0(
     "Three nested closed curves over a strike-zone rectangle, lightest for 2024 and darkest for 2026. ",
     "The 2026 curve's top edge sits at ", f_d(e(2026, "top_in"), 1), " in against ", f_d(e(2024, "top_in"), 1),
@@ -454,7 +503,9 @@ fig_f2 <- function(p) {
     facet_wrap(~panel, ncol = 2, scales = "free_y") +
     labs(x = NULL, y = "Change, 2024 to 2026") +
     theme_fig() + theme(panel.grid.major.x = element_blank(), axis.text.x = element_text(size = 5.5))
-  side <- dplyr::bind_rows(d[, setdiff(names(d), c("panel", "fill"))], const_rows("F2", c(ci_pct = 95)))
+  rc <- recovery_counts(p)
+  side <- dplyr::bind_rows(d[, setdiff(names(d), c("panel", "fill"))], const_rows("F2", c(ci_pct = 95)),
+                           recovery_rows("F2", rc))
   v <- function(e, k, dg) f_d(d$value[d$estimand == e & d$key == k], dg)
   mv <- function(e) {
     x <- d$value[d$estimand == e & d$key == "delta_total"]
@@ -466,8 +517,9 @@ fig_f2 <- function(p) {
     "2026 (Delta_buffer and Delta_ABS). Each of those bars starts where the one before it ends, and whiskers are 95% ",
     "intervals. Plane, right of the rule, is the mechanical plate-plane component of 2025, the mid-plate contour ",
     "minus the front-plate contour. It sits outside the sum, because the decomposition uses mid-plate coordinates in ",
-    "every season; it is what a front-plate 2025 against mid-plate 2026 comparison adds. Placebo P1 failed, so the ",
-    "components describe departures and name no cause.")
+    "every season; it is what a front-plate 2025 against mid-plate 2026 comparison adds. F2b shows the drop between ",
+    "the two planes by pitch type. Placebo P1 failed, so the components describe departures and name no cause.",
+    recovery_caption(rc))
   alt <- paste0(
     "Four small bar charts, one each for the top edge, bottom edge, half-width and area. In area, Buffer is ",
     v("area_sqin", "delta_buffer", 1), " sq in and ABS ", v("area_sqin", "delta_abs", 1), " sq in, for a total of ",
@@ -475,6 +527,62 @@ fig_f2 <- function(p) {
     " sq in. The top edge ", mv("top_in"), " in in total and the bottom edge ", mv("bot_in"),
     " in; the plane bars are ", v("top_in", "plane", 2), " in at the top and ", v("bot_in", "plane", 2), " in at the bottom.")
   list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 9, palette = unname(fills))
+}
+
+## --- F2b ---------------------------------------------------------------------------------------
+
+# W3.17's front-to-middle dz table, one row per pitch type, 2025 called pitches after the primary
+# height rule. dz is z at mid-plate minus z at the front, in inches, so a drop is negative.
+PITCH_NAME <- c(FF = "Four-seam", SI = "Sinker", FC = "Cutter", CH = "Changeup", ST = "Sweeper", SL = "Slider",
+                FS = "Splitter", SV = "Slurve", CS = "Slow curve", FO = "Forkball", KC = "Knuckle curve",
+                CU = "Curveball")
+dz_path <- function(p) file.path(p$fig, "F_dz_by_pitch_type.csv")
+
+fig_f2b <- function(p) {
+  d <- read_csv_plain(dz_path(p))
+  need <- c("pitch_type", "n", "mean_velo_mph", "mean_dz_in", "sd_dz_in", "p05_dz_in", "p25_dz_in", "p50_dz_in",
+            "p75_dz_in", "p95_dz_in")
+  if (!all(need %in% names(d))) die("F2b: W3.17's dz table lacks ", paste(setdiff(need, names(d)), collapse = ", "))
+  check("F2b: W3.17's dz table has ordered quantiles on every row",
+        nrow(d) > 0L && all(d$p05_dz_in <= d$p25_dz_in & d$p25_dz_in <= d$p50_dz_in & d$p50_dz_in <= d$p75_dz_in &
+                              d$p75_dz_in <= d$p95_dz_in),
+        sprintf("%d pitch types, %s pitches", nrow(d), comma(sum(d$n))))
+  d <- d[order(-d$p50_dz_in, d$pitch_type), ]
+  nm <- ifelse(d$pitch_type %in% names(PITCH_NAME), PITCH_NAME[d$pitch_type], d$pitch_type)
+  d$label <- sprintf("%s (%s)", nm, d$pitch_type)
+  d$row <- factor(d$label, levels = rev(d$label))
+  pl <- ggplot(d, aes(y = row)) +
+    geom_vline(xintercept = 0, colour = INK2, linewidth = 0.25) +
+    geom_linerange(aes(xmin = p05_dz_in, xmax = p95_dz_in), colour = B450, linewidth = 0.35) +
+    geom_linerange(aes(xmin = p25_dz_in, xmax = p75_dz_in), colour = B450, linewidth = 1.5) +
+    geom_point(aes(x = p50_dz_in), shape = 21, size = 1.6, fill = B650, colour = "white", stroke = 0.5) +
+    scale_x_continuous(breaks = seq(-2, 0, by = 0.5), limits = c(min(-2, floor(2 * min(d$p05_dz_in)) / 2), 0.05),
+                       expand = expansion(mult = c(0.01, 0.01))) +
+    labs(x = "dz, in: height at mid-plate minus height at the front", y = NULL) +
+    theme_fig() + theme(panel.grid.major.y = element_blank())
+  side <- dplyr::bind_rows(
+    data.frame(figure = "F2b", element = "pitch_type", key = d$pitch_type, label = nm, n = d$n, x = d$mean_velo_mph,
+               value = d$p50_dz_in, mean = d$mean_dz_in, sd = d$sd_dz_in, p05 = d$p05_dz_in, p25 = d$p25_dz_in,
+               p75 = d$p75_dz_in, p95 = d$p95_dz_in, source = "out/ch1/fig/F_dz_by_pitch_type.csv (W3.17)",
+               stringsAsFactors = FALSE),
+    const_rows("F2b", c(n_pitch_types = nrow(d), n_pitches = sum(d$n), pct_lo = 5, pct_q1 = 25, pct_median = 50,
+                        pct_q3 = 75, pct_hi = 95)))
+  hi <- d[1, ]; lo <- d[nrow(d), ]
+  nm1 <- function(r) tolower(ifelse(r$pitch_type %in% names(PITCH_NAME), PITCH_NAME[[r$pitch_type]], r$pitch_type))
+  q <- function(r) sprintf("median %s in (IQR %s to %s)", f_d(r$p50_dz_in, 2), f_d(r$p25_dz_in, 2), f_d(r$p75_dz_in, 2))
+  caption <- paste0(
+    "The drop in the ball's height between the front of the plate and mid-plate, dz, for ", comma(sum(d$n)),
+    " 2025 called pitches by pitch type, from W3.17's plane table. Each dot is the median, the thick bar the ",
+    "interquartile range and the thin bar the 5th to 95th percentiles. Rows run from the smallest median drop to ",
+    "the largest. The ", nm1(hi), " (", hi$pitch_type, ") drops least, ", q(hi), ", and the ", nm1(lo), " (",
+    lo$pitch_type, ") most, ", q(lo), ". This is the by-pitch-type figure D-56 and CH1-A13 ask for; the per-edge ",
+    "plane component is F2's Plane bar and T4's plane row.")
+  alt <- paste0(
+    "A dot-and-bar chart with one row per pitch type, ", nrow(d), " rows. Medians run from ", f_d(hi$p50_dz_in, 2),
+    " in for the ", nm1(hi), " at the top to ", f_d(lo$p50_dz_in, 2), " in for the ", nm1(lo), " at the bottom. ",
+    if (all(d$p95_dz_in < 0)) "Every bar lies left of zero, so every pitch type drops between the two planes."
+    else "Some bars reach zero.")
+  list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 7, palette = B450)
 }
 
 ## --- F3 ----------------------------------------------------------------------------------------
@@ -528,15 +636,16 @@ fig_f3 <- function(p) {
     facet_wrap(~panel, ncol = 1, scales = "free_y") +
     labs(x = NULL, y = "Change from 2024, in") +
     theme_fig() + theme(panel.grid.major.x = element_blank())
+  rc <- recovery_counts(p)
   side <- dplyr::bind_rows(d[, setdiff(names(d), "panel")], tr[, setdiff(names(tr), "panel")], mk, p1d,
-                           const_rows("F3", c(ci_pct = 95, batter_height_in = REF_HEIGHT_IN)))
+                           const_rows("F3", c(ci_pct = 95, batter_height_in = REF_HEIGHT_IN)), recovery_rows("F3", rc))
   v <- function(e, s) f_d(d$value[d$estimand == e & d$season == s], 2)
   caption <- paste0(
     "Each edge's change from 2024 by season, for a 72-inch batter, with 95% intervals from the joint coefficient ",
     "draws. The dotted rule is the 2023 to 2024 placebo boundary (P1), where no rule changed; the solid rules are ",
     "the 2025 buffer cut and the 2026 ABS challenge. The dashed line extends the 2024 level by the 2022 to 2024 ",
     "trend. P1 fails its equivalence test on area and on the shadow rate (T5), so the departures after 2024 are ",
-    "descriptive.")
+    "descriptive.", recovery_caption(rc))
   alt <- paste0(
     "Three stacked panels of five season points each, for the top edge, the bottom edge and the half-width. ",
     "The top edge is ", v("top_in", 2023), " in from its 2024 level in 2023 and ", v("top_in", 2026),
@@ -751,7 +860,7 @@ fig_placeholder <- function(id) {
 
 ## --- the render stage ------------------------------------------------------------------------------
 
-BUILDERS <- list(F1 = fig_f1, F2 = fig_f2, F3 = fig_f3, F4 = fig_f4, F6 = fig_f6, F7 = fig_f7)
+BUILDERS <- list(F1 = fig_f1, F2 = fig_f2, F2b = fig_f2b, F3 = fig_f3, F4 = fig_f4, F6 = fig_f6, F7 = fig_f7)
 
 render_stage <- function(ctx, dest) {
   p <- ctx$paths
@@ -788,7 +897,7 @@ render_stage <- function(ctx, dest) {
     return(names(BLOCKED))
   }
   step_receipt(ctx, suffix = "figures", seed = DRAW_SEED,
-               inputs = c(unlist(fig_paths(p)[c("rays", "contours", "bins")]),
+               inputs = c(unlist(fig_paths(p)[c("rays", "contours", "bins")]), dz_path(p),
                           file.path(p$tab, c("T3_estimands.csv", "T4_decomposition.csv", "T4_plane_component.csv",
                                              "T5_placebos.csv", "T6_heterogeneity.csv", "framing_catcher_seasons.csv")),
                           file.path(p$model, c("estimand_draws_main.csv", "umpire_me.rds"))),
@@ -813,7 +922,7 @@ main <- function() {
   if (length(ph) > 0L) {
     for (id in ph) cat(sprintf("PLACEHOLDER %s %s: blocked on %s. %s\n", id, FIG_TITLES[[id]], BLOCKED[[id]]$step,
                                BLOCKED[[id]]$why))
-    cat(sprintf("W3.24 figures INCOMPLETE: %d of 8 are placeholders (%s); exit 3\n", length(ph), paste(ph, collapse = ", ")))
+    cat(sprintf("W3.24 figures INCOMPLETE: %d of %d are placeholders (%s); exit 3\n", length(ph), length(FIG_IDS), paste(ph, collapse = ", ")))
     quit(status = 3)
   }
   quit(status = 0)

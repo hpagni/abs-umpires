@@ -12,8 +12,11 @@
 # seasons, W3.14's receipt), checks that F4 names no umpire (D-21), that T4 prints the share only
 # under D-59's rule and carries CH1-A14's panel difference, that every T9 citation resolves in
 # docs/prior-art.md, and that docs/ch1.md names every figure and table, folds framing.md verbatim and
-# traces its numbers. The last test fails while any figure or table is a placeholder: W3.24 is not
-# done until F5 (W3.20), F8 (W3.23) and T8 (W3.22) are real.
+# traces its numbers. It also holds the acceptance verifier's gaps closed (DEV-85): annex 8.7's
+# caveat beside every top-edge and half-width row (R3), T8 from W3.22's grid with CH1-A9's verdict (R4,
+# R5), F2b the dz-by-pitch-type figure (CH1-A13), the balanced-panel rows in headline.csv (CH1-A14),
+# F4's local sidecar (D-21) and T9's Doolittle default. The last test fails while any figure or table
+# is a placeholder: W3.24 is not done until F5 (W3.20) and F8 (W3.23) are real; T8 landed with W3.22.
 
 find_root <- function() {
   r <- Sys.getenv("ABSUMP_ROOT", "")
@@ -33,7 +36,7 @@ TAB <- file.path(OUT, "ch1", "tab")
 PUB <- file.path(OUT, "tables")
 FIGD <- file.path(OUT, "figures")
 rd <- function(f) utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE)
-FIG_IDS <- sprintf("F%d", 1:8)
+FIG_IDS <- c("F1", "F2", "F2b", sprintf("F%d", 3:8))  # F2b: the dz-by-pitch-type figure (CH1-A13)
 TAB_IDS <- sprintf("T%d", 1:9)
 BLOCKED <- c(F5 = "W3.20", F8 = "W3.23", T8 = "W3.22")
 fman <- rd(file.path(FIGD, "figures_manifest.csv"))
@@ -286,8 +289,12 @@ test_that("docs/ch1.md names every figure and table, marks each placeholder, fol
   expect_true(file.exists(DOCS))
   L <- readLines(DOCS, warn = FALSE, encoding = "UTF-8")
   for (id in c(FIG_IDS, TAB_IDS)) expect_true(any(startsWith(L, sprintf("### %s. ", id))), info = id)
-  for (id in names(BLOCKED)) {
+  ph <- c(fman$figure_id[fman$status == "PLACEHOLDER"], tman$table_id[tman$status == "PLACEHOLDER"])
+  for (id in ph) {
     expect_true(any(grepl(sprintf("%s, .*placeholder, not a result.*blocked on %s", id, BLOCKED[[id]]), L)), info = id)
+  }
+  for (id in setdiff(c(FIG_IDS, TAB_IDS), ph)) {
+    expect_false(any(grepl(sprintf("^- \\*\\*%s, .*placeholder, not a result", id), L)), info = paste(id, "is built"))
   }
   a <- which(L == "## Catcher framing by regime"); b <- which(L == "## The AAA arm")
   expect_length(a, 1L); expect_length(b, 1L)
@@ -300,12 +307,114 @@ test_that("docs/ch1.md names every figure and table, marks each placeholder, fol
   expect_identical(body[k:(k + length(fr) - 1L)], fr)
   aaa <- file.path(OUT, "ch1", "prose", "aaa.md")
   if (!file.exists(aaa)) expect_true(any(grepl("^Not written\\. W3\\.20 is blocked", L[b:length(L)])))
-  src <- c(list.files(PUB, pattern = "^F[1-8]_data\\.csv$", full.names = TRUE), file.path(OUT, sub("^out/", "", tman$csv)),
+  src <- c(list.files(PUB, pattern = "^F[1-8]b?_data\\.csv$", full.names = TRUE), file.path(OUT, sub("^out/", "", tman$csv)),
            file.path(FIGD, "figures_manifest.csv"), file.path(PUB, "tables_manifest.csv"))
   pool <- pool_of(lapply(src, rd))
   rest <- L[-((a + 1L):(b - 1L))]
   bad <- untraced(paste(rest, collapse = "\n"), pool)
   expect_identical(bad, character(0))
+})
+
+test_that("annex 8.7: the published T4 keeps W3.16's disclosure and undersmooth columns, and every top-edge row carries the caveat", {
+  up <- rd(file.path(TAB, "T4_decomposition.csv")); up <- up[up$fit == "main", ]
+  t4 <- rd(tabf("T4"))
+  cols <- c("undersmooth_point", "undersmooth_lo95", "undersmooth_hi95", "undersmooth_minus_primary", "recovery_disclosure")
+  expect_true(all(cols %in% names(t4)), info = paste(setdiff(cols, names(t4)), collapse = ", "))
+  txt <- function(e) unique(up$recovery_disclosure[up$estimand == e & !is.na(up$recovery_disclosure) & nzchar(up$recovery_disclosure)])
+  expect_length(txt("top_in"), 1L); expect_length(txt("half_width_in"), 1L)
+  k <- match(paste(t4$estimand, t4$component), paste(up$estimand, up$component))
+  s <- !is.na(k)
+  expect_equal(t4$undersmooth_point[s], up$undersmooth_point[k[s]], tolerance = 1e-12)
+  expect_true(any(is.finite(t4$undersmooth_point[t4$estimand == "top_in"])))
+  # Every published table row about the top edge or the half-width carries annex 8.7's text.
+  for (id in c("T3", "T4", "T5", "T8", "T9")) {
+    x <- rd(tabf(id))
+    expect_true("recovery_disclosure" %in% names(x), info = id)
+    e <- if ("estimand" %in% names(x)) x$estimand else if (id == "T5") sub(" .*", "", x$quantity) else rep("", nrow(x))
+    if (id == "T9") e <- ifelse(grepl("^Top edge", x$published_quantity), "top_in", ifelse(grepl("^Half-width", x$published_quantity), "half_width_in", ""))
+    for (ed in c("top_in", "half_width_in")) {
+      r <- which(e == ed)
+      if (id %in% c("T3", "T4", "T9")) expect_gt(length(r), 0)
+      expect_true(all(x$recovery_disclosure[r] == txt(ed)), info = paste(id, ed))
+    }
+  }
+  # The chapter: each table row naming the top edge or the half-width has a filled Annex 8.7 cell,
+  # and every caption of a figure whose alt text gives a top-edge number carries the caveat.
+  L <- readLines(DOCS, warn = FALSE, encoding = "UTF-8")
+  rows <- grep("^\\| (Top edge|Half-width)", L, value = TRUE)
+  expect_gt(length(rows), 10)
+  last <- vapply(strsplit(rows, " | ", fixed = TRUE), function(v) sub(" \\|$", "", v[length(v)]), "")
+  expect_true(all(grepl("CI covered", last)), info = paste(rows[!grepl("CI covered", last)], collapse = "\n"))
+  for (i in which(grepl("top edge", fman$alt, ignore.case = TRUE))) {
+    expect_true(grepl("Top-edge caveat (annex 8.7", fman$caption[i], fixed = TRUE), info = fman$figure_id[i])
+    expect_true(grepl("Half-width shortfall", fman$caption[i], fixed = TRUE), info = fman$figure_id[i])
+  }
+  expect_true(any(grepl("^- Top-edge caveat \\(annex 8\\.7, D-R0-04\\)", L)))
+})
+
+test_that("CH1-A13: F2b is W3.17's dz-by-pitch-type table, row for row, and sits in the chapter", {
+  dz <- rd(file.path(OUT, "ch1", "fig", "F_dz_by_pitch_type.csv"))
+  s <- side("F2b")
+  r <- s[s$element == "pitch_type", ]
+  expect_setequal(r$key, dz$pitch_type)
+  m <- match(r$key, dz$pitch_type)
+  expect_equal(r$n, dz$n[m])
+  for (cc in c("p05", "p25", "p75", "p95")) expect_equal(r[[cc]], dz[[paste0(cc, "_dz_in")]][m], tolerance = 1e-12)
+  expect_equal(r$value, dz$p50_dz_in[m], tolerance = 1e-12)
+  expect_true(all(diff(r$value) <= 0))
+  L <- readLines(DOCS, warn = FALSE, encoding = "UTF-8")
+  expect_true(any(startsWith(L, "### F2b. ")))
+})
+
+test_that("CH1-A14: headline.csv carries the balanced-panel rows with the difference as a number", {
+  hl <- rd(file.path(PUB, "headline.csv"))
+  t4 <- rd(file.path(TAB, "T4_decomposition.csv")); t4 <- t4[t4$fit == "main" & t4$estimand == "area_sqin", ]
+  ids <- c(delta_buffer = "CH1_W324_PANEL_BUF", delta_abs = "CH1_W324_PANEL_ABS", delta_total = "CH1_W324_PANEL_TOTAL")
+  for (k in names(ids)) {
+    h <- hl[hl$id == ids[[k]], ]
+    r <- t4[t4$component == k, ]
+    expect_equal(nrow(h), 1L, info = ids[[k]])
+    expect_equal(h$point, r$panel_point, tolerance = 1e-9)
+    expect_equal(c(h$lo95, h$hi95), c(r$panel_lo95, r$panel_hi95), tolerance = 1e-9)
+    expect_true(grepl(sprintf("Panel minus primary: %+.2f sq in", r$panel_minus_primary), h$sentence, fixed = TRUE), info = h$sentence)
+  }
+  expect_identical(hl$id[1], "CH1_P1")
+})
+
+test_that("T8 reads W3.22's grid, and CH1-A9 is stated as not met while any cell did not run", {
+  g <- rd(file.path(TAB, "sensitivity_grid.csv"))
+  t8 <- rd(tabf("T8"))
+  sm <- t8[t8$block == "summary", ]
+  v <- function(k) sm$value[sm$key == k]
+  expect_equal(v("n_grid_rows"), nrow(g))
+  expect_equal(v("n_computed"), sum(g$status == "ok"))
+  expect_equal(v("n_bam_ran"), sum(g$estimator == "bam" & g$status == "ok"))
+  expect_equal(v("n_binned_ran"), sum(g$estimator == "binned" & g$status == "ok"))
+  grid_rows <- t8[t8$block == "grid", ]
+  expect_equal(nrow(grid_rows), 10L * nrow(g))
+  L <- paste(readLines(DOCS, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+  bad <- g$cell_id[g$status != "ok"]
+  if (length(bad)) {
+    expect_true(grepl("CH1-A9 is not met", L, fixed = TRUE))
+    for (b in bad) expect_true(grepl(paste0("`", b, "`"), L, fixed = TRUE), info = b)
+    expect_true(grepl(sprintf("over the %d computed rows only", sum(g$status == "ok")), L, fixed = TRUE))
+  }
+  expect_false(grepl("6 bam rows|six bam rows", L, ignore.case = TRUE))
+})
+
+test_that("D-21: F4's sidecar stays local, and the chapter says so", {
+  gi <- readLines(file.path(ROOT, ".gitignore"), warn = FALSE)
+  expect_true("out/tables/F4_data.csv" %in% trimws(gi))
+  L <- readLines(DOCS, warn = FALSE, encoding = "UTF-8")
+  expect_true(any(grepl("^Data: `out/tables/F4_data.csv`, kept local and not published", L)))
+})
+
+test_that("T9: Doolittle's comparable is reported as not reproduced and not headlined (DEV-85)", {
+  t9 <- rd(tabf("T9"))
+  d <- t9[t9$source == "Doolittle", ]
+  expect_gt(nrow(d), 0)
+  expect_true(all(d$reproduced == "no" & d$headlined == "no"))
+  expect_true(any(grepl("not reproduced", d$reading, fixed = TRUE)))
 })
 
 test_that("determinism: a second render reproduces every sidecar and table CSV to 1e-8", {

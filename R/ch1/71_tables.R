@@ -19,13 +19,26 @@
 #   T6  umpire heterogeneity, W3.18 (CH1-A6)
 #   T7  calibration by 0.5-inch d bin, in-sample, the rows F7 plots; the sealed-set calibration of
 #       W3.23 is a separate block that is empty until that run
-#   T8  the sensitivity grid. BUILT ONLY WHEN quality/receipts/W3.22.json IS PASS. Until then a
-#       placeholder that fails loudly: the grid on disk is unverified and no row of it is read.
+#   T8  the sensitivity grid, read from W3.22's out/ch1/tab/sensitivity_grid.csv. BUILT ONLY WHEN
+#       quality/receipts/W3.22.json IS PASS; until then a placeholder that fails loudly and reads
+#       no row. It states CH1-A9's verdict from the grid: a deferred cell means the multiverse is
+#       incomplete, CH1-A9 is not met, and sign stability is stated over the computed rows only.
 #   T9  comparison with Clemens, Andrews, Dwyer, Doolittle and use-it-or-lose-it METHODS section 8,
 #       every published number cited to its section of docs/prior-art.md
 #
 # docs/ch1.md is assembled here from the figure manifest, these tables and the sibling prose
-# (out/ch1/prose/framing.md, W3.19; out/ch1/prose/aaa.md, W3.20, folded in when it exists).
+# (out/ch1/prose/framing.md, W3.19; out/ch1/prose/aaa.md, W3.20, folded in when it exists;
+# out/ch1/prose/sensitivity.md, W3.22, folded in when it exists).
+#
+# ANNEX 8.7 (D-R0-04). Every top-edge interval is read as slightly too narrow and every top-edge
+# statement carries that caveat; the half-width's recovery shortfall is stated beside its interval.
+# The counts are parsed from T4's recovery_disclosure column (W3.16), and T3, T4, T5, T8 and T9
+# carry that column on their top-edge and half-width rows, with an "Annex 8.7" cell in the chapter.
+# T4 also keeps W3.16's SENS-B1-UNDERSMOOTH columns beside the top-edge rows.
+#
+# out/tables/headline.csv: the published run upserts three CH1_W324_PANEL_* rows, CH1-A14's
+# balanced-panel decomposition on area with the panel-minus-primary difference as a number, beside
+# the headline rows W3.16 and W6.7 write. Every other row is kept byte for byte (upsert_row).
 #
 # EXIT STATUS. 0 when all nine tables are built, 3 when a placeholder was written (T8 today),
 # 1 on a failed check.
@@ -53,6 +66,9 @@ EST_NAME <- c(top_in = "Top edge", bot_in = "Bottom edge", half_width_in = "Half
               shadow_rate = "Shadow-band called-strike rate", count_bias = "Count bias")
 UNIT_DIG <- c("in" = 2L, "sq in" = 1L, "pp" = 2L, "in per season" = 3L)
 REGIME_LAB <- c(pre_buffer = "Pre-buffer", buffer_2025 = "Buffer cut", abs_2026 = "ABS challenge")
+# Sidecars that stay local (.gitignore) and why; the chapter says so on the figure's Data line.
+LOCAL_SIDECAR <- c(F4 = paste("kept local and not published: its anonymised per-umpire rows and intervals form a",
+                              "per-umpire table, which D-21 and annex 8.5 withhold (DEV-83). The figure shows ranks only."))
 
 tab_paths <- function(p) {
   list(bins = file.path(p$fig, "W3_24_F7_bins.csv"), sample = file.path(p$fig, "W3_24_fit_sample.csv"))
@@ -67,6 +83,37 @@ md_table <- function(df) {
     vapply(seq_len(nrow(df)), function(i) paste0("| ", paste(esc(unlist(df[i, ], use.names = FALSE)), collapse = " | "), " |"), ""))
 }
 rd <- function(...) read_csv_plain(file.path(...))
+nz <- function(x) !is.na(x) & nzchar(as.character(x))
+
+## --- annex 8.7: the recovery disclosure -------------------------------------------------------------
+
+# T4's recovery_disclosure text per estimand (top_in and half_width_in), and its counts parsed out.
+# A change in that wording stops the run rather than printing a stale count.
+recovery <- function(p) {
+  t4 <- rd(p$tab, "T4_decomposition.csv")
+  txt <- function(e) {
+    x <- unique(t4$recovery_disclosure[t4$estimand == e & nz(t4$recovery_disclosure)])
+    if (length(x) != 1L) die("T4 carries ", length(x), " recovery_disclosure texts for ", e, "; annex 8.7 gives one")
+    x
+  }
+  text <- c(top_in = txt("top_in"), half_width_in = txt("half_width_in"))
+  m1 <- regmatches(text[["top_in"]], regexec(paste0(
+    "covered the truth in ([0-9]+) of ([0-9]+) injected replicates \\(bound ([0-9]+)\\).*",
+    "inside \\+/-([0-9.]+) in in ([0-9]+) of ([0-9]+) \\(bound ([0-9]+)\\)"), text[["top_in"]]))[[1]]
+  m2 <- regmatches(text[["half_width_in"]], regexec("covered zero in ([0-9]+) of ([0-9]+) replicates \\(bound ([0-9]+)\\)",
+                                                     text[["half_width_in"]]))[[1]]
+  if (length(m1) != 8L || length(m2) != 4L) die("T4's recovery_disclosure no longer reads as annex 8.7's three clauses")
+  n <- as.numeric(c(m1[-1], m2[-1]))
+  cell <- c(top_in = sprintf(paste("read as slightly too narrow: 95%% CI covered the truth in %d of %d (bound %d);",
+                                   "null 90%% CI inside +/-%.2f in for %d of %d (bound %d)"),
+                             n[1], n[2], n[3], n[4], n[5], n[6], n[7]),
+            half_width_in = sprintf("shortfall: null 90%% CI covered zero in %d of %d (bound %d)", n[8], n[9], n[10]))
+  list(text = text, cell = cell, n = n)
+}
+# The estimand a row speaks about, read from the start of a T5 or T9 quantity key.
+edge_of <- function(q) ifelse(grepl("^top_in", q), "top_in", ifelse(grepl("^half_width_in", q), "half_width_in", ""))
+rec_text <- function(rc, e) unname(ifelse(e %in% names(rc$text), rc$text[e], ""))
+rec_cell <- function(rc, e) unname(ifelse(e %in% names(rc$cell), rc$cell[e], ""))
 
 ## --- T1 ---------------------------------------------------------------------------------------------
 
@@ -131,14 +178,18 @@ tab_t3 <- function(p) {
   t3 <- t3[t3$fit == "main", c("estimand", "units", "season", "regime", "point", "lo95", "hi95", "n_draws", "n_complete", "estimator")]
   t3 <- t3[order(match(t3$estimand, ESTS), t3$season), ]
   check("T3: six estimands by five seasons", nrow(t3) == 30L && all(t3$n_complete >= 0.99 * t3$n_draws), sprintf("%d rows", nrow(t3)))
+  rc <- recovery(p)
+  t3$recovery_disclosure <- rec_text(rc, t3$estimand)
   md <- data.frame(Estimand = sprintf("%s (%s)", EST_NAME[ESTS], t3$units[match(ESTS, t3$estimand)]), stringsAsFactors = FALSE)
   for (s in SEASONS) {
     r <- t3[t3$season == s, ][match(ESTS, t3$estimand[t3$season == s]), ]
     md[[as.character(s)]] <- ci_s(r$point, r$lo95, r$hi95, vapply(r$units, digits_for, 0L))
   }
+  md$`Annex 8.7` <- rec_cell(rc, ESTS)
   list(data = t3, md = md_table(md),
        note = paste("Primary fit, a 72-inch batter, standardised to the 2024 pitch mix; point estimate and 95% interval",
-                    "from the 1,000 coefficient draws. Shadow rate and count bias are in percentage points."))
+                    "from the 1,000 coefficient draws. Shadow rate and count bias are in percentage points. The Annex 8.7",
+                    "cell carries the recovery caveat beside every top-edge and half-width interval (D-R0-04)."))
 }
 
 ## --- T4 ---------------------------------------------------------------------------------------------
@@ -147,6 +198,7 @@ tab_t4 <- function(p) {
   t4 <- rd(p$tab, "T4_decomposition.csv")
   t4 <- t4[t4$fit == "main", ]
   pc <- rd(p$tab, "T4_plane_component.csv")
+  rc <- recovery(p)
   rows <- list()
   for (e in ESTS) {
     r <- function(cmp) t4[t4$estimand == e & t4$component == cmp, ]
@@ -168,13 +220,20 @@ tab_t4 <- function(p) {
                     panel_minus_primary = pick$panel_minus_primary, binned_point = pick$binned_point,
                     binned_minus_bam = pick$binned_minus_bam, ch1_a5_within = pick$ch1_a5_within,
                     abs_cohort_point = pick$abs_cohort_point, sign_agrees_abs_cohort = pick$sign_agrees_abs_cohort,
+                    undersmooth_point = pick$undersmooth_point, undersmooth_lo95 = pick$undersmooth_lo95,
+                    undersmooth_hi95 = pick$undersmooth_hi95, undersmooth_minus_primary = pick$undersmooth_minus_primary,
+                    recovery_disclosure = ifelse(nz(pick$recovery_disclosure), pick$recovery_disclosure, ""),
                     source = "out/ch1/tab/T4_decomposition.csv (W3.16)", stringsAsFactors = FALSE)
+    check(sprintf("T4 %s: annex 8.7's disclosure is on every row of an estimand it names, and on no other", e),
+          all(x$recovery_disclosure == rec_text(rc, e)), rec_text(rc, e))
     if (e %in% pc$estimand) {
       q <- pc[pc$estimand == e, ]
       x <- rbind(x, data.frame(estimand = e, component = "plane_mechanical", units = q$units, point = q$point, lo95 = q$lo95,
                                hi95 = q$hi95, reported = TRUE, panel_point = NA, panel_lo95 = NA, panel_hi95 = NA,
                                panel_minus_primary = NA, binned_point = NA, binned_minus_bam = NA, ch1_a5_within = NA,
-                               abs_cohort_point = NA, sign_agrees_abs_cohort = NA,
+                               abs_cohort_point = NA, sign_agrees_abs_cohort = NA, undersmooth_point = NA,
+                               undersmooth_lo95 = NA, undersmooth_hi95 = NA, undersmooth_minus_primary = NA,
+                               recovery_disclosure = rec_text(rc, e),
                                source = "out/ch1/tab/T4_plane_component.csv (W3.17, D-56)", stringsAsFactors = FALSE))
     }
     rows[[e]] <- x
@@ -188,13 +247,37 @@ tab_t4 <- function(p) {
   md <- data.frame(Estimand = EST_NAME[show$estimand], Component = comp_lab[show$component],
                    `Primary (95% CI)` = ci_s(show$point, show$lo95, show$hi95, dg),
                    `Balanced panel (95% CI)` = ci_s(show$panel_point, show$panel_lo95, show$panel_hi95, dg),
-                   `Panel minus primary` = f_d(show$panel_minus_primary, dg),
+                   `Panel minus primary` = ifelse(is.na(show$panel_minus_primary), "",
+                                                  sprintf("%+.*f", as.integer(dg) + 1L, show$panel_minus_primary)),
                    `Binned` = f_d(show$binned_point, dg),
                    `CH1-A5` = ifelse(is.na(show$ch1_a5_within), "", ifelse(show$ch1_a5_within %in% c(TRUE, "TRUE"), "within", "outside")),
+                   `SENS-B1-UNDERSMOOTH (95% CI)` = ci_s(show$undersmooth_point, show$undersmooth_lo95, show$undersmooth_hi95, dg),
+                   `Annex 8.7` = rec_cell(rc, show$estimand),
                    check.names = FALSE, stringsAsFactors = FALSE)
-  list(data = out, md = md_table(md),
-       note = paste("Placebo P1 failed (T5), so the components are descriptive departures from the 2022 to 2024 trend",
-                    "and name no cause. The plane row is the 2025 mid-plate minus front-plate contour, outside the sum."))
+  # CH1-A14 beside the headline: the balanced panel's size from T1 and its area differences from T4.
+  t1 <- rd(p$tab, "T1_sample.csv")
+  up <- t1[t1$row_id == "U_panel", ]
+  n_panel <- unique(as.numeric(unlist(up[, paste0("y", SEASONS)], use.names = FALSE)))
+  min_games <- as.numeric(sub(".*>= ([0-9]+) home-plate games.*", "\\1", up$rule))
+  check("T4: CH1-A14's panel is one set of umpires in every season, with its games floor in T1's rule",
+        length(n_panel) == 1L && is.finite(min_games), sprintf("%s umpires, at least %s games", n_panel[1], min_games))
+  ad <- function(k) out[out$estimand == "area_sqin" & out$component == k, ]
+  pd <- vapply(c("delta_buffer", "delta_abs", "delta_total"), function(k) ad(k)$panel_minus_primary, 0)
+  check("T4: CH1-A14's three panel differences on area are numbers", all(is.finite(pd)),
+        paste(sprintf("%+.2f", pd), collapse = ", "))
+  note <- c(
+    paste("Placebo P1 failed (T5), so the components are descriptive departures from the 2022 to 2024 trend",
+          "and name no cause. The plane row is the 2025 mid-plate minus front-plate contour, outside the sum."),
+    "",
+    sprintf(paste("CH1-A14, beside the headline: the balanced panel is the %d umpires with at least %d home-plate games",
+                  "in every season 2022 to 2026 (T1). On area, panel minus primary is %+.2f sq in for Delta_buffer,",
+                  "%+.2f for Delta_ABS and %+.2f for Delta_total. Each panel 95%% CI is in the Balanced panel column."),
+            as.integer(n_panel), as.integer(min_games), pd[["delta_buffer"]], pd[["delta_abs"]], pd[["delta_total"]]),
+    "",
+    paste("Annex 8.7 (D-R0-04): top-edge rows are read as slightly too narrow, and half-width rows carry their",
+          "recovery shortfall, in the Annex 8.7 cell. SENS-B1-UNDERSMOOTH refits the season term with a larger basis",
+          "and is reported beside the top-edge primary, never in its place."))
+  list(data = out, md = md_table(md), note = paste(note, collapse = "\n"), panel = list(n = n_panel, min_games = min_games))
 }
 
 ## --- T5 ---------------------------------------------------------------------------------------------
@@ -202,11 +285,14 @@ tab_t4 <- function(p) {
 tab_t5 <- function(p) {
   t5 <- rd(p$tab, "T5_placebos.csv")
   t5$source <- "out/ch1/tab/T5_placebos.csv (W3.21)"
+  rc <- recovery(p)
+  t5$recovery_disclosure <- rec_text(rc, edge_of(t5$quantity))
   dig <- ifelse(t5$units == "rate", 4L, ifelse(t5$units == "sq in", 1L, 2L))
   md <- data.frame(Placebo = t5$placebo, Quantity = t5$quantity, Units = t5$units,
                    Estimate = f_d(t5$estimate, dig), Interval = ifelse(is.na(t5$lo), "", sprintf("%s to %s", f_d(t5$lo, dig), f_d(t5$hi, dig))),
                    Level = ifelse(is.na(t5$interval_level), "", f_d(100 * t5$interval_level, 0)),
                    `Margin or threshold` = f_d(t5$margin_or_threshold, dig), Verdict = t5$verdict,
+                   `Annex 8.7` = rec_cell(rc, edge_of(t5$quantity)),
                    check.names = FALSE, stringsAsFactors = FALSE)
   check("T5: P3 is marked not run while the AAA arm is blocked", all(t5$verdict[t5$placebo == "P3"] == "not run"), "W3.20")
   list(data = t5, md = md_table(md),
@@ -325,15 +411,109 @@ tab_t8 <- function(p) {
     return(list(data = data, placeholder = TRUE, blocked_by = "W3.22", why = why,
                 md = c("**PLACEHOLDER, not a result.**", "", why), note = ""))
   }
-  grid <- read_csv_plain(file.path(p$tables, "T8_sensitivity_data.csv"))
+  wide <- read_csv_plain(grid_path(p))
   t4 <- rd(p$tab, "T4_decomposition.csv")
+  t4 <- t4[t4$fit == "main", ]
   ff <- file.path(p$tab, "sensitivity_flags.csv")
-  g <- build_t8(grid, t4[t4$fit == "main", ], if (file.exists(ff)) read_csv_plain(ff) else NULL)
-  hd <- g[g$estimand == "area_sqin", ]
-  md <- data.frame(Cell = hd$cell_id, Estimator = hd$estimator, Component = hd$component,
-                   `Point (95% CI)` = ci_s(hd$point, hd$lo95, hd$hi95, 1L), Flags = hd$flag_reasons,
-                   check.names = FALSE, stringsAsFactors = FALSE)
-  list(data = g, md = md_table(md), note = sprintf("%d flagged rows, every one named in the CSV.", sum(g$flagged)))
+  g <- build_t8(grid_long(wide, t4), t4, if (file.exists(ff)) read_csv_plain(ff) else NULL)
+  rc <- recovery(p)
+  g$recovery_disclosure <- rec_text(rc, g$estimand)
+  g$block <- "grid"
+  # CH1-A9 from the grid: which rows ran, which cell is deferred, and sign stability against the
+  # pre-registered bam primary over the computed rows only.
+  row_ok <- wide$status == "ok"
+  n_bin <- sum(wide$estimator == "binned"); n_bin_ok <- sum(wide$estimator == "binned" & row_ok)
+  n_bam <- sum(wide$estimator == "bam"); n_bam_ok <- sum(wide$estimator == "bam" & row_ok)
+  deferred <- wide[!row_ok, ]
+  bp <- t4$point[match(paste(g$estimand, g$component), paste(t4$estimand, t4$component))]
+  flip <- g$status == "ok" & sign(g$point) != sign(bp)
+  flips <- vapply(c("delta_buffer", "delta_abs"), function(k) sum(flip[g$component == k]), 0)
+  cross <- sum(g$flag_crosses_zero)
+  sm <- t4[t4$estimand == "area_sqin" & t4$component == "sum_components", ]
+  complete <- nrow(deferred) == 0L
+  bam_cells <- wide$cell_id[wide$estimator == "bam" & row_ok]
+  check("T8: every grid row is binned or bam, and every row that is not ok is named",
+        n_bin + n_bam == nrow(wide) && all(nzchar(deferred$cell_id)), sprintf("%d binned, %d bam", n_bin, n_bam))
+  summ <- data.frame(block = "summary",
+                     key = c("n_grid_rows", "n_binned_cells", "n_binned_ran", "n_binned_not_run", "n_bam_cells", "n_bam_ran",
+                             "n_computed", "sign_flips_delta_buffer", "sign_flips_delta_abs", "n_intervals_crossing_zero",
+                             "area_sum_lo95", "area_sum_hi95", "ch1_a9"),
+                     value = c(nrow(wide), n_bin, n_bin_ok, n_bin - n_bin_ok, n_bam, n_bam_ok, sum(row_ok), flips[[1]], flips[[2]],
+                               cross, sm$lo95, sm$hi95, NA),
+                     note = c(rep("", 12), if (complete) "met on sign stability over the whole grid" else
+                                paste("not met: the multiverse is incomplete; not run:", paste(deferred$cell_id, collapse = ", "))),
+                     stringsAsFactors = FALSE)
+  data <- dplyr::bind_rows(g, summ)
+  # The chapter's table: one row per cell and estimator, both components on area.
+  area <- g[g$estimand == "area_sqin", ]
+  lab <- c(status = "not run", sign = "sign differs from its estimator's primary", crosses_zero = "crosses zero",
+           excludes_primary = "excludes its estimator's primary", excludes_bam_primary = "excludes the bam primary",
+           verifier = "verifier's list")
+  one <- function(i) {
+    w <- wide[i, ]
+    a <- area[area$cell_id == w$cell_id & area$estimator == w$estimator, ]
+    b <- a[a$component == "delta_buffer", ]; s <- a[a$component == "delta_abs", ]
+    fl <- unique(unlist(strsplit(a$flag_reasons[nzchar(a$flag_reasons)], ";", fixed = TRUE)))
+    data.frame(Cell = w$cell_id, Factor = w$factor, Estimator = w$estimator,
+               Status = if (w$status == "ok") "ran" else sprintf("%s: %s", w$status, sub(":.*$", "", w$status_note)),
+               `Delta_buffer, area (95% CI)` = ci_s(b$point, b$lo95, b$hi95, 1L),
+               `Delta_ABS, area (95% CI)` = ci_s(s$point, s$lo95, s$hi95, 1L),
+               Flags = paste(lab[fl], collapse = "; "), check.names = FALSE, stringsAsFactors = FALSE)
+  }
+  md <- do.call(rbind, lapply(seq_len(nrow(wide)), one))
+  bk <- function(x) paste0("`", x, "`")
+  lst <- function(x) if (length(x) < 2L) x else paste(paste(x[-length(x)], collapse = ", "), "and", x[length(x)])
+  lead <- if (complete) {
+    sprintf("**CH1-A9: every one of the %d grid rows ran, so sign stability is read over the whole grid.**", nrow(wide))
+  } else {
+    sprintf("**CH1-A9 is not met, because the multiverse is incomplete. That is the finding, and %s is the missing cell.**",
+            lst(bk(deferred$cell_id)))
+  }
+  note <- c(
+    lead, "",
+    sprintf(paste("The grid, `out/ch1/tab/sensitivity_grid.csv` (W3.22), holds %d rows: %d binned rows that ran, %d %s",
+                  "not run, and %d `bam` rows that ran. The %d `bam` rows are %s, so %d rows were computed."),
+            nrow(wide), n_bin_ok, n_bin - n_bin_ok, if (n_bin - n_bin_ok == 1L) "binned cell" else "binned cells",
+            n_bam_ok, n_bam_ok, lst(bk(bam_cells)), sum(row_ok)),
+    if (!complete) c("", paste(sprintf("%s is %s: %s.", bk(deferred$cell_id), deferred$status, sub(":.*$", "", deferred$status_note)),
+                           collapse = " ")),
+    "",
+    sprintf(paste("Over the %d computed rows only, Delta_buffer and Delta_ABS each keep one sign on area, the top edge, the",
+                  "bottom edge, the half-width and the shadow rate: %d and %d sign flips against the `bam` primary, and %d",
+                  "intervals crossing zero."), sum(row_ok), flips[[1]], flips[[2]], cross),
+    "",
+    sprintf(paste("The share clause is met: the primary sum's 95%% interval on area, %s to %s sq in (T4), excludes zero.",
+                  "Every binned row's area interval excludes the `bam` primary, the CH1-A5 gap T4 reports as a limitation.",
+                  "Top-edge and half-width rows carry annex 8.7's caveat in the CSV's recovery_disclosure column."),
+            f_d(sm$lo95, 1), f_d(sm$hi95, 1)))
+  if (!(sm$lo95 > 0 || sm$hi95 < 0)) note[length(note)] <- sub("The share clause is met", "The share clause is not met", note[length(note)])
+  list(data = data, md = md_table(md), note = paste(note, collapse = "\n"),
+       ch1_a9 = list(complete = complete, deferred = deferred$cell_id, n_computed = sum(row_ok)))
+}
+
+grid_path <- function(p) file.path(p$tab, "sensitivity_grid.csv")
+
+# W3.22's wide grid, one row per cell and estimator, to the long form build_t8 reads: Delta_buffer
+# and Delta_ABS on area, the three edges and the shadow rate, with T4's units.
+grid_long <- function(wide, t4) {
+  need <- c("cell_id", "factor", "value", "estimator", "is_primary", "status", "status_note")
+  if (!all(need %in% names(wide))) die("W3.22's grid lacks ", paste(setdiff(need, names(wide)), collapse = ", "))
+  ests <- c("area_sqin", "top_in", "bot_in", "half_width_in", "shadow_rate")
+  out <- list()
+  for (e in ests) for (k in c("delta_buffer", "delta_abs")) {
+    col <- if (e == "area_sqin") k else paste(e, k, sep = "_")
+    if (!all(paste0(col, c("", "_lo95", "_hi95")) %in% names(wide))) die("W3.22's grid lacks ", col)
+    u <- t4$units[t4$estimand == e & t4$component == k]
+    out[[paste(e, k)]] <- data.frame(cell_id = wide$cell_id, factor = wide$factor, factor_value = as.character(wide$value),
+                                     estimator = wide$estimator, is_primary = wide$is_primary, status = wide$status,
+                                     status_note = ifelse(is.na(wide$status_note), "", wide$status_note),
+                                     estimand = e, units = u, component = k, point = wide[[col]],
+                                     lo95 = wide[[paste0(col, "_lo95")]], hi95 = wide[[paste0(col, "_hi95")]],
+                                     stringsAsFactors = FALSE)
+  }
+  g <- do.call(rbind, out)
+  rownames(g) <- NULL
+  g
 }
 
 ## --- T9 ---------------------------------------------------------------------------------------------
@@ -443,6 +623,25 @@ tab_t9 <- function(p) {
     "their contrast is 2026 against 2025 without a trend; ours removes the 2022 to 2024 trend",
     sprintf("The 2026 departure from trend on count bias is %s pp (95%% CI %s to %s).", f_d(ca$point, 2), f_d(ca$lo95, 2), f_d(ca$hi95, 2)))
   out <- dplyr::bind_rows(rows)
+  # Annex 8.7 beside the Clemens top-edge and half-width rows.
+  rc <- recovery(p)
+  qk <- c(rep("", nrow(out)))
+  qk[out$source == "Clemens"] <- c("area_sqin", "top_in", "bot_in", "half_width_in")
+  out$recovery_disclosure <- rec_text(rc, qk)
+  cav <- nzchar(out$recovery_disclosure)
+  out$reading[cav] <- paste0(out$reading[cav], " Annex 8.7: ", rec_cell(rc, qk[cav]), ".")
+  # Doolittle's comparable, the phase 08 presentation default (DEV-85): not reproduced, not headlined.
+  dool <- out$source == "Doolittle"
+  out$reproduced <- ifelse(dool, "no", "")
+  out$headlined <- ifelse(dool, "no", "")
+  ch <- dool & grepl("change", out$published_quantity)
+  out$reading[ch] <- paste(out$reading[ch], "His decline is not reproduced: the point here is a rise, and the interval",
+                           "is too wide to confirm or reject his figure. The comparable is reported here and not headlined.")
+  out$reading[dool & !ch] <- paste(out$reading[dool & !ch], "Part of a comparable this chapter does not reproduce",
+                                   "and does not headline (the change row).")
+  check("T9: Clemens's four rows are area, top, bottom and half-width in that order",
+        identical(unname(qk[out$source == "Clemens"]), c("area_sqin", "top_in", "bot_in", "half_width_in")) &&
+          sum(out$source == "Clemens") == 4L, paste(out$published_quantity[out$source == "Clemens"], collapse = "; "))
   pub <- ifelse(grepl(" ft", out$published_as_printed) & !is.na(out$published_lo95),
                 sprintf("%s, that is %s to %s in", out$published_as_printed, f_d(out$published_lo95, 3), f_d(out$published_hi95, 3)),
                 out$published_as_printed)
@@ -490,13 +689,42 @@ assemble_docs <- function(ctx, dest, tman, fman, res) {
     L <- c(L, paste("- Reading: placebo P1 failed (T5). Under the pre-registered consequence (PREREGISTRATION.md section 8,",
                     "DEV-77) every regime contrast in this chapter is descriptive and names no cause."))
   }
+  rc <- recovery(p)
+  n <- rc$n
+  L <- c(L, sprintf(paste("- Top-edge caveat (annex 8.7, D-R0-04): every top-edge interval in this chapter is read as slightly",
+                          "too narrow. In the synthetic recovery the top edge's 95%% interval covered the truth in %d of %d",
+                          "replicates, against a bound of %d. Its null 90%% interval lay inside +/-%.2f in for %d of %d, against %d,",
+                          "so a top-edge equivalence reading is underpowered. Each top-edge row below carries this in its Annex 8.7",
+                          "cell, and each figure caption with a top-edge number repeats it."), n[1], n[2], n[3], n[4], n[5], n[6], n[7]),
+         sprintf(paste("- Half-width shortfall (annex 8.7): the half-width's null 90%% interval covered zero in %d of %d",
+                       "replicates, against a bound of %d. It is stated beside every half-width interval below."), n[8], n[9], n[10]))
+  a9 <- res$T8$ch1_a9
+  if (!is.null(a9) && !a9$complete) {
+    L <- c(L, sprintf(paste("- CH1-A9 is not met: the multiverse is incomplete, because %s did not run (T8). Sign stability is",
+                            "stated over the %d computed rows only, and the missing cell is the finding."),
+                      paste0("`", a9$deferred, "`", collapse = ", "), a9$n_computed))
+  }
+  pn <- res$T4$panel
+  if (!is.null(pn)) {
+    t4p <- res$T4$data
+    pd <- function(k) t4p$panel_minus_primary[t4p$estimand == "area_sqin" & t4p$component == k]
+    L <- c(L, sprintf(paste("- CH1-A14: the balanced panel of %d umpires sits beside the headline in T4 and in",
+                            "`out/tables/headline.csv`. On area, panel minus primary is %+.2f sq in for Delta_buffer, %+.2f",
+                            "for Delta_ABS and %+.2f for Delta_total (T4)."),
+                      as.integer(pn$n), pd("delta_buffer"), pd("delta_abs"), pd("delta_total")))
+  }
   L <- c(L, "", "## Figures", "",
          paste("Every figure is drawn at 8 cm width for grayscale print, and writes its sidecar CSV. Each caption's numbers",
                "are rows of that sidecar."), "")
   for (i in seq_len(nrow(fman))) {
     m <- fman[i, ]
+    data_line <- if (m$figure_id %in% names(LOCAL_SIDECAR)) {
+      sprintf("Data: `%s`, %s Vector: `%s`.", m$sidecar, LOCAL_SIDECAR[[m$figure_id]], m$pdf)
+    } else {
+      sprintf("Data: `%s`. Vector: `%s`.", m$sidecar, m$pdf)
+    }
     L <- c(L, sprintf("### %s. %s", m$figure_id, m$title), "", sprintf("![%s](%s)", m$alt, rel(m$png)), "", m$caption, "",
-           sprintf("Data: `%s`. Vector: `%s`.", m$sidecar, m$pdf), "")
+           data_line, "")
   }
   L <- c(L, "## Tables", "")
   for (id in TAB_IDS) {
@@ -520,9 +748,18 @@ assemble_docs <- function(ctx, dest, tman, fman, res) {
                     "This section folds in `out/ch1/prose/aaa.md` when the sibling builder writes it. F5 and placebo P3",
                     "wait on the same step."), "")
   }
+  ss <- file.path(p$root, "ch1", "prose", "sensitivity.md")
+  if (file.exists(ss)) {
+    L <- c(L, "## The sensitivity grid, W3.22's reading", "",
+           paste("Folded in from `out/ch1/prose/sensitivity.md` (W3.22) with its headings moved down one level. Its",
+                 "numbers are rows of the grid behind T8."), "", fold_prose(ss), "")
+  }
   L <- c(L, "## How this chapter is built", "",
          "- `make figures` runs `R/ch1/70_figures.R`: a cached compute stage, which needs the fitted surface, then the render.",
          "- `make tables` runs the same compute stage, a cache hit, then `R/ch1/71_tables.R`, which also writes this file.",
+         paste("- F2b is the dz-by-pitch-type figure CH1-A13 asks for. It follows F2, whose plane bar it explains, and",
+               "renumbers no figure."),
+         "- `make tables` also upserts the CH1-A14 balanced-panel rows of `out/tables/headline.csv`, keeping every other row.",
          "- Determinism is checked on the sidecars and table CSVs, never on the images.",
          "- `tests/testthat/test-ch1-figures.R` re-reads every output and fails while any placeholder remains.")
   L
@@ -567,17 +804,53 @@ tables_stage <- function(ctx, dest, docs) {
   record("docs", sprintf("%s, %d lines", out_rel(ctx, docs), length(L)))
   if (!identical(normalizePath(dest, mustWork = FALSE), normalizePath(ctx$out, mustWork = FALSE))) {
     record("receipt", "not written: a --dest run is a check, not the published run")
+    record("headline", "not written: a --dest run is a check, not the published run")
     return(tman)
   }
+  hl <- headline_panel(p, res$T4)
   step_receipt(ctx, suffix = "tables",
                inputs = c(unlist(tab_paths(p)), fm,
                           file.path(p$tab, c("T1_sample.csv", "T2_zone_gate.csv", "T3_estimands.csv", "T4_decomposition.csv",
                                              "T4_plane_component.csv", "T5_placebos.csv", "T6_heterogeneity.csv",
                                              "T9_published_comparison.csv", "framing_doolittle.csv")),
+                          grid_path(p), file.path(ROOT, "quality", "receipts", "W3.22.json"),
                           file.path(p$model, "estimand_draws_main.csv"),
-                          file.path(p$root, "ch1", "prose", c("framing.md", "aaa.md"))),
-               outputs = c(outs, mf, docs))
+                          file.path(p$root, "ch1", "prose", c("framing.md", "aaa.md", "sensitivity.md"))),
+               outputs = c(outs, mf, docs, hl))
   tman
+}
+
+# CH1-A14 beside the headline: three rows of out/tables/headline.csv, one per area component, each
+# with the balanced panel's point and 95% interval and the panel-minus-primary difference as a
+# number. upsert_row replaces only these ids and keeps every other line byte for byte.
+headline_panel <- function(p, t4res) {
+  f <- file.path(p$tables, "headline.csv")
+  if (!file.exists(f)) die("no ", f, ": W3.16 and W6.7 write the headline rows this sits beside")
+  src <- rd(p$tab, "T4_decomposition.csv")
+  lab <- c(delta_buffer = "Delta_buffer", delta_abs = "Delta_ABS", delta_total = "Delta_total")
+  ids <- c(delta_buffer = "CH1_W324_PANEL_BUF", delta_abs = "CH1_W324_PANEL_ABS", delta_total = "CH1_W324_PANEL_TOTAL")
+  for (k in names(ids)) {
+    i <- which(src$fit == "main" & src$estimand == "area_sqin" & src$component == k)
+    if (length(i) != 1L) die("T4 has ", length(i), " main area rows for ", k)
+    r <- src[i, ]
+    lead <- if (k == "delta_buffer") {
+      sprintf("Balanced-panel robustness row (CH1-A14): over the %d umpires with at least %d home-plate games in every season 2022 to 2026,",
+              as.integer(t4res$panel$n), as.integer(t4res$panel$min_games))
+    } else "In the same balanced panel (CH1-A14),"
+    sent <- sprintf("%s %s on area is %.1f sq in (95%% CI %.1f to %.1f). Panel minus primary: %+.2f sq in, against the primary's %.1f.",
+                    lead, lab[[k]], r$panel_point, r$panel_lo95, r$panel_hi95, r$panel_minus_primary, r$point)
+    row <- data.frame(id = ids[[k]], step = "W3.24", chapter = "1", sentence = sent,
+                      estimand = sprintf("area_sqin %s, balanced panel", k), point = r$panel_point, lo95 = r$panel_lo95,
+                      hi95 = r$panel_hi95, units = "sq in",
+                      estimator = sprintf(paste("bam balanced-panel arm (T1 U_panel); panel minus primary %+.6f sq in against the",
+                                                "bam primary %.6f; 95%% percentile interval over the W3.15 joint draws"),
+                                          r$panel_minus_primary, r$point),
+                      source_csv = "out/ch1/tab/T4_decomposition.csv", source_row = i, stringsAsFactors = FALSE)
+    st <- upsert_row(f, row)
+    record(sprintf("headline %s", ids[[k]]), sprintf("%s: panel %.2f, panel minus primary %+.2f", st, r$panel_point,
+                                                     r$panel_minus_primary))
+  }
+  f
 }
 
 main <- function() {
