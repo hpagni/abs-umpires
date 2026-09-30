@@ -4,10 +4,10 @@
   "ledger": "docs/numbers.json",
   "ledger_sha256": "97a9cbbaf89e32aa2caebeb841914527d26405b5253c47ed692a78d171afe960",
   "out": "abstract/ssac2027_abstract.filled.md",
-  "words_filled": 493,
+  "words_filled": 485,
   "owner_reserve": 0,
   "extra_words": 0,
-  "words_counted": 493,
+  "words_counted": 485,
   "cap": 495,
   "within_cap": true,
   "prereg_sentence": "narrow",
@@ -31,7 +31,6 @@
     "A_PUB_LOSS",
     "A_CONV",
     "A_CORR_LOSS",
-    "SD_UMP",
     "CALL",
     "SHARE_ABS",
     "SHARE_ABS_CI"
@@ -58,7 +57,6 @@
     "A_PUB_LOSS": "8 to 22",
     "A_CONV": "20.0 (95% CI 13.0 to 28.2)",
     "A_CORR_LOSS": "32.8 (95% CI 29.3 to 36.6)",
-    "SD_UMP": "0.04 (95% CI 0.00 to 0.10)",
     "CALL": "The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step.",
     "SHARE_ABS": "59",
     "SHARE_ABS_CI": "53 to 65"

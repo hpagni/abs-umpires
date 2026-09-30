@@ -36,9 +36,8 @@ Fenced as code: these are table cells and raw values, provenance rather than pri
 Fenced as code: these are table cells and raw values, provenance rather than printed results, so quality/check_numbers.py does not read them.
 
 ```text
-- Step baselines, where each bracket and each drift bar start: 2024 level + g = 495.350484; 2025 level + g = 472.174008.
+- Step baselines, where each arrow starts: 2024 level + g = 495.350484; 2025 level + g = 472.174008. Each arrow ends at the season's level.
   The script checks that level minus baseline equals the T4 step to 1e-6.
-- Drift bars: 10.786347 sq in tall, hanging from each baseline, so they end at 484.564136 and 461.387661.
   The script checks that the P1 estimate equals the 2024 minus 2023 level to 1e-6.
 - The small bracket runs from the 2023 level to the 2024 level.
 - Period band labels are the study's period names; no number in them is a statistic.
@@ -46,7 +45,7 @@ Fenced as code: these are table cells and raw values, provenance rather than pri
 
 ## Not drawn
 
-The All-Star-break placebo tick is not on the figure: it sat beside no bracket. The abstract's Results print the largest All-Star-break swing.
+The All-Star-break placebo tick is not on the figure: it sat beside no arrow. The abstract's Results print the largest All-Star-break swing. The 10.8 sq in drift bars drawn behind each step in an earlier version were removed at a reviewer's request; the comparison is read from the rust bracket on the same axis.
 
 ## Seal
 

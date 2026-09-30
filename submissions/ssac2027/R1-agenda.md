@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 493 of 495,
+Variant filled: owner. Words counted: 485 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -135,7 +135,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 526 words with the inline table, OVER THE CAP by 31 words after every rung. Cuts: none.
+The no-upload body counts 518 words with the inline table, OVER THE CAP by 23 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -187,7 +187,6 @@ The slots as printed in this fill:
 | A_PUB_LOSS | 8 to 22 | 3 |
 | A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
 | A_CORR_LOSS | 32.8 (95% CI 29.3 to 36.6) | 6 |
-| SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
 | CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and pitch-location comparisons that start from 2025 miss that step. | 26 |
 | SHARE_ABS | 59 | 1 |
 | SHARE_ABS_CI | 53 to 65 | 3 |

@@ -1,4 +1,4 @@
-Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, mid-plate). Cells are point [95% interval]; the placebo row's area and rate use their pre-registered 90% interval, and its edge cells are not pre-registered. The 2023-to-2024 change exceeded its margin, so no step is attributed to a rule.
+Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, mid-plate), by period: the trend, the failed placebo pair, the two steps net of trend, their total, and the measurement-plane adjustment. The note under the table defines the cells.
 
 The table is abstract/table1.png, copied from abstract/exhibits/table-periods-descriptive/table-periods-descriptive.png; its cells and their
 sources are listed in abstract/exhibits/table-periods-descriptive/data-sources.md, and its alt text is abstract/exhibits/table-periods-descriptive/alt.txt.

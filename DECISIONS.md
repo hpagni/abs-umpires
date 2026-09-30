@@ -3148,28 +3148,28 @@ the count is 494 of 495; pending, with the 25-word reserve, it is also 494.
 
 ### D-R0-05 OWNER ANSWERS, 2026-09-30T21:32:08+02:00: the Chapter 1 RESULT CALL, D-56, D-59, D-66 and the postseason cell
 
-Owner: Hudson Pagni. Status: applied. Four answers given in one sitting, each to a question that
-carried the SOP's recommended default; the owner took the default in every case.
+Owner: Hudson Pagni. Status: applied. Four answers given in one sitting. Each question carried the SOP's
+recommended default, and the owner took the default in every case.
 
-1. **RESULT CALL (out/ch1/decision.md, section 8).** Approved verbatim: "RESULT CALL:
-   descriptive. Placebo P1 failed (CH1-A3), so the 2025 and 2026 steps (-23.4 and -33.1 sq in,
-   95% CIs -28.3 to -18.6 and -37.5 to -28.7) are reported as departures from the 2022-2024
-   trend with no cause assigned, and the P1 failure is the headline; BREAK_YEAR 2025." This is
-   the literal gate for Phase 14 (P8), now open.
+1. **RESULT CALL (out/ch1/decision.md, section 8).** Approved verbatim; the line is quoted
+   in that file. The call is descriptive, because placebo P1 failed (CH1-A3). The 2025 and
+   2026 steps are -23.4 and -33.1 sq in (95% CIs -28.3 to -18.6 and -37.5 to -28.7). Both are
+   departures from the 2022-2024 trend with no cause assigned. The P1 failure is the headline,
+   and BREAK_YEAR is 2025. This is the literal gate for Phase 14 (P8), now open.
 2. **D-56: yes.** The plane correction is reported per edge (top, bottom, width), each with its
-   own 95% interval; the share may exceed 1 or change sign; the dz-by-pitch-type figure is
+   own 95% interval. The share may exceed 1 or change sign. The dz-by-pitch-type figure is
    published. Built this way in T4_plane_component and F2.
-3. **D-59: yes.** Delta_buffer and Delta_ABS, each with a 95% interval, are the primary result;
-   share_ABS is reported only where the 95% interval on their sum excludes zero (it does on all
-   six estimands); sign stability per component replaces the IQR criterion.
-4. **D-66: yes.** The committed abstract variants are the only candidates and the choice at R1
-   is a result call (the descriptive owner variant, D-P6-01, D-P6-02); heterogeneity is
-   presented as a bounded null (tau upper bound 0.092 in), ranks only, no per-umpire table
-   (DEV-83 untracked the F4 sidecar under annex 8.5).
+3. **D-59: yes.** Delta_buffer and Delta_ABS, each with a 95% interval, are the primary result.
+   share_ABS is reported only where the 95% interval on their sum excludes zero, which it does
+   on all six estimands. Sign stability per component replaces the IQR criterion.
+4. **D-66: yes.** The committed abstract variants are the only candidates, and the choice at
+   R1 is a result call: the descriptive owner variant (D-P6-01, D-P6-02). Heterogeneity is
+   presented as a bounded null (tau upper bound 0.092 in), ranks only, no per-umpire table.
+   DEV-83 untracked the F4 sidecar under annex 8.5.
 5. **Postseason cell of the sensitivity grid: deferred and disclosed.** The warehouse holds no
-   2022-2025 postseason called pitch (the Statcast and schedule pulls cover game_type R only),
-   so CH1-A9 is reported as not met because the multiverse is incomplete, with the
-   postseason_in cell named as the missing one. No new ingest this week.
+   2022-2025 postseason called pitch, since the Statcast and schedule pulls cover game_type R
+   only. CH1-A9 is therefore reported as not met because the multiverse is incomplete, with
+   the postseason_in cell named as the missing one. No new ingest this week.
 
 Still open for the owner: the gh token's workflow scope for W9.10 (CI), and the form submission
 of the abstract on 2026-10-01.

@@ -333,13 +333,12 @@ ROWS = [
 SIGN_SENTENCE = "A positive value moves an edge up or outward, or enlarges the area."
 FOOTNOTE = (
     f"Cells are point [95% interval] from coefficient draws of the fitted model; the placebo row "
-    f"prints its pre-registered {P1_LEVEL} interval on area and rate, and each of its cells names "
-    f"its level. {SIGN_SENTENCE} Because a season pair with no change to the zone or umpire "
-    "grading moved beyond its margin, no step is attributed to its rule; the 2025 and 2026 "
-    "labels name the period only. "
-    "Top-edge intervals read slightly too narrow. The shadow band is the pitches within 3 inches, "
-    "either side, of where the ball just touches the zone edge. Edge cells of the placebo row were "
-    "added after the tag and are not pre-registered. Dashes: not estimated for that row."
+    f"prints its pre-registered {P1_LEVEL} interval on area and rate, and its edge cells, added "
+    f"after the tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage points; the shadow "
+    "band is the pitches within 3 inches, either side, of where the ball just touches the zone "
+    "edge. Top-edge intervals undercovered in the recovery test. The placebo pair moved beyond "
+    "its margin, so no step is attributed to its rule; the 2025 and 2026 labels name the period "
+    "only. Dashes: not estimated for that row."
 )
 
 
@@ -537,9 +536,9 @@ area = {
 
 caption = (
     "Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, "
-    "mid-plate). Cells are point [95% interval]; the placebo row's area and rate use their "
-    f"pre-registered {P1_LEVEL} interval, and its edge cells are not pre-registered. The "
-    "2023-to-2024 change exceeded its margin, so no step is attributed to a rule."
+    "mid-plate), by period: the trend, the failed placebo pair, the two steps net of trend, "
+    "their total, and the measurement-plane adjustment. The note under the table defines the "
+    "cells."
 )
 n_words = len(caption.split())
 if n_words >= 60:
@@ -569,7 +568,8 @@ alt = (
     "carries edge cells added after the tag and not pre-registered, each with a 95 percent "
     f"interval: top {span(rows_placebo['top_in'])}, bottom {span(rows_placebo['bot_in'])} and "
     f"half-width {span(rows_placebo['half_width_in'])} inches. A footnote states that no step "
-    "is attributed to its rule, that top-edge intervals read slightly too narrow, and that the "
+    "is attributed to its rule, that top-edge intervals undercovered in the recovery test, and "
+    "that the "
     "shadow band is the pitches within 3 inches either side of where the ball just touches the "
     "zone edge. Its last line, exploratory and not pre-registered, gives the 2025 area step "
     f"against the 2022-2024 mean plus one season of trend, {span(base_mean)} sq in, and against "

@@ -1,0 +1,1 @@
+Change in strike-zone area, 2025 to 2026, as published work measures it (2025 at the front of the plate, 2026 at mid-plate) and with both seasons at mid-plate. The plane component is 2025 read at mid-plate minus at the front. Points with 95% intervals; the grey band is the published range of −22 to −8 sq in.

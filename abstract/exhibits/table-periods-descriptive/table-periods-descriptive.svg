@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-09-30T21:21:48.747276</dc:date>
+    <dc:date>2026-09-30T21:37:15.287074</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -432,19 +432,19 @@ L 463.68 249.696
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="263.331" transform="rotate(-0 4.32 263.331)">Cells are point [95% interval] from coefficient draws of the fitted model; the placebo row prints its pre-registered</text>
   </g>
   <g id="text_114">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="273.051" transform="rotate(-0 4.32 273.051)">90% interval on area and rate, and each of its cells names its level. A positive value moves an edge up or outward, or</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="273.051" transform="rotate(-0 4.32 273.051)">90% interval on area and rate, and its edge cells, added after the tag, are not pre-registered. A positive value moves</text>
   </g>
   <g id="text_115">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">enlarges the area. Because a season pair with no change to the zone or umpire grading moved beyond its margin, no step</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">an edge up or outward, or enlarges the area. pp is percentage points; the shadow band is the pitches within 3 inches,</text>
   </g>
   <g id="text_116">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">is attributed to its rule; the 2025 and 2026 labels name the period only. Top-edge intervals read slightly too narrow.</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">either side, of where the ball just touches the zone edge. Top-edge intervals undercovered in the recovery test. The</text>
   </g>
   <g id="text_117">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">The shadow band is the pitches within 3 inches, either side, of where the ball just touches the zone edge. Edge cells</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">placebo pair moved beyond its margin, so no step is attributed to its rule; the 2025 and 2026 labels name the period</text>
   </g>
   <g id="text_118">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.931" transform="rotate(-0 4.32 311.931)">of the placebo row were added after the tag and are not pre-registered. Dashes: not estimated for that row.</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.9585" transform="rotate(-0 4.32 311.9585)">only. Dashes: not estimated for that row.</text>
   </g>
   <g id="text_119">
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="321.651" transform="rotate(-0 4.32 321.651)">Exploratory, not pre-registered: against the 2022-2024 mean plus one season of trend, the 2025 area step is −19.7</text>
