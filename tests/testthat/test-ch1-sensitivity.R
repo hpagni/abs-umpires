@@ -12,8 +12,10 @@
 # where CH1-A9 licenses it; the bam rows are the primary and the four cells that move the
 # headline most, ranked again from the binned rows; the binned and bam primaries reproduce W3.16;
 # CH1-A9 as D-59 revised it (the sign of delta_buffer and of delta_abs each stable over the
-# multiverse, on the headline area); T8 agrees with the grid; the script reads the warehouse
-# through v_*_open views only and passes GD-04.
+# computed rows, on the headline area); T8 agrees with the grid; the script reads the warehouse
+# through v_*_open views only and passes GD-04; out/ch1/prose/sensitivity.md names every cell whose
+# 95% interval excludes a primary and the deferred cell, and reports CH1-A9 NOT MET while one is
+# deferred.
 
 find_root <- function() {
   r <- Sys.getenv("ABSUMP_ROOT", "")
@@ -31,7 +33,12 @@ OUT <- Sys.getenv("W322_OUT", file.path(ROOT, "out"))
 SYNTHETIC <- identical(Sys.getenv("W322_SYNTHETIC", ""), "1")
 GRID <- file.path(OUT, "ch1", "tab", "sensitivity_grid.csv")
 T8 <- file.path(OUT, "tables", "T8_sensitivity_data.csv")
-T4 <- file.path(OUT, "ch1", "tab", "T4_decomposition_arms.csv")
+# W3.16 writes its CH1-A5 arms (binned, single_offset, undersmooth, abs_cohort, panel) to
+# T4_decomposition_arms.csv and the bam primary, fit "main", to T4_decomposition.csv.
+T4_ARMS <- file.path(OUT, "ch1", "tab", "T4_decomposition_arms.csv")
+T4_MAIN <- file.path(OUT, "ch1", "tab", "T4_decomposition.csv")
+PROSE <- file.path(OUT, "ch1", "prose", "sensitivity.md")
+PROSE_MAX_WORDS <- 300L
 SEED <- 20260922
 N_DRAWS <- 1000
 N_BAM <- 4L
@@ -162,10 +169,11 @@ test_that("bam refits the primary and the four cells that move the headline most
 })
 
 test_that("the binned and bam primaries reproduce W3.16's CH1-A5 binned arm and its primary", {
-  skip_if_not(file.exists(T4), "no T4_decomposition_arms.csv beside the grid")
+  skip_if_not(file.exists(T4_ARMS) && file.exists(T4_MAIN), "no T4_decomposition_arms.csv and T4_decomposition.csv beside the grid")
   g <- read_grid()
-  t4 <- utils::read.csv(T4, stringsAsFactors = FALSE)
-  for (pair in list(c("binned", "binned"), c("bam", "main"))) {
+  for (pair in list(c("binned", "binned", T4_ARMS), c("bam", "main", T4_MAIN))) {
+    t4 <- utils::read.csv(pair[3], stringsAsFactors = FALSE)
+    expect_true(any(t4$fit == pair[2]), info = sprintf("fit '%s' in %s", pair[2], basename(pair[3])))
     p <- g[g$estimator == pair[1] & g$cell_id == "primary", ]
     a <- t4[t4$fit == pair[2] & t4$estimand == "area_sqin", ]
     expect_equal(p$delta_buffer, a$point[a$component == "delta_buffer"], tolerance = 1e-6, info = pair[1])
@@ -175,9 +183,14 @@ test_that("the binned and bam primaries reproduce W3.16's CH1-A5 binned arm and 
   }
 })
 
-test_that("CH1-A9: the sign of delta_buffer and of delta_abs is each stable across the multiverse", {
+test_that("CH1-A9: the sign of delta_buffer and of delta_abs is each stable over the computed rows", {
+  # Stability is asserted over the ok rows only. A deferred cell is not evidence either way, so while
+  # one is deferred CH1-A9 is NOT MET (the multiverse is incomplete); the prose test below holds the
+  # chapter to saying so.
   g <- read_grid()
   ok <- g[g$status == "ok", ]
+  if (any(g$status != "ok")) message(sprintf("W3.22 CH1-A9 NOT MET: multiverse incomplete, %d ok rows, deferred: %s",
+                                             nrow(ok), paste(g$id[g$status != "ok"], collapse = ", ")))
   for (e in EDGES) for (comp in c("delta_buffer", "delta_abs")) {
     s <- table(sgn(ok[[sprintf("%s_%s", e, comp)]]))
     message(sprintf("W3.22 %s_%s signs over %d ok rows: %s", e, comp, nrow(ok), paste(names(s), s, sep = " x", collapse = ", ")))
@@ -207,4 +220,44 @@ test_that("the grid reads the warehouse through v_*_open views only, and passes 
   cmd <- sprintf("cd %s && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/50_sensitivity.R 2>&1", shQuote(ROOT))
   out <- suppressWarnings(system(cmd, intern = TRUE))
   expect_null(attr(out, "status"), info = paste(out, collapse = "\n"))
+})
+
+test_that("the prose names every cell whose 95% interval excludes a primary, the deferred cell, and CH1-A9's verdict", {
+  # out/ch1/prose/sensitivity.md is the chapter's reading of the grid (at most 300 words). A cell is
+  # flagged when any area, edge or shadow-rate component's 95% interval excludes the binned primary's
+  # point or the bam primary's point, differs from either in sign, or crosses zero; a cell that is not
+  # ok is flagged too. Each flagged cell must be named by its id in backticks (the primary cell as
+  # "binned primary"). Sign stability is stated over the computed rows only, and CH1-A9 is NOT MET
+  # while any cell is deferred. Every decimal in the prose is a grid value to its printed precision.
+  skip_if(SYNTHETIC && !file.exists(PROSE), "a synthetic dry run writes no prose")
+  expect_true(file.exists(PROSE), info = PROSE)
+  g <- read_grid()
+  ok <- g[g$status == "ok", ]
+  prim <- list(ok[ok$estimator == "binned" & ok$cell_id == "primary", ], ok[ok$estimator == "bam" & ok$cell_id == "primary", ])
+  flag <- rep(FALSE, nrow(ok))
+  for (k in c("delta_buffer", "delta_abs", as.vector(outer(EDGES, c("delta_buffer", "delta_abs"), paste, sep = "_")))) {
+    lo <- ok[[paste0(k, "_lo95")]]
+    hi <- ok[[paste0(k, "_hi95")]]
+    flag <- flag | (lo <= 0 & hi >= 0)
+    for (pr in prim) flag <- flag | pr[[k]] < lo | pr[[k]] > hi | sgn(ok[[k]]) != sgn(pr[[k]])
+  }
+  need <- unique(c(ok$cell_id[flag], g$cell_id[g$status != "ok"]))
+  txt <- paste(readLines(PROSE, warn = FALSE), collapse = "\n")
+  named <- vapply(need, function(cid) grepl(if (cid == "primary") "binned primary" else paste0("`", cid, "`"), txt, fixed = TRUE),
+                  logical(1))
+  expect_true(all(named), info = paste("flagged in the grid, not named in the prose:", paste(need[!named], collapse = ", ")))
+  message(sprintf("W3.22 prose names %d of %d flagged cells", sum(named), length(need)))
+  expect_lte(length(strsplit(trimws(txt), "\\s+")[[1]]), PROSE_MAX_WORDS)
+  expect_true(grepl(sprintf("over the %d computed rows only", nrow(ok)), txt, fixed = TRUE))
+  if (any(g$status != "ok")) {
+    expect_true(grepl("CH1-A9 is NOT MET", txt, fixed = TRUE))
+  } else {
+    expect_false(grepl("NOT MET", txt, fixed = TRUE), info = "no cell is deferred any more: CH1-A9's verdict in the prose is stale")
+  }
+  bare <- gsub("`[^`]*`|\\b(CH1-A|W)[0-9]+(\\.[0-9]+)?", " ", txt, perl = TRUE)
+  nums <- as.numeric(regmatches(bare, gregexpr("-?[0-9]+\\.[0-9]+", bare))[[1]])
+  vals <- unlist(ok[vapply(ok, is.numeric, logical(1))], use.names = FALSE)
+  vals <- vals[is.finite(vals)]
+  traced <- vapply(nums, function(x) any(abs(vals - x) <= 0.05 + 1e-9), logical(1))
+  expect_true(all(traced), info = paste("prose numbers not in the grid:", paste(nums[!traced], collapse = ", ")))
 })

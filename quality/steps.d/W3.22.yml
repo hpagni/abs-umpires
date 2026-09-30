@@ -1,0 +1,20 @@
+# W3.22, the Chapter 1 sensitivity grid and CH1-A9 as D-59 revised it. Owner W3, fleet phase 08,
+# the chapter1-full lane.
+#
+# R/ch1/50_sensitivity.R is the only producer. It writes out/ch1/tab/sensitivity_grid.csv, one row
+# per cell and estimator (the binned-logistic grid, plus bam for the primary and the four cells that
+# move the headline most), and out/tables/T8_sensitivity_data.csv, the same grid in long form. The
+# verify command re-reads both with tests/testthat/test-ch1-sensitivity.R, which refits nothing:
+# every SOP cell present with its verbatim value, every row ok or deferred for want of data with its
+# reason, seed, draws and the decomposition identity to 1e-9, share_abs only where CH1-A9 licenses
+# it, the bam cells re-ranked from the binned rows, both primaries against W3.16's T4 tables, sign
+# stability of each component, T8 against the grid, and the prose reading in
+# out/ch1/prose/sensitivity.md naming every cell whose interval excludes a primary. test_dir with
+# stop_on_failure = TRUE exits non-zero on any failed expectation. Then GD-04 on the script.
+# `needs` names the step's outputs, so before the grid run the step reads MISSING rather than FAIL.
+- id: W3.22
+  title: "Chapter 1 sensitivity grid and CH1-A9"
+  verify: "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-sensitivity\", stop_on_failure = TRUE)' && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/50_sensitivity.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/50_sensitivity.R, out/ch1/tab/sensitivity_grid.csv, out/tables/T8_sensitivity_data.csv
