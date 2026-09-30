@@ -1223,6 +1223,7 @@ write_prose <- function(ctx, T, reading, has_arms) {
   }
   f <- file.path(ctx$paths$prose, "framing.md")
   ensure_dir(dirname(f))
+  while (length(L) > 0L && L[length(L)] == "") L <- L[-length(L)]   # one final newline, as the repo's hooks keep it
   writeLines(L, f)
   pnum <- do.call(rbind, .pn$rows)
   pnum <- pnum[!duplicated(paste(pnum$text, pnum$source, pnum$key, pnum$column)), , drop = FALSE]
