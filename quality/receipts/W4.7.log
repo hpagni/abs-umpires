@@ -62,7 +62,7 @@ PASS every string in the file equals the rerun
 PASS the file's verdict is PASS -- PASS
 PASS no provenance.json under out/ch2
 RECORD MT-01 Chapter 2 verdict: PASS
-W4.7 check: 0 FAIL, wall 60.2 s
+W4.7 check: 0 FAIL, wall 61.9 s
 GD-04: 0 violation(s) in R/ch2/03_prior_predictive.R
 
 -- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

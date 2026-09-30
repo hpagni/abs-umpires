@@ -17,7 +17,7 @@ PASS    every open game_type R pitch lies inside its season's fetched regular-se
 record  called pitches with coordinates read into R: 1,835,287
 PASS    pitcher positions: every pitcher id resolved by the people endpoint (1690 pitchers in 17 requests, 0 unresolved)
 PASS    pitcher roles: every pitcher-season resolved to the role held that season (4322 pitcher-seasons: 9 from the fielding record; 3450 from the fullSeason roster; 863 from the people endpoint, current season)
-record  pitcher-seasons whose role then differs from today's primary position: 2 (Brett Phillips 2023, CF then, P today, 4 pitches; Brett Phillips 2022, RF then, P today, 32 pitches)
+record  pitcher-seasons whose role then differs from today's primary position: 2 (Brett Phillips 2022, RF then, P today, 32 pitches; Brett Phillips 2023, CF then, P today, 4 pitches)
 record  position players: 203 pitchers, 5,056 called pitches, release speed median 58.5 mph, p90 77.4 mph, 144 at 85 mph or more
 record  two-way players kept as pitchers: Shohei Ohtani
 PASS    waterfall 2022: all pitches less the non-called rows equals the called count (367,145)

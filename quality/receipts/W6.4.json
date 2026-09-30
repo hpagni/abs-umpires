@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "f993c28953bd6e8d52dc7111f1502eb6b407188b",
+  "git_sha": "57167fd713c5eae07ecbef383cb3960157649357",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W6.4.log",
   "owner": "W6",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W6.4",
-  "timestamp_madrid": "2026-09-30 05:48:04 CEST",
+  "timestamp_madrid": "2026-09-30 11:09:52 CEST",
   "title": "SSAC sprint checkpoint on the corrected join and the two Methods slots"
 }

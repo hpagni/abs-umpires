@@ -1,23 +1,7 @@
 ........................................................................ [ 46%]
-........................................................................ [ 93%]
-..........                                                               [100%]
+........................................................................ [ 92%]
+...........                                                              [100%]
 =============================== warnings summary ===============================
-tests/guard/test_seal_receipts.py::test_every_fit_artifact_has_a_receipt
-  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:123: VacuousGuard: GD-01 vacuous: no fit artifacts under out/ yet, because phase 01 fits nothing
-    warnings.warn(
-
-tests/guard/test_seal_receipts.py::test_every_receipt_carries_the_contract_keys
-  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:142: VacuousGuard: GD-01 vacuous: no fit receipts under out/ yet, because phase 01 fits nothing
-    warnings.warn(
-
-tests/guard/test_seal_receipts.py::test_no_held_out_artifact_predates_the_pre_registration
-  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:168: VacuousGuard: GD-02 vacuous: no fit receipts yet, so no artifact can have touched a held-out row
-    warnings.warn(
-
-tests/guard/test_seal_receipts.py::test_the_ordering_script_runs_and_reports
-  /Users/hudsonpagni/sports-project/tests/guard/test_seal_receipts.py:212: VacuousGuard: GD-12 vacuous: no fit receipts yet and prereg-v1 is not tagged yet, so no ordering has been tested
-    warnings.warn(
-
 tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
   /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:101: UserWarning: GD-10 pairing vacuous: docs/prereg/SEAL.md records no UNSEALED line in phase 01
     warnings.warn(
@@ -26,10 +10,10 @@ tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
 [redteam] checking the guard is green before anything is planted
 [redteam] make test-guard -> exit 0 at rest, nothing planted
 [redteam] applying tests/guard/redteam.patch
-[redteam] SOP plant -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:36 reads the held-out analysis set -- d <- dplyr::filter(d, analysis_set == 'sealed')
+[redteam] SOP plant -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:101 reads the held-out analysis set -- d <- dplyr::filter(d, analysis_set == 'sealed')
 [redteam] SOP plant -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:37 names the held-out pitch view -- rows = con.execute("SELECT * FROM v_pitch_sealed").pl()
 [redteam] reverted the two SOP plants
-[redteam] E1 label in two pieces, compared through a variable -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:51 reads the held-out analysis set -- late_frame <- function(d) dplyr::filter(d, analysis_set == HELD)
+[redteam] E1 label in two pieces, compared through a variable -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:161 reads the held-out analysis set -- late_frame <- function(d) dplyr::filter(d, analysis_set == HELD)
 [redteam] E2 view name built by an f-string -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:47 names the held-out pitch view -- view = f"v_pitch_{split}"
 [redteam] E3 FROM and the table on two lines -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/v_pitch_all__redteam.sql:9 unqualified raw fact-table read -- fct_pitch
 [redteam] E4 a comment used to forgive the read -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/late_counts__redteam.sql:5 unqualified raw fact-table read -- SELECT game_pk, count(*) AS pitches FROM fct_pitch GROUP BY 1
@@ -41,7 +25,7 @@ tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
 [redteam] E10 the label alone in ch3, no read on the line -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/dp_fast.py:46 the held-out label outside the two allowlisted files -- split = "sealed"
 [redteam] E11 the held-out partition read by path -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/parquet__redteam.py:2 the held-out label outside the two allowlisted files -- return con.execute("SELECT * FROM read_parquet('data/sealed/pitch/*.parquet')").pl()
 [redteam] E12 the boundary day in two fragments, python -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:45 literal boundary-date comparison -- FIRST = "2026-09-2" + "2"
-[redteam] E13 the boundary day built by paste(), R -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:50 held-out date literal -- cut_day <- as.Date(paste("2026", "09", "22", sep = "-"))
+[redteam] E13 the boundary day built by paste(), R -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:160 held-out date literal -- cut_day <- as.Date(paste("2026", "09", "22", sep = "-"))
 [redteam] E14 a pull window through the seal, in a config -> make test-guard exit 2   GD-04 FAIL: config/backfill__redteam.yml:3 held-out date literal -- end: "2026-09-30"
 [redteam] E15 a held-out game copied into a fixture -> make test-guard exit 2   GD-04 FAIL: tests/fixtures/late_game__redteam.json:1 held-out date literal -- {"gamePk": 825412, "officialDate": "2026-09-23", "venue": "Wrigley Field"}
 [redteam] E16 the query carried as base64 in a notebook -> make test-guard exit 2   GD-04 FAIL: notebooks/encoded__redteam.ipynb:7 names the held-out pitch view -- "q = base64.b64decode(\"U0VMRUNUICogRlJPTSB2X3BpdGNoX3NlYWxlZA==\").decode()\n",

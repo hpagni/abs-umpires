@@ -1,17 +1,17 @@
 {
   "cmd": "uv run --locked python -m absump.ingest.savant_leaderboard_sweep --check",
-  "duration_s": 1,
+  "duration_s": 0,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "f993c28953bd6e8d52dc7111f1502eb6b407188b",
+  "git_sha": "8b2bbcf6bcdab29231f31efc88e280b1e32c2109",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W4.3.log",
   "owner": "W4",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W4.3",
-  "timestamp_madrid": "2026-09-30 05:46:14 CEST",
+  "timestamp_madrid": "2026-09-30 13:02:07 CEST",
   "title": "Leaderboard sweep, 28 views at 10 s spacing"
 }

@@ -1,58 +1,58 @@
 b2_sync: source data/raw
 b2_sync: destination b2://abs-umpires-raw/raw
 b2_sync: never-mirror check OK (0 held-out plain paths, 0 duckdb files)
-b2_sync: plan 8272 file(s), 1522323418 byte(s)
+b2_sync: plan 13841 file(s), 3804123321 byte(s)
   upload data/raw/_budget.json
+  upload data/raw/_budget.json.lock
   upload data/raw/_manifest.csv
+  upload data/raw/baseballsavant.mlb.com/00/005d82e41eb278d5665fea17412ad2000e4f80a8670d8319683fbef3a106bd95.zst
+  upload data/raw/baseballsavant.mlb.com/00/00b545f4e424e7b4c1e6a75abe8ebbb53e8204c81fc48bb17bf5707da720c71d.zst
+  upload data/raw/baseballsavant.mlb.com/01/015e1c6020e5507c7ff01301dfc8e2b1c0e72d6abc8c118455b9cab2db5879a0.zst
   upload data/raw/baseballsavant.mlb.com/02/02262e3a66c74b78c22696d1310ddbfad5bea644a757371190a115472acad7dd.zst
+  upload data/raw/baseballsavant.mlb.com/03/031dd4f7cec39a9746c030313c02b726bcd2e5bfcc851a8243265136abef0d85.zst
   upload data/raw/baseballsavant.mlb.com/04/041e3c2fba99359a8d04020ce7e1121d26cfa4f28fc919e40aacd1446a84c335.zst
   upload data/raw/baseballsavant.mlb.com/05/052d08cad3a9725a0317a932c514710911250c96341990d47dc840f494e16563.zst
   upload data/raw/baseballsavant.mlb.com/05/053f3109bedfb913a8a5255e7200b186b4472264ef439f40a09ed3a7a06ed4af.zst
+  upload data/raw/baseballsavant.mlb.com/05/054877b4b8542de248a3c92d1067edb095da929f42c3deda6aa1cda8fef2d846.zst
   upload data/raw/baseballsavant.mlb.com/05/05752115511f33a35ebef041ba432645e704afbb30f467a2fdfdbc9d1970b686.zst
   upload data/raw/baseballsavant.mlb.com/06/06eefda729a7d189d8d22e862dc755057eb58bf5fa0732ed2c66d3db8b402a27.zst
   upload data/raw/baseballsavant.mlb.com/08/0882b3ef014c252075183a6d90b0957994aa5901c92fa566ef10725506ad5e7c.zst
   upload data/raw/baseballsavant.mlb.com/08/088c17b7bdcb62e7769532ed3291a2a88619b1c3372ee1fd9fe44a5d6b1e26bf.zst
+  upload data/raw/baseballsavant.mlb.com/09/093455fae32e1e434d9b1b101bfea0d46c9b32868a7939ced919a84144733193.zst
   upload data/raw/baseballsavant.mlb.com/09/095c84a7792f2e92fa4920925c7b09c75c6b0fee1b490ed1939d62d034d35282.zst
+  upload data/raw/baseballsavant.mlb.com/09/09c96515e92ccb1d66e06271f90c9ba448e4d504f6987ee7238c682b93b19e5f.zst
   upload data/raw/baseballsavant.mlb.com/09/09cd7e2d11f89187bd8f736228d5ce065be126e0f8e0f2e46992522b3f1c3a1b.zst
   upload data/raw/baseballsavant.mlb.com/09/09d681041d368c09ce464a3092fbb7953452fe3acc07cd7cfeff8c9f67be530c.zst
+  upload data/raw/baseballsavant.mlb.com/0a/0a6635866d344d2552bfb1057ee843f1ceb42cc3aa8b611c62c500a363978ee2.zst
   upload data/raw/baseballsavant.mlb.com/0a/0a66675b180bf9f973225859fdba584338bf07a5774bbd52ec556afca73590a1.zst
+  upload data/raw/baseballsavant.mlb.com/0a/0aba2ff5de34c439d898cf730d95da97e98bb7877b1db2d1eb295cafdf3aa20a.zst
   upload data/raw/baseballsavant.mlb.com/0b/0b23e3d95b0c8b9e0ae35a135e8dac4882b07fa5b4e6e88a877aa5ca3f4f8b8a.zst
+  upload data/raw/baseballsavant.mlb.com/0b/0bd06fb311457c3dc79a7ef60303ff294e22f7b21e9976ddaf265a9789e3bbb7.zst
   upload data/raw/baseballsavant.mlb.com/0c/0c28e185d0048783499a5514e06d6e8f8f975b739d1833f3824f672237272ab1.zst
+  upload data/raw/baseballsavant.mlb.com/0c/0c45cb993ce138a56ba77b436f53b9881eb9a948395785889ca053669dedb650.zst
+  upload data/raw/baseballsavant.mlb.com/0c/0c480b97004ebe50f67b31056b479750da7e56ca646630fcfac5959b7bf0fc3d.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0d387ef10b37c979904fbe9bb8bf935415c6a9f5fde81fa068ac191895914f40.zst
   upload data/raw/baseballsavant.mlb.com/0d/0d5184742bab8a8473515388d19b743d9b60ea05f47467a8c585ac43bcfe3da4.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0db06b2dd254b96b20e2116d9dd248158df799302e893fad5f88a279571f78ab.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0db288d6d9f212cbc85b1be04d9d6e5aacc258c1ef6465df0c2d037843fc5dbf.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0dd09ac682ae8c6ad03efd213042ced8c5594a5d78a77a65afe0f5daf17a9fe6.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0dd7f2ff15eaadeec8f0ab09a465db036d6a62c5d191a56b81b897be4c53100c.zst
+  upload data/raw/baseballsavant.mlb.com/0d/0df1aaf02b7e279872b064c6a2b82d3b9dadc0df815086d7b6f2e5e59ec624a2.zst
+  upload data/raw/baseballsavant.mlb.com/0e/0e4cdba08d17506af37facb6a1e284f754508ba149748fc926721b0c81be6052.zst
+  upload data/raw/baseballsavant.mlb.com/0e/0e56558f6e2b11242d8709b5be443f8f6e6905e5384c92faa4c3f22eb458ad66.zst
+  upload data/raw/baseballsavant.mlb.com/0e/0ebbee11fe0ac026fd3389a7e14b6fdcdfbcd97a5c26f43743640f9a052f8e05.zst
+  upload data/raw/baseballsavant.mlb.com/0e/0edc274bfa54e35c4f8ba60ccc62d01a39b936cb20d9bd168274197eaffa7bef.zst
   upload data/raw/baseballsavant.mlb.com/0f/0f184f68252320d78dd38b6fefdf3bfc67640e60344ba48414c669e201f5022f.zst
   upload data/raw/baseballsavant.mlb.com/0f/0f9c7ed273537d3f9221e02c72e020cee793cf93ff0e5b689cfc8b2016e8a2bf.zst
+  upload data/raw/baseballsavant.mlb.com/0f/0fb81149d823c21eb9ea4bff3bcc4d799e34c769d6764ec23affe868c0a7fac2.zst
+  upload data/raw/baseballsavant.mlb.com/10/10410e9586692d9f9567aaa4ae86ffc4537be12d1767407513e14475be40b10d.zst
+  upload data/raw/baseballsavant.mlb.com/11/1106a2f958947fa79dc499a25507792f1eea622b9609e9ec21de287d75a8575c.zst
   upload data/raw/baseballsavant.mlb.com/13/13395a11c25f6889ea1f92f7c820607495a6785c6503bee712988b2417e366dd.zst
   upload data/raw/baseballsavant.mlb.com/13/13c03162c4ca38a02968498797642aad9761646d0aa4ae4f2852c87c1ea013c9.zst
+  upload data/raw/baseballsavant.mlb.com/14/146a6e3406b85c8e4f94a4039d7df731247254aa04ab85a44f5cfdbc5345d7f9.zst
   upload data/raw/baseballsavant.mlb.com/15/154e571047f37845a7418cb0548ca8b58cc1c01c824f7da7fda4039288faa17b.zst
-  upload data/raw/baseballsavant.mlb.com/18/18f432bee2fe8ec8c8c697f0b7d83b59ada38fdb101b9b22d087d86f416a0ea6.zst
-  upload data/raw/baseballsavant.mlb.com/19/19a0edbf2e411a6882bd297beab33b1a0dd87bf2d926db301c34b510199276aa.zst
-  upload data/raw/baseballsavant.mlb.com/19/19d41ecb9cf66794324d41a0b9fe7aafef141595b2bf032fae44051ec7f218d8.zst
-  upload data/raw/baseballsavant.mlb.com/1a/1a4b4ae81b661e2062960284cd9f220326e4fb416baaf72d2ec8c174c5579479.zst
-  upload data/raw/baseballsavant.mlb.com/1e/1e755845e31801ab5482ce5919fb4913f9e9bfed455a07d873b5aa3e445b4def.zst
-  upload data/raw/baseballsavant.mlb.com/1e/1e7e3e16e8a8e1571a98dc096561b05ff33df9ca856ddd1fb8650ce3b69d9718.zst
-  upload data/raw/baseballsavant.mlb.com/1f/1fc75064db777a8b20357c6350558c83c816e6884b97b8b323f9072c7ab8cbee.zst
-  upload data/raw/baseballsavant.mlb.com/24/24215e4ae30d36a1120c77b14ad84295bec67faace317540914d1849fb52a2d9.zst
-  upload data/raw/baseballsavant.mlb.com/25/252e3a8cb0147ac5710ac2eaa2b00fe2d27c718a81f7b4524fcb7e4dc5cdf1d5.zst
-  upload data/raw/baseballsavant.mlb.com/28/28d90790100e49f18685f404d686e70ed30a97403f5c85f6d7e99412df13d397.zst
-  upload data/raw/baseballsavant.mlb.com/29/29ffac7a32ffebc91022076c39a7da1c23e1187131666a5254c7fb0cc0e28ff7.zst
-  upload data/raw/baseballsavant.mlb.com/2a/2a46e14f27949f4d7999931bfa0066d03631fcf0eb76012a95767c1fe8e8b844.zst
-  upload data/raw/baseballsavant.mlb.com/2d/2d4ccbf83785947edd95011068b6cd7c003e5e373a7f3d8022d57736aef9ec58.zst
-  upload data/raw/baseballsavant.mlb.com/33/3358c1c83b9be839beff532db7f3294977b6de086195c0b75554726a53ec55b6.zst
-  upload data/raw/baseballsavant.mlb.com/34/34eb1273ba0bd1a3229498a6c62ac5e2cfc263c2c76c8751ad5cbd181764a575.zst
-  upload data/raw/baseballsavant.mlb.com/35/3530fb93066a12eca3623215ddaec45ba0d2c57bd1043a2da7096543bb7e4583.zst
-  upload data/raw/baseballsavant.mlb.com/35/3545ff56028c93b0cbd9bbd478cd40aca467e3b7549cfd27f223692692b2dedf.zst
-  upload data/raw/baseballsavant.mlb.com/35/35ddfc9f4d276def16b2a3e21f3b5397549aa572e4e45fc4595feb7897a30caa.zst
-  upload data/raw/baseballsavant.mlb.com/36/366dd7b4961561a70628b03601614de0f03608a26f0e682dc4b4293b255d4aef.zst
-  upload data/raw/baseballsavant.mlb.com/36/3693110db25061a3aca880a98bee5fcbbc22714cc2e41379efde9509ade3868b.zst
-  upload data/raw/baseballsavant.mlb.com/37/371d756c8d9985d33e1df100edcd7b4e937cd7dd4ce72be5929040fb0a3acd02.zst
-  upload data/raw/baseballsavant.mlb.com/39/39f47321458dde45a3572fa005ba6b23ac3c97e98a99a786bd6bb731250455ae.zst
-  upload data/raw/baseballsavant.mlb.com/3a/3a0166891298947544d753bcfd326023045693f7880b11ae90f19fbd6a811b03.zst
-  upload data/raw/baseballsavant.mlb.com/3a/3a8964249a8dfca2774f0bfab2c3855c7327e2841a1a3ef8bb0ba6784b1a8665.zst
-  upload data/raw/baseballsavant.mlb.com/3c/3c0887d2a1e7a38ca8476a576c65076bda98719c2b410203164aa14d33e53edf.zst
-  upload data/raw/baseballsavant.mlb.com/3c/3c2f786ecec926e06f630e336a7b7eefbf4fa02f23129671e6d28493b4cfed96.zst
-  upload data/raw/baseballsavant.mlb.com/3d/3dc698817dee898bd515e018c3488088aee5646232973db8ec880be54af0e00b.zst
-  upload data/raw/baseballsavant.mlb.com/3e/3e5dd07ecd89bfee3a88566d22b6ee311001c514f9a246e93ce133b0d396d1a8.zst
-  ... and 8222 more
+  upload data/raw/baseballsavant.mlb.com/16/161821921598a48b8f0ac2ee35cc6036b997688d0e21747f33f3ec9f8b7f2465.zst
+  ... and 13791 more
 command: uv run b2 sync --delete --threads 4 data/raw b2://abs-umpires-raw/raw
 DEFERRED: B2_APPLICATION_KEY_ID and B2_APPLICATION_KEY are unset.
 DEFERRED: the b2 side of the dry run needs an account: b2 authorizes before it plans.

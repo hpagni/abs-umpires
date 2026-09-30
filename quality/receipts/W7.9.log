@@ -1,4 +1,4 @@
-SEAL-ORDER OK (0 fit receipts, prereg-v1 tagged at 7c2add919004dda9868932d49ae02efea1886dff, pushed=1, read from origin)
+SEAL-ORDER OK (29/29 fit receipt(s) descend from prereg-v1 7c2add919004dda9868932d49ae02efea1886dff, read from origin)
 PREREG 1/6 PASS tag prereg-v1 exists: annotated tag object a1b06d1254cc on commit 7c2add919004
 PREREG 2/6 PASS tag prereg-v1 is pushed to origin: origin returns a1b06d1254cc for refs/tags/prereg-v1, the local tag object
 PREREG 3/6 PASS tag prereg-v1 is an ancestor of HEAD: tagged commit 7c2add919004 is an ancestor of HEAD

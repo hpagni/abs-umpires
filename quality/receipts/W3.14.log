@@ -64,12 +64,12 @@ PASS    one git_sha: models/ch1_W3_21/provenance.json      ad79e3669cc2788a30847
 PASS    GD-12: models/ch1_W3_21/provenance.json            ad79e3669cc2788a30847f06f85dbbf2592f44de
 PASS    GD-01 keys: models/ch1_W6_7/provenance.json
 PASS    seal: models/ch1_W6_7/provenance.json              NULL
-PASS    one git_sha: models/ch1_W6_7/provenance.json       ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W6_7/provenance.json             ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W6_7/provenance.json       c3a5dede36662391f1a6f32fdb000ed8611c8816
+PASS    GD-12: models/ch1_W6_7/provenance.json             c3a5dede36662391f1a6f32fdb000ed8611c8816
 PASS    GD-01 keys: models/ch1_W6_8/provenance.json
 PASS    seal: models/ch1_W6_8/provenance.json              NULL
-PASS    one git_sha: models/ch1_W6_8/provenance.json       ad79e3669cc2788a30847f06f85dbbf2592f44de
-PASS    GD-12: models/ch1_W6_8/provenance.json             ad79e3669cc2788a30847f06f85dbbf2592f44de
+PASS    one git_sha: models/ch1_W6_8/provenance.json       c3a5dede36662391f1a6f32fdb000ed8611c8816
+PASS    GD-12: models/ch1_W6_8/provenance.json             c3a5dede36662391f1a6f32fdb000ed8611c8816
 PASS    GD-01 keys: models/surface_abs_cohort/provenance.json
 PASS    seal: models/surface_abs_cohort/provenance.json    2026-09-21
 PASS    one git_sha: models/surface_abs_cohort/provenance.json ad79e3669cc2788a30847f06f85dbbf2592f44de
