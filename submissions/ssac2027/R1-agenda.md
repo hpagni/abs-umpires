@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 494 of 495,
+Variant filled: owner. Words counted: 495 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -134,7 +134,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 527 words with the inline table, OVER THE CAP by 32 words after every rung. Cuts: none.
+The no-upload body counts 528 words with the inline table, OVER THE CAP by 33 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -179,7 +179,7 @@ The slots as printed in this fill:
 | A_PUB_LOSS | 8 to 22 | 3 |
 | A_CONV | 20.0 (95% CI 13.0 to 28.2) | 6 |
 | SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
-| CALL | The zone had already lost 23.4 (95% CI 18.6 to 28.3) square inches in 2025, before any challenge was made, so comparisons that start from 2025 miss that step entirely. | 30 |
+| CALL | The zone had already lost 23.4 (95% CI 18.6 to 28.3) square inches in 2025, before MLB challenges began, so comparisons that start from 2025 miss that step. | 28 |
 | BREAK_YEAR | 2025 | 1 |
 | SHARE_ABS | 59 | 1 |
 | SHARE_ABS_CI | 53 to 65 | 3 |

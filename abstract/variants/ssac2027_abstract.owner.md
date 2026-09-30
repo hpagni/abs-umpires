@@ -2,11 +2,11 @@
 
 ## Introduction
 
-The called strike zone shrank in 2026, when ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge to three-quarters of an inch either side. Published estimates of the 2026 change start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so neither step has an interval against old-rule seasons. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before challenges began.
+The called strike zone shrank in 2026, when ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge to three-quarters of an inch either side. Published estimates of the 2026 change start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so none gives both steps intervals against old-rule seasons. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before challenges began.
 
 ## Methods
 
-To put five seasons on one zone, I re-projected each 2022-2025 pitch to the plate midpoint Statcast adopted in 2026. I fitted called-strike probability to <<N_CALLED>> called pitches from <<N_GAMES>> regular-season games and read each season's zone as its 50 percent contour. With ABS-measured heights, the zone geometry matched <<N_CHAL_AGREE>> of <<N_CHAL>> challenge verdicts. I measured both steps net of the 2022-2024 trend, pooled umpires, and pre-registered a placebo between 2023 and 2024, two seasons under one rule.
+To put five seasons on one zone, I re-projected each 2022-2025 pitch to the plate midpoint Statcast adopted in 2026. I fitted called-strike probability near the edge, from <<N_CALLED>> called pitches in <<N_GAMES>> regular-season games, and read each season's zone as its 50 percent contour. With ABS-measured heights, the zone geometry matched <<N_CHAL_AGREE>> of <<N_CHAL>> challenge verdicts. I measured both steps net of the 2022-2024 trend, pooled umpires, and pre-registered a placebo between 2023 and 2024, two seasons under one rule.
 
 ## Results
 
