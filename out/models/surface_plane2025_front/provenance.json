@@ -1,0 +1,45 @@
+{
+  "step": "W3.17",
+  "fit": "surface_plane2025_front",
+  "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+  "n_games": 2430,
+  "n_rows": 232886,
+  "min_official_date": "2025-03-18",
+  "max_official_date": "2025-09-28",
+  "game_pk_sha256": "a02b9c50a6c2599dd02388ac932eb4666acceedc26e7bb51855c117f57be5a43",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": 20260951,
+  "code_sha256": "325856af235504f2beed2cb30daba011adf3027f5cea924ce4d2bd09e9f2c04b",
+  "code_files": {
+    "R/ch1/24_plane.R": "97ca6a5ad12cef8eacb7df61cd4407c1e8b9d2368f85dd4943a867f0bed12464",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "mgcv": "1.9.4",
+  "written_madrid": "2026-09-30T08:36:46+0200",
+  "formula": "cs ~ count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\")",
+  "n_coef": 1112,
+  "edf": 278.816349138233,
+  "fit_seconds": 49.284,
+  "converged": true,
+  "freml_grad_max": 0.000146771648516619,
+  "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04) ; front-plane pair",
+  "n_draws": 1000,
+  "interval_cov": "Vc",
+  "files": [
+    "surface_plane2025_front.rds",
+    "draws_vc_plane2025_front.rds"
+  ]
+}

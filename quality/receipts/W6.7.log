@@ -1,0 +1,23 @@
+
+== W6.7
+PASS    present: tables/abstract_slots_ch1.csv
+PASS    CALL and BREAK_YEAR unfilled
+PASS    W6.7's sentence names a cause only when P1 and P2 passed Of the 56.0 square inches (95% CI 52.0 to 59.6) by which the called zone contracted between 2024 and 2026, 23.4 (95% CI 18.6 to 28.3) falls in the 2025 buffer season and 33.1 (95% CI 28.7 to 37.5) in the 2026 ABS season.
+PASS    W6.7 states D-P4-04's sign-agreement reading
+PASS    every slot carries a 95% interval, a count its value
+PASS    D_BUF traces to out/ch1/tab/T4_decomposition.csv row 20
+PASS    D_ABS traces to out/ch1/tab/T4_decomposition.csv row 21
+PASS    D_PRE traces to out/ch1/tab/T4_decomposition.csv row 19
+PASS    D_PLANE_TOP traces to out/ch1/tab/T4_plane_component.csv row 1
+PASS    D_PLANE_BOT traces to out/ch1/tab/T4_plane_component.csv row 2
+PASS    A_CORR traces to out/ch1/tab/T4_plane_component.csv row 4
+PASS    A_PUB traces to out/ch1/tab/T9_published_comparison.csv row 1
+PASS    N_CHAL traces to out/ch1/tab/T2_zone_gate.csv row 1
+PASS    N_CHAL is the n of T2_zone_gate.csv's overall row (W3.8) N_CHAL 10168
+PASS    W6.7's cohort sentence follows T4's height_cohort_flag agree: The ABS-measured-height arm agrees in sign on both components: -23.8 sq in (95% CI -29.3 to -18.4) in 2025 and -32.2 sq in (95% CI -36.8 to -27.9) in 2026 (D-P4-04).
+PASS    the ledger is the exporter's output                /Users/hudsonpagni/sports-project/docs/numbers.json
+
+check W6.7: 16 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/27_abstract_ch1.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

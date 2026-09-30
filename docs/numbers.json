@@ -131,6 +131,453 @@
       }
     },
     {
+      "slot": "D_BUF",
+      "value": -23.431579551808,
+      "lo95": -28.3180170876189,
+      "hi95": -18.5724894168008,
+      "units": "sq in",
+      "what": "bam primary: P0, roster + cohort-specific offset; 95% percentile interval over 1000 joint draws of N(beta, Vc), W3.14",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 20,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-23.4",
+        "lo95": "-28.3",
+        "hi95": "-18.6"
+      },
+      "print_contraction": {
+        "point": "23.4",
+        "lo95": "18.6",
+        "hi95": "28.3"
+      }
+    },
+    {
+      "slot": "D_ABS",
+      "value": -33.101134459375,
+      "lo95": -37.4559952260529,
+      "hi95": -28.740883241359,
+      "units": "sq in",
+      "what": "bam primary: P0, roster + cohort-specific offset; 95% percentile interval over 1000 joint draws of N(beta, Vc), W3.14",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 21,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-33.1",
+        "lo95": "-37.5",
+        "hi95": "-28.7"
+      },
+      "print_contraction": {
+        "point": "33.1",
+        "lo95": "28.7",
+        "hi95": "37.5"
+      }
+    },
+    {
+      "slot": "D_PRE",
+      "value": 0.255104039883034,
+      "lo95": -1.64745504479232,
+      "hi95": 2.19964623228236,
+      "units": "sq in per season",
+      "what": "bam primary: P0, roster + cohort-specific offset; 95% percentile interval over 1000 joint draws of N(beta, Vc), W3.14",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 19,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.3",
+        "lo95": "-1.6",
+        "hi95": "2.2"
+      }
+    },
+    {
+      "slot": "D_PLANE_TOP",
+      "value": -0.766577339351599,
+      "lo95": -0.935300788761434,
+      "hi95": -0.612463814213645,
+      "units": "in",
+      "what": "bam single-season 2025 fits, mid-plane minus front-plane pair; 95% interval from 1000 independent N(beta, Vc) draws of each fit (conservative)",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 1,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.77",
+        "lo95": "-0.94",
+        "hi95": "-0.61"
+      }
+    },
+    {
+      "slot": "D_PLANE_BOT",
+      "value": -1.10601926800442,
+      "lo95": -1.23770266315492,
+      "hi95": -0.977892815262782,
+      "units": "in",
+      "what": "bam single-season 2025 fits, mid-plane minus front-plane pair; 95% interval from 1000 independent N(beta, Vc) draws of each fit (conservative)",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 2,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-1.11",
+        "lo95": "-1.24",
+        "hi95": "-0.98"
+      }
+    },
+    {
+      "slot": "A_CORR",
+      "value": -32.846030419492,
+      "lo95": -36.640593218863,
+      "hi95": -29.2918772832102,
+      "units": "sq in",
+      "what": "bam primary, 2026 minus 2025, both mid-plane; W3.15 draws",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 4,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-32.8",
+        "lo95": "-36.6",
+        "hi95": "-29.3"
+      }
+    },
+    {
+      "slot": "A_PUB",
+      "value": null,
+      "lo95": -22,
+      "hi95": -8,
+      "units": "sq in",
+      "what": "Clemens, FanGraphs, The Strike Zone Is Shrinking, 2026-04-28 (docs/prior-art.md section 6.3)",
+      "source": "out/ch1/tab/T9_published_comparison.csv",
+      "source_row": 1,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "lo95": "-22",
+        "hi95": "-8"
+      }
+    },
+    {
+      "slot": "T1_PRE_TOP",
+      "value": 0.134603062999804,
+      "lo95": 0.0864051560148306,
+      "hi95": 0.179677857748082,
+      "units": "in",
+      "what": "top_in g",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 1,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.13",
+        "lo95": "0.09",
+        "hi95": "0.18"
+      }
+    },
+    {
+      "slot": "T1_BUF_TOP",
+      "value": -0.183386971048307,
+      "lo95": -0.321007409298702,
+      "hi95": -0.0484866882402617,
+      "units": "in",
+      "what": "top_in delta_buffer",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 2,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.18",
+        "lo95": "-0.32",
+        "hi95": "-0.05"
+      }
+    },
+    {
+      "slot": "T1_ABS_TOP",
+      "value": -0.629507858382397,
+      "lo95": -0.757709363312923,
+      "hi95": -0.504192135932619,
+      "units": "in",
+      "what": "top_in delta_abs",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 3,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.63",
+        "lo95": "-0.76",
+        "hi95": "-0.50"
+      }
+    },
+    {
+      "slot": "T1_PRE_BOT",
+      "value": 0.0555985841565339,
+      "lo95": 0.0161700317807036,
+      "hi95": 0.0925438844128237,
+      "units": "in",
+      "what": "bot_in g",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 7,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.06",
+        "lo95": "0.02",
+        "hi95": "0.09"
+      }
+    },
+    {
+      "slot": "T1_BUF_BOT",
+      "value": 0.179700380305668,
+      "lo95": 0.0767631909846226,
+      "hi95": 0.287209568825735,
+      "units": "in",
+      "what": "bot_in delta_buffer",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 8,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.18",
+        "lo95": "0.08",
+        "hi95": "0.29"
+      }
+    },
+    {
+      "slot": "T1_ABS_BOT",
+      "value": 0.648967408157166,
+      "lo95": 0.554485562466021,
+      "hi95": 0.743204939123051,
+      "units": "in",
+      "what": "bot_in delta_abs",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 9,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.65",
+        "lo95": "0.55",
+        "hi95": "0.74"
+      }
+    },
+    {
+      "slot": "T1_PRE_HW",
+      "value": -0.0323876523898134,
+      "lo95": -0.0599380036554605,
+      "hi95": -0.006572138526789,
+      "units": "in",
+      "what": "half_width_in g",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 13,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.03",
+        "lo95": "-0.06",
+        "hi95": "-0.01"
+      }
+    },
+    {
+      "slot": "T1_BUF_HW",
+      "value": -0.412230344505286,
+      "lo95": -0.494715651711566,
+      "hi95": -0.325737908954912,
+      "units": "in",
+      "what": "half_width_in delta_buffer",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 14,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.41",
+        "lo95": "-0.49",
+        "hi95": "-0.33"
+      }
+    },
+    {
+      "slot": "T1_ABS_HW",
+      "value": -0.245787419351387,
+      "lo95": -0.320535870010747,
+      "hi95": -0.160432844876458,
+      "units": "in",
+      "what": "half_width_in delta_abs",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 15,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.25",
+        "lo95": "-0.32",
+        "hi95": "-0.16"
+      }
+    },
+    {
+      "slot": "T1_PRE_AREA",
+      "value": 0.255104039883034,
+      "lo95": -1.64745504479232,
+      "hi95": 2.19964623228236,
+      "units": "sq in",
+      "what": "area_sqin g",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 19,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.3",
+        "lo95": "-1.6",
+        "hi95": "2.2"
+      }
+    },
+    {
+      "slot": "T1_BUF_AREA",
+      "value": -23.431579551808,
+      "lo95": -28.3180170876189,
+      "hi95": -18.5724894168008,
+      "units": "sq in",
+      "what": "area_sqin delta_buffer",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 20,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-23.4",
+        "lo95": "-28.3",
+        "hi95": "-18.6"
+      }
+    },
+    {
+      "slot": "T1_ABS_AREA",
+      "value": -33.101134459375,
+      "lo95": -37.4559952260529,
+      "hi95": -28.740883241359,
+      "units": "sq in",
+      "what": "area_sqin delta_abs",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 21,
+      "produced_by": "W3.16",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-33.1",
+        "lo95": "-37.5",
+        "hi95": "-28.7"
+      }
+    },
+    {
+      "slot": "T1_PLANE_TOP",
+      "value": -0.766577339351599,
+      "lo95": -0.935300788761434,
+      "hi95": -0.612463814213645,
+      "units": "in",
+      "what": "top_in plane",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 1,
+      "produced_by": "W3.17",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-0.77",
+        "lo95": "-0.94",
+        "hi95": "-0.61"
+      }
+    },
+    {
+      "slot": "T1_PLANE_BOT",
+      "value": -1.10601926800442,
+      "lo95": -1.23770266315492,
+      "hi95": -0.977892815262782,
+      "units": "in",
+      "what": "bot_in plane",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 2,
+      "produced_by": "W3.17",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-1.11",
+        "lo95": "-1.24",
+        "hi95": "-0.98"
+      }
+    },
+    {
+      "slot": "T1_PLANE_HW",
+      "value": 0.124104732779037,
+      "lo95": -0.0115683877261493,
+      "hi95": 0.25441015246793,
+      "units": "in",
+      "what": "half_width_in plane",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 3,
+      "produced_by": "W3.17",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.12",
+        "lo95": "-0.01",
+        "hi95": "0.25"
+      }
+    },
+    {
+      "slot": "T1_PLANE_AREA",
+      "value": 12.8583482793561,
+      "lo95": 6.25250959396778,
+      "hi95": 19.2020814259141,
+      "units": "sq in",
+      "what": "area_sqin plane",
+      "source": "out/ch1/tab/T4_plane_component.csv",
+      "source_row": 4,
+      "produced_by": "W3.17",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "12.9",
+        "lo95": "6.3",
+        "hi95": "19.2"
+      }
+    },
+    {
+      "slot": "SD_UMP",
+      "value": 0.0414326345,
+      "lo95": 0.0021582095675,
+      "hi95": 0.1002538885,
+      "units": "in",
+      "what": "tau, between-umpire SD of the 2025-to-2026 response (the 2026 shift, common to the three edges under sop): sop: SOP W3.18 B2, abs_step prior normal(0, 0.30), sd prior exponential(2); posterior median, 95% interval",
+      "source": "out/ch1/tab/umpire_eb.csv",
+      "source_row": 1,
+      "produced_by": "W6.8",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.04",
+        "lo95": "0.00",
+        "hi95": "0.10"
+      }
+    },
+    {
+      "slot": "REL_UMP",
+      "value": 0.168845637413997,
+      "lo95": -0.271549376399894,
+      "hi95": 0.456711955298472,
+      "units": "reliability",
+      "what": "split-half reliability of the RESPONSE, not the level: B3: odd/even plate games by game index within umpire-season, B1 per half, Spearman-Brown corrected; 95% interval from Fisher's z on the half-sample correlation, then Spearman-Brown",
+      "source": "out/ch1/tab/umpire_eb.csv",
+      "source_row": 3,
+      "produced_by": "W6.8",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "0.17",
+        "lo95": "-0.27",
+        "hi95": "0.46"
+      }
+    },
+    {
+      "slot": "N_UMP",
+      "value": 88,
+      "units": "counts",
+      "what": "umpires behind both tau's 2025-to-2026 response and the split-half response",
+      "source": "out/ch1/tab/umpire_eb.csv",
+      "source_row": 8,
+      "produced_by": "W6.8",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "88"
+      }
+    },
+    {
       "slot": "N_CALLED",
       "value": 1492502,
       "units": "counts",

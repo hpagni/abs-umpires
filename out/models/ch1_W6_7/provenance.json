@@ -1,0 +1,39 @@
+{
+  "step": "W6.7",
+  "what": "run receipt of one Chapter 1 entry point",
+  "n_games": 0,
+  "n_rows": 0,
+  "min_official_date": null,
+  "max_official_date": null,
+  "game_pk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "analysis_sets_touched": [],
+  "seed": null,
+  "code_sha256": "2f1ab8b1640b3d2f7aca140ebada4dfe931d2898f98f1e6f9a2ef43a3636d41c",
+  "code_files": {
+    "R/ch1/27_abstract_ch1.R": "03f1091c097d583fbc7cf5544193f0a575aef524e2b045cfe67c38ccd2d44a04",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "inputs": {
+    "out/ch1/tab/T4_decomposition.csv": "d8e89dfc4d60ee3f29620c36262f75da9d309b7ba0508f52777602b13600e62c",
+    "out/ch1/tab/T4_plane_component.csv": "b7235280e6b1fc6bd25e5877a9a38aff70ad60459d58b7ebc456661577bc09c5",
+    "out/ch1/tab/T9_published_comparison.csv": "398fcbf121f12f40c41ccfbed60419edd5b301b5380514efc9ba272e39666e68",
+    "out/ch1/tab/T5_placebos.csv": "b9d554188c2cdeb30b6fd9a4274d55b9a5e8a38ce4b4737e0db9e2ab077903f0",
+    "out/ch1/tab/T2_zone_gate.csv": "1a663d0cdc692d3f64523cf23467c863039669189b4d024242ab357967b5b9de"
+  },
+  "outputs": {
+    "out/tables/abstract_slots_ch1.csv": "9b3d1da3139b4b999cfdaff42d8a4fb9f1397792da53fb6b5997b8e1ff3aa2e4",
+    "out/tables/headline.csv": "c001cd1bd30ef9b67f9d3e1fffc71f18312f2ae1a8cee8f6b50b1ab2e64fd97a",
+    "docs/numbers.json": "17397ab3f07a7bbbca51a1552eed6373a9e5371e9b1b2155829f5ed7e80299c0"
+  },
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "written_madrid": "2026-09-30T08:45:47+0200"
+}

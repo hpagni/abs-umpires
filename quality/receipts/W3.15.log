@@ -1,0 +1,22 @@
+
+== W3.15
+PASS    present: ch1/tab/T3_estimands.csv
+PASS    T3 carries an arm column                           fit,arm,sample,season,regime,estimand,units,point,lo95,hi95,lo90,hi90,n_draws,n_complete,estimator,n_rows_fit
+PASS    T3 main: labelled primary, five seasons x 6 estimands 30 rows, arm primary
+PASS    T3 undersmooth: labelled SENS-B1-UNDERSMOOTH, five seasons x 1 estimands 5 rows, arm SENS-B1-UNDERSMOOTH
+PASS    T3 abs_cohort: labelled ABS-measured arm, five seasons x 6 estimands 30 rows, arm ABS-measured arm
+PASS    T3 single_offset: labelled SENS-HEIGHT-SINGLE, five seasons x 6 estimands 30 rows, arm SENS-HEIGHT-SINGLE
+PASS    T3 panel: labelled CH1-A14 balanced panel, five seasons x 6 estimands 30 rows, arm CH1-A14 balanced panel
+PASS    T3 binned: labelled CH1-A5 binned logistic, five seasons x 4 estimands 20 rows, arm CH1-A5 binned logistic
+PASS    T3 holds no fit outside the six arms
+PASS    T3 main: intervals are the draws' quantiles        30 rows, 1000 draws
+PASS    T3 undersmooth: intervals are the draws' quantiles 5 rows, 1000 draws
+PASS    T3 abs_cohort: intervals are the draws' quantiles  30 rows, 1000 draws
+PASS    T3 single_offset: intervals are the draws' quantiles 30 rows, 1000 draws
+PASS    T3 panel: intervals are the draws' quantiles       30 rows, 1000 draws
+PASS    T3 binned: intervals are the draws' quantiles      20 rows, 1000 draws
+
+check W3.15: 15 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/22_estimands.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

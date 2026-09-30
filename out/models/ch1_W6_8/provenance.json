@@ -1,0 +1,34 @@
+{
+  "step": "W6.8",
+  "what": "run receipt of one Chapter 1 entry point",
+  "n_games": 0,
+  "n_rows": 0,
+  "min_official_date": null,
+  "max_official_date": null,
+  "game_pk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "analysis_sets_touched": [],
+  "seed": null,
+  "code_sha256": "86be68692b77943fe5f93b8bc94416b9765c45753893d53f530e447c9bda93bf",
+  "code_files": {
+    "R/ch1/28_umpire_summary.R": "a0e958f6d4ea8c7f06741d67cab597390d59f54557c6c33e63093781c48efff9",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "inputs": {
+    "out/ch1/tab/umpire_eb.csv": "7c065bdfc5ce6ac0c428e1831d92039febe23b631c6d0c229dc3e11c9cff64b6"
+  },
+  "outputs": {
+    "out/ch1/tab/umpire_eb_summary.csv": "00c44ab0aa8d46cfd0825a3587bc38e0e836cf7c4d4fe31267befa01f9a31c95",
+    "docs/numbers.json": "e98972607dd86dd43e96ec6b6bdfe45d58bd6c91676070126b199589bb1a7adf"
+  },
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "written_madrid": "2026-09-30T08:45:52+0200"
+}

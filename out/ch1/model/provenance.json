@@ -1,0 +1,950 @@
+{
+  "what": "union of the fit receipts of this directory; one receipt per fit under models/<fit>/; n_games is the largest fit's count, game_pk_sha256 hashes the fits' own hashes in fit order; git_sha is the earliest fit commit",
+  "n_games": 12056,
+  "n_rows": 10512695,
+  "min_official_date": "2022-04-07",
+  "max_official_date": "2026-09-21",
+  "game_pk_sha256": "7cf26428266e631b174436477a7774644be25ffaeb14d0ad5b51856aebabfc00",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": "20260922;none;20260951;20260939",
+  "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714;d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c;325856af235504f2beed2cb30daba011adf3027f5cea924ce4d2bd09e9f2c04b;2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "git_shas": [
+    "ad79e3669cc2788a30847f06f85dbbf2592f44de"
+  ],
+  "synthetic": false,
+  "fits": [
+    {
+      "step": "W3.14",
+      "fit": "surface_abs_cohort",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 938015,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:04:56+0200",
+      "formula": "cs ~ season + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = season_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_season, bs = \"re\")",
+      "family": "binomial",
+      "method": "fREML",
+      "discrete": true,
+      "n_coef": 2893,
+      "edf": 766.63526340991,
+      "fit_seconds": 828.73,
+      "converged": true,
+      "freml_grad_max": 0.000165658560021598,
+      "arm": "ABS-measured arm",
+      "height_rule": "ABS-measured arm: P1, H = H_abs (D-R0-02)",
+      "height_rule_key": "abs_cohort",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "draw_seed": 20260922,
+      "files": [
+        "surface_abs_cohort.rds",
+        "draws_vc_abs_cohort.rds"
+      ],
+      "n_umpires": 114,
+      "rows_by_season": {
+        "2022": 134251,
+        "2023": 168866,
+        "2024": 186878,
+        "2025": 215197,
+        "2026": 232823
+      }
+    },
+    {
+      "step": "W3.14",
+      "fit": "surface_binned",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 1153067,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:19:52+0200",
+      "formula": "glm(cbind(strikes, balls) ~ 0 + bin + season + count_class + stand), per edge",
+      "bins": "0.5 in over [-8, 8], 32 bins",
+      "arm": "CH1-A5 binned logistic",
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04)",
+      "height_rule_key": "primary",
+      "files": [
+        "surface_binned.rds"
+      ]
+    },
+    {
+      "step": "W3.14",
+      "fit": "surface_main",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 1153067,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T07:50:45+0200",
+      "formula": "cs ~ season + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = season_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_season, bs = \"re\")",
+      "family": "binomial",
+      "method": "fREML",
+      "discrete": true,
+      "n_coef": 2893,
+      "edf": 816.579028895766,
+      "fit_seconds": 367.666,
+      "converged": true,
+      "freml_grad_max": 0.00259087182422491,
+      "arm": "primary",
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04)",
+      "height_rule_key": "primary",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "draw_seed": 20260922,
+      "files": [
+        "surface_main.rds",
+        "draws_vc_main.rds"
+      ],
+      "n_umpires": 114,
+      "rows_by_season": {
+        "2022": 226513,
+        "2023": 233551,
+        "2024": 227302,
+        "2025": 232886,
+        "2026": 232815
+      }
+    },
+    {
+      "step": "W3.14",
+      "fit": "surface_panel",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 8960,
+      "n_rows": 857364,
+      "min_official_date": "2022-04-08",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "ba2f563a7be0fd786d39e34d56e0d08363856a2a7bbd033eb6295b8e8ef12dba",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:19:42+0200",
+      "formula": "cs ~ season + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = season_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_season, bs = \"re\")",
+      "family": "binomial",
+      "method": "fREML",
+      "discrete": true,
+      "n_coef": 2688,
+      "edf": 638.716261200753,
+      "fit_seconds": 864.412,
+      "converged": true,
+      "freml_grad_max": 6.35318428314768e-05,
+      "arm": "CH1-A14 balanced panel",
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04) ; balanced umpire panel",
+      "height_rule_key": "primary",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "draw_seed": 20260922,
+      "files": [
+        "surface_panel.rds",
+        "draws_vc_panel.rds"
+      ],
+      "n_umpires": 62,
+      "rows_by_season": {
+        "2022": 164974,
+        "2023": 177523,
+        "2024": 169073,
+        "2025": 175360,
+        "2026": 170434
+      }
+    },
+    {
+      "step": "W3.21",
+      "fit": "surface_placebo_p2_2022",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2429,
+      "n_rows": 226513,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2022-10-05",
+      "game_pk_sha256": "871a92d3519c497387d4545419d25e833d8029168cf4030e5e0cc160b926c5fb",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+      "code_files": {
+        "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:38:41+0200",
+      "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+      "n_coef": 1626,
+      "edf": 362.673994739217,
+      "fit_seconds": 85.609,
+      "files": [
+        "surface_placebo_p2_2022.rds"
+      ]
+    },
+    {
+      "step": "W3.21",
+      "fit": "surface_placebo_p2_2023",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2430,
+      "n_rows": 233551,
+      "min_official_date": "2023-03-30",
+      "max_official_date": "2023-10-01",
+      "game_pk_sha256": "a7d08cbd82b96ecf97cb9414c8f8cb0bdd11026c3a7f22d39536b927e398d844",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+      "code_files": {
+        "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:40:41+0200",
+      "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+      "n_coef": 1618,
+      "edf": 361.931723536116,
+      "fit_seconds": 101.725,
+      "files": [
+        "surface_placebo_p2_2023.rds"
+      ]
+    },
+    {
+      "step": "W3.21",
+      "fit": "surface_placebo_p2_2024",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2429,
+      "n_rows": 227302,
+      "min_official_date": "2024-03-20",
+      "max_official_date": "2024-09-30",
+      "game_pk_sha256": "91f77ace6ab42c5c6772ddecd3aba814ecfbfe110ef8b6ecebad03960c5b5da8",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+      "code_files": {
+        "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:42:24+0200",
+      "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+      "n_coef": 1610,
+      "edf": 357.199472118689,
+      "fit_seconds": 85.811,
+      "files": [
+        "surface_placebo_p2_2024.rds"
+      ]
+    },
+    {
+      "step": "W3.21",
+      "fit": "surface_placebo_p2_2025",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2430,
+      "n_rows": 232886,
+      "min_official_date": "2025-03-18",
+      "max_official_date": "2025-09-28",
+      "game_pk_sha256": "a02b9c50a6c2599dd02388ac932eb4666acceedc26e7bb51855c117f57be5a43",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+      "code_files": {
+        "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:44:04+0200",
+      "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+      "n_coef": 1615,
+      "edf": 347.861266902163,
+      "fit_seconds": 83.692,
+      "files": [
+        "surface_placebo_p2_2025.rds"
+      ]
+    },
+    {
+      "step": "W3.21",
+      "fit": "surface_placebo_p2_2026",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2308,
+      "n_rows": 229869,
+      "min_official_date": "2026-03-25",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "a1d6e745116eea69630155b814e11f71d7361e8aa6ebf4e12db1c34c5faec3f8",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": null,
+      "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+      "code_files": {
+        "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:45:42+0200",
+      "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+      "n_coef": 1616,
+      "edf": 338.909727021139,
+      "fit_seconds": 82.052,
+      "files": [
+        "surface_placebo_p2_2026.rds"
+      ]
+    },
+    {
+      "step": "W3.17",
+      "fit": "surface_plane2025_front",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2430,
+      "n_rows": 232886,
+      "min_official_date": "2025-03-18",
+      "max_official_date": "2025-09-28",
+      "game_pk_sha256": "a02b9c50a6c2599dd02388ac932eb4666acceedc26e7bb51855c117f57be5a43",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260951,
+      "code_sha256": "325856af235504f2beed2cb30daba011adf3027f5cea924ce4d2bd09e9f2c04b",
+      "code_files": {
+        "R/ch1/24_plane.R": "97ca6a5ad12cef8eacb7df61cd4407c1e8b9d2368f85dd4943a867f0bed12464",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:36:46+0200",
+      "formula": "cs ~ count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\")",
+      "n_coef": 1112,
+      "edf": 278.816349138233,
+      "fit_seconds": 49.284,
+      "converged": true,
+      "freml_grad_max": 0.000146771648516619,
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04) ; front-plane pair",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "files": [
+        "surface_plane2025_front.rds",
+        "draws_vc_plane2025_front.rds"
+      ]
+    },
+    {
+      "step": "W3.17",
+      "fit": "surface_plane2025_mid",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 2430,
+      "n_rows": 232886,
+      "min_official_date": "2025-03-18",
+      "max_official_date": "2025-09-28",
+      "game_pk_sha256": "a02b9c50a6c2599dd02388ac932eb4666acceedc26e7bb51855c117f57be5a43",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260939,
+      "code_sha256": "325856af235504f2beed2cb30daba011adf3027f5cea924ce4d2bd09e9f2c04b",
+      "code_files": {
+        "R/ch1/24_plane.R": "97ca6a5ad12cef8eacb7df61cd4407c1e8b9d2368f85dd4943a867f0bed12464",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:35:36+0200",
+      "formula": "cs ~ count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\")",
+      "n_coef": 1112,
+      "edf": 283.213789509428,
+      "fit_seconds": 53.857,
+      "converged": true,
+      "freml_grad_max": 5.58937760977152e-05,
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04)",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "files": [
+        "surface_plane2025_mid.rds",
+        "draws_vc_plane2025_mid.rds"
+      ]
+    },
+    {
+      "step": "W3.14",
+      "fit": "surface_single_offset",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 1153207,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T07:44:15+0200",
+      "formula": "cs ~ season + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = season_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_season, bs = \"re\")",
+      "family": "binomial",
+      "method": "fREML",
+      "discrete": true,
+      "n_coef": 2893,
+      "edf": 817.030683240951,
+      "fit_seconds": 365.193,
+      "converged": true,
+      "freml_grad_max": 0.00230025001462764,
+      "arm": "SENS-HEIGHT-SINGLE",
+      "height_rule": "SENS-HEIGHT-SINGLE: roster +0.0022 in for every batter, D-R0-02's one offset (D-P4-04 not applied)",
+      "height_rule_key": "single_offset",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "draw_seed": 20260922,
+      "files": [
+        "surface_single_offset.rds",
+        "draws_vc_single_offset.rds"
+      ],
+      "n_umpires": 114,
+      "rows_by_season": {
+        "2022": 226568,
+        "2023": 233594,
+        "2024": 227323,
+        "2025": 232907,
+        "2026": 232815
+      }
+    },
+    {
+      "step": "W3.14",
+      "fit": "surface_undersmooth",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 1153067,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "fcf7a18396c2854448ee8868f659171bb0493f5dbc9d03ff2ccbd71760a26714",
+      "code_files": {
+        "R/ch1/20_surfaces.R": "38a3b441a41cbfd9deedba08ccf000c63d330c0b761a0da00c4674b445c89d7c",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T07:37:47+0200",
+      "formula": "cs ~ season + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24), by = season_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_season, bs = \"re\")",
+      "family": "binomial",
+      "method": "fREML",
+      "discrete": true,
+      "n_coef": 3901,
+      "edf": 823.708163044441,
+      "fit_seconds": 549.447,
+      "converged": true,
+      "freml_grad_max": 0.000183364219118687,
+      "arm": "SENS-B1-UNDERSMOOTH",
+      "height_rule": "primary: roster +0.0022 in inside the ABS-measured cohort, roster -0.3470 in outside it, both added to roster height (D-R0-02, D-P4-04); SENS-B1-UNDERSMOOTH, season by-term k = 24",
+      "height_rule_key": "primary",
+      "n_draws": 1000,
+      "interval_cov": "Vc",
+      "draw_seed": 20260922,
+      "files": [
+        "surface_undersmooth.rds",
+        "draws_vc_undersmooth.rds"
+      ],
+      "n_umpires": 114,
+      "rows_by_season": {
+        "2022": 226513,
+        "2023": 233551,
+        "2024": 227302,
+        "2025": 232886,
+        "2026": 232815
+      }
+    },
+    {
+      "step": "W3.18",
+      "fit": "umpire_me",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 497803,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+      "code_files": {
+        "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:37:50+0200",
+      "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)",
+      "prior": "sop: SOP W3.18 B2, abs_step prior normal(0, 0.30), sd prior exponential(2)",
+      "sampler": {
+        "chains": 4,
+        "warmup": 1000,
+        "sampling": 2000,
+        "adapt_delta": 0.99,
+        "max_treedepth": 10
+      },
+      "attempts": [
+        {
+          "chains": 4,
+          "warmup": 1000,
+          "sampling": 2000,
+          "adapt_delta": 0.99,
+          "max_treedepth": 10,
+          "seed": 20260922,
+          "divergent": 0,
+          "treedepth_hits": 0,
+          "ebfmi_min": 0.808386763269461,
+          "rhat_max": 1.00240028300985,
+          "ess_bulk_min": 2094.02350256856,
+          "ess_tail_min": 1974.56536782394,
+          "seconds": 28.353
+        }
+      ],
+      "n_cells": 1367,
+      "files": [
+        "umpire_me.rds"
+      ]
+    },
+    {
+      "step": "W3.18",
+      "fit": "umpire_me_sens_abs_prior",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 497803,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+      "code_files": {
+        "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:38:19+0200",
+      "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)",
+      "prior": "SENS-B2-ABS-PRIOR: abs_step prior normal(0, 1)",
+      "sampler": {
+        "chains": 4,
+        "warmup": 1000,
+        "sampling": 2000,
+        "adapt_delta": 0.99,
+        "max_treedepth": 10
+      },
+      "attempts": [
+        {
+          "chains": 4,
+          "warmup": 1000,
+          "sampling": 2000,
+          "adapt_delta": 0.99,
+          "max_treedepth": 10,
+          "seed": 20260922,
+          "divergent": 0,
+          "treedepth_hits": 0,
+          "ebfmi_min": 0.785842132580193,
+          "rhat_max": 1.00133590510881,
+          "ess_bulk_min": 2820.76153749533,
+          "ess_tail_min": 2847.23353794171,
+          "seconds": 27.258
+        }
+      ],
+      "n_cells": 1367,
+      "files": [
+        "umpire_me_sens_abs_prior.rds"
+      ]
+    },
+    {
+      "step": "W3.18",
+      "fit": "umpire_me_sens_sd_exp1",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 497803,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+      "code_files": {
+        "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:38:53+0200",
+      "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)",
+      "prior": "prior sensitivity: sd prior exponential(1)",
+      "sampler": {
+        "chains": 4,
+        "warmup": 1000,
+        "sampling": 2000,
+        "adapt_delta": 0.99,
+        "max_treedepth": 10
+      },
+      "attempts": [
+        {
+          "chains": 4,
+          "warmup": 1000,
+          "sampling": 2000,
+          "adapt_delta": 0.99,
+          "max_treedepth": 10,
+          "seed": 20260922,
+          "divergent": 0,
+          "treedepth_hits": 0,
+          "ebfmi_min": 0.783959168483283,
+          "rhat_max": 1.00123733294196,
+          "ess_bulk_min": 1805.85290040003,
+          "ess_tail_min": 1767.32288610914,
+          "seconds": 32.036
+        }
+      ],
+      "n_cells": 1367,
+      "files": [
+        "umpire_me_sens_sd_exp1.rds"
+      ]
+    },
+    {
+      "step": "W3.18",
+      "fit": "umpire_me_sens_sd_exp4",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 497803,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+      "code_files": {
+        "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:39:22+0200",
+      "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)",
+      "prior": "prior sensitivity: sd prior exponential(4)",
+      "sampler": {
+        "chains": 4,
+        "warmup": 1000,
+        "sampling": 2000,
+        "adapt_delta": 0.99,
+        "max_treedepth": 10
+      },
+      "attempts": [
+        {
+          "chains": 4,
+          "warmup": 1000,
+          "sampling": 2000,
+          "adapt_delta": 0.99,
+          "max_treedepth": 10,
+          "seed": 20260922,
+          "divergent": 0,
+          "treedepth_hits": 0,
+          "ebfmi_min": 0.780188037365163,
+          "rhat_max": 1.00401885211157,
+          "ess_bulk_min": 2053.268596587,
+          "ess_tail_min": 2040.91391474665,
+          "seconds": 26.895
+        }
+      ],
+      "n_cells": 1367,
+      "files": [
+        "umpire_me_sens_sd_exp4.rds"
+      ]
+    },
+    {
+      "step": "W3.18",
+      "fit": "umpire_me_ue_us",
+      "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+      "n_games": 12056,
+      "n_rows": 497803,
+      "min_official_date": "2022-04-07",
+      "max_official_date": "2026-09-21",
+      "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+      "analysis_sets_touched": [
+        "open"
+      ],
+      "seed": 20260922,
+      "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+      "code_files": {
+        "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+        "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+        "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+        "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+        "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+        "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+      },
+      "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+      "prereg_tag": "prereg-v1",
+      "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+      "synthetic": false,
+      "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+      "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+      "r_version": "R version 4.5.2 (2025-10-31)",
+      "mgcv": "1.9.4",
+      "written_madrid": "2026-09-30T08:42:10+0200",
+      "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id) + (1 | umpire_hp_id:edge) + (1 | umpire_hp_id:season)",
+      "prior": "ue_us: B2 plus (1 | umpire x edge) and (1 | umpire x season)",
+      "sampler": {
+        "chains": 4,
+        "warmup": 2000,
+        "sampling": 6000,
+        "adapt_delta": 0.99,
+        "max_treedepth": 10
+      },
+      "attempts": [
+        {
+          "chains": 4,
+          "warmup": 2000,
+          "sampling": 6000,
+          "adapt_delta": 0.99,
+          "max_treedepth": 10,
+          "seed": 20260922,
+          "divergent": 0,
+          "treedepth_hits": 0,
+          "ebfmi_min": 0.599339234278949,
+          "rhat_max": 1.00285140818282,
+          "ess_bulk_min": 2207.80095131076,
+          "ess_tail_min": 3193.68879231897,
+          "seconds": 153.992
+        }
+      ],
+      "n_cells": 1367,
+      "files": [
+        "umpire_me_ue_us.rds"
+      ]
+    }
+  ]
+}

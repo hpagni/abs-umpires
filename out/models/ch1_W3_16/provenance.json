@@ -1,0 +1,41 @@
+{
+  "step": "W3.16",
+  "what": "run receipt of one Chapter 1 entry point",
+  "n_games": 0,
+  "n_rows": 0,
+  "min_official_date": null,
+  "max_official_date": null,
+  "game_pk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "analysis_sets_touched": [],
+  "seed": null,
+  "code_sha256": "4dc1340dfe268deb6af206ed0ba361b0b2a10a4b8b6a6335bab2ecbcc80920b4",
+  "code_files": {
+    "R/ch1/23_decomposition.R": "b80e0ab4e920887ce17debfc882e3b45b0ef56f4a63582fc00ca57c821734791",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "inputs": {
+    "out/ch1/tab/T3_estimands.csv": "5a722d5db1ed48ce314e844b831b5f5b8ead35b908c3048262dcb864add62a6a",
+    "out/ch1/model/estimand_draws_main.csv": "68e45b088b65e7c58494f2ff6c77d8a2b7e1020cc5fde168e1946042051ab7c6",
+    "out/ch1/model/estimand_draws_undersmooth.csv": "d44acd16dc90eb2d080c3c8c5c9dc44f0d1cee2be245c111c53ae60b82f34426",
+    "out/ch1/model/estimand_draws_abs_cohort.csv": "e94dc0c54b7c6485ac53249050a291a05acde14ceb034211916e63a637728651",
+    "out/ch1/model/estimand_draws_single_offset.csv": "98f521b3741e4e1fa15f5b55f08dfbfabb3d1b6c78ad987e6d9ec52b34d99958",
+    "out/ch1/model/estimand_draws_panel.csv": "91a64e7e90f54d46c78f12a77e64fbf797befc518b02bb1519ec49d8152fadd7",
+    "out/ch1/model/estimand_draws_binned.csv": "9c178a1a98c88bede9ae96a07cf4941e9214ebfabffe03df72bb7254edfdeb35"
+  },
+  "outputs": {
+    "out/ch1/tab/T4_decomposition.csv": "d8e89dfc4d60ee3f29620c36262f75da9d309b7ba0508f52777602b13600e62c",
+    "out/ch1/tab/T4_decomposition_arms.csv": "0e5da6f00bf4bc00ef607d6fa6316c5f62e554919ac4623df012b476703c0390",
+    "out/tables/headline.csv": "c26f4910c752cdeb93223c954797ea7275e0530f6f50fbc4b5ead408a7aef208"
+  },
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "written_madrid": "2026-09-30T08:34:17+0200"
+}

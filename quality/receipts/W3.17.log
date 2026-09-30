@@ -1,0 +1,13 @@
+
+== W3.17
+PASS    present: ch1/tab/T4_plane_component.csv
+PASS    CH1-A13: top, bottom and width rows, each with a 95% interval
+PASS    one quantity named as the one the component was subtracted from the 2025-to-2026 change on the published convention (2025 front plane, 2026 mid plane)
+PASS    present: ch1/tab/T9_published_comparison.csv
+PASS    present: ch1/fig/F_dz_by_pitch_type.png
+PASS    present: ch1/fig/F_dz_by_pitch_type.csv
+
+check W3.17: 6 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/24_plane.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

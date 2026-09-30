@@ -1,0 +1,26 @@
+
+== W3.16
+PASS    present: ch1/tab/T4_decomposition.csv
+PASS    present: ch1/tab/T4_decomposition_arms.csv
+PASS    identity residual below 1e-9 on every row          max 5.68e-14
+PASS    T4 re-derived from T3 and the W3.15 draws          points, intervals and the CH1-A9 share rule
+PASS    T4 is the primary's, labelled primary              primary
+PASS    T4 arms: undersmooth present, labelled SENS-B1-UNDERSMOOTH, re-derived from its draws 6 rows, arm SENS-B1-UNDERSMOOTH
+PASS    T4 arms: abs_cohort present, labelled ABS-measured arm, re-derived from its draws 36 rows, arm ABS-measured arm
+PASS    T4 arms: single_offset present, labelled SENS-HEIGHT-SINGLE, re-derived from its draws 36 rows, arm SENS-HEIGHT-SINGLE
+PASS    T4 arms: panel present, labelled CH1-A14 balanced panel, re-derived from its draws 36 rows, arm CH1-A14 balanced panel
+PASS    T4 arms: binned present, labelled CH1-A5 binned logistic, re-derived from its draws 24 rows, arm CH1-A5 binned logistic
+PASS    T4 carries the ABS-measured arm, SENS-HEIGHT-SINGLE and height_cohort_flag
+PASS    T4 abs_cohort columns equal that arm's decomposition, signs re-read
+PASS    T4 single_offset columns equal that arm's decomposition, signs re-read
+PASS    height_cohort_flag is D-P4-04's verdict on the area, on every row flag agree; re-read agree
+PASS    SENS-B1-UNDERSMOOTH beside the primary on the top edge only (annex 8.7)
+PASS    annex 8.7's unmet recovery clauses disclosed on the top_in and half_width_in rows (D-R0-04)
+PASS    present: models/ch1_W3_16/provenance.json
+PASS    headline.csv carries W3.16's row
+PASS    W3.16's sentence is descriptive                    Net of the 2022-2024 trend, the standardised called-zone area changed by -23.4 sq in (95% CI -28.3 to -18.6) in 2025 and by -33.1 sq in (95% CI -37.5 to -28.7) in 2026.
+
+check W3.16: 19 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/23_decomposition.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

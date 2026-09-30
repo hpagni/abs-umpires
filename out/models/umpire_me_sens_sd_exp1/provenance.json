@@ -1,0 +1,62 @@
+{
+  "step": "W3.18",
+  "fit": "umpire_me_sens_sd_exp1",
+  "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+  "n_games": 12056,
+  "n_rows": 497803,
+  "min_official_date": "2022-04-07",
+  "max_official_date": "2026-09-21",
+  "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": 20260922,
+  "code_sha256": "2d3ac15a4f8cf2f523a49c54f5e49d41511f4f4ab34a74ebaaa90e51ce55f2ac",
+  "code_files": {
+    "R/ch1/25_heterogeneity.R": "13404c5e385b94e434e4085c2d17aa4f17f2b6ce5392871b0d0b65e67f507470",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "mgcv": "1.9.4",
+  "written_madrid": "2026-09-30T08:38:53+0200",
+  "formula": "delta | se(se_delta, sigma = TRUE) ~ 0 + edge + edge:buf_step + edge:abs_step + (1 + buf_step + abs_step | umpire_hp_id)",
+  "prior": "prior sensitivity: sd prior exponential(1)",
+  "sampler": {
+    "chains": 4,
+    "warmup": 1000,
+    "sampling": 2000,
+    "adapt_delta": 0.99,
+    "max_treedepth": 10
+  },
+  "attempts": [
+    {
+      "chains": 4,
+      "warmup": 1000,
+      "sampling": 2000,
+      "adapt_delta": 0.99,
+      "max_treedepth": 10,
+      "seed": 20260922,
+      "divergent": 0,
+      "treedepth_hits": 0,
+      "ebfmi_min": 0.783959168483283,
+      "rhat_max": 1.00123733294196,
+      "ess_bulk_min": 1805.85290040003,
+      "ess_tail_min": 1767.32288610914,
+      "seconds": 32.036
+    }
+  ],
+  "n_cells": 1367,
+  "files": [
+    "umpire_me_sens_sd_exp1.rds"
+  ]
+}

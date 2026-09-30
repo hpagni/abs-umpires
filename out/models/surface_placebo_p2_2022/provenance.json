@@ -1,0 +1,39 @@
+{
+  "step": "W3.21",
+  "fit": "surface_placebo_p2_2022",
+  "model_dir": "/Users/hudsonpagni/sports-project/out/ch1/model",
+  "n_games": 2429,
+  "n_rows": 226513,
+  "min_official_date": "2022-04-07",
+  "max_official_date": "2022-10-05",
+  "game_pk_sha256": "871a92d3519c497387d4545419d25e833d8029168cf4030e5e0cc160b926c5fb",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": null,
+  "code_sha256": "d360204a1ca81a5b7b4a83e30eff02c48d9142bbe04677c2ae6c696147af7d4c",
+  "code_files": {
+    "R/ch1/26_placebos.R": "4ee94697d1b913861fdadc42139c64eb64d9f85530150ba469d272954be5301b",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "table_sha256": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "mgcv": "1.9.4",
+  "written_madrid": "2026-09-30T08:38:41+0200",
+  "formula": "cs ~ half + count_class + stand + pitch_group + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(24,24)) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(18,18), by = half_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = count_class_o) + te(x_mid, zn, bs = c(\"cr\",\"cr\"), k = c(12,12), by = stand_o) + s(velo, k = 10) + s(umpire_hp_id, bs = \"re\") + s(umpire_half, bs = \"re\")",
+  "n_coef": 1626,
+  "edf": 362.673994739217,
+  "fit_seconds": 85.609,
+  "files": [
+    "surface_placebo_p2_2022.rds"
+  ]
+}

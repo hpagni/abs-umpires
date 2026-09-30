@@ -1,0 +1,12 @@
+
+== W6.8
+PASS    present: ch1/tab/umpire_eb_summary.csv
+PASS    SD_UMP matches umpire_eb.csv
+PASS    REL_UMP matches umpire_eb.csv
+PASS    N_UMP matches umpire_eb.csv
+PASS    REL_UMP is the reliability of the response
+
+check W6.8: 5 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/28_umpire_summary.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

@@ -1,0 +1,10 @@
+
+== W3.21
+PASS    present: ch1/tab/T5_placebos.csv
+PASS    P1 to P4 present
+PASS    P1 is two one-sided tests at 0.5 pp and 3 sq in, 90% intervals
+
+check W3.21: 3 PASS, 0 FAIL, <elapsed> s
+GD-04: 0 violation(s) in R/ch1/26_placebos.R
+
+-- scripts/prove.sh normalised run-local tokens in this log: RN-04 timing

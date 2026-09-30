@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript tests/ch1/check_ch1_outputs.R --out out --step W3.17 && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/24_plane.R",
+  "duration_s": 2,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "a6871bc545110ac28bf18b6ac1cf6a1a2a3d53d6",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W3.17.log",
+  "owner": "W3",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W3.17",
+  "timestamp_madrid": "2026-09-30 09:00:33 CEST",
+  "title": "Chapter 1 plate-plane component per edge (CH1-A13)"
+}
