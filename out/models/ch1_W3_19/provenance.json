@@ -10,18 +10,18 @@
     "open"
   ],
   "seed": 20260922,
-  "code_sha256": "0ecd6909801586dbaf912ba7c4f148b3f7737fb946a7fbfba8c94e1d1a2a1294",
+  "code_sha256": "0530222937f4198d39588ba8e75a7b6b53f5ead49ef36e4623dff9f7160fffa3",
   "code_files": {
-    "R/ch1/30_framing.R": "38d082ffc56aa993a94d1f99a49020b85a7447ee22286166247209cf4dd6ffb2",
+    "R/ch1/30_framing.R": "e0a4ffa4dcbd91fe7570ec7daf06a8ec75d30c328ed0875322f34d982a9cd280",
     "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
     "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
     "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "ca3dee97e7d3a0bf12fbd38039bff8b2c862db80",
+  "git_sha": "919f7da8b0987c44f943588f78af85b8071665e2",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 442d427f5e11; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 919f7da8b098; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -47,13 +47,13 @@
     "out/tables/ch1_framing_validity.csv": "ebf6713554c18c709efadffd3e16ee13871449ba4f86516d1857304b96d0bc23",
     "out/ch1/tab/framing_validity_pairs.csv": "355a426c0d5b40fd0f33eb1e58da4ceba53fc2a1bca26bac868767d55e210196",
     "out/ch1/tab/framing_arms.csv": "b8055ea2cb51945195b6529dbb0a5a8cff1062b9f384d44223ab968c5a4d1d5d",
-    "out/ch1/tab/framing_prose_numbers.csv": "d32c395af3456b520b6b6fba49006e3beebd5e39e0855e9e79e5bb49e3a88d09",
-    "out/ch1/prose/framing.md": "6b39c7cfa932c4a4958b093f680a5be64a6c117ef5ce3c0c727f1fc857ffeab9"
+    "out/ch1/tab/framing_prose_numbers.csv": "2c1d65172db0494db5cbbaa18ba76920cb8d5c45d8488d6ca58483f45ec3d921",
+    "out/ch1/prose/framing.md": "2db7acec6ef6acd7ddcbd62bf9c9a7e4e81711c8b62d959b3e3e8fab3689b044"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T17:54:37+0200",
+  "written_madrid": "2026-09-30T17:57:11+0200",
   "fit_cache_sha256": "4b1bbc6a64061095ca61db37069f41ffcf0d732034cc8ca1b8d5f94e297af2a5",
-  "fit_cached": false,
+  "fit_cached": true,
   "fit_seconds": 934.556,
   "fit_cache_parts": {
     "input_frame_sha256": "62929d56c78caca10eafa56fa446ccbe55e671a5bd34e1ed10c3d81a238e4fc1",
