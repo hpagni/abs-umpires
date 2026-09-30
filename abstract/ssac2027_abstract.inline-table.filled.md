@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The called strike zone shrank in 2026, when ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge to three-quarters of an inch either side. Published estimates of the 2026 change start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so none gives both steps intervals against old-rule seasons. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before challenges began.
+The called strike zone shrank in 2026, when regular-season ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge to three-quarters of an inch either side. Published estimates of the 2026 change start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so none gives both steps intervals against old-rule seasons. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before regular-season challenges began.
 
 ## Methods
 
@@ -14,4 +14,4 @@ The placebo failed: with no rule change, the zone grew 10.8 (90% CI 7.7 to 13.9)
 
 ## Conclusion
 
-The zone had already lost 23.4 (95% CI 18.6 to 28.3) square inches in 2025, before MLB challenges began, so comparisons that start from 2025 miss that step. The break dates to 2025, although the 2026 step is larger, at 59 percent of the two combined (95% CI 53 to 65). The contribution is the two steps with intervals against three old-rule seasons, and the measured drift, a caveat for two-season comparisons. Its limit is the failed placebo: the design cannot assign either step to its rule. A binned cross-check misses its ±3 square inch tolerance, finding both steps 6.0 and 7.6 larger. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 and the postseason are held out as a confirmatory prediction and calibration check.
+The zone had already lost 23.4 (95% CI 18.6 to 28.3) square inches in 2025, before regular-season challenges began, so comparisons that start from 2025 miss that step. The break dates to 2025, although the 2026 step is larger, at 59 percent of the two combined (95% CI 53 to 65). The contribution is the two steps with intervals against three old-rule seasons, and the measured drift, a caveat for two-season comparisons. Its limit is the failed placebo: the design cannot assign either step to its rule. A binned cross-check misses its ±3 square inch tolerance, finding both steps 6.0 and 7.6 larger. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 and the postseason are held out.
