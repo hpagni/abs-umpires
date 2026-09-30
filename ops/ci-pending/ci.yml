@@ -343,10 +343,13 @@ jobs:
               out_dir = root / table
               out_dir.mkdir(parents=True, exist_ok=True)
               out = out_dir / "part-0.parquet"
+              # Named parameters: DuckDB binds COPY's TO target before the query, so
+              # two positional ? swap the paths and the read finds no file (W9.10
+              # rehearsal, duckdb 1.5.5).
               con.execute(
-                  "COPY (SELECT * FROM read_csv_auto(?, header=true)) "
-                  "TO ? (FORMAT PARQUET, COMPRESSION ZSTD)",
-                  [str(src), str(out)],
+                  "COPY (SELECT * FROM read_csv_auto($src, header=true)) "
+                  "TO $out (FORMAT PARQUET, COMPRESSION ZSTD)",
+                  {"src": str(src), "out": str(out)},
               )
               rows = con.execute("SELECT count(*) FROM read_parquet(?)", [str(out)]).fetchone()[0]
               print(f"{table}: {rows} rows -> {out}")
