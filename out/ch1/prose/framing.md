@@ -1,0 +1,19 @@
+# Catcher framing by regime
+
+SOP W3.19. **Primary result.** Every number here is a row of `out/ch1/tab/framing_*.csv` or `out/tables/ch1_framing_*.csv`, listed with its source in `out/ch1/tab/framing_prose_numbers.csv`.
+
+**External validity, CH1-A11.** Across 181 Savant-qualified catcher-seasons of 2022 to 2024, this step's count-specific framing runs correlate with Savant's `rv_tot` at r = 0.949 (95% CI 0.933 to 0.962). The pre-registered threshold is 0.85. The correlation clears it, so framing is reported as a primary result.
+
+**Method.** Each pitch's expected strike probability comes from a catcher-free surface. It is the frozen formula of the chapter's primary surface, fitted by `bam` to P0 with no catcher term. P0 holds 1,829,610 called pitches of 2022 through 2026-09-21. Observed minus expected strikes are summed per catcher-season. Runs are centred on the league-average catcher of each season, per called pitch, in every replicate. Uncentred, that catcher earns 0.426 runs per 100 innings in 2026. The surface's count term is the strike count, and umpires call more strikes than it expects in counts with more balls. Each pitch is priced by the count-specific run value of a strike against a ball, from `delta_run_exp` over 2022 to 2024. In the first-pitch count that table gives a ball 0.036 runs and a strike -0.041. Tango's figures, 0.034 and -0.042, are the sanity check, within 0.010 runs. A flat 0.125 runs per strike is the Savant-comparable robustness column. Each interval is a 95% interval from 1,000 replicates that pair a surface draw with a catcher bootstrap. A catcher-season qualifies with a quarter of its season's mean team innings.
+
+**Spread across catchers.** Net of binomial noise, the SD of framing runs per 100 innings across qualified catchers is 1.171 (95% CI 0.978 to 1.333) in 2022 to 2024. It is 0.945 (95% CI 0.697 to 1.162) in 2025 and 0.746 (95% CI 0.575 to 0.885) in 2026. The raw SDs, noise included, are 1.249, 1.032 and 0.862. They cover 160, 50 and 54 qualified catcher-seasons.
+
+**Doolittle's comparable.** The top-30 mean is 0.576 runs per 100 innings (95% CI 0.199 to 0.981) in 2025. Through 2026-05-18 it is 0.821 (95% CI 0.372 to 1.178), a change of 42.5% (95% CI -38.7% to 316.3%). Doolittle reported 0.704 and 0.565 for the same windows, a change of -19.7%. Over the whole open 2026 season the top-30 mean is 0.645 (95% CI 0.372 to 0.844).
+
+**Reliability.** Split-half reliability compares odd and even games within a catcher-season, Spearman-Brown corrected. It is 0.85 (95% CI 0.77 to 0.89) in 2022 to 2024, 0.82 (95% CI 0.67 to 0.89) in 2025 and 0.56 (95% CI 0.32 to 0.71) in 2026. The step then asks whether the reliability of framing itself fell under ABS. The 2026 minus 2025 difference is -0.26 (95% CI -0.49 to -0.05). The trend-adjusted `Delta_ABS` component is -0.25 (95% CI -0.49 to -0.03). Both intervals lie below zero, so the reliability of framing fell in 2026.
+
+**Decomposition.** On the signal SD, `Delta_buffer` is -0.101 (95% CI -0.417 to 0.235) runs per 100 innings. `Delta_ABS` is -0.136 (95% CI -0.523 to 0.230). On the top-30 mean the two are -0.253 (95% CI -0.815 to 0.328) and 0.110 (95% CI -0.483 to 0.608). W3.21's placebo P1 failed (CH1-A3), so these components are descriptive departures from the 2022 to 2024 trend and name no cause.
+
+**The two 2026 conventions.** The primary keeps every pitch at its original call, the call the catcher influenced. Excluding challenged pitches, the SIS convention, the 2026 signal SD is 0.621 (95% CI 0.475 to 0.742) and the 2026 reliability 0.72 (95% CI 0.58 to 0.82). At the flat value the 2026 signal SD is 0.705 (95% CI 0.550 to 0.839).
+
+**Surface checks.** On band rows, catcher-season rates from the framing surface and from W3.14's band surface correlate at r = 1.000 over 264 qualified catcher-seasons. On P1's band rows the framing surface and W3.14's ABS-measured surface correlate at r = 1.000.

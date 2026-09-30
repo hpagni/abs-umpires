@@ -1,0 +1,81 @@
+{
+  "step": "W3.19",
+  "what": "run receipt of one Chapter 1 entry point",
+  "n_games": 12056,
+  "n_rows": 1829610,
+  "min_official_date": "2022-04-07",
+  "max_official_date": "2026-09-21",
+  "game_pk_sha256": "8188d6fedc65f2edb3810e89449def9286859ef67eba92f6f175abe6681d54d6",
+  "analysis_sets_touched": [
+    "open"
+  ],
+  "seed": 20260922,
+  "code_sha256": "0ecd6909801586dbaf912ba7c4f148b3f7737fb946a7fbfba8c94e1d1a2a1294",
+  "code_files": {
+    "R/ch1/30_framing.R": "38d082ffc56aa993a94d1f99a49020b85a7447ee22286166247209cf4dd6ffb2",
+    "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
+    "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
+    "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
+    "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
+    "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
+  },
+  "git_sha": "ca3dee97e7d3a0bf12fbd38039bff8b2c862db80",
+  "prereg_tag": "prereg-v1",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 442d427f5e11; prereg-v1 is on origin at 7c2add919004",
+  "synthetic": false,
+  "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
+  "inputs": {
+    "data/marts/ch1_called.parquet": "299ad93eff1354e0c253b9c5bc55248112459cf86192e73bfc7fc65a3cc21688",
+    "out/ch1/tab/T5_placebos.csv": "b9d554188c2cdeb30b6fd9a4274d55b9a5e8a38ce4b4737e0db9e2ab077903f0"
+  },
+  "outputs": {
+    "out/ch1/tab/framing_sample.csv": "aa7956c7b9775ea90f4cb3fa5ecc5eddaabea2d8d50e3cf9c1c40a310aaa606c",
+    "out/ch1/tab/framing_sanity.csv": "cd27823b2cd826d81de0d63914a16e9f29d7c21a1d97a9ac3409cdf48fc18883",
+    "out/ch1/tab/framing_run_values.csv": "fbb9dcf2227c7fc5402a1b98e1b951daf082c2997919aa74fb509c6304c07695",
+    "out/ch1/tab/framing_catcher_seasons.csv": "36658187c5c08ee65a672f9beea9a56c7c10ff24df95ce7a0024497539cbf272",
+    "out/ch1/tab/framing_by_season.csv": "e43ca36733b799f3356cdea2137fae8a58b96d45a96c8fda5353ac2883dc7556",
+    "out/ch1/tab/framing_decomposition.csv": "c46cc04fcefc53c84a3a0e090921df8fcbfd00063b0a55f389e774253d775da1",
+    "out/ch1/tab/framing_reliability_change.csv": "7e58d2918944a0994f8606873c5baf2314b7b5c009d4779068d0670deac1c19c",
+    "out/ch1/tab/framing_doolittle.csv": "aa778cfd4cbd3417af0ccaa85ef8d18cc056e097ea9cdc782b10a88b09f45b2b",
+    "out/ch1/tab/framing_validity.csv": "ebf6713554c18c709efadffd3e16ee13871449ba4f86516d1857304b96d0bc23",
+    "out/ch1/tab/framing_replicate_completeness.csv": "497a07c476a4f702980138e4dd62118c7917e6cd57caa230e080eb38dcdebd3a",
+    "out/ch1/tab/framing_centring.csv": "d654af8777d7ae6ec798421502d762690cba74a55c55da3d913bb07372aefe7a",
+    "out/tables/ch1_framing_by_regime.csv": "17c7cc537372092010cb71f7134113c6df04c234775c4940eb4c0277f8e3950d",
+    "out/tables/ch1_framing_decomposition.csv": "c46cc04fcefc53c84a3a0e090921df8fcbfd00063b0a55f389e774253d775da1",
+    "out/tables/ch1_framing_reliability.csv": "7e58d2918944a0994f8606873c5baf2314b7b5c009d4779068d0670deac1c19c",
+    "out/tables/ch1_framing_doolittle.csv": "aa778cfd4cbd3417af0ccaa85ef8d18cc056e097ea9cdc782b10a88b09f45b2b",
+    "out/tables/ch1_framing_validity.csv": "ebf6713554c18c709efadffd3e16ee13871449ba4f86516d1857304b96d0bc23",
+    "out/ch1/tab/framing_validity_pairs.csv": "355a426c0d5b40fd0f33eb1e58da4ceba53fc2a1bca26bac868767d55e210196",
+    "out/ch1/tab/framing_arms.csv": "b8055ea2cb51945195b6529dbb0a5a8cff1062b9f384d44223ab968c5a4d1d5d",
+    "out/ch1/tab/framing_prose_numbers.csv": "d32c395af3456b520b6b6fba49006e3beebd5e39e0855e9e79e5bb49e3a88d09",
+    "out/ch1/prose/framing.md": "6b39c7cfa932c4a4958b093f680a5be64a6c117ef5ce3c0c727f1fc857ffeab9"
+  },
+  "r_version": "R version 4.5.2 (2025-10-31)",
+  "written_madrid": "2026-09-30T17:54:37+0200",
+  "fit_cache_sha256": "4b1bbc6a64061095ca61db37069f41ffcf0d732034cc8ca1b8d5f94e297af2a5",
+  "fit_cached": false,
+  "fit_seconds": 934.556,
+  "fit_cache_parts": {
+    "input_frame_sha256": "62929d56c78caca10eafa56fa446ccbe55e671a5bd34e1ed10c3d81a238e4fc1",
+    "seed": 20260922,
+    "n_draws": 1000,
+    "model_code_sha256": "02ccd130f928f74a94c963c9cc4135dfde10f35b81c65fdd02493b9eed65ccfe"
+  },
+  "decomposition_reading": "descriptive",
+  "ch1_a11": {
+    "pearson_r": 0.949258727132851,
+    "lo95": 0.932513799176762,
+    "hi95": 0.961930688319062,
+    "n": 181,
+    "threshold": 0.85,
+    "verdict": "framing primary"
+  },
+  "conventions": {
+    "original": "every pitch at its original call (primary)",
+    "sis": "challenged pitches excluded (SIS convention)"
+  },
+  "value_types": {
+    "cnt": "count-specific run value from delta_run_exp (2022-2024 table)",
+    "flat": "flat 0.125 runs per strike (Savant-comparable)"
+  }
+}

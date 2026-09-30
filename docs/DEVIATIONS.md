@@ -1689,3 +1689,31 @@ Stamped 2026-09-30T15:44:08+02:00, Europe/Madrid. Owner W9, fleet phase 08. File
 6. **Clause 3 is pending.** "CI is green on every push in under 8 minutes" needs a runner.
    The token lacks `workflow`, so it is NOT MEASURABLE UNTIL THE OWNER ENABLES THE SCOPE,
    and W9.10 registers it as pending, never as passed.
+
+## DEV-79: W3.19, framing runs centred on the league-average catcher after the first real run
+
+Stamped 2026-09-30T17:28:28+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `R/ch1/30_framing.R`,
+`tests/testthat/test-ch1-framing.R`, `out/ch1/tab/framing_centring.csv`.
+
+1. **What the first run showed.** The first real run (commit ff22df2, log
+   `out/ch1/log/W3.19_framing.log`) scored runs uncentred. The league-average catcher then
+   earned +0.40 to +0.46 runs per 100 innings in every season.
+2. **Why.** Observed minus expected strikes sum to zero inside each strike class, because
+   `count_class` is a fixed effect of the frozen surface. Inside a class they rise with balls,
+   by +0.018 to +0.026 strikes per pitch in three-ball counts. Those counts carry the largest
+   count-specific run values, 0.611 runs at 3-2.
+3. **What it did to the intervals.** Across the 1,000 coefficient draws that league level moved
+   with SD 0.16 to 0.38 runs per 100 innings, the same shift for every catcher. The point sat near
+   the top of the draw distribution, so every level statistic's interval was wide and off centre.
+4. **The change (commit bcab0de).** Runs are now relative to the league-average catcher of each
+   season: the league's runs per called pitch are subtracted in each season and each replicate. The
+   SOP compares the top-30 mean with Doolittle, whose figures are relative to average, as Savant's are.
+5. **What moved and what did not.** Split-half reliabilities are unchanged. The signal SDs the prose quotes moved by
+   at most 0.003 runs per 100 innings. The 2025 top-30 mean moved from 1.030 to 0.576 runs per 100
+   innings, beside Doolittle's 0.704.
+6. **CH1-A11 either way.** The gate reads r = 0.949 (95% CI 0.933 to 0.962, n = 181) on centred
+   runs and r = 0.946 (95% CI 0.928 to 0.960) uncentred. Both clear 0.85, so framing stays primary.
+   The estimator was not tuned toward the threshold.
+7. **Kept for the record.** The uncentred values stay in `framing_catcher_seasons.csv` as
+   `runs_*_uncentred` columns. `framing_centring.csv` holds the removed level per season and
+   variant, at beta and over the draws.

@@ -1,0 +1,3 @@
+"check","value","reference","tolerance","pass","note"
+"tango_00_ball",0.0359915960701117,0.034,0.01,TRUE,"the pooled 2022-2024 table's 0-0 row; a sanity check, not an input"
+"tango_00_strike",-0.0408246476840942,-0.042,0.01,TRUE,"the pooled 2022-2024 table's 0-0 row; a sanity check, not an input"
