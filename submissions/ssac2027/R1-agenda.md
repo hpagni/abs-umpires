@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR are still slots: CALL, BREAK_YEAR. No agent writes them.
 
-Variant filled: descriptive. Words counted: 467 of 470,
+Variant filled: descriptive. Words counted: 468 of 470,
 with 24 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -39,6 +39,9 @@ The two steps are net of the 2022-2024 trend.
 | Called pitches, P0 | count | 1,830,231 | N_CALLED_P0 |
 | Games, P0 | count | 12,060 | N_GAMES_P0 |
 | Challenged pitches, zone validation | count | 10,168 | N_CHAL |
+| CH1-A5: binned minus smooth, 2025 step, area | sq in | -6.0 | A5_BUF |
+| CH1-A5: binned minus smooth, 2026 step, area | sq in | -7.6 | A5_ABS |
+| CH1-A5: area tolerance | sq in | 3 | A5_TOL |
 | 2024-to-2026 total, area (not a slot) | sq in | -56.0 (-59.6 to -52.0) | T4 row delta_total |
 | Share of the two steps in 2026 (not a slot) | ratio | 0.586 (0.527 to 0.647) | T4 row share_abs |
 
@@ -73,10 +76,12 @@ the 2025 step. So the design can say when the zone moved, not what moved it. P2
 passing says the 2026 step is far larger than any within-season drift across an
 All-Star break.
 
-Still to do for the consequence: `out/tables/headline.csv` has no row stating the P1
-failure, and `docs/DEVIATIONS.md` has no dated entry for it, which the W3.21
-CONSEQUENCE line asks for. The DECISIONS.md entry D-P6-01 records the fourth abstract
-variant only.
+Applied: `out/tables/headline.csv` leads with CH1_P1, written by W6.7 from T5:
+
+> Placebo P1 failed. With no rule change between 2023 and 2024, the called zone grew 10.8 square inches (90% CI 7.7 to 13.9), not inside its ±3 margin. The shadow-band strike rate rose 1.54 percentage points (90% CI 1.03 to 2.04), not inside its ±0.5 margin. So the three-regime decomposition is reported as descriptive (PREREGISTRATION.md section 8).
+
+`docs/DEVIATIONS.md` records it as DEV-77, as the W3.21 CONSEQUENCE line asks.
+The DECISIONS.md entry D-P6-01 records the fourth abstract variant.
 
 ## (c) RESULT CALL: three PROPOSALS for the owner
 
@@ -129,7 +134,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 465 words with the inline table, within the cap. Cuts: the pre-trend clause, the reliability clause, the second edge in the plane sentence.
+The no-upload body counts 491 words with the inline table, OVER THE CAP by 21 words after every rung. Cuts: the pre-trend clause, the reliability clause, the second edge in the plane sentence.
 
 ## (g) Deadline
 
@@ -151,9 +156,8 @@ The conference page says "Oct. 1, 2026 11:59 p.m. EST".
 - The SENS arms: W3.22's multiverse did not run, so CH1-A9 sign stability is not
   evaluated. The five arms present agree in sign on all eight geometric components.
 - CH1-A5 misses on area. The binned estimates exceed the smooth fit by 6.0 and 7.6 sq in,
-  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up.
-- D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it, because
-  the fill sits 3 words under the cap. Decide whether a clause replaces another.
+  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up. The Conclusion names it, from A5_BUF, A5_ABS and A5_TOL.
+- D-R0-04's top-edge caveat: the Results say top-edge intervals are slightly too narrow. The caveat that the study cannot declare no change at the top edge is not needed, because the abstract makes no such claim.
 - The RESULT CALL line in `out/ch1/decision.md`, and CALL and BREAK_YEAR.
 - `make abstract` then `bash quality/w612_check.sh`, then RP-08 and the numbers freeze.
 
@@ -183,10 +187,14 @@ The slots as printed in this fill:
 | SD_UMP | 0.04 (95% CI 0.00 to 0.10) | 6 |
 | REL_UMP | 0.17 (95% CI -0.27 to 0.46) | 6 |
 | N_UMP | 88 | 1 |
+| A5_TOL | 3 | 1 |
+| A5_BUF | 6.0 | 1 |
+| A5_ABS | 7.6 | 1 |
 
 Cut ladder, SOP order. Rungs applied in this fill:
 
-- none; the fill is within the cap
+- the pre-trend clause: cut
+- the reliability clause: cut
 
 Chapter 2: the ledger holds no CH2_ slot, so rung 2 of the cut ladder applies and there is no Chapter 2 sentence.
 
@@ -195,6 +203,6 @@ Chapter 2: the ledger holds no CH2_ slot, so rung 2 of the cut ladder applies an
 - docs/harmonized_zone.md F1: the zone the W3.8 gate scored uses measured height, and
   the Chapter 1 primary uses roster height. Decide whether Methods says so.
 - N_CALLED prints P0 as T1 counts it. The fits drop the four games without ABS
-  hardware (621 pitches), so the fitted sample is slightly smaller.
+  hardware (621 pitches), so the fitted sample is slightly smaller. Methods says the fits use samples drawn from P0.
 
 Missing slots: none.

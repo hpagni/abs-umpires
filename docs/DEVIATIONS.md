@@ -1613,3 +1613,49 @@ Introduction is 99 words, as before, and the three filled drafts count 464, 469 
 as before. The inline citation `quality/w610_check.sh` requires is kept. Methods, Results and
 Conclusion are unchanged. `ops/abstract_dryrun.sh` plants its WR-09 em dash in "but names no
 cause", because the phrase it used is gone.
+
+## DEV-77: W3.21 and W6.7, placebo P1 failed, and the frozen consequence is applied
+
+Raised 2026-09-30 09:54 (Europe/Madrid). Status: CLOSED 2026-09-30 by this entry. Applied as
+pre-registered, not a departure: the consequence is the frozen rule's own, and nothing in the
+plan changes. The owner item it raises is the RESULT CALL at review R1.
+
+What W3.21 found. Placebo P1 compares 2024 with 2023, two seasons under one rule, as two
+one-sided tests on 90% intervals (CH1-A3). Both tests fail, in
+`out/ch1/tab/T5_placebos.csv`:
+
+- Shadow-band called-strike rate, 2024 minus 2023: +1.54 pp, 90% interval 1.03 to 2.04,
+  against a margin of ±0.5 pp.
+- Called-zone area, 2024 minus 2023: +10.8 sq in, 90% interval 7.7 to 13.9, against a margin
+  of ±3 sq in.
+
+Placebo P2 passed on all four estimands: top edge, bottom edge, half-width and area.
+
+The W3.21 log asks for this entry. Its CONSEQUENCE line, stamped 2026-09-30T08:45:43+0200 in
+`out/ch1/log/W3.21.log`, reads: "P1 or P2 did not pass. Pre-registered: the three-regime
+decomposition is reported as descriptive, the causal language is removed from every artifact,
+and the failure is the headline finding. Record it in docs/DEVIATIONS.md with a Madrid stamp
+and raise it as an owner item." The log is a run log and stays untracked, so the line is
+quoted here.
+
+The rule, verbatim. `PREREGISTRATION.md` section 8: "if P1 or P2 fails, the three-regime
+decomposition is reported as **descriptive**, the causal language is removed from every
+artifact, and the failure is the headline finding."
+
+Where it is applied:
+
+1. `out/ch1/tab/T5_placebos.csv` reads `decomposition_reading = descriptive` on every row
+   (W3.21).
+2. The abstract is the descriptive variant, `abstract/variants/ssac2027_abstract.descriptive.md`
+   (DECISIONS.md D-P6-01), which `scripts/abstract.sh` fills by default. Its Results open with
+   the failure, and its Conclusion names the failure as the main limitation.
+3. `out/tables/headline.csv` leads with the row CH1_P1, which W6.7 writes from T5 and
+   `tests/ch1/check_ch1_outputs.R --step W6.7` checks against T5 digit for digit.
+4. The website page (`docs/portfolio/abs-umpires.md`) and the resume entry
+   (`docs/resume/entry.html`) are not written yet. When they are, they carry the same reading:
+   the steps are described by season, and no step is assigned to its rule change.
+
+Two further pre-registered limitations reach the descriptive abstract in the same change. CH1-A5
+misses on area: the binned logistic differs from the smooth fit by 6.0 and 7.6 sq in, against
+3 sq in, and the frozen rule reports that as a limitation. D-R0-04's caveat that top-edge
+intervals are slightly too narrow now sits beside the top-edge numbers.

@@ -172,7 +172,7 @@ def proposals(share, buf, abs_, drift):
 
 def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
     printed = report.get("printed") or {}
-    text = filled_text(report)
+    filled = filled_text(report)
     counted = int(report.get("words_counted", 0))
     buf_e, abs_e = entry(ledger, "D_BUF"), entry(ledger, "D_ABS")
     buf, abs_ = reading(buf_e), reading(abs_e)
@@ -402,7 +402,7 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
             "- D-R0-04's top-edge caveat: the Results say top-edge intervals are slightly too"
             " narrow. The caveat that the study cannot declare no change at the top edge is not"
             " needed, because the abstract makes no such claim."
-            if "Top-edge intervals are slightly too narrow" in text
+            if "Top-edge intervals are slightly too narrow" in filled
             else "- D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it."
         ),
         "- The RESULT CALL line in `out/ch1/decision.md`, and CALL and BREAK_YEAR.",
@@ -440,7 +440,7 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
         "  hardware (621 pitches), so the fitted sample is slightly smaller"
         + (
             ". Methods says the fits use samples drawn from P0."
-            if "samples drawn from" in text
+            if "samples drawn from" in filled
             else ", and Methods does not say so."
         ),
         "",

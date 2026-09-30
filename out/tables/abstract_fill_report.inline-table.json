@@ -2,14 +2,14 @@
   "variant": "descriptive",
   "template": "abstract/variants/ssac2027_abstract.descriptive.md",
   "ledger": "docs/numbers.json",
-  "ledger_sha256": "122c69ff9bb634493b39199596eb17d3edab9d08d9264144511485e899209e93",
+  "ledger_sha256": "82c145f15b38437f7b92f73f6d03be2b4562fd205a59cf5fc4280dd279914cd4",
   "out": "abstract/ssac2027_abstract.inline-table.filled.md",
-  "words_filled": 408,
+  "words_filled": 434,
   "owner_reserve": 24,
   "extra_words": 33,
-  "words_counted": 465,
+  "words_counted": 491,
   "cap": 470,
-  "within_cap": true,
+  "within_cap": false,
   "prereg_sentence": "narrow",
   "filled": [
     "N_CALLED",
@@ -31,7 +31,10 @@
     "A_PUB",
     "SD_UMP",
     "REL_UMP",
-    "N_UMP"
+    "N_UMP",
+    "A5_TOL",
+    "A5_BUF",
+    "A5_ABS"
   ],
   "missing": [],
   "owner_pending": [
@@ -58,7 +61,10 @@
     "A_PUB": "-22 to -8 square inches",
     "SD_UMP": "0.04 (95% CI 0.00 to 0.10)",
     "REL_UMP": "0.17 (95% CI -0.27 to 0.46)",
-    "N_UMP": "88"
+    "N_UMP": "88",
+    "A5_TOL": "3",
+    "A5_BUF": "6.0",
+    "A5_ABS": "7.6"
   },
   "cuts": [
     {
