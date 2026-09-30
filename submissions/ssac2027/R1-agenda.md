@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 476 of 495,
+Variant filled: owner. Words counted: 480 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -135,7 +135,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 509 words with the inline table, OVER THE CAP by 14 words after every rung. Cuts: none.
+The no-upload body counts 513 words with the inline table, OVER THE CAP by 18 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
@@ -184,9 +184,7 @@ The slots as printed in this fill:
 | COV_TOP_HIT | 91 | 1 |
 | COV_TOP_N | 100 | 1 |
 | COV_TOP_BOUND | 93 | 1 |
-| CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step. | 23 |
-| SHARE_ABS | 59 | 1 |
-| SHARE_ABS_CI | 53 to 65 | 3 |
+| CALL | The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. | 26 |
 
 Cut ladder, SOP order. Rungs applied in this fill:
 

@@ -4,10 +4,10 @@
   "ledger": "docs/numbers.json",
   "ledger_sha256": "ceecef40785df640fe6ffcdcf3d2ad8b839bad0d7afeed7f2b809dce4835a36d",
   "out": "abstract/ssac2027_abstract.filled.md",
-  "words_filled": 476,
+  "words_filled": 480,
   "owner_reserve": 0,
   "extra_words": 0,
-  "words_counted": 476,
+  "words_counted": 480,
   "cap": 495,
   "within_cap": true,
   "prereg_sentence": "narrow",
@@ -28,9 +28,7 @@
     "COV_TOP_HIT",
     "COV_TOP_N",
     "COV_TOP_BOUND",
-    "CALL",
-    "SHARE_ABS",
-    "SHARE_ABS_CI"
+    "CALL"
   ],
   "missing": [],
   "owner_pending": [],
@@ -51,9 +49,7 @@
     "COV_TOP_HIT": "91",
     "COV_TOP_N": "100",
     "COV_TOP_BOUND": "93",
-    "CALL": "The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so baselines that start from 2025 miss that step.",
-    "SHARE_ABS": "59",
-    "SHARE_ABS_CI": "53 to 65"
+    "CALL": "The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step."
   },
   "cuts": []
 }
