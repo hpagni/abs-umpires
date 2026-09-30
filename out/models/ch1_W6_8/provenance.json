@@ -17,9 +17,9 @@
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "ad79e3669cc2788a30847f06f85dbbf2592f44de",
+  "git_sha": "c3a5dede36662391f1a6f32fdb000ed8611c8816",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD ad79e3669cc2; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD c3a5dede3666; prereg-v1 is on origin at 7c2add919004",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -27,8 +27,8 @@
   },
   "outputs": {
     "out/ch1/tab/umpire_eb_summary.csv": "00c44ab0aa8d46cfd0825a3587bc38e0e836cf7c4d4fe31267befa01f9a31c95",
-    "docs/numbers.json": "e98972607dd86dd43e96ec6b6bdfe45d58bd6c91676070126b199589bb1a7adf"
+    "docs/numbers.json": "82c145f15b38437f7b92f73f6d03be2b4562fd205a59cf5fc4280dd279914cd4"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T08:45:52+0200"
+  "written_madrid": "2026-09-30T09:53:23+0200"
 }

@@ -638,6 +638,51 @@
       }
     },
     {
+      "slot": "A5_BUF",
+      "value": -6.02218522499805,
+      "units": "sq in",
+      "what": "CH1-A5, binned logistic minus bam primary, area_sqin delta_buffer: a difference of two point estimates, no interval; tolerance 3 sq in, within FALSE",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 20,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-6.0"
+      },
+      "print_contraction": {
+        "point": "6.0"
+      }
+    },
+    {
+      "slot": "A5_ABS",
+      "value": -7.622861339331,
+      "units": "sq in",
+      "what": "CH1-A5, binned logistic minus bam primary, area_sqin delta_abs: a difference of two point estimates, no interval; tolerance 3 sq in, within FALSE",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 21,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "-7.6"
+      },
+      "print_contraction": {
+        "point": "7.6"
+      }
+    },
+    {
+      "slot": "A5_TOL",
+      "value": 3,
+      "units": "sq in",
+      "what": "CH1-A5's pre-registered agreement tolerance on area (docs/prereg/ch1.md section 5)",
+      "source": "out/ch1/tab/T4_decomposition.csv",
+      "source_row": 21,
+      "produced_by": "W6.7",
+      "carried_by": "W7.24",
+      "print": {
+        "point": "3"
+      }
+    },
+    {
       "slot": "N_CALLED",
       "value": 1492502,
       "units": "counts",
