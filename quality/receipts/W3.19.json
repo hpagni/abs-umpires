@@ -1,0 +1,17 @@
+{
+  "cmd": "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-framing\", stop_on_failure = TRUE)' && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/30_framing.R",
+  "duration_s": 7,
+  "exit": 0,
+  "expect_exit": 0,
+  "git_branch": "phase01/public",
+  "git_dirty": true,
+  "git_sha": "867b4a2257bbbf2c662e16bcc45a78862020f8eb",
+  "host": "Hudsons-MacBook-Pro.local",
+  "log": "quality/receipts/W3.19.log",
+  "owner": "W3",
+  "schema": "absump/receipt/1",
+  "status": "PASS",
+  "step": "W3.19",
+  "timestamp_madrid": "2026-09-30 17:57:53 CEST",
+  "title": "Chapter 1 catcher framing by regime, and CH1-A11"
+}
