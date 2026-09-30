@@ -510,7 +510,7 @@ framing_fit <- function(ctx, p0, ff, force) {
                                   arm = "W3.19 framing surface (P0, catcher-free)",
                                   height_rule = attr(p0, "height_rule"), height_rule_key = attr(p0, "height_rule_key"),
                                   n_draws = ctx$n_draws, interval_cov = INTERVAL_COV, draw_seed = DRAW_SEED,
-                                  cache_key = key, cache_parts = parts,
+                                  cache_sha256 = key, cache_parts = parts,
                                   files = list(basename(f_fit), basename(f_dr)),
                                   n_umpires = length(unique(p0$umpire_hp_id)),
                                   rows_by_season = as.list(table(p0$season))))
@@ -1397,7 +1397,7 @@ main <- function() {
   outs <- c(vapply(T, function(t) t$path, ""), tabf("prose_numbers"), pr$path)
   step_receipt(ctx, rows = rows, inputs = c(ctx$table, file.path(p$tab, "T5_placebos.csv")), outputs = outs,
                seed = DRAW_SEED,
-               extra = list(fit_cache_key = fit_key, fit_cached = fit_meta$cached, fit_seconds = fit_meta$seconds,
+               extra = list(fit_cache_sha256 = fit_key, fit_cached = fit_meta$cached, fit_seconds = fit_meta$seconds,
                             fit_cache_parts = fit_meta$cache_parts, decomposition_reading = reading,
                             ch1_a11 = list(pearson_r = g$pearson_r, lo95 = g$lo95, hi95 = g$hi95, n = g$n,
                                            threshold = A11_R, verdict = g$verdict),
