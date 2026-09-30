@@ -345,9 +345,10 @@ SIGN_SENTENCE = (
 )
 FOOTNOTE = (
     f"Cells are point [95% interval] from 1,000 draws of the fitted model's coefficients, "
-    f"model-conditional, omitting season-to-season variation; the placebo row prints its "
-    f"pre-registered {P1_LEVEL} interval on area and rate, and its edge cells, added after the "
-    f"tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage points; the shadow band is "
+    f"N(beta, Vc), conditional on the model and omitting season-to-season variation. The "
+    f"placebo row prints its pre-registered {P1_LEVEL} interval on area and rate; its edge "
+    f"cells, added after the tag, are not pre-registered. {SIGN_SENTENCE} pp is percentage "
+    f"points; the shadow band is "
     "the pitches within 3 inches, either side, of where the ball just touches the zone edge. "
     "In the recovery test, top-edge 95% intervals covered the truth in 91 of 100 runs (bound "
     "93). The placebo pair moved beyond its margin, so no step is attributed to its rule; the "
@@ -551,9 +552,9 @@ area = {
 
 caption = (
     "Table 1. Changes in the fitted 50 percent strike contour (72-inch batter, 2024 pitch mix, "
-    "mid-plate), by period: the trend, the failed placebo pair, the two steps net of trend, "
-    "their total, and the measurement-plane adjustment. The note under the table defines the "
-    "cells."
+    "mid-plate), by period: the trend, the failed placebo pair, the two trend-adjusted steps, "
+    "the unadjusted 2024-to-2026 change, and the measurement-plane adjustment. The note under "
+    "the table defines the cells. A sealed-set calibration check is pending after the postseason."
 )
 n_words = len(caption.split())
 if n_words >= 60:

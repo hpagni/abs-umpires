@@ -233,7 +233,7 @@ bracket(xp1, level[2024]["point"], level[2023]["point"], DRIFT)
 ax.text(
     xp1,
     max(level[2023]["point"], level[2024]["point"]) + 2.2,
-    f"2023{EN}2024\n{f1(p1_est)} sq in\nno zone rule change",
+    f"2023{EN}2024\n{f1(p1_est)} sq in\nplacebo, failed",
     ha="center",
     va="bottom",
     fontsize=7.5,
@@ -257,14 +257,14 @@ fig.savefig(svg, metadata={"Creator": None, "Date": None})
 # ---- caption and alt text, from the same values ----------------------------------------
 gi = comp["g"]
 caption = (
-    f"Figure 1. Points are fitted areas of the 50 percent strike contour (72-inch batter, "
-    f"2024 pitch mix), with 95% model-conditional intervals. Arrows are the 2025 and "
-    f"2026 steps net of the 2022{EN}2024 trend of {f1(gi['point'])} sq in per season (95%: "
-    f"{f1s(gi['lo95'])} to {f1s(gi['hi95'])}); each starts at the prior season plus that "
-    f"trend. The bracket is the 2023-to-2024 change, {f1s(p1_est)} sq in "
+    f"Figure 1. Points are fitted 50 percent contour areas (72-inch batter, 2024 pitch "
+    f"mix), with 95% model-conditional intervals. Arrows are the 2025 and 2026 steps net "
+    f"of the 2022{EN}2024 trend of {f1(gi['point'])} sq in per season (95%: "
+    f"{f1s(gi['lo95'])} to {f1s(gi['hi95'])}), each from the prior season plus that trend. "
+    f"The bracket is the 2023-to-2024 change, {f1s(p1_est)} sq in "
     f"({pct(p1_level)}: {f1s(p1_lo)} to {f1s(p1_hi)}), with zone and grading rules "
-    f"unchanged; that placebo failed. Grading changed in 2025 and regular-season challenges "
-    f"began in 2026; no step is attributed to either.\n"
+    f"unchanged; that placebo failed. Grading changed in 2025, regular-season challenges "
+    f"began in 2026; neither step is attributed. A sealed-set calibration check is pending.\n"
 )
 n_words = len(caption.split())
 if n_words > 90:

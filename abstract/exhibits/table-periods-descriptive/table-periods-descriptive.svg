@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2026-09-30T21:55:03.743389</dc:date>
+    <dc:date>2026-09-30T22:08:31.696015</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -432,25 +432,25 @@ L 463.68 249.696
    <text style="font-size: 9px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #4d4d4d" x="428.189434" y="230.850352" transform="rotate(-0 428.189434 230.850352)">–</text>
   </g>
   <g id="text_114">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="263.331" transform="rotate(-0 4.32 263.331)">Cells are point [95% interval] from 1,000 draws of the fitted model's coefficients, model-conditional, omitting</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="263.38225" transform="rotate(-0 4.32 263.38225)">Cells are point [95% interval] from 1,000 draws of the fitted model's coefficients, N(beta, Vc), conditional on the</text>
   </g>
   <g id="text_115">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="273.051" transform="rotate(-0 4.32 273.051)">season-to-season variation; the placebo row prints its pre-registered 90% interval on area and rate, and its edge</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="273.051" transform="rotate(-0 4.32 273.051)">model and omitting season-to-season variation. The placebo row prints its pre-registered 90% interval on area and</text>
   </g>
   <g id="text_116">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">cells, added after the tag, are not pre-registered. Positive top or bottom values move that edge up; positive</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="282.771" transform="rotate(-0 4.32 282.771)">rate; its edge cells, added after the tag, are not pre-registered. Positive top or bottom values move that edge up;</text>
   </g>
   <g id="text_117">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">half-width values widen the zone; positive area values enlarge it. pp is percentage points; the shadow band is the</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="292.491" transform="rotate(-0 4.32 292.491)">positive half-width values widen the zone; positive area values enlarge it. pp is percentage points; the shadow band</text>
   </g>
   <g id="text_118">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">pitches within 3 inches, either side, of where the ball just touches the zone edge. In the recovery test, top-edge 95%</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="302.211" transform="rotate(-0 4.32 302.211)">is the pitches within 3 inches, either side, of where the ball just touches the zone edge. In the recovery test,</text>
   </g>
   <g id="text_119">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.931" transform="rotate(-0 4.32 311.931)">intervals covered the truth in 91 of 100 runs (bound 93). The placebo pair moved beyond its margin, so no step is</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="311.931" transform="rotate(-0 4.32 311.931)">top-edge 95% intervals covered the truth in 91 of 100 runs (bound 93). The placebo pair moved beyond its margin, so no</text>
   </g>
   <g id="text_120">
-   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="321.6785" transform="rotate(-0 4.32 321.6785)">attributed to its rule; the 2025 and 2026 labels name the period only. Dashes: not estimated for that row.</text>
+   <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="321.6785" transform="rotate(-0 4.32 321.6785)">step is attributed to its rule; the 2025 and 2026 labels name the period only. Dashes: not estimated for that row.</text>
   </g>
   <g id="text_121">
    <text style="font-size: 8px; font-family: 'Helvetica', 'Arial', 'DejaVu Sans', sans-serif; text-anchor: start; fill: #4d4d4d" x="4.32" y="331.371" transform="rotate(-0 4.32 331.371)">Exploratory, not pre-registered: the 2022-to-2023 area change was −10.3 [−13.4, −7.3] sq in (90%); against the</text>
