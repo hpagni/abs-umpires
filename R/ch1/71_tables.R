@@ -740,6 +740,16 @@ assemble_docs <- function(ctx, dest, tman, fman, res) {
          paste("Folded in from `out/ch1/prose/framing.md` (W3.19) with its headings moved down one level. W3.19's test",
                "traces each of its numbers to `out/ch1/tab/framing_prose_numbers.csv`."), "")
   L <- c(L, if (file.exists(fr)) fold_prose(fr) else "Not written: `out/ch1/prose/framing.md` does not exist.", "")
+  # Two presentation defaults the agent applied in place of open phase 08 questions (DEV-85, items 7
+  # and 8). They sit here, beside W3.19's prose, because W3.19's receipt hashes framing.md.
+  L <- c(L, "### Two presentation defaults, DEV-85", "",
+         paste("**Doolittle's comparable.** This chapter does not reproduce his decline, and the comparable is not a",
+               "headline result (T9)."), "",
+         paste("**Reliability.** The pre-registered reading stands: framing's reliability fell in 2026. All three",
+               "robustness variants, the flat 0.125 run value, the SIS convention and the two together, give a 2026",
+               "minus 2025 difference whose 95% interval includes zero (`out/tables/ch1_framing_reliability.csv`)."),
+         "", paste("Both are defaults the agent applied in place of two open phase 08 questions; the owner may overturn",
+                   "either."), "")
   L <- c(L, "## The AAA arm", "")
   if (file.exists(aa)) {
     L <- c(L, "Folded in from `out/ch1/prose/aaa.md` (W3.20) with its headings moved down one level.", "", fold_prose(aa), "")
