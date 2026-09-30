@@ -85,7 +85,7 @@ repairs in `ci.yml`, each explained in a comment above its job. `PYTHONPATH` car
 `tests/guard`, without which the xdist controller dies on the `VacuousGuard` warning. The
 python job restores R with its renv library and installs the git hooks, which `tests/unit`
 needs. The guard job sets `PYTEST_ADDOPTS=-n 4`, because the red team took 485 seconds
-serial and takes 189 with it. The dbt job's fixture step also bound its two paths in the
+serial and about 200 with it. The dbt job's fixture step also bound its two paths in the
 wrong order until it used named parameters.
 
 Two jobs stay red for reasons outside these files, and will fail the same way on a runner
