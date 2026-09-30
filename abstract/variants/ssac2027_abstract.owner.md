@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The called strike zone shrank in 2026, when ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge. Published estimates start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so neither step has an interval against old-rule seasons alone. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before challenges began.
+The called strike zone shrank in 2026, when ABS challenges began. Umpire grading had already tightened in 2025, from a buffer two inches outside the edge. Published estimates start from 2025 or fold it into a trend (Lee et al., arXiv, 22 September 2026), so neither step has an interval against old-rule seasons. This paper measures both steps against 2022-2024 and argues that more of the contraction came in 2026, although the zone was already smaller before challenges began.
 
 ## Methods
 
@@ -14,4 +14,4 @@ The placebo failed: with no rule change, the zone grew <<P1_AREA>> square inches
 
 ## Conclusion
 
-<<CALL>> The 2026 step is <<SHARE_ABS>> percent of the two combined (95% CI <<SHARE_ABS_CI>>). The break therefore dates to <<BREAK_YEAR>>, before challenges began. The contribution is the two steps with intervals against three old-rule seasons, and the measured drift, a caveat for two-season comparisons. Its limit is the failed placebo: the design cannot assign either step to its rule. A binned cross-check misses its ±<<A5_TOL>> square inch tolerance, finding both steps <<A5_BUF>> and <<A5_ABS>> larger. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 and the postseason are held out.
+<<CALL>> The 2026 step is <<SHARE_ABS>> percent of the two combined (95% CI <<SHARE_ABS_CI>>). The break dates to <<BREAK_YEAR>>. The contribution is the two steps with intervals against three old-rule seasons, and the measured drift, a caveat for two-season comparisons. Its limit is the failed placebo: the design cannot assign either step to its rule. A binned cross-check misses its ±<<A5_TOL>> square inch tolerance, finding both steps <<A5_BUF>> and <<A5_ABS>> larger. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 and the postseason are held out.
