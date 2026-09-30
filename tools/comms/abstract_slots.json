@@ -34,6 +34,9 @@
     "P1_AREA": {"kind": "estimate90", "orient": "signed", "units": "sq in", "section": "Results"},
     "P1_SHADOW": {"kind": "estimate90", "orient": "signed", "units": "pp", "section": "Results"},
     "P2_AREA_MAX": {"kind": "value", "orient": "signed", "units": "sq in", "suffix": " square inches", "section": "Results"},
+    "A5_BUF": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
+    "A5_ABS": {"kind": "value", "orient": "contraction", "units": "sq in", "section": "Conclusion"},
+    "A5_TOL": {"kind": "value", "orient": "signed", "units": "sq in", "digits": 0, "section": "Conclusion"},
     "CALL": {"kind": "owner", "reserve_words": 25, "section": "Conclusion"},
     "BREAK_YEAR": {"kind": "owner", "reserve_words": 1, "section": "Conclusion"}
   },
@@ -51,5 +54,6 @@
       ["AREA", "Area, sq in", "sq in"]
     ]
   },
+  "_ch1_a5": "A5_BUF, A5_ABS and A5_TOL carry CH1-A5's miss on the area into the descriptive variant's Conclusion, where the frozen rule reports it as a limitation. W6.7 writes them from T4_decomposition.csv: binned_minus_bam for delta_buffer and delta_abs, and ch1_a5_tolerance. A5_BUF and A5_ABS are printed in the contraction orientation, so a binned loss larger than the smooth fit's reads as a positive number in a sentence that calls the binned losses larger. A5_TOL is printed whole, as the tolerance is written.",
   "_descriptive": "P1_AREA, P1_SHADOW, P2_AREA_MAX and the four T1_ edge slots are read only by the descriptive variant (DECISIONS.md D-P6-01), written because placebo P1 failed and the frozen consequence of CH1-A3 applies. The two top-edge slots are printed as drops (orient contraction), so a top edge that moved down reads as a positive number in a sentence that says it came down. The two bottom-edge slots are printed signed, and a positive bottom edge moved up. Both orientations are fixed here, not in the text."
 }

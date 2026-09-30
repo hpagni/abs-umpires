@@ -166,7 +166,10 @@ def test_no_output_names_a_cause_before_the_placebos_pass(dry_run):
     headline = (dry_run["out"] / "tables" / "headline.csv").read_text(encoding="utf-8")
     if not (verdicts.get("P1") == "pass" and verdicts.get("P2") == "pass"):
         assert "attributable" not in headline
-    w316 = [r["sentence"] for r in read_rows(dry_run["out"] / "tables" / "headline.csv")]
+    rows = read_rows(dry_run["out"] / "tables" / "headline.csv")
+    # CH1_P1, W6.7's placebo row, leads the file (PREREGISTRATION.md section 8, DEV-77).
+    assert rows and rows[0]["id"] == "CH1_P1"
+    w316 = [r["sentence"] for r in rows if r["id"] == "CH1_W316"]
     assert w316 and "attributable" not in w316[0]
 
 

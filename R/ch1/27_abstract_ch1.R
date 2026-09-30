@@ -14,7 +14,14 @@
 #   N_CHAL                the Methods sentence's count of challenged pitches the zone was
 #                         validated on: column n of T2's overall row, traced, never typed. A
 #                         synthetic run reads the T2 fixture its caller put under <out>/ch1/tab/.
-# It appends two rows to tables/headline.csv, keyed so a re-run replaces only its own rows:
+#   A5_BUF, A5_ABS        CH1-A5 on the area: T4's binned_minus_bam for delta_buffer and delta_abs
+#                         (sq in), a difference of two point estimates, so a point and no interval
+#   A5_TOL                CH1-A5's area tolerance, T4's ch1_a5_tolerance (sq in). The frozen rule
+#                         reports a miss as a limitation (docs/prereg/ch1.md section 5)
+# It writes three rows to tables/headline.csv, keyed so a re-run replaces only its own rows:
+#   CH1_P1          placebo P1's verdict with its two numbers and 90% intervals, read from T5. It
+#                   leads the file: PREREGISTRATION.md section 8 makes a failed P1 or P2 the
+#                   headline finding, and the decomposition is then descriptive (DEV-77).
 #   CH1_W67         the headline template of SOP W3.14-W3.17, verbatim in form. "contracted" and the
 #                   signs follow the direction of the 2024-to-2026 change, so the sentence reads
 #                   correctly either way. It uses the pre-registered causal wording only when P1
@@ -46,6 +53,55 @@ slot_row <- function(slot, tab, i, cols, units, estimator, source_csv) {
   data.frame(slot = slot, point = if (is.na(cols[1])) NA_real_ else tab[[cols[1]]][i], lo95 = tab[[cols[2]]][i],
              hi95 = tab[[cols[3]]][i], units = units, estimator = estimator, source_csv = source_csv, source_row = i,
              source_columns = paste(stats::na.omit(cols), collapse = ";"), stringsAsFactors = FALSE)
+}
+# A value slot: one column, a point and no interval (abstract_slots.json kind "value").
+value_row <- function(slot, tab, i, col, units, estimator, source_csv) {
+  data.frame(slot = slot, point = tab[[col]][i], lo95 = NA_real_, hi95 = NA_real_, units = units,
+             estimator = estimator, source_csv = source_csv, source_row = i, source_columns = col,
+             stringsAsFactors = FALSE)
+}
+VALUE_SLOTS <- c("A5_BUF", "A5_ABS", "A5_TOL")
+
+# CH1_P1, from T5's two P1 rows. Each number is printed as T5 holds it, unsigned with a verb that
+# carries the sign, the interval at T5's level (90%, CH1-A3), and the equivalence margin. A failed
+# P1 makes the decomposition descriptive (PREREGISTRATION.md section 8), and the sentence says so.
+P1_WORDS <- list("sq in" = c("square inches", 1L), "pp" = c("percentage points", 2L))
+p1_clause <- function(r, what, up, down) {
+  u <- P1_WORDS[[r$units]]
+  if (is.null(u)) die("T5's P1 row ", r$quantity, " has units ", r$units, "; CH1_P1 prints sq in and pp")
+  d <- as.integer(u[2])
+  sg <- if (r$estimate >= 0) 1 else -1
+  iv <- sort(c(sg * r$lo, sg * r$hi))
+  sprintf("%s %s %s %s (%d%% CI %s to %s), %s its ±%s margin", what, if (sg > 0) up else down,
+          fmt(sg * r$estimate, d), u[1], as.integer(round(100 * r$interval_level)), fmt(iv[1], d), fmt(iv[2], d),
+          if (identical(r$verdict, "pass")) "inside" else "not inside", format(r$margin_or_threshold))
+}
+p1_sentence <- function(t5) {
+  p1 <- t5[t5$placebo == "P1", ]
+  ia <- which(grepl("^area_sqin", p1$quantity)); is <- which(grepl("^shadow_rate", p1$quantity))
+  if (length(ia) != 1L || length(is) != 1L) die("T5 lacks P1's area_sqin row or its shadow_rate row")
+  yrs <- regmatches(p1$quantity[ia], regexpr("[0-9]{4} minus [0-9]{4}", p1$quantity[ia]))
+  if (length(yrs) != 1L) die("T5's P1 area row does not name its two seasons: ", p1$quantity[ia])
+  yrs <- rev(strsplit(yrs, " minus ", fixed = TRUE)[[1]])
+  failed <- any(p1$verdict == "fail")
+  paste0(sprintf("Placebo P1 %s. ", if (failed) "failed" else "passed"),
+         sprintf("With no rule change between %s and %s, %s. ", yrs[1], yrs[2],
+                 p1_clause(p1[ia, ], "the called zone", "grew", "shrank")),
+         p1_clause(p1[is, ], "The shadow-band strike rate", "rose", "fell"), ". ",
+         if (failed) "So the three-regime decomposition is reported as descriptive (PREREGISTRATION.md section 8)."
+         else "P1 alone leaves the decomposition as pre-registered.")
+}
+
+# CH1_P1 leads headline.csv. upsert_row keeps every other line byte for byte; this then moves
+# the row to the top when a new file or an earlier layout left it lower.
+upsert_first <- function(path, row, key = "id") {
+  how <- upsert_row(path, row, key)
+  lines <- readLines(path, warn = FALSE)
+  cur <- utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE, colClasses = "character")
+  if (length(lines) != nrow(cur) + 1L) die(path, " has a multi-line row; it cannot be reordered line by line")
+  i <- which(cur[[key]] == row[[key]])
+  if (i != 1L) writeLines(c(lines[1], lines[i + 1L], lines[-c(1L, i + 1L)]), path)
+  how
 }
 
 
@@ -83,16 +139,29 @@ main <- function() {
                estimator = sprintf("challenged pitches the zone was validated on (W3.8, DT-21, row %s): %s; zone %s",
                                    N_CHAL_ROW, t2$population[i2], t2$zone[i2]),
                source_csv = rel(f2), source_row = i2, source_columns = "n", stringsAsFactors = FALSE))
+  # CH1-A5 on the area: binned logistic minus bam, per step, and the pre-registered tolerance.
+  a5 <- function(k) sprintf(paste("CH1-A5, binned logistic minus bam primary, area_sqin %s: a difference of two",
+                                  "point estimates, no interval; tolerance %s sq in, within %s"),
+                            k, format(t4$ch1_a5_tolerance[i4(k)]), t4$ch1_a5_within[i4(k)])
+  slots <- rbind(slots,
+    value_row("A5_BUF", t4, i4("delta_buffer"), "binned_minus_bam", "sq in", a5("delta_buffer"), rel(f4)),
+    value_row("A5_ABS", t4, i4("delta_abs"), "binned_minus_bam", "sq in", a5("delta_abs"), rel(f4)),
+    value_row("A5_TOL", t4, i4("delta_abs"), "ch1_a5_tolerance", "sq in",
+              "CH1-A5's pre-registered agreement tolerance on area (docs/prereg/ch1.md section 5)", rel(f4)))
   counts <- slots$units == "counts"
-  bad <- slots[!counts & (!is.finite(slots$lo95) | !is.finite(slots$hi95)), "slot"]
-  bad <- c(bad, slots[counts & !is.finite(slots$point), "slot"])
-  check("every Chapter 1 slot carries a 95% interval (a count, its value) and a source row", length(bad) == 0L,
+  values <- slots$slot %in% VALUE_SLOTS
+  bad <- slots[!counts & !values & (!is.finite(slots$lo95) | !is.finite(slots$hi95)), "slot"]
+  bad <- c(bad, slots[(counts | values) & !is.finite(slots$point), "slot"])
+  check("every Chapter 1 slot carries a 95% interval (a count or a value, its point) and a source row", length(bad) == 0L,
         if (length(bad)) paste("missing:", paste(bad, collapse = ", ")) else sprintf("%d slots", nrow(slots)))
+  a5_in <- t4$ch1_a5_within[c(i4("delta_buffer"), i4("delta_abs"))]
+  record("CH1-A5 on area", sprintf("within the tolerance: 2025 step %s, 2026 step %s; a miss is reported as a limitation",
+                                   a5_in[1], a5_in[2]))
   write_csv_plain(slots[, SLOT_COLS], file.path(p$tables, "abstract_slots_ch1.csv"))
   for (i in seq_len(nrow(slots))) {
     v <- if (!is.finite(slots$point[i])) "no point" else if (counts[i]) comma(slots$point[i]) else format(signif(slots$point[i], 4))
-    ci <- if (counts[i]) "no interval, a count" else sprintf("95%% CI %s to %s", format(signif(slots$lo95[i], 4)),
-                                                              format(signif(slots$hi95[i], 4)))
+    ci <- if (counts[i]) "no interval, a count" else if (values[i]) "no interval, a value" else
+      sprintf("95%% CI %s to %s", format(signif(slots$lo95[i], 4)), format(signif(slots$hi95[i], 4)))
     record(slots$slot[i], sprintf("%s (%s) %s, from %s row %d", v, ci, slots$units[i], slots$source_csv[i], slots$source_row[i]))
   }
 
@@ -119,6 +188,19 @@ main <- function() {
                    source_csv = rel(f4), source_row = i4("delta_abs"), stringsAsFactors = FALSE)
   upsert_row(f_hl, hc)
   record("D-P4-04", cohort)
+
+  # CH1_P1 leads the file: a failed P1 is the headline finding (PREREGISTRATION.md section 8).
+  i5a <- which(t5$placebo == "P1" & grepl("^area_sqin", t5$quantity))
+  p1s <- p1_sentence(t5)
+  hp <- data.frame(id = "CH1_P1", step = "W6.7", chapter = "1", sentence = p1s,
+                   estimand = paste("P1:", paste(t5$quantity[t5$placebo == "P1"], collapse = "; ")),
+                   point = t5$estimate[i5a], lo95 = NA_real_, hi95 = NA_real_, units = t5$units[i5a],
+                   estimator = sprintf(paste("W3.21 placebo P1, two one-sided tests on 90%% intervals (CH1-A3), verdict %s;",
+                                             "point is the area row's estimate; lo95 and hi95 are empty because P1 is",
+                                             "read at 90%%, and both 90%% intervals are in the sentence"), v1),
+                   source_csv = rel(f5), source_row = i5a, stringsAsFactors = FALSE)
+  how1 <- upsert_first(f_hl, hp)
+  record("CH1_P1", sprintf("%s, first row: %s", how1, p1s))
   if (identical(flag, CLAUSE_SENSITIVE)) cat("OWNER   D-P4-04: the ABS-measured arm disagrees in sign; the primary is reported as sensitive to the height cohort.\n")
   led <- run_exporter(ctx)
   step_receipt(ctx, inputs = c(f4, fp, f9, f5, f2), outputs = c(file.path(p$tables, "abstract_slots_ch1.csv"), f_hl, led))

@@ -29,6 +29,9 @@ out/models/**/*.npz
 # sample runs to hundreds of megabytes, and the B1 cells and B2 fits hold per-umpire estimates that
 # CH1-A6 and D-21 keep unpublished. Their provenance.json receipts beside them are tracked.
 out/ch1/model/*.rds
+# Chapter 1 run logs and step markers (scripts/ch1_sprint.sh): machine paths and timings, not results.
+out/ch1/log/*.log
+out/ch1/log/.done/
 
 # Secrets and local environment
 .env

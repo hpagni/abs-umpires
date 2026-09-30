@@ -25,8 +25,10 @@
 #   W3.21  P1 to P4 present, P1 scored as two one-sided tests against 0.5 pp and 3 sq in
 #   W6.7   every slot has a 95% interval (N_CHAL, a count, its value) and matches its source row
 #          digit for digit; N_CHAL is the n of T2_zone_gate.csv's overall row; the cohort sentence
-#          follows T4's height_cohort_flag; the ledger is what tools/comms/export_numbers.R --check
-#          regenerates; CALL and BREAK_YEAR absent
+#          follows T4's height_cohort_flag; CH1-A5's A5_BUF, A5_ABS and A5_TOL are values from T4's
+#          area rows; headline.csv leads with CH1_P1, whose numbers are T5's P1 rows digit for digit
+#          (PREREGISTRATION.md section 8, DEV-77); the ledger is what tools/comms/export_numbers.R
+#          --check regenerates; CALL and BREAK_YEAR absent
 #   W6.8   SD_UMP, REL_UMP and N_UMP match umpire_eb.csv; REL_UMP is the response's reliability
 # Exit 0 when every check passes, 1 otherwise.
 
@@ -243,6 +245,52 @@ chk_w321 <- function() {
           setequal(p1$margin_or_threshold, c(0.5, 3)) && all(p1$interval_level == 0.90), "")
 }
 
+# CH1_P1, W6.7's placebo row. PREREGISTRATION.md section 8 makes a failed P1 or P2 the headline
+# finding, so the row leads headline.csv. Its numbers are re-derived here from T5, independently
+# of the writer: each P1 estimate and its 90% interval at the units' digits (1 for sq in, 2 for
+# pp), the margin, the two seasons, and the verdict; the sentence may hold no other number.
+chk_p1_row <- function(t5, hl) {
+  check("headline.csv leads with CH1_P1, W6.7's placebo row", nrow(hl) >= 1L && identical(hl$id[1], "CH1_P1"),
+        paste(hl$id, collapse = ", "))
+  s <- hl$sentence[hl$id == "CH1_P1"]
+  p1 <- t5[t5$placebo == "P1", ]
+  if (length(s) != 1L || nrow(p1) != 2L) {
+    check("CH1_P1 present once, and T5 carries P1's two rows", FALSE, sprintf("%d rows, %d P1 rows", length(s), nrow(p1)))
+    return(invisible())
+  }
+  dg <- c("sq in" = 1L, "pp" = 2L)
+  want <- character(0)
+  for (i in seq_len(nrow(p1))) {
+    d <- dg[[p1$units[i]]]
+    sg <- if (p1$estimate[i] >= 0) 1 else -1
+    iv <- sort(c(sg * p1$lo[i], sg * p1$hi[i]))
+    want <- c(want, sprintf("%s %s (90%% CI %s to %s)", formatC(sg * p1$estimate[i], format = "f", digits = d),
+                            if (p1$units[i] == "pp") "percentage points" else "square inches",
+                            formatC(iv[1], format = "f", digits = d), formatC(iv[2], format = "f", digits = d)),
+              sprintf("%s its ±%s margin", if (p1$verdict[i] == "pass") "inside" else "not inside",
+                      format(p1$margin_or_threshold[i])))
+  }
+  yrs <- unique(unlist(regmatches(p1$quantity, gregexpr("[0-9]{4}", p1$quantity))))
+  failed <- any(p1$verdict == "fail")
+  miss <- want[!vapply(want, grepl, TRUE, x = s, fixed = TRUE)]
+  check("CH1_P1 prints T5's P1 estimates, 90% intervals, margins and verdicts", length(miss) == 0L,
+        if (length(miss)) paste("not in the sentence:", paste(miss, collapse = " | ")) else s)
+  nums <- regmatches(s, gregexpr("(?<![A-Za-z0-9.])[0-9]+(\\.[0-9]+)?", s, perl = TRUE))[[1]]
+  allowed <- c(regmatches(want, gregexpr("[0-9]+(\\.[0-9]+)?", want)), recursive = TRUE)
+  allowed <- c(allowed, yrs, "90", "8")
+  check("CH1_P1 holds no number that is not T5's", all(nums %in% allowed) && length(yrs) == 2L && all(yrs %in% nums),
+        paste(setdiff(nums, allowed), collapse = ", "))
+  i5 <- which(t5$placebo == "P1" & grepl("^area_sqin", t5$quantity))
+  r <- hl[hl$id == "CH1_P1", ]
+  check("CH1_P1's verdict, reading and source row follow T5",
+        startsWith(s, sprintf("Placebo P1 %s.", if (failed) "failed" else "passed")) &&
+          (!failed || grepl("reported as descriptive", s, fixed = TRUE)) &&
+          !grepl("caus(al|ed|es)|attributable|because of ABS", s, ignore.case = TRUE) &&
+          identical(as.integer(r$source_row), i5) && same(as.numeric(r$point), p1$estimate[p1$quantity == t5$quantity[i5]], 0) &&
+          identical(r$source_csv, "out/ch1/tab/T5_placebos.csv"),
+        sprintf("verdict %s, row %s", if (failed) "fail" else "pass", format(r$source_row)))
+}
+
 chk_w67 <- function() {
   fs <- file.path(P$tables, "abstract_slots_ch1.csv")
   if (!has(fs)) return()
@@ -255,15 +303,29 @@ chk_w67 <- function() {
     check("W6.7's sentence names a cause only when P1 and P2 passed", length(s67) == 1L &&
             (causal_ok || !grepl("caus(al|ed|es)|attributable|because of ABS", s67, ignore.case = TRUE)), s67)
     check("W6.7 states D-P4-04's sign-agreement reading", "CH1_W67_COHORT" %in% hl$id, "")
+    chk_p1_row(t5, hl)
   }
   counts <- sl$units == "counts"
-  check("every slot carries a 95% interval, a count its value",
-        all(is.finite(sl$lo95[!counts]) & is.finite(sl$hi95[!counts])) && all(is.finite(sl$point[counts])), "")
+  # A value slot (CH1-A5's A5_BUF, A5_ABS, A5_TOL) names one source column: a point, no interval.
+  values <- !counts & vapply(strsplit(sl$source_columns, ";"), length, 0L) == 1L
+  check("every slot carries a 95% interval, a count or a value its point",
+        all(is.finite(sl$lo95[!counts & !values]) & is.finite(sl$hi95[!counts & !values])) &&
+          all(is.finite(sl$point[counts | values])), "")
+  a5 <- c("A5_BUF", "A5_ABS", "A5_TOL")
+  t4a <- csv(file.path(P$tab, "T4_decomposition.csv"))
+  j5 <- match(a5, sl$slot)
+  comp5 <- if (is.null(t4a) || anyNA(j5)) NA_character_ else
+    paste(t4a$estimand[sl$source_row[j5]], t4a$component[sl$source_row[j5]])
+  check("CH1-A5's three area slots: values from T4's area rows for delta_buffer and delta_abs",
+        !anyNA(j5) && all(values[j5]) && all(sl$source_csv[j5] == "out/ch1/tab/T4_decomposition.csv") &&
+          identical(sl$source_columns[j5], c("binned_minus_bam", "binned_minus_bam", "ch1_a5_tolerance")) &&
+          identical(comp5, c("area_sqin delta_buffer", "area_sqin delta_abs", "area_sqin delta_abs")),
+        paste(comp5, collapse = ", "))
   for (i in seq_len(nrow(sl))) {
     src <- csv(file.path(dirname(OUT), sl$source_csv[i]))
     cols <- strsplit(sl$source_columns[i], ";")[[1]]
     v <- vapply(cols, function(cn) as.numeric(src[[cn]][sl$source_row[i]]), 0)
-    mine <- if (counts[i]) sl$point[i] else c(if (length(cols) == 3L) sl$point[i], sl$lo95[i], sl$hi95[i])
+    mine <- if (counts[i] || values[i]) sl$point[i] else c(if (length(cols) == 3L) sl$point[i], sl$lo95[i], sl$hi95[i])
     check(sprintf("%s traces to %s row %d", sl$slot[i], sl$source_csv[i], sl$source_row[i]), same(v, mine, 0), "")
   }
   nc <- sl[sl$slot == "N_CHAL", ]

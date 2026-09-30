@@ -81,6 +81,40 @@ def read_csv(rel: str) -> list[dict]:
         return list(csv.DictReader(fh))
 
 
+def consequence_lines() -> list[str]:
+    """Where the P1 consequence stands: headline.csv's first row, and the DEVIATIONS entry."""
+    hl = read_csv("out/tables/headline.csv")
+    first = hl[0] if hl else {}
+    dev = ""
+    path = os.path.join(ROOT, "docs", "DEVIATIONS.md")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            heads = [ln for ln in fh if ln.startswith("## DEV-") and "placebo P1" in ln]
+        dev = heads[-1][3:].split(":", 1)[0] if heads else ""
+    out = []
+    if first.get("id") == "CH1_P1":
+        out.append("Applied: `out/tables/headline.csv` leads with CH1_P1, written by W6.7 from T5:")
+        out += ["", "> " + first.get("sentence", ""), ""]
+    else:
+        out.append("Still to do: `out/tables/headline.csv` has no leading row stating P1's result.")
+    out.append(
+        f"`docs/DEVIATIONS.md` records it as {dev}, as the W3.21 CONSEQUENCE line asks."
+        if dev
+        else "Still to do: `docs/DEVIATIONS.md` has no dated entry for it, which the W3.21 "
+        "CONSEQUENCE line asks for."
+    )
+    out.append("The DECISIONS.md entry D-P6-01 records the fourth abstract variant.")
+    return out
+
+
+def filled_text(report) -> str:
+    path = os.path.join(ROOT, report.get("out", "")) if report.get("out") else ""
+    if not path or not os.path.exists(path):
+        return ""
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
 def t4_row(rows, estimand: str, component: str):
     for r in rows:
         if r.get("arm") == "primary" and r["estimand"] == estimand and r["component"] == component:
@@ -138,6 +172,7 @@ def proposals(share, buf, abs_, drift):
 
 def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
     printed = report.get("printed") or {}
+    text = filled_text(report)
     counted = int(report.get("words_counted", 0))
     buf_e, abs_e = entry(ledger, "D_BUF"), entry(ledger, "D_ABS")
     buf, abs_ = reading(buf_e), reading(abs_e)
@@ -203,6 +238,9 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
         ("Called pitches, P0", "count", "N_CALLED_P0", 95),
         ("Games, P0", "count", "N_GAMES_P0", 95),
         ("Challenged pitches, zone validation", "count", "N_CHAL", 95),
+        ("CH1-A5: binned minus smooth, 2025 step, area", "sq in", "A5_BUF", 95),
+        ("CH1-A5: binned minus smooth, 2026 step, area", "sq in", "A5_ABS", 95),
+        ("CH1-A5: area tolerance", "sq in", "A5_TOL", 95),
     ]
     for label, units, slot, level in rows:
         lines.append(f"| {label} | {units} | {interval(entry(ledger, slot), level)} | {slot} |")
@@ -258,10 +296,7 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
             "passing says the 2026 step is far larger than any within-season drift across an",
             "All-Star break.",
             "",
-            "Still to do for the consequence: `out/tables/headline.csv` has no row stating the P1",
-            "failure, and `docs/DEVIATIONS.md` has no dated entry for it, which the W3.21",
-            "CONSEQUENCE line asks for. The DECISIONS.md entry D-P6-01 records the fourth abstract",
-            "variant only.",
+            *consequence_lines(),
             "",
         ]
     lines += [
@@ -357,9 +392,19 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
             else "an amount T4 does not carry"
         )
         + ",",
-        "  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up.",
-        "- D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it, because",
-        "  the fill sits 3 words under the cap. Decide whether a clause replaces another.",
+        "  against a 3 sq in tolerance. The frozen rule makes it a limitation of the write-up. "
+        + (
+            "The Conclusion names it, from A5_BUF, A5_ABS and A5_TOL."
+            if "A5_BUF" in printed
+            else "The abstract does not name it yet."
+        ),
+        (
+            "- D-R0-04's top-edge caveat: the Results say top-edge intervals are slightly too"
+            " narrow. The caveat that the study cannot declare no change at the top edge is not"
+            " needed, because the abstract makes no such claim."
+            if "Top-edge intervals are slightly too narrow" in text
+            else "- D-R0-04's top-edge caveat: the abstract prints top-edge numbers without it."
+        ),
         "- The RESULT CALL line in `out/ch1/decision.md`, and CALL and BREAK_YEAR.",
         "- `make abstract` then `bash quality/w612_check.sh`, then RP-08 and the numbers freeze.",
         "",
@@ -392,7 +437,12 @@ def agenda(ledger: dict, report: dict, ledger_path: str) -> str:
         "- docs/harmonized_zone.md F1: the zone the W3.8 gate scored uses measured height, and",
         "  the Chapter 1 primary uses roster height. Decide whether Methods says so.",
         "- N_CALLED prints P0 as T1 counts it. The fits drop the four games without ABS",
-        "  hardware (621 pitches), so the fitted sample is slightly smaller.",
+        "  hardware (621 pitches), so the fitted sample is slightly smaller"
+        + (
+            ". Methods says the fits use samples drawn from P0."
+            if "samples drawn from" in text
+            else ", and Methods does not say so."
+        ),
         "",
     ]
     missing = report.get("missing") or []
