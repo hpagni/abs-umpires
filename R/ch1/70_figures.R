@@ -967,8 +967,8 @@ fig_f5 <- function(p) {
   alt <- paste0(
     "Three stacked dot-and-interval panels. In the top panel every within-week interval lies right of zero. ",
     "Pooled, the challenge-format rate is ", v(wp$estimate), " pp above the full-ABS rate (95% CI ", v(wp$lo95), " to ",
-    v(wp$hi95), "). The top edge row is the largest, at ", v(wt$estimate), " pp, and the bottom edge row the smallest, at ",
-    v(wb$estimate), " pp. In the pre-trend panels two intervals exclude zero: area, ", v(qa$point), " sq in (", v(qa$lo95),
+    v(wp$hi95), "). Of the six rows the top edge row is the largest, at ", v(wt$estimate), " pp, and the bottom edge row the ",
+    "smallest, at ", v(wb$estimate), " pp, both with intervals above zero. In the pre-trend panels two intervals exclude zero: area, ", v(qa$point), " sq in (", v(qa$lo95),
     " to ", v(qa$hi95), "), and the top edge, ", v(qt$point), " in (", v(qt$lo95), " to ", v(qt$hi95),
     "). The bottom edge and half-width intervals contain zero.")
   list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 9.5, palette = B450)
