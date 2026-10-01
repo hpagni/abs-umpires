@@ -2303,7 +2303,7 @@ Auditor #3's two refutations are closed: `tests/guard/test_no_owner_address.py` 
 translated ids (it had been translated in the working tree and left out of 1c40950), and the
 sentence in `docs/slide-requests.md` that said the study "separates" the two rule changes now
 describes the two measured steps. The word "untreated" is gone from the three superseded abstract
-templates. The T1 table in `docs/ch1.md` is repaired (`R/ch1/71_tables.R` keys its season columns
-by name), the tables were regenerated from caches, `make test-ch1` reports FAIL 0 and `scripts/prove.sh
-W3.24` passes. The README's Status section now describes the fitted, descriptive chapter and the
+templates. The T1 table in `docs/ch1.md` is repaired: `R/ch1/71_tables.R` keys its season columns
+by name. The tables were regenerated from caches. `make test-ch1` reports FAIL 0, and
+`scripts/prove.sh W3.24` passes. The README's Status section now describes the fitted, descriptive chapter and the
 unopened sealed set.
