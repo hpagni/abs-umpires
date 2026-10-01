@@ -106,10 +106,11 @@ MIN_BOOT_SHARE  <- MIN_COMPLETE_SHARE       # 99% of replicates complete, as W3.
 FORMAT_ROW      <- "format_challenge_tue_thu"   # the D-57 row of the rule-version table
 ROLE            <- "The DiD is a supporting arm, not the identification."
 PARALLEL_TRENDS <- paste(
-  "Parallel trends, stated explicitly: had the 2025 grading-buffer cut not happened, MLB's called",
-  "zone would have changed from 2024 to 2025 as AAA's challenge-format called zone did.",
-  "This assumption is strong: different umpire populations, different parks, different Hawk-Eye",
-  "installations, and a machine-set zone in AAA.")
+  "Parallel trends, stated explicitly: the DiD is MLB's 2024 to 2025 called-zone change minus AAA's",
+  "challenge-format change over the same seasons, and it reads as more than that difference only if",
+  "the two series share one trend. This assumption is strong: different umpire populations, different",
+  "parks, different Hawk-Eye installations, and a machine-set zone in AAA. Placebo P1 failed, so the",
+  "DiD is reported as the measured difference only (DEV-89).")
 PRETREND_RULE   <- paste("Pre-trend test (SOP W3.20): the AAA-versus-MLB 2023 to 2024 coefficient must",
                          "have a 95% interval containing 0, or the DiD is reported as descriptive.")
 WEEKDAYS        <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
@@ -1012,9 +1013,11 @@ prose <- c(
   paste0("**", ROLE, "** The chapter's design is the three-regime MLB comparison. ",
          "AAA gives a second, weaker reading of the same seasons."),
   "",
-  paste0("**Parallel trends.** Had the 2025 grading-buffer cut not happened, MLB's called zone would have changed ",
-         "from 2024 to 2025 as AAA's challenge-format called zone did. This assumption is strong. ",
-         "The two series differ in umpire populations, parks and Hawk-Eye installations, and AAA's zone is machine-set."),
+  paste0("**Parallel trends.** The DiD is MLB's 2024 to 2025 called-zone change minus AAA's challenge-format change ",
+         "over the same seasons. Reading it as more than that difference needs the two series to share one trend. ",
+         "This assumption is strong. ",
+         "The two series differ in umpire populations, parks and Hawk-Eye installations, and AAA's zone is machine-set. ",
+         "Placebo P1 failed, so the DiD is reported as the measured difference only."),
   "",
   paste0("Both series use the annex section 5 binned logistic. MLB comes from W3.15's cached draws, and AAA from a ",
          "bootstrap of games within season. AAA's edges are net of its published rule, which changed from 2023 to 2024."),

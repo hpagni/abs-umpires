@@ -114,8 +114,8 @@ Their pre-registered primary estimand, verbatim:
 > 2025 evaluation-buffer cut from 2 in to 0.75 in and the 2026 zone redefinition are level
 > shifts to be reported, not absorbed).
 
-The problem is the placebo. A placebo pair is supposed to be untreated. The 2024 to 2025
-pair is the treated pair for the grading change. The December 2024 umpire labor agreement
+The problem is the placebo. A placebo pair is supposed to span no rule change. The 2024 to
+2025 pair spans the grading change. The December 2024 umpire labor agreement
 cut the grading buffer from two inches outside the zone edge to three-quarters of an inch on
 either side of it. That change acts on the same borderline lean, conditional on count, that
 their estimand measures.
@@ -133,8 +133,11 @@ change, not challenges."
 
 This project is not first to notice that confound (lit/04, lit/06, lit/22 and
 METHODS_REVIEW B5, dated 2026-08-17). It is public, in four of their literature files and
-in their methods review. This project's claim is to resolve
-it with a third, untreated baseline regime.
+in their methods review. This project adds a third regime, 2022 to 2024 under the earlier
+buffer, and measures the 2025 and 2026 steps against those seasons. Its own placebo pair inside
+2022 to 2024 failed: the called zone grew 10.8 sq in (90% CI 7.7 to 13.9) from 2023 to 2024
+with no rule change (P1, DEV-77). The three regimes are therefore reported as a description of
+what changed in each season, and neither step is assigned to its rule.
 
 ---
 
@@ -234,7 +237,7 @@ Newest first. No ABS post exists on that site after 2026-08-31.
 
 | Author and post | Date | Data and method | Result | Does not do |
 |---|---|---|---|---|
-| Ben Clemens, "The Strike Zone Is Shrinking. Here's How." https://blogs.fangraphs.com/the-strike-zone-is-shrinking-heres-how/ | 2026-04-28 | Called pitches through 25 April in 2025 and 2026, restricted to batters appearing in both seasons, with 2026 official heights used for both years. Height-normalised vertical location, Nadaraya-Watson kernel regression on a 121 by 121 grid, 50% called-strike contour, 100 bootstrap resamples clustered by game, and inverse probability weighting for count splits. | The best public estimate of the 2026 change. Numbers are in section 6.3. | Does not correct for the plate-plane change described in section 6.4, and does not separate the 2025 grading change, because 2025 is its baseline. |
+| Ben Clemens, "The Strike Zone Is Shrinking. Here's How." https://blogs.fangraphs.com/the-strike-zone-is-shrinking-heres-how/ | 2026-04-28 | Called pitches through 25 April in 2025 and 2026, restricted to batters appearing in both seasons, with 2026 official heights used for both years. Height-normalised vertical location, Nadaraya-Watson kernel regression on a 121 by 121 grid, 50% called-strike contour, 100 bootstrap resamples clustered by game, and inverse probability weighting for count splits. | The best public estimate of the 2026 change. Numbers are in section 6.3. | Does not correct for the plate-plane change described in section 6.4, and does not measure the 2025 step, the season of the grading change, because 2025 is its baseline. |
 | Clemens, "An Early, Nerdy Look At The Challenge System" https://blogs.fangraphs.com/an-early-nerdy-look-at-the-challenge-system/ | 2026-04-01 | 227 challenges through 30 March, RE288 run values by leverage bucket. | 54% overall, 124 of 227. Catchers 57.6%, hitters 50.5%. Hitters challenge on 2.4% of low-leverage called pitches against 10.2% of high-leverage. Runs per high-leverage challenge 0.26 for hitters, 0.22 for catchers. | Rejects win probability outright: "Because you don't get to take your challenges home with you." Lists umpire identity among the questions he did not answer. |
 | Davy Andrews, "Strike Zone Update Part 2: How the Zone Has Tightened" https://blogs.fangraphs.com/strike-zone-update-part-2-how-the-zone-has-tightened/ | 2025-05-06 | March and April 2024 against March and April 2025. Descriptive: shadow-zone accuracy and rates, heat maps. | The public source for the grading change. The buffer went from two inches outside the zone edge before 2025 to "three-quarters of an inch on either side" from 2025, under the new umpire labor agreement. Accuracy 92.53% in 2024 and 92.63% in early 2025. | Reports no zone-area or edge estimate in inches or square inches. |
 | Andrews, "Your Final Pre-Robo-Zone Umpire Accuracy Update" https://blogs.fangraphs.com/your-final-pre-robo-zone-umpire-accuracy-update/ | 2025-11-20 | Full 2025 season, descriptive. | Record 92.83% overall accuracy. In-zone accuracy fell 1.7 percentage points and has fallen four straight years. 68% of calls were on pitches outside the zone. Shadow-zone accuracy 82.2% in MLB and 81.6% in the minors. The 2025 record came from calling more balls. | No per-umpire numbers at all. No zone geometry. |
@@ -311,7 +314,7 @@ decomposition needs "a no-ABS control season".
   [second-hand]
 - Lee, Han, Lee and Ko, arXiv:2609.25525, v1, 2026-09-22. Statcast 2015-2026, 2026 through
   24 August, re-projected to mid-plate, with edge positions in inches. 2026 is tested against
-  a 2015-2025 trend. 2025 sits inside that untreated trend, and grading is never mentioned.
+  a 2015-2025 trend. 2025 sits inside that trend, and grading is never mentioned.
 - Michopoulos, Newberry, Smith, H. Waldfogel and S. Waldfogel, SSRN 7242822, version
   2026-08-07. Called strikes near the edge rise by inning under ABS. It names the December
   2024 buffer cut but does not model it.
@@ -387,15 +390,20 @@ umpire-level ball and strike modelling. Requests to [21] and [54] are logged in
 
 ## 6. The regime question
 
-### 6.1 Separating the 2025 grading change from the 2026 ABS effect
+### 6.1 The 2025 and 2026 steps, each measured against 2022 to 2024
 
-No published work estimates the 2025 grading and 2026 ABS components separately against
-an untreated 2022-2024 baseline, with intervals. The evidence for that statement is the
-list below, which is every public treatment of either transition found on 2026-09-22 or on
-the recheck of 2026-09-29.
+No published work measures the 2025 step and the 2026 step separately against the 2022-2024
+seasons, with intervals. The evidence for that statement is the list below, which is every
+public treatment of either transition found on 2026-09-22 or on the recheck of 2026-09-29.
+
+This project's design measures both steps against 2022 to 2024 and carries a placebo pair
+inside those seasons. That placebo, P1, failed: the zone grew 10.8 sq in (90% CI 7.7 to 13.9)
+from 2023 to 2024 with no rule change (DEV-77). Under the frozen consequence each step is
+reported as a measured change dated to its season, and neither is assigned to the rule that
+took effect in it.
 
 1. Estimates of the 2026 change use 2025 as the baseline (Clemens, 2026-04-28; CalledThird,
-   2026-04-23) or fold 2025 into an untreated trend (arXiv 2609.25525, 2026-09-22). Cooper
+   2026-04-23) or fold 2025 into a 2015-2025 trend (arXiv 2609.25525, 2026-09-22). Cooper
    (Baseball America, 2026-09-22) shows 2025 smaller than any season from 2015 to 2024 and
    names no cause.
 2. Andrews, FanGraphs, 2025-05-05 and 2025-05-06, is the fullest published treatment of the
@@ -409,7 +417,7 @@ the recheck of 2026-09-29.
 4. Doolittle, ESPN, 2026-05-19, gives 2025 against 2026 aggregates only.
 5. `use-it-or-lose-it` METHODS.md section 8, v0.3c, 2026-08-18, is the only design that
    tries. It is a 2026 against 2025 count-bias contrast with 2024 to 2025 as its placebo
-   pair, and that pair is the treated pair for the grading change. It is scheduled for their
+   pair, and that pair spans the grading change. It is scheduled for their
    4 December paper and has no output as of 2026-09-29, when their `CURRENT_METHODS.md`
    called it a proposal.
 6. The KBO literature (Lee and Ko 2026; Song, Kang and Paulsen 2026) is a two-regime human
@@ -515,19 +523,19 @@ repository.
 Chapter 1, the headline.
 
 - A third regime. `use-it-or-lose-it` METHODS.md v0.3c section 8 pre-registers a 2026
-  against 2025 contrast whose only placebo pair is 2024 to 2025, which is the treated pair
-  for the grading change. This project adds 2022 to 2024 under the earlier buffer of two
-  inches outside the zone edge. That way 2022 to 2024 against 2025 identifies the grading
-  change on the same estimand, and 2025 against 2026 identifies ABS net of it. A genuinely
-  untreated placebo pair sits inside 2022 to 2024. Lee et al. (arXiv 2609.25525, 2026-09-22)
-  fold 2025 into an untreated 2015-2025 trend instead. The claim is the one section 6.1
-  opens with: the two components, estimated separately against 2022 to 2024, with
+  against 2025 contrast whose only placebo pair is 2024 to 2025, which spans the grading
+  change. This project adds 2022 to 2024 under the earlier buffer of two inches outside the
+  zone edge, and measures the 2025 step and the 2026 step on the same estimand, each net of
+  the 2022-2024 trend. Its placebo pair inside 2022 to 2024 failed (P1, DEV-77), so both
+  steps are reported as descriptive and neither is assigned to its rule. Lee et al. (arXiv
+  2609.25525, 2026-09-22) fold 2025 into a 2015-2025 trend instead. The claim is the one
+  section 6.1 opens with: the two steps, measured separately against 2022 to 2024, with
   intervals.
 - Zone geometry as the headline quantity, in square inches and signed edge inches. Their
   section 8 demotes geometry to a secondary result and headlines the count-bias contrast.
   The 2024-to-2025 change itself is published (Cooper, Baseball America, 2026-09-22; arXiv
-  2609.25525, Figure 3). This project claims only an interval on that step and its
-  attribution to the grading change.
+  2609.25525, Figure 3). This project claims only an interval on that step, measured net of
+  the 2022-2024 trend. With P1 failed it assigns the step to no rule.
 - Umpire heterogeneity as an estimand, with shrinkage and reliability. Their per-umpire
   contour is a normalisation only, and the antecedents in section 3 stop in 2023 or earlier.
   The neighbours in section 6.2 report levels by season or other contrasts. The claim is a
@@ -566,6 +574,8 @@ This project may not claim:
 
 - Being first to notice the confound between the grading change and ABS. That is public and
   dated 2026-08-17 in four of their literature files and in their methods review.
+- That the 2025 step is the grading change's doing or the 2026 step is ABS's. Placebo P1
+  failed, so both steps are descriptive (DEV-77).
 - The count-bias contrast or the overturn regression discontinuity as new. Their METHODS.md
   section 8 pre-registers both.
 - That challenge accuracy is mostly noise. Published: signal shares 0.80 and 0.33 for
@@ -607,7 +617,7 @@ Their newer figure uses sealed games and is not quoted.
 
 Clemens (FanGraphs, 2026-04-28) and Lee et al. (arXiv 2609.25525, 2026-09-22) are the public
 estimates of the 2026 zone change that Chapter 1 is built to extend. Andrews (FanGraphs, 5 and 6 May 2025) is the public record
-of the grading change that Chapter 1 is built to separate from it. TapToChallenge and
+of the grading change, whose season Chapter 1 measures as a step of its own. TapToChallenge and
 `ilan-goodman/mlb-abs-xwpa` are the public leaderboards this project compares against.
 
 Corrections to this file are welcome as issues on the repository.

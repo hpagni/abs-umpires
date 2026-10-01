@@ -1,7 +1,12 @@
 #!/usr/bin/env Rscript
 # R/ch1/26_placebos.R - SOP W3.21, placebos P1 to P4.
 #
-#   Rscript R/ch1/26_placebos.R --table data/marts/ch1_called.parquet --out out
+#   Rscript R/ch1/26_placebos.R --table data/marts/ch1_called.parquet --out out [--cache-only]
+#
+# --cache-only (DEV-89): P2 reads each season's fit from ch1/model/ and refuses to start a fit when
+# a cached fit is missing or was made on another table. Without the flag a missing or stale fit is
+# refitted, as before. A cached fit is reused only when its receipt names this table's sha256, the
+# same row count and the same game_pk hash as the half-season rows rebuilt here.
 #
 # P1  2023 -> 2024, both under the 2-inch-outside-the-edge buffer (CH1-A3). Two one-sided
 #     equivalence tests on W3.15's primary draws: the 90% interval on the shadow-rate difference
@@ -12,8 +17,10 @@
 #     the placebo is second half minus first half on the standardised surface. The five give the
 #     empirical null; the headline delta_abs (area) must exceed the 95th percentile of |placebo|
 #     (R's default quantile, type 7). The edges are read the same way and reported.
-# P3  AAA full-ABS days across seasons. Not run: SOP W3.20's AAA arm is blocked on D-11, D-12
-#     and D-57, W3.9 is deferred (DEV-55), and the analysis table holds MLB pitches only.
+# P3  AAA full-ABS days across seasons. Scored by SOP W3.20's AAA arm (R/ch1/40_aaa_arm.R), not
+#     here: the analysis table holds MLB pitches only. Its two `change` rows are read from
+#     <out>/tables/aaa_placebo.csv, one T5 row each, with W3.20's estimate, 90% interval, margin
+#     and verdict unchanged (DEV-89). In an output tree without that file P3 is written as not run.
 # P4  pitches with |d| > 6 in: the called-strike rate outside (d > 6) and inside (d < -6), per
 #     season, with Wilson 95% intervals. The SOP's rule, "rate about 0 or 1 and stable", carries
 #     no number in the pre-registration, so P4 is reported as a table and its verdict is left to
@@ -73,8 +80,28 @@ p1_tests <- function(ctx) {
   do.call(rbind, out)
 }
 
-p2_fits <- function(ctx, prim, ref) {
+# A cached P2 fit, or NULL. It is used only when its receipt was written on this table, over the
+# same rows (count and game_pk hash), so a cache hit reads exactly the fit a refit would rebuild.
+cached_p2 <- function(ctx, name, rows, table_sha) {
+  f <- file.path(ctx$paths$model, sprintf("surface_%s.rds", name))
+  pv <- file.path(ctx$paths$models, sprintf("surface_%s", name), "provenance.json")
+  if (!file.exists(f) || !file.exists(pv)) return(list(obj = NULL, why = "no cached fit or no receipt"))
+  rc <- jsonlite::fromJSON(pv, simplifyVector = TRUE)
+  gpk <- sha256_text(paste(sort(unique(rows$game_pk)), collapse = "\n"))
+  if (!identical(rc$table_sha256, table_sha)) return(list(obj = NULL, why = "fitted on another table"))
+  if (!identical(as.integer(rc$n_rows), nrow(rows)) || !identical(rc$game_pk_sha256, gpk)) {
+    return(list(obj = NULL, why = "fitted on other rows"))
+  }
+  obj <- readRDS(f)
+  if (!identical(as.integer(obj$n_rows), nrow(rows)) || !identical(obj$fit, name)) {
+    return(list(obj = NULL, why = "the cached object does not match its receipt"))
+  }
+  list(obj = obj, why = sprintf("cache hit: %s, receipt written %s", basename(f), rc$written_madrid))
+}
+
+p2_fits <- function(ctx, prim, ref, cache_only = FALSE) {
   vals <- list()
+  table_sha <- sha256_file(ctx$table)
   for (s in SEASONS) {
     rows <- surface_rows(prim[prim$season == s, ])
     rows$half <- season_half(rows)
@@ -84,29 +111,69 @@ p2_fits <- function(ctx, prim, ref) {
       record(sprintf("P2 %d", s), sprintf("not estimable: %d first-half and %d second-half rows", nh[1], nh[2]))
       next
     }
-    spec <- make_spec("half")
-    ft <- fit_surface(fit_frame(rows, spec), spec)
-    check(sprintf("P2 %d: bam converged", s), ft$converged,
-          sprintf("%s rows (%s first half, %s second), %.0f s", comma(nrow(rows)), comma(nh[1]), comma(nh[2]), ft$seconds))
-    mix <- ref_mix(ft$m, ft$spec, ref, "first")
-    e1 <- surface_estimands(ft$m, ft$spec, mix, "first", ref, geom_only = TRUE)$point
-    e2 <- surface_estimands(ft$m, ft$spec, mix, "second", ref, geom_only = TRUE)$point
-    vals[[as.character(s)]] <- e2[GEOM] - e1[GEOM]
     name <- sprintf("placebo_p2_%d", s)
-    f <- file.path(ctx$paths$model, sprintf("surface_%s.rds", name))
-    ensure_dir(ctx$paths$model)
-    saveRDS(list(m = ft$m, spec = ft$spec, fit = name, n_rows = nrow(rows)), f)
-    write_receipt(ctx, provenance(ctx, sprintf("surface_%s", name), rows, NA, ctx$paths$model,
-                                  extra = list(formula = spec$formula, n_coef = ft$n_coef, edf = ft$edf,
-                                               fit_seconds = ft$seconds, files = list(basename(f)))),
-                  ctx$paths$model)
+    hit <- cached_p2(ctx, name, rows, table_sha)
+    if (!is.null(hit$obj)) {
+      m <- hit$obj$m; sp <- hit$obj$spec
+      record(sprintf("P2 %d fit", s), sprintf("%s; %s rows (%s first half, %s second), not refitted", hit$why,
+                                               comma(nrow(rows)), comma(nh[1]), comma(nh[2])))
+    } else {
+      if (cache_only) refuse(ctx$step, sprintf("--cache-only, and P2 %d has no usable cached fit (%s)", s, hit$why))
+      spec <- make_spec("half")
+      ft <- fit_surface(fit_frame(rows, spec), spec)
+      check(sprintf("P2 %d: bam converged", s), ft$converged,
+            sprintf("%s rows (%s first half, %s second), %.0f s", comma(nrow(rows)), comma(nh[1]), comma(nh[2]), ft$seconds))
+      m <- ft$m; sp <- ft$spec
+      f <- file.path(ctx$paths$model, sprintf("surface_%s.rds", name))
+      ensure_dir(ctx$paths$model)
+      saveRDS(list(m = ft$m, spec = ft$spec, fit = name, n_rows = nrow(rows)), f)
+      write_receipt(ctx, provenance(ctx, sprintf("surface_%s", name), rows, NA, ctx$paths$model,
+                                    extra = list(formula = spec$formula, n_coef = ft$n_coef, edf = ft$edf,
+                                                 fit_seconds = ft$seconds, files = list(basename(f)))),
+                    ctx$paths$model)
+    }
+    mix <- ref_mix(m, sp, ref, "first")
+    e1 <- surface_estimands(m, sp, mix, "first", ref, geom_only = TRUE)$point
+    e2 <- surface_estimands(m, sp, mix, "second", ref, geom_only = TRUE)$point
+    vals[[as.character(s)]] <- e2[GEOM] - e1[GEOM]
     record(sprintf("P2 %d second minus first", s), paste(sprintf("%s %.3f", GEOM, vals[[as.character(s)]]), collapse = ", "))
   }
   vals
 }
 
+# P3, from W3.20's machine-drift placebo. One T5 row per season-to-season change, copied from
+# <out>/tables/aaa_placebo.csv: the estimate, the 90% interval, the margin and the verdict as W3.20
+# wrote them. The test is W3.20's: two one-sided tests, 90% interval inside +/-3 sq in (D-P4-29).
+P3_TEST <- "machine zone does not move, net of each season's published rule (D-P4-29)"
+p3_rows <- function(ctx) {
+  f <- file.path(ctx$paths$tables, "aaa_placebo.csv")
+  if (!file.exists(f)) {
+    record("P3", "not run: no tables/aaa_placebo.csv in this output tree (W3.20 writes it)")
+    return(test_row("P3", P3_TEST, "AAA full-ABS rule-net area", "sq in", NA, NA, NA, 0.90, 3, NA, "not run",
+                    "no tables/aaa_placebo.csv in this output tree; SOP W3.20's AAA arm writes it"))
+  }
+  a <- read_csv_plain(f)
+  a <- a[a$placebo == "P3" & a$row_type == "change", ]
+  if (nrow(a) == 0L) die("W3.21: ", f, " holds no P3 change row")
+  check("P3: W3.20's margin is the pre-registered 3 sq in", all(a$margin_sqin == 3), paste(a$margin_sqin, collapse = ", "))
+  out <- lapply(seq_len(nrow(a)), function(i) {
+    r <- a[i, ]
+    record(sprintf("P3 %d to %d", r$season_from, r$season_to),
+           if (is.na(r$estimate)) r$verdict else sprintf("%+.4f sq in, 90%% CI %+.4f to %+.4f against +/-3: %s",
+                                                         r$estimate, r$lo90, r$hi90, r$verdict))
+    test_row("P3", P3_TEST, sprintf("AAA full-ABS rule-net area %d minus %d", r$season_to, r$season_from), "sq in",
+             r$estimate, r$lo90, r$hi90, 0.90, r$margin_sqin, NA, r$verdict,
+             paste0("W3.20, out/tables/aaa_placebo.csv: ", r$detail))
+  })
+  do.call(rbind, out)
+}
+
+p3_verdict <- function(v) {
+  if (any(v == "fail")) "fail" else if (any(v == "pass")) "pass" else if (all(v == "not run")) "not run" else "not evaluable"
+}
+
 main <- function() {
-  opt <- parse_cli(commandArgs(trailingOnly = TRUE))
+  opt <- parse_cli(commandArgs(trailingOnly = TRUE), flags = "cache-only")
   ctx <- start_run("W3.21", opt, "R/ch1/26_placebos.R")
   p <- ctx$paths
   cal <- read_calibration(ctx, opt)
@@ -118,7 +185,7 @@ main <- function() {
   rows <- list(p1_tests(ctx))
   p1_ok <- all(rows[[1]]$verdict == "pass")
 
-  vals <- p2_fits(ctx, prim, ref)
+  vals <- p2_fits(ctx, prim, ref, cache_only = isTRUE(opt[["cache-only"]]))
   detail <- list()
   p2_ok <- NA
   for (e in GEOM) {
@@ -140,9 +207,7 @@ main <- function() {
     record(sprintf("P2 %s", e), sprintf("|delta_abs| %.3f against the 95th percentile of |placebo| %.3f: %s", abs(dabs), q95,
                                         if (!is.finite(q95)) "not run" else if (ok) "pass" else "FAIL"))
   }
-  rows[[length(rows) + 1L]] <- test_row("P3", "machine zone does not move, net of each season's published rule (D-P4-29)",
-                                        "AAA full-ABS rule-net area", "sq in", NA, NA, NA, 0.90, 3, NA, "not run",
-                                        "SOP W3.20's AAA arm is blocked on D-11, D-12 and D-57 (DEV-55); the analysis table holds MLB pitches only")
+  rows[[length(rows) + 1L]] <- p3_rows(ctx)
   for (side in c("outside", "inside")) {
     r <- prim[if (side == "outside") prim$d > P4_D else prim$d < -P4_D, ]
     per <- lapply(SEASONS, function(s) {
@@ -163,7 +228,7 @@ main <- function() {
   t5 <- do.call(rbind, rows)
   t5$placebo_verdict <- ifelse(t5$placebo == "P1", if (p1_ok) "pass" else "fail",
                         ifelse(t5$placebo == "P2", if (isTRUE(p2_ok)) "pass" else if (is.na(p2_ok)) "not run" else "fail",
-                        ifelse(t5$placebo == "P3", "not run", "reported")))
+                        ifelse(t5$placebo == "P3", p3_verdict(t5$verdict[t5$placebo == "P3"]), "reported")))
   descriptive <- !(p1_ok && isTRUE(p2_ok))
   t5$decomposition_reading <- if (descriptive) "descriptive" else "as pre-registered"
   write_csv_plain(t5, file.path(p$tab, "T5_placebos.csv"))
@@ -176,7 +241,8 @@ main <- function() {
               "finding. Record it in docs/DEVIATIONS.md with a Madrid stamp and raise it as an owner item.\n"))
   }
   step_receipt(ctx, rows = d, inputs = c(file.path(p$tab, "T3_estimands.csv"), file.path(p$tab, "T4_decomposition.csv"),
-                                         file.path(p$model, "estimand_draws_main.csv")),
+                                         file.path(p$model, "estimand_draws_main.csv"),
+                                         file.path(p$tables, "aaa_placebo.csv")),
                outputs = c(file.path(p$tab, "T5_placebos.csv"), file.path(p$tab, "T5_placebos_detail.csv")))
   finish("W3.21")
 }

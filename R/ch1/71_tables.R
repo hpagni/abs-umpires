@@ -15,7 +15,7 @@
 #       the 95% interval on Delta_buffer + Delta_ABS excludes zero (D-59, CH1-A9); the plane
 #       component per edge (W3.17, D-56, CH1-A13); the balanced-panel row beside each component with
 #       the difference as a number (CH1-A14); the binned estimate and CH1-A5's verdict
-#   T5  the placebos, W3.21 (P3 not run: the AAA arm is blocked)
+#   T5  the placebos, W3.21; P3's rows are W3.20's, read from out/tables/aaa_placebo.csv (DEV-89)
 #   T6  umpire heterogeneity, W3.18 (CH1-A6)
 #   T7  calibration by 0.5-inch d bin, in-sample, the rows F7 plots; the sealed-set calibration of
 #       W3.23 is a separate block that is empty until that run
@@ -294,10 +294,29 @@ tab_t5 <- function(p) {
                    `Margin or threshold` = f_d(t5$margin_or_threshold, dig), Verdict = t5$verdict,
                    `Annex 8.7` = rec_cell(rc, edge_of(t5$quantity)),
                    check.names = FALSE, stringsAsFactors = FALSE)
-  check("T5: P3 is marked not run while the AAA arm is blocked", all(t5$verdict[t5$placebo == "P3"] == "not run"), "W3.20")
+  # P3 is W3.20's machine-drift placebo. Each T5 row must carry the matching change row of
+  # out/tables/aaa_placebo.csv, value for value, or say "not run" when that file is absent.
+  ap <- file.path(p$tables, "aaa_placebo.csv")
+  t3r <- t5[t5$placebo == "P3", ]
+  if (file.exists(ap)) {
+    a <- rd(p$tables, "aaa_placebo.csv")
+    a <- a[a$placebo == "P3" & a$row_type == "change", ]
+    q <- sprintf("AAA full-ABS rule-net area %d minus %d", a$season_to, a$season_from)
+    same <- function(x, y) (is.na(x) & is.na(y)) | (!is.na(x) & !is.na(y) & abs(x - y) < 1e-9)
+    k <- match(q, t3r$quantity)
+    ok <- nrow(t3r) == nrow(a) && !anyNA(k) && all(same(t3r$estimate[k], a$estimate)) && all(same(t3r$lo[k], a$lo90)) &&
+      all(same(t3r$hi[k], a$hi90)) && all(t3r$verdict[k] == a$verdict) && all(same(t3r$margin_or_threshold[k], a$margin_sqin))
+    check("T5: P3's rows are W3.20's aaa_placebo.csv change rows", ok,
+          paste(sprintf("%s: %s", t3r$quantity, t3r$verdict), collapse = "; "))
+  } else {
+    check("T5: P3 is not run when no aaa_placebo.csv is in this tree", all(t3r$verdict == "not run"), "W3.20")
+  }
   list(data = t5, md = md_table(md),
        note = paste("P1 is two one-sided equivalence tests at 90% (CH1-A3). P2's estimate is the mean of five All-Star",
-                    "break boundaries, with their range as the interval. P4's interval is the range of season rates."))
+                    "break boundaries, with their range as the interval. P3's rows are W3.20's machine-drift placebo,",
+                    "read from `out/tables/aaa_placebo.csv`: two one-sided tests at 90% on AAA's rule-net machine-day",
+                    "area. A change is not evaluable when a season has no keyless full-ABS game on disk.",
+                    "P4's interval is the range of season rates."))
 }
 
 ## --- T6 ---------------------------------------------------------------------------------------------

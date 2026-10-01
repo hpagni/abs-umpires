@@ -8,7 +8,7 @@ The 2026 rollout of the ABS challenge system did not land on a stable baseline. 
 2024 umpire labor agreement had already cut the grading buffer from two inches outside the
 zone edge to three-quarters of an inch on either side of it. Published estimates of the
 2026 change either use 2025 as their baseline (Clemens, FanGraphs, 2026-04-28) or fold 2025
-into an untreated 2015-2025 trend (Lee et al., [arXiv](https://arxiv.org/abs/2609.25525),
+into a 2015-2025 trend (Lee et al., [arXiv](https://arxiv.org/abs/2609.25525),
 2026-09-22). A Baseball America series (2026-09-22) shows the 2025 zone already smaller than
 in any season from 2015 to 2024. None puts an interval on that step against the seasons
 before it. This project adds 2022 to 2024 as a third regime under the earlier rule and

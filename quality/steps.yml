@@ -1227,8 +1227,10 @@
 #
 # R/ch1/26_placebos.R scores P1 as two one-sided equivalence tests on W3.15's draws (0.5 pp, 3 sq
 # in, 90% intervals, no zero-coverage clause), fits the five All-Star-break false boundaries for P2,
-# and tabulates P4 with Wilson intervals. P3 is written as not run: it needs the AAA arm, which is
-# out of the sprint. If P1 or P2 fails, T5 reads "descriptive" and W6.7 drops the causal wording.
+# and tabulates P4 with Wilson intervals. P3 is W3.20's machine-drift placebo, copied row for row
+# from out/tables/aaa_placebo.csv, and "not run" only in a tree without that file (DEV-89).
+# --cache-only reuses the cached P2 fits and refuses to refit. If P1 or P2 fails, T5 reads
+# "descriptive" and W6.7 drops the causal wording.
 #
 # Every real-data entry point refuses to run unless `git merge-base --is-ancestor prereg-v1 HEAD`
 # succeeds, origin carries the tag (D-67), and the fit code is committed (GD-12), and writes a
