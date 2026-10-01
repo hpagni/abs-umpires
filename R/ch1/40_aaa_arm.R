@@ -529,8 +529,8 @@ for (s in AAA_SEASONS) {
     comma(length(games)), comma(nrow(p)), base$n_other_rule, f2(area), f2(ra), sgn2(area - ra)))
 }
 
-P3_NOTE <- paste("Use 1 of 3, the strongest: the machine-drift placebo. The level DiD, use 3, is a supporting",
-                 "arm, not the identification. Placebo P1 failed, so every contrast is descriptive.")
+P3_NOTE <- paste("Use 1 of 3, the strongest: the machine-drift placebo. Use 3 is the level DiD.", ROLE,
+                 "Placebo P1 failed, so every contrast is descriptive.")
 p3_rows <- list()
 for (s in AAA_SEASONS) {
   z <- p3_season[[as.character(s)]]
@@ -646,8 +646,8 @@ fe_fit <- function(x) {
   list(beta = 100 * beta, se = 100 * se, lo = 100 * (beta - tq * se), hi = 100 * (beta + tq * se),
        n = N_, clusters = G_, k = K_)
 }
-WEEK_NOTE <- paste("Use 2 of 3: the within-week alternation. The level DiD, use 3, is a supporting arm, not the",
-                   "identification. Placebo P1 failed, so every contrast is descriptive.")
+WEEK_NOTE <- paste("Use 2 of 3: the within-week alternation. Use 3 is the level DiD.", ROLE,
+                   "Placebo P1 failed, so every contrast is descriptive.")
 wk_rows <- list()
 scopes <- list(c("pooled", "all"), c(AAA_LEVELS[1], "all"), c(AAA_LEVELS[2], "all"))
 scopes <- c(scopes, lapply(EDGE_LEVELS, function(e) c("pooled", e)))
