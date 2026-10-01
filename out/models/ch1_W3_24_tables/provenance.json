@@ -8,18 +8,18 @@
   "game_pk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "analysis_sets_touched": [],
   "seed": null,
-  "code_sha256": "627ece9d098b8a53367e93fad9d65afac40e47204c57d7945d6ac153e94359da",
+  "code_sha256": "9f2e7d56305c0f20cf8a31e246d4a51dbf31a68a10ee0551b300eb10ae019d8c",
   "code_files": {
-    "R/ch1/71_tables.R": "2f834c24eafb44d5f24132319ced9a99383a7c0d3588eddd139e0fc10c9cdc59",
+    "R/ch1/71_tables.R": "6ab3f3a1fd89943a08e93440fd6a55bbcabbde60f0b81ffb9eae470e02b49bd2",
     "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
     "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
     "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "e17a5415d64ab1911a42da38ea29883cb31bf4f9",
+  "git_sha": "e59060b474960c36966d94a941e59716d37549f8",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD e17a5415d64a; prereg-v1 is on origin at e4382841f2bd",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD e59060b47496; prereg-v1 is on origin at e4382841f2bd",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -53,9 +53,9 @@
     "out/tables/T8_sensitivity.csv": "ac0ee9cd803b4333d187fb4b2784813a54d0d951a60335100e04c4f4843a1864",
     "out/tables/T9_prior_work.csv": "331c9d09aa78e1f447730523c9d4cebe6c5691bbbc5d12f947f4a51b8d4edcc9",
     "out/tables/tables_manifest.csv": "0075e35e60dd1d3af7b8872692e4653e2cbca78e2834149e501fbec423e027eb",
-    "docs/ch1.md": "ebf5728c5daf4c5e4fb7f584215d40ddd263fa0ad032f628f006c6de90061305",
+    "docs/ch1.md": "fbdabf87cab39c006606e10790bc8482b3d51661dae3173747d8babbd2da7efb",
     "out/tables/headline.csv": "168c6a40826dae5731dd3a37ccdf2beff667bb67d21ff403891ce5c590da4a83"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-10-01T05:25:34+0200"
+  "written_madrid": "2026-10-01T06:22:36+0200"
 }

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Published estimates of the 2025-to-2026 zone change either take 2025 as the baseline (Clemens, FanGraphs, 28 April 2026) or fold 2025 into an untreated 2015-2025 trend (Lee et al., arXiv, 22 September 2026). Baseball America (22 September 2026) shows the 2025 zone smaller than any since 2015 but names no cause. The December 2024 umpire labor agreement cut the grading buffer from two inches outside the zone edge to three-quarters of an inch on either side of it. Neither design can separate the challenge system from the grading change that preceded it. Clubs and the league need that split.
+Published estimates of the 2025-to-2026 zone change either take 2025 as the baseline (Clemens, FanGraphs, 28 April 2026) or fold 2025 into a 2015-2025 trend (Lee et al., arXiv, 22 September 2026). Baseball America (22 September 2026) shows the 2025 zone smaller than any since 2015 but names no cause. The December 2024 umpire labor agreement cut the grading buffer from two inches outside the zone edge to three-quarters of an inch on either side of it. Neither design can separate the challenge system from the grading change that preceded it. Clubs and the league need that split.
 
 ## Methods
 

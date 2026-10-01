@@ -36,12 +36,18 @@ this way is in [docs/prior-art.md](docs/prior-art.md), section 6.1.
 
 ## Status
 
-Pre-analysis. No result is published yet, and no 2026 datum has been read.
+Chapter 1 is fitted and reported. The pre-registration was frozen and tagged as `prereg-v1`
+on 2026-09-30 before any 2025 or 2026 called pitch was fitted (the order is recorded in
+`docs/prereg/ordering_sentence.md`); the fits ran the same day. The result is descriptive:
+the pre-registered placebo failed, so the two steps are reported as what changed and when,
+with no cause assigned (`docs/DEVIATIONS.md`, DEV-77; the owner's result call is in
+`out/ch1/decision.md`). The sealed set, MLB games from 2026-09-22 and the postseason, stays
+unopened until the postseason ends; it is a confirmatory calibration check. Chapters 2 and 3
+are not yet fitted.
 
-The order is fixed and enforced in code. The analysis set is sealed, the pre-registration is
-frozen and tagged, and only then is data read. `make seal-check` runs the sealed-side checks
-that need no data. `make unseal` refuses unless the pre-registration tag is an ancestor of
-the current commit. The pre-registration tag is not yet cut.
+The order is fixed and enforced in code. `make seal-check` runs the sealed-side checks that
+need no data. `make unseal` refuses unless the pre-registration tag is an ancestor of the
+current commit; no unseal has happened.
 
 Continuous integration runs on Linux and never exercises the arm64 macOS build. Its two
 workflows are parked in `ops/ci-pending/` until the repository owner enables them, so no run

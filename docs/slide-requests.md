@@ -89,8 +89,9 @@ Body:
 > speaker but no abstract, and I could not find slides or a recording online.
 >
 > I am working on a study of how the called strike zone changed between 2024 and 2026, for
-> a conference abstract due on 1 October. It separates the 2025 umpire grading change from
-> the 2026 ABS rollout, and it estimates umpire-level variation in the response with
+> a conference abstract due on 1 October. It measures the zone's step in 2025, the season of the
+> umpire grading change, and its step in 2026, the first regular season with ABS challenges,
+> against the three seasons before either, and it estimates umpire-level variation in the response with
 > shrinkage. Umpire positioning is a plausible mechanism for part of what I am measuring, so
 > I want to read what you presented before I write about it.
 >

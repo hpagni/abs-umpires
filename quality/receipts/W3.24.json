@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "af0f5b3fff7222c7c7e8779c311d9d1ec7825d99",
+  "git_sha": "e59060b474960c36966d94a941e59716d37549f8",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.24.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.24",
-  "timestamp_madrid": "2026-10-01 05:26:39 CEST",
+  "timestamp_madrid": "2026-10-01 06:23:12 CEST",
   "title": "Chapter 1 figures F1 to F8, tables T1 to T9, and docs/ch1.md"
 }

@@ -1,8 +1,8 @@
 """No tracked file carries the owner's personal email address or handle.
 
 The repository is public. `abstract/FORM-FIELDS.md` carried the owner's personal
-Gmail address three times from cd44758. `DECISIONS.md` carried it on one line from
-74b995a: URL-encoded, in base64, and decoded. Both were replaced on 2026-09-29
+Gmail address three times from 9368fa0. `DECISIONS.md` carried it on one line from
+8e3581e: URL-encoded, in base64, and decoded. Both were replaced on 2026-09-29
 (DEV-69).
 Git history still holds them; whether to scrub it is the owner's call.
 

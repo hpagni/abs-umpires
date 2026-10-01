@@ -6,7 +6,7 @@ main_intermediate.int_pitch,,,rows,,3546608
 main_intermediate.int_re288_state,,,rows,,288
 main_intermediate.int_regime,,,rows,,18817
 main_marts.agg_closed_season_drift,,,rows,,28
-main_marts.agg_closed_season_rowcount,,,rows,,924
+main_marts.agg_closed_season_rowcount,,,rows,,1456
 main_marts.dim_aaa_format,,,rows,,6755
 main_marts.dim_batter_season,,,rows,,3335
 main_marts.dim_game,,,rows,,18817

@@ -1,0 +1,4 @@
+probe_date,param_form,http_status,content_type,bytes,outcome,note
+2026-09-22,season[],500,text/html,80549,dead,canonical parameters taken from the page's own serverParams
+2026-09-22,year=,500,text/html,80647,dead,"second independent parameter form, same failure"
+2026-11-01,season[],,,,scheduled,SOP W2.11 asks for one re-test in November; record the result either way
