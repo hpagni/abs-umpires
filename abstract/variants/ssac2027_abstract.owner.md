@@ -1,4 +1,4 @@
-# A Moving Baseline: Measuring MLB's Called Strike Zone, 2022–2026
+# A Moving Baseline: Measuring MLB's Strike Zone, 2022–2026
 
 ## Introduction
 

@@ -6,7 +6,7 @@ is the owner's. Nothing here is written into the abstract, `out/ch1/decision.md`
 `abstract/owner-calls.json` by an agent.
 CALL and BREAK_YEAR were read from the owner's calls file.
 
-Variant filled: owner. Words counted: 489 of 495,
+Variant filled: owner. Words counted: 488 of 495,
 with 0 words held for the owner slots.
 Pre-registration sentence: narrow.
 
@@ -135,7 +135,7 @@ After the owner writes `abstract/owner-calls.json` as
 6. After submitting: the confirmation screenshot and `receipt.eml` go into
    `submissions/ssac2027/`, as its README says.
 
-The no-upload body counts 522 words with the inline table, OVER THE CAP by 27 words after every rung. Cuts: none.
+The no-upload body counts 521 words with the inline table, OVER THE CAP by 26 words after every rung. Cuts: none.
 
 ## (g) Deadline
 
