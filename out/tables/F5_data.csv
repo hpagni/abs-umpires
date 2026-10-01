@@ -1,2 +1,27 @@
-"figure","element","key","blocked_by","note"
-"F5","placeholder","status","W3.20","PLACEHOLDER, not a result: W3.20, the AAA arm, is blocked on D-11's 2023 scan and D-57's 2024 changeover date (DT-29); out/ch1/prose/aaa.md does not exist"
+"figure","element","key","label","value","lo95","hi95","n","n_umpire_weeks","n_umpires","y","note","source","units","verdict","primary","mlb_change","aaa_change"
+"F5","withinweek","pooled/all","Pooled",4.233034,3.522627,4.943441,96554,941,72,8,"frame 2023-04-25 to 2024-05-19, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","withinweek","2023/all","2023 only",4.647069,3.839612,5.454527,70975,691,58,7,"frame 2023-04-25 to 2023-09-24, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","withinweek","2024/all","2024 only",3.085365,1.957063,4.213668,25579,250,53,6,"frame 2024-04-02 to 2024-05-19, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","withinweek","pooled/side","Side edge",4.216629,3.245457,5.1878,50373,941,72,4.5,"frame 2023-04-25 to 2024-05-19, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","withinweek","pooled/top","Top edge",6.954109,5.401219,8.506999,19998,941,72,3.5,"frame 2023-04-25 to 2024-05-19, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","withinweek","pooled/bot","Bottom edge",2.217751,1.089579,3.345922,26183,941,72,2.5,"frame 2023-04-25 to 2024-05-19, strictly before the 2024-06-25 changeover","out/ch1/tab/aaa_withinweek.csv (W3.20)",,,,,
+"F5","pretrend","top_in","Top edge",0.691905,0.499095,0.938352,1000,,,3,"MLB binned series, primary AAA window","out/ch1/tab/aaa_pretrend.csv (W3.20)","in","fail",FALSE,0.430579,-0.261326
+"F5","pretrend","bot_in","Bottom edge",0.110676,-0.172199,0.412367,1000,,,2,"MLB binned series, primary AAA window","out/ch1/tab/aaa_pretrend.csv (W3.20)","in","pass",FALSE,0.14107,0.030394
+"F5","pretrend","half_width_in","Half-width",0.098739,-0.080869,0.268406,1000,,,1,"MLB binned series, primary AAA window","out/ch1/tab/aaa_pretrend.csv (W3.20)","in","pass",FALSE,0.142633,0.043893
+"F5","pretrend","area_sqin","Area",16.815708,5.577053,27.785078,1000,,,1,"MLB binned series, primary AAA window","out/ch1/tab/aaa_pretrend.csv (W3.20)","sq in","fail",TRUE,12.865799,-3.949908
+"F5","constant","ci_pct",,95,,,,,,,,,,,,,
+"F5","constant","n_withinweek_rows",,6,,,,,,,,,,,,,
+"F5","constant","n_pretrend_rows",,4,,,,,,,,,,,,,
+"F5","constant","top_cover_hits",,91,,,,,,,,,,,,,
+"F5","constant","top_cover_n",,100,,,,,,,,,,,,,
+"F5","constant","top_cover_bound",,93,,,,,,,,,,,,,
+"F5","constant","top_null_margin_in",,0.1,,,,,,,,,,,,,
+"F5","constant","top_null_hits",,44,,,,,,,,,,,,,
+"F5","constant","top_null_n",,50,,,,,,,,,,,,,
+"F5","constant","top_null_bound",,47,,,,,,,,,,,,,
+"F5","constant","hw_null_hits",,42,,,,,,,,,,,,,
+"F5","constant","hw_null_n",,50,,,,,,,,,,,,,
+"F5","constant","hw_null_bound",,43,,,,,,,,,,,,,
+"F5","constant","recovery_ci_pct",,95,,,,,,,,,,,,,
+"F5","constant","recovery_null_ci_pct",,90,,,,,,,,,,,,,
+"F5","constant","annex_section",,8.7,,,,,,,,,,,,,

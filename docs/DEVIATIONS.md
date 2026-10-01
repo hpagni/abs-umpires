@@ -2208,3 +2208,12 @@ F8 pending panel: recorded 2026-10-01; W3.23 runs once after 2026-11-01.
 
 No model was fitted and no datum dated 2026-09-22 or later was read. The compute stage reran once,
 because its cache key hashes `70_figures.R`; it reads the cached surface and draws only.
+
+Checks, at 2026-10-01T05:25+02:00 Europe/Madrid. `bash scripts/ch1.sh` exits 0. It regenerated all
+nine figures and nine tables: F1 to F7 and F2b built, F8 pending by design. The compute stage's
+rays, contours and bins are byte-identical to HEAD; only its key file changed, through the code
+hash. `bash scripts/test_ch1.sh` reads [ FAIL 0 | WARN 0 | SKIP 0 | PASS 2048 ]. The prose lint on
+`docs/ch1.md` reports 0 violations. GD-04 reports 0 violations on both scripts and on `scripts/ch1.sh`.
+
+Status: OPEN until W3.23 runs and F8 is drawn; F5's departure stands unless the owner asks for an
+AAA contour fit.

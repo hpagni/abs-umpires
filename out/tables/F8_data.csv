@@ -1,2 +1,2 @@
-"figure","element","key","blocked_by","note"
-"F8","placeholder","status","W3.23","PLACEHOLDER, not a result: W3.23, the sealed run, runs once after the season; no sealed output exists and none is read here"
+"figure","element","key","blocked_by","gate","recorded","runs_after","deviation","note"
+"F8","pending","status","W3.23","quality/receipts/W3.23.json","2026-10-01","2026-11-01","DEV-90","Sealed run pending, not a result: W3.23, the sealed run, runs once after the season; no sealed output exists and none is read here"
