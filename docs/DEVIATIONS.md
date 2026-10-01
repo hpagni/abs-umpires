@@ -2299,8 +2299,8 @@ Status: OPEN until W3.23 evaluates CH1-A10 after 2026-11-01. DEV-88 is supersede
 
 ### DEV-91 addendum, 2026-10-01 06:25 Madrid
 
-Auditor #3's two refutations are closed: `tests/guard/test_no_owner_address.py` now carries the
-translated ids (it had been translated in the working tree and left out of 1c40950), and the
+Auditor #3's two refutations are closed. `tests/guard/test_no_owner_address.py` now carries the
+translated ids; it had been translated in the working tree and left out of 1c40950. The
 sentence in `docs/slide-requests.md` that said the study "separates" the two rule changes now
 describes the two measured steps. The word "untreated" is gone from the three superseded abstract
 templates. The T1 table in `docs/ch1.md` is repaired: `R/ch1/71_tables.R` keys its season columns
