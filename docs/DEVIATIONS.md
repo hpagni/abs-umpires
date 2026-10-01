@@ -2217,3 +2217,82 @@ hash. `bash scripts/test_ch1.sh` reads [ FAIL 0 | WARN 0 | SKIP 0 | PASS 2048 ].
 
 Status: OPEN until W3.23 runs and F8 is drawn; F5's departure stands unless the owner asks for an
 AAA contour fit.
+
+## DEV-91: CH1-A1 to CH1-A14 re-evaluated at HEAD be834ef; this table supersedes DEV-88's verdicts
+
+Stamped 2026-10-01T05:40:48+02:00, Europe/Madrid. Owner W3, fleet phase 08c, the acceptance evaluator. Files:
+`out/tables/acceptance.csv` (one row per criterion) and `logs/evidence/CH1-acceptance-3.log` (local; `logs/`
+is ignored). The phase 08c script named this entry DEV-90. DEV-90 already holds W3.24's F5 and F8
+record, so this is the next free id.
+
+Applied as pre-registered, not a departure. The verdicts in `out/tables/acceptance.csv` replace DEV-88's
+table. DEV-88's text stays as written. Each statement is the SOP 9.2 text verbatim from
+`fleet/08-chapter1-full.js` SOP_CH1_ACCEPTANCE, and each of the 14 also appears verbatim in
+PREREGISTRATION.md. No model was fitted. No datum dated 2026-09-22 or later was read.
+
+Verdicts: 9 PASS (CH1-A1, A2, A4, A6, A8, A11, A12, A13, A14), 4 FAIL (CH1-A3, A5, A7, A9), and CH1-A10
+reads "PENDING (sealed run after 2026-11-01)". Every number a verdict reads is the one DEV-88 read. Both
+hard gates pass. `Rscript R/ch1/11_zone_gate.R --check` was rerun at HEAD: 23 PASS, 0 FAIL, exit 0.
+`R/ch1/02_original_call.R --check` was not rerun, because it reads team drawer files that hold rows
+dated after the seal. CH1-A2 was recounted instead from its pre-seal artifact,
+`data/interim/ch1/original_call.parquet`, read with `official_date < 2026-09-22`: 10,139 bridge plus 28
+fallback recoveries, 0 unrecovered, 0 ambiguous. `R/ch1/03_heights.R --check` was not rerun, because the
+script can fit a `bam`. Its table and code are the same blobs as at DEV-88's run. CH1-A7 and CH1-A8 were
+recounted from the replicate files in `out/dev/ch1_synth/`, none newer than 2026-09-29. The chapter
+stays descriptive (CH1-A3; DEV-77, DEV-83, DEV-89).
+
+The items of DEV-88's audit (`logs/evidence/CH1-acceptance-verify-2.log`):
+
+1. **R1, closed by DEV-89 item 1** (commit a15d4cb). `docs/prior-art.md` carries none of the six
+   phrases R1 named. Its seven remaining hits for the pattern list are other authors' terms (their
+   "identification trap", their quoted "identification must difference both", their published
+   counterfactuals) and "identifiers".
+2. **The `aaa.md` counterfactual, closed by DEV-89 item 2.** The parallel-trends paragraph of
+   `out/ch1/prose/aaa.md` and `docs/ch1.md` is now a description. No tracked file outside DEVIATIONS.md keeps
+   the counterfactual sentence.
+3. **D1, closed by DEV-89 item 3** (commit 5f9426f). T5's two P3 rows equal the change rows of
+   `out/tables/aaa_placebo.csv` value for value, in both copies of T5. `docs/ch1.md` no longer calls the AAA
+   arm "Not written".
+4. **D2, closed by DEV-86's addendum** (commit 1c40950). Outside the commit map and
+   `docs/prereg/ordering_sentence.md`, two pre-rewrite ids remain, both in DEV-86's own sentence about the
+   tag. All 52 `gd12` strings in tracked provenance files name e4382841f2bd. Ids that were never in the
+   map stay as DEV-86 says. One side effect is recorded here. The translation turned DEV-88's "old, now
+   new" pair into a repeated id, "87b0a14, now 87b0a14", in DEV-88 and in the superseded table. The new
+   table cites DEV-81's HEAD as 87b0a14 alone.
+5. **D3, corrected.** DEV-88 said every source was byte-identical to DEV-81's HEAD except T4 and T5. That
+   was untrue. Each row now states its own sources. Unchanged since DEV-81's HEAD: both T2 files, W3.16's
+   T4, T6, `umpire_eb_summary.csv`, the power curve, the framing validity table, `height_coverage.csv`, the
+   plane component table, PREREGISTRATION.md and the three gate scripts. Changed, with 0 shared-cell
+   differences: the published T4 (5 added columns), `headline.csv` (4 to 7 rows) and T5. T5 gained a
+   column, and its P3 row became two rows under DEV-89. Also changed: `docs/ch1.md`, the rebuilt T8,
+   `out/ch1/prose/sensitivity.md`, the added F2b sidecar and the W3.22 receipt.
+6. **D4, the first closing clause, met with F8 pending by design** (DEV-90). `make ch1` ran at HEAD
+   be834ef at 05:34 from caches and exited 0. It built F1 to F7 and F2b, wrote F8 as the dated pending
+   panel and regenerated the 9 tables. `make test-ch1` reported [ FAIL 0 | WARN 0 | SKIP 0 | PASS 2048 ]
+   and exited 0. The second clause holds: section 8 of `out/ch1/decision.md` carries the owner's
+   `RESULT CALL:` line, unchanged since commit ecc2879.
+7. **D5, a finding with no consequence.** The owner's D-R0-02 answer (4ed2aaf, 2026-09-24) quoted
+   batter-season coverage. The called-pitch table first appears in c01c931 a day later. Both precede the
+   tag. 2022 sits below the 0.60 trigger on either measure (0.5934 of called pitches, 0.4372 of batters).
+   D-13's fork is the same.
+8. **D6, the vocabulary fixed.** CH1-A10 reads "PENDING (sealed run after 2026-11-01)", not FAIL. The
+   criterion cannot be evaluated before W3.23 runs. That is not a calibration failure.
+
+Findings outside the criteria, left to their owners:
+
+- **T1 in `docs/ch1.md` is malformed.** Its header row has 2,028 pipes, because `R/ch1/71_tables.R` line
+  152 indexes `md[[SEASONS[i]]]` by the integer 2022 to 2026. T3 uses `as.character(s)` at line 186.
+  `out/tables/T1_sample_construction.csv` is correct. The W3.24 gate (`logs/evidence/W3.24.log`, 05:31)
+  reads FAIL on it, because 240 printed header tokens trace to no committed table. The defect dates from
+  the first W3.24 build (e9f0b3d). It sat in the tree at DEV-81's and DEV-88's HEADs too. The fix belongs
+  to the W3.24 lane; this evaluator did not edit it.
+- The `make ch1` summary counts "figures 8 of 8" and leaves F2b out of its list, although it rebuilt F2b.
+- The whole-tree sweep for "identif", "untreated", "accounts for", "attributab", "effect of", "due to the
+  rule", "counterfactual", "had .* not happened" and "caused" found no attributive claim outside DEV-89's
+  exemptions. Two items stay where DEV-89 left them. The abstract and its two variants say Lee et al.
+  "fold 2025 into an untreated 2015-2025 trend", which describes Lee et al.'s model in the owner's
+  submission text. A comment at `tools/comms/fill_slots.R` line 20 still says the D-66 variants "all
+  say" a phrase that DEV-83 removed. It is a stale code comment, not a claim.
+- No commit message from 1c40950 to HEAD carries an attribution line.
+
+Status: OPEN until W3.23 evaluates CH1-A10 after 2026-11-01. DEV-88 is superseded by this entry.
