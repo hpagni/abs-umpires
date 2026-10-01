@@ -1,41 +1,6 @@
-FAILURE: 'test-ch1-figures.R:428:3' ---------------
-Expected `is.null(attr(r1, "status")) || ...` to be TRUE.
-Differences:
-`actual`:   FALSE
-`expected`: TRUE
-
-REFUSED W3.24: real data, and the fit code is not committed, so git_sha would not name it: ?? R/ch1/40_aaa_arm.R
-
-FAILURE: 'test-ch1-figures.R:431:3' ---------------
-Expected `is.null(attr(r2, "status")) || ...` to be TRUE.
-Differences:
-`actual`:   FALSE
-`expected`: TRUE
-
-REFUSED W3.24: real data, and the fit code is not committed, so git_sha would not name it: ?? R/ch1/40_aaa_arm.R
-
-WARNING: 'test-ch1-figures.R:434:33' --------------
-cannot open file '/var/folders/_s/ccpgpzc95d7_s00k9rrpv8h00000gn/T//Rtmpp0Zyjs/w324_10bde7021d566/tables/F1_data.csv': No such file or directory
-Backtrace:
-    ▆
- 1. └─rd(file.path(tmp, "tables", f)) at test-ch1-figures.R:434:33
- 2.   └─utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE) at test-ch1-figures.R:38:7
- 3.     └─utils::read.table(...)
- 4.       └─base::file(file, "rt")
-
-ERROR: 'test-ch1-figures.R:434:33' ----------------
-Error in `file(file, "rt")`: cannot open the connection
-Backtrace:
-    ▆
- 1. └─rd(file.path(tmp, "tables", f)) at test-ch1-figures.R:434:33
- 2.   └─utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE) at test-ch1-figures.R:38:7
- 3.     └─utils::read.table(...)
- 4.       └─base::file(file, "rt")
-
-FAILURE: 'test-ch1-figures.R:449:3' ---------------
-W3.24 INCOMPLETE, placeholders remain: F5 blocked on W3.20; F8 blocked on W3.23
-
-[ FAIL 4 | WARN 1 | SKIP 0 | PASS 357 ]
-Error:
-! Test failures.
-Execution halted
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 719 ]
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
+prose-lint: 1 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+GD-04: 0 violation(s) in R/ch1/70_figures.R
+GD-04: 0 violation(s) in R/ch1/71_tables.R
