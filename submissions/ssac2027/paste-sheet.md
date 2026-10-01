@@ -22,7 +22,7 @@ Baseball.
 Counted inside the word limit.
 
 ```text
-MLB's called strike zone shrank before regular-season ABS challenges, and again in 2026
+The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 ```
 
 ## 4. Body, one box
@@ -33,7 +33,7 @@ Option A, the form has an upload field: 488 words with the title. Upload
 `abstract/table1.png` and, if the figure stays after review R1, `abstract/figure1.png`.
 
 ```text
-MLB's called strike zone shrank before regular-season ABS challenges, and again in 2026
+The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 
 Introduction
 
@@ -56,7 +56,7 @@ Option B, no upload field: 521 words with the title, OVER THE 495-WORD CAP: do n
 the end of Results and the figure is dropped.
 
 ```text
-MLB's called strike zone shrank before regular-season ABS challenges, and again in 2026
+The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 
 Introduction
 

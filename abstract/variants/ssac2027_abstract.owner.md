@@ -1,4 +1,4 @@
-# MLB's called strike zone shrank before regular-season ABS challenges, and again in 2026
+# The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 
 ## Introduction
 
