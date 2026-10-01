@@ -1057,6 +1057,7 @@ prose <- c(
 prose <- prose[!vapply(prose, is.null, logical(1))]
 prose_text <- paste0(paste(unlist(prose), collapse = "\n"), "\n")
 prose_text <- gsub("\n{3,}", "\n\n", prose_text)
+prose_text <- sub("\n+$", "\n", prose_text)   # one final newline, as the end-of-file hook wants
 
 ## --- write or compare -----------------------------------------------------------------------------------
 

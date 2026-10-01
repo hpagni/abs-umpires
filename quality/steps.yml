@@ -1197,6 +1197,32 @@
   owner: W3
   needs: R/ch1/30_framing.R, tests/testthat/test-ch1-framing.R, out/ch1/tab/framing_catcher_seasons.csv, out/ch1/tab/framing_by_season.csv, out/tables/ch1_framing_by_regime.csv, out/tables/ch1_framing_validity.csv, out/ch1/prose/framing.md
 
+# W3.20, the AAA arm and the level difference-in-differences. Owner W3, fleet phase 08, the
+# chapter1-full lane. Unblocked by D-11 and D-57 (DEV-84) and D-12 (D-R0-01).
+#
+# R/ch1/40_aaa_arm.R is the only producer. It reads the AAA feeds on disk, offline, and reports the
+# three uses in descending strength: the machine-drift placebo P3 (out/tables/aaa_placebo.csv), the
+# within-week alternation (out/ch1/tab/aaa_withinweek.csv), and the level DiD with AAA as the control
+# series (out/ch1/tab/aaa_pretrend.csv, out/ch1/tab/aaa_did.csv), with out/ch1/prose/aaa.md. The
+# within-week frame, and the DiD series in 2024, keep only dates strictly before the D-57 changeover
+# date, read from the format_challenge_tue_thu row of out/tables/aaa_format.csv. The DiD is a
+# supporting arm, not the identification. The real run refuses unless prereg-v1 is an ancestor of
+# HEAD and the code it executes is committed; `--check` rebuilds and compares byte for byte.
+#
+# The verify command re-reads what the step wrote with tests/testthat/test-ch1-aaa.R, which refits
+# nothing: the changeover date from the rule-version table and absent from the script, DT-29's
+# DiD-frame clause on the within-week frame and the DiD series, the role sentence in every artifact,
+# parallel trends stated as strong, the pre-trend rule, the DiD's own 95% interval, P3's two
+# one-sided tests, no causal wording, the seal, and every prose number traced to a table cell. Then
+# the prose lint on aaa.md and GD-04 on the script. `needs` names the outputs, so before the run the
+# step reads MISSING rather than FAIL.
+- id: W3.20
+  title: "Chapter 1 AAA arm: machine-drift placebo, within-week alternation, level DiD"
+  verify: "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-aaa\", stop_on_failure = TRUE)' && uv run --locked python quality/prose_lint.py out/ch1/prose/aaa.md && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/40_aaa_arm.R"
+  expect_exit: 0
+  owner: W3
+  needs: R/ch1/40_aaa_arm.R, tests/testthat/test-ch1-aaa.R, out/tables/aaa_placebo.csv, out/ch1/tab/aaa_withinweek.csv, out/ch1/tab/aaa_pretrend.csv, out/ch1/tab/aaa_did.csv, out/ch1/prose/aaa.md
+
 # W3.21, placebos P1 to P4. Owner W3, fleet phase 05, the ch1-fits lane.
 #
 # R/ch1/26_placebos.R scores P1 as two one-sided equivalence tests on W3.15's draws (0.5 pp, 3 sq

@@ -1967,3 +1967,36 @@ Because commit ids changed, every receipt's `git_sha` and every fit receipt's `g
 translated through the map, so `make prove`, GD-02 and GD-12 read the same commits under their new
 ids. Hashes quoted in the prose of DECISIONS.md, this file and RUNLOG.md before this entry refer to
 the pre-rewrite history; the map resolves each one. No file's contents changed in any commit.
+
+## DEV-87: W3.20, the AAA arm as built on the AAA corpus on disk, and DT-29's DiD-frame clause handed to its owner
+
+Stamped 2026-10-01T02:21:47+02:00, Europe/Madrid. Owner W3, fleet phase 08, the chapter1-full lane. Files:
+`R/ch1/40_aaa_arm.R`, `tests/testthat/test-ch1-aaa.R`, `out/tables/aaa_placebo.csv`,
+`out/ch1/tab/aaa_withinweek.csv`, `out/ch1/tab/aaa_pretrend.csv`, `out/ch1/tab/aaa_did.csv`,
+`out/ch1/prose/aaa.md`, `quality/steps.yml` (W3.20 registered).
+
+The SOP text of W3.20 is applied as written. The three uses run in descending strength and in that
+order. The within-week contrast keeps dates strictly before the D-57 changeover date, read from the
+rule-version table. "The DiD is a supporting arm, not the identification." is in every artifact.
+Parallel trends is stated and called strong, the pre-trend rule is applied, and the DiD carries its
+own 95% interval. Placebo P1 failed, so every contrast is descriptive. What departs, or applies a
+consequence:
+
+1. The level DiD is estimated for the 2024 to 2025 step only. The 2025 to 2026 step needs AAA 2026
+   feeds; none is in the lake, `data/raw/` belongs to phase 07, and this phase makes no request. The
+   2025 to 2026 rows of `aaa_did.csv` read "not estimated" with that reason.
+2. The AAA 2024 pull is still open in phase 07: 696 of 2,232 Final games, complete through
+   2024-05-18. The primary AAA window is therefore the month-day span every season covers with
+   challenge-format games, 04-28 to 05-18; every challenge-format game on disk is a robustness row.
+   The arm should be rerun once phase 07 completes 2024.
+3. DT-29 is applied to the level DiD as well as to the within-week frame. In 2024 the AAA DiD series
+   keeps only dates strictly before the changeover date. The challenge-format 2024 games on disk
+   after it are D-57's binary-search probes, not a season sample.
+4. P3's 2024 to 2025 change is not evaluable: 2025 has no keyless full-ABS game on disk.
+5. GD-12 is applied as its local half: prereg-v1 is an ancestor of HEAD and the code the run
+   executes is committed and clean. The tag's presence on origin is not queried, because this phase
+   makes no network request.
+6. DT-29's DiD-frame clause in `tests/data/test_aaa_changeover.py` fails from this registration on,
+   as it was written to. It stays red until its owner (W2, the W2.8 scans) points it at
+   `out/ch1/tab/aaa_withinweek.csv` and asserts every `frame_last_date` is before the changeover date. That file is outside this
+   lane and was not edited. The same assertion runs now in `tests/testthat/test-ch1-aaa.R`.
