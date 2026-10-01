@@ -149,7 +149,7 @@ tab_t1 <- function(p) {
   cnt <- function(x, u) ifelse(u %in% c("pitches", "games", "umpires") & grepl("^[0-9.]+$", x),
                                comma(round(as.numeric(x))), x)
   md <- data.frame(Row = show$row_id, Rule = show$rule, check.names = FALSE, stringsAsFactors = FALSE)
-  for (i in seq_along(SEASONS)) md[[SEASONS[i]]] <- cnt(as.character(show[[yc[i]]]), show$unit)
+  for (i in seq_along(SEASONS)) md[[as.character(SEASONS[i])]] <- cnt(as.character(show[[yc[i]]]), show$unit)
   md$Total <- cnt(ifelse(is.na(show$total), "", as.character(show$total)), show$unit)
   list(data = out, md = md_table(md),
        note = paste("The W3.5 rows count the whole open lake; the fit rows are the sample the primary surface",
