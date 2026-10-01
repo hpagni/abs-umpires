@@ -2000,3 +2000,68 @@ consequence:
    as it was written to. It stays red until its owner (W2, the W2.8 scans) points it at
    `out/ch1/tab/aaa_withinweek.csv` and asserts every `frame_last_date` is before the changeover date. That file is outside this
    lane and was not edited. The same assertion runs now in `tests/testthat/test-ch1-aaa.R`.
+
+## DEV-88: CH1-A1 to CH1-A14 re-evaluated at HEAD 694b593; this table supersedes DEV-81's verdicts
+
+Stamped 2026-10-01T02:56:45+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `out/tables/acceptance.csv`
+(now tracked, one row per criterion, with a new `refutation_status` column),
+`logs/evidence/CH1-acceptance-2.log`, and `logs/evidence/CH1-acceptance-DEV81-snapshot.csv` (the
+DEV-81 table as it stood, kept because it was never tracked).
+
+Applied as pre-registered, not a departure. The verdicts in `out/tables/acceptance.csv` replace the
+verdict table in DEV-81. DEV-81's text stays as written. The evaluator changed no model, fit or
+number. Every source table is byte-identical to DEV-81's HEAD (0a76fd7, now 87b0a14 under DEV-86's
+map), except T4 and T5. Those two gained disclosure columns, and their shared cells differ 0 times.
+
+Verdicts: 9 PASS (CH1-A1, A2, A4, A6, A8, A11, A12, A13, A14) and 5 FAIL (CH1-A3, A5, A7, A9, A10).
+They are the same as DEV-81's. Both hard gates pass, and their check scripts were rerun at HEAD:
+`11_zone_gate.R` 23 PASS 0 FAIL, `02_original_call.R` 20 PASS 0 FAIL, `03_heights.R` 15 PASS 0 FAIL,
+each exit 0. The chapter stays descriptive (CH1-A3; DEV-77, DEV-83).
+
+The five refutations in `logs/evidence/CH1-acceptance-verify.log`:
+
+1. **R1, partly closed.** DEV-83 closed every location R1 named: `abstract/ssac2027_abstract.md`,
+   the null-buffer and sign-reversal variants, and `README.md`. All four scan clean at HEAD. R1
+   stays open in `docs/prior-art.md`, which is tracked and public. Line 137 says "a third,
+   untreated baseline regime". Line 390 is headed "Separating the 2025 grading change from the
+   2026 ABS effect". Lines 519 to 521 say 2022 to 2024 against 2025 "identifies the grading
+   change" and 2025 against 2026 "identifies ABS net of it", over "a genuinely untreated placebo
+   pair". The failed placebo contradicts all three. The frozen consequence removes causal
+   language from every artifact, so CH1-A3's consequence is not yet complete across the tree.
+   This evaluator did not edit that file.
+2. **R2, closed by DEV-83.** `out/tables/F4_data.csv` is out of the index and ignored
+   (`.gitignore` line 68). No tracked file holds a per-umpire table. The F4 figure stays tracked
+   and anonymised, and it draws the 88 per-umpire intervals (DEV-85 item 6).
+3. **R3, closed by DEV-85 item 1** (commit 9b61121). The published `out/tables/T4_decomposition.csv`
+   carries `recovery_disclosure` and the `undersmooth_*` columns. `docs/ch1.md` carries the Annex 8.7
+   column and the SENS-B1-UNDERSMOOTH column beside the primary.
+4. **R4, closed by DEV-85 item 2.** T8 is built from W3.22's grid (`out/tables/T8_sensitivity.csv`,
+   333 rows; W3.22's receipt is PASS). `docs/ch1.md` states CH1-A9 as not met because the
+   multiverse is incomplete, and the owner deferred `postseason_in` and had it disclosed (D-R0-05
+   item 5).
+5. **R5, closed by DEV-85 item 3.** The CH1-A9 cell reads 5 `bam` rows, and
+   `out/ch1/prose/sensitivity.md` gives the same breakdown.
+
+Row text that changed: CH1-A10 is re-dated and is still not evaluable until W3.23 runs after
+2026-11-01. CH1-A12 cites `prereg-v1` by its ids after the DEV-86 rewrite (tag 980db5f on commit
+e438284). It also records the order of events. The owner's D-R0-02 answer quoted batter-season
+coverage, and the called-pitch table first appears a day later. Both came before the tag, and 2022 sits below
+the 0.60 trigger on either measure. CH1-A13 points at F2b, and CH1-A14 at the three panel rows in
+`out/tables/headline.csv`.
+
+The two closing clauses of SOP 9.2:
+
+- **`make ch1 && make test-ch1`: not met.** `make ch1` regenerated every buildable figure and
+  table and exited 3, because F5 and F8 are placeholders. F8 waits on W3.23. F5 is still a
+  placeholder although W3.20 landed in 694b593: `R/ch1/70_figures.R` line 85 still marks F5 as
+  blocked, and its message says `out/ch1/prose/aaa.md` does not exist, though it now does.
+  `make test-ch1`, run alone, reported FAIL 2 and PASS 2003. One failure is W3.24's completeness
+  test. The other is the `docs/ch1.md` trace test, which found 34 numbers that trace to no table
+  in its pool. That failure appeared once the regenerated `docs/ch1.md` folded W3.20's `aaa.md`
+  into "The AAA arm", and the `aaa_*.csv` tables are not in the test's pool. Both fixes belong to
+  the W3.24 lane. `make ch1` left regenerated tracked outputs in the working tree (`docs/ch1.md`
+  and the figure PDFs, which differ by CreationDate). This evaluator committed none of them.
+- **`out/ch1/decision.md`, the RESULT CALL line: present.** Section 8 carries the line the owner
+  approved verbatim on 2026-09-30T21:32:08+02:00 (D-R0-05, commit ecc2879). No agent wrote it.
+
+Status: OPEN until W3.23 evaluates CH1-A10 and `make ch1 && make test-ch1` exits 0.
