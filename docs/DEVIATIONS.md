@@ -2070,3 +2070,101 @@ The two closing clauses of SOP 9.2:
   approved verbatim on 2026-09-30T21:32:08+02:00 (D-R0-05, commit ecc2879). No agent wrote it.
 
 Status: OPEN until W3.23 evaluates CH1-A10 and `make ch1 && make test-ch1` exits 0.
+
+## DEV-89: the placebo consequence applied to prior-art.md, the AAA parallel-trends sentence and T5's P3 row
+
+Stamped 2026-10-01T03:51:59+02:00, Europe/Madrid. Owner W3, fleet phase 08, the chapter1-full lane, after the second
+acceptance auditor (`logs/evidence/CH1-acceptance-verify-2.log`: R1 open, defect D1). Files:
+`docs/prior-art.md`, `README.md`, `R/ch1/40_aaa_arm.R`, `out/ch1/prose/aaa.md`,
+`out/ch1/tab/aaa_did.csv`, `out/ch1/tab/aaa_pretrend.csv`, `R/ch1/26_placebos.R`, `R/ch1/71_tables.R`,
+`out/ch1/tab/T5_placebos.csv`, `out/tables/T5_placebos.csv`, `out/tables/tables_manifest.csv`,
+`docs/ch1.md`, `out/ch1/decision.md`, `tests/testthat/test-ch1-figures.R`,
+`abstract/exhibits/area-trajectory-drift/make_exhibit.py`, `quality/steps.yml` and
+`quality/steps.d/W3.21.yml` (the W3.21 comment), two run receipts and the W3.20 and W3.21 step receipts.
+
+Applied as pre-registered, not a departure. PREREGISTRATION.md section 8 says that when P1 fails
+the causal language is removed from every artifact. DEV-77, DEV-83 and DEV-88 applied it to the
+submission, the tables, the templates and the README. Three places still carried it. What changed:
+
+1. **`docs/prior-art.md`.** Line 137 said the project would "resolve" the confound "with a third,
+   untreated baseline regime". It now says the project measures the 2025 and 2026 steps against
+   2022 to 2024. Its placebo pair inside those seasons failed (10.8 sq in, 90% CI 7.7 to 13.9),
+   so neither step is assigned to its rule. Section 6.1 was headed "Separating the
+   2025 grading change from the 2026 ABS effect" and spoke of "an untreated 2022-2024 baseline".
+   It is now "The 2025 and 2026 steps, each measured against 2022 to 2024". It states the P1
+   failure where the design is described. Its list of what is and is not published is unchanged,
+   except that Lee et al.'s trend is no longer called "untreated". In section 7 the first claim said
+   2022 to 2024 against 2025 "identifies the grading change" and 2025 against 2026 "identifies ABS
+   net of it". It also spoke of "a genuinely untreated placebo pair". It now describes two steps
+   measured net of the 2022-2024 trend, with the placebo failure. The 2024-to-2025 claim no longer
+   claims "its attribution to the grading change". Four smaller passages changed the same way: "the
+   treated pair" (three times) now reads "spans the grading change". The Clemens row and the
+   closing paragraph no longer say the chapter "separates" the grading change. The may-not-claim
+   list is kept and gains one item: that either step is its rule's doing. `README.md` drops
+   "untreated" from its description of Lee et al. in the same way.
+2. **The AAA parallel-trends sentence.** `R/ch1/40_aaa_arm.R` wrote a counterfactual: "Had the 2025
+   grading-buffer cut not happened, MLB's called zone would have changed ... as AAA's did". It is now
+   a description: the DiD is MLB's 2024 to 2025 change minus AAA's challenge-format change, and it
+   reads as more than that difference only if the two series share one trend. The assumption is
+   still stated and still called strong, with its four differences, as SOP W3.20 requires. The arm
+   was not rerun, because it refits the AAA bootstrap, and so does its `--check`. The new strings
+   were evaluated from the script's own two expressions and substituted for the old ones. The
+   substitution touched the `parallel_trends` column of `aaa_did.csv` (20 rows) and
+   `aaa_pretrend.csv` (16 rows), and one paragraph of `aaa.md`. No number changed.
+   "The DiD is a supporting arm, not the identification." stays: SOP W3.20 asks for it verbatim, the
+   W3.20 test checks it, and it is a negation. The W3.20 test passes 249 of 249, and
+   `scripts/prove.sh W3.20` is PASS.
+3. **T5's P3 row (auditor D1).** T5 said P3 was "not run", while W3.20's `out/tables/aaa_placebo.csv`
+   scored it. `R/ch1/26_placebos.R` now copies W3.20's two change rows. The first is 2024 minus
+   2023, +0.3605 sq in, 90% CI -0.436041 to +1.224819 against +/-3 sq in: pass. The second is 2025
+   minus 2024: not evaluable, since 2025 has no keyless full-ABS game on disk. The P3 verdict is
+   pass. In a tree without `aaa_placebo.csv` P3 is still written as not run. The script gained
+   `--cache-only`. P2 then reads its five fits from `out/ch1/model/` when each receipt matches
+   the table's sha256, the row count and the game_pk hash. It refuses to fit otherwise. The rerun
+   read all five from cache, fitted nothing and took 89 s. The P1, P2 and P4 rows and
+   `T5_placebos_detail.csv` are byte-identical. `make tables` then hit the compute cache and ran
+   `71_tables.R`: 29 PASS, 0 FAIL. That script now checks T5's P3 rows against `aaa_placebo.csv`,
+   value for value. The consequence still turns on P1 and P2 alone, so the reading stays
+   descriptive. DEV-70's condition, "not run until the AAA arm runs", is met. The W3.19, W6.7 and
+   W3.24 figure receipts still name the previous T5 hash. Those steps read only P1, P2 or the
+   decomposition reading from T5, and none of these changed, so they were not rerun.
+4. **`docs/ch1.md`.** The fold-in that the previous run left uncommitted (2026-10-01 02:57) was
+   reviewed and kept. It is what `make tables` builds from the committed `aaa.md` and
+   `sensitivity.md`. This run's rebuild differs from it only in the two T5 P3 rows, the T5 note
+   and the parallel-trends paragraph. The four `aaa_*` tables joined the `docs/ch1.md` trace pool
+   in `tests/testthat/test-ch1-figures.R`. Before, 34 numbers traced to no table in that pool; now
+   none does. That test still fails on one count, the F5 and F8 placeholders. F5's placeholder
+   text still says W3.20 is blocked (`R/ch1/70_figures.R` line 85, the W3.24 lane). It was not
+   touched here.
+5. **The sweep.** `git ls-files | xargs grep` ran for "identif", "untreated", "accounts for",
+   "attributab", "effect of", "due to the rule", "counterfactual" and "had .* not happened". Every
+   hit that attributes is fixed above. One more fix: the error text in `make_exhibit.py` now says
+   "carried-forward level". Left, with the reason:
+   - PREREGISTRATION.md and `docs/prereg/*` are frozen.
+   - "Not the identification" is a negation, and W3.20 requires it.
+   - `R/lib/ch1_decomp.R` holds the causal sentence template. It is used only when P1 and P2 both
+     pass. Editing `R/lib` would change the fit-code hash of every cached fit.
+   - The tests that assert the absence of causal words stay.
+   - `DECISIONS.md` lines 2991 to 2997 (D-P4-46) are a dated record. DEV-77 and this entry
+     supersede them.
+   - Earlier DEVIATIONS entries quote the removed text.
+   - `out/tables/acceptance.csv` is DEV-88's evaluator record. The next evaluation re-reads the tree.
+   - `docs/prior-art.md` keeps other authors' terms: their "identification trap", their quoted
+     "identification must difference both", and their published counterfactuals.
+   - Unrelated senses stay: identifiers, "not identifiable" in a smooth, the HTTP identity section
+     and "the window the mark accounts for".
+   - `abstract/ssac2027_abstract.md` and its two variants still say Lee et al. "fold 2025 into an
+     untreated 2015-2025 trend". That clause describes Lee et al.'s model and is the owner's
+     submission text, so it is left for the owner.
+6. **Checks.** `bash ops/lint_prose.sh`: 0 violations. `scripts/prove.sh W3.21`: PASS.
+   `scripts/prove.sh W3.20`: PASS. The W6.7 ledger check passes: `docs/numbers.json` is the
+   exporter's output and unchanged. `quality/check_numbers.py` ran on each touched document. Its
+   scope is `abstract/` and `docs/memo/`, so these files had untraced literals before. It added no
+   untraced number in `docs/prior-art.md` or `aaa.md`. The new literals in `docs/ch1.md` (the P3
+   row, 0.4 and -0.4 to 1.2) trace to T5. Those in `out/ch1/decision.md` trace to
+   `aaa_placebo.csv`.
+
+No model was fitted. Of the published values, T5's two P3 rows changed, and nothing else. They
+now carry W3.20's numbers. `out/ch1/decision.md` sections 1, 5, 6 and 7 record the same.
+
+Status: CLOSED 2026-10-01 by this entry for R1 and D1. DEV-88 stays OPEN for its own clauses.

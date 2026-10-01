@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-aaa\", stop_on_failure = TRUE)' && uv run --locked python quality/prose_lint.py out/ch1/prose/aaa.md && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/40_aaa_arm.R",
-  "duration_s": 2,
+  "duration_s": 1,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "694b5937b4a49956388102d2ea608794b6639c60",
+  "git_sha": "44ebf0a38fa957f5cfd32d0fd7a45754d4c02674",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.20.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W3.20",
-  "timestamp_madrid": "2026-10-01 02:26:08 CEST",
+  "timestamp_madrid": "2026-10-01 03:47:42 CEST",
   "title": "Chapter 1 AAA arm: machine-drift placebo, within-week alternation, level DiD"
 }

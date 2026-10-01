@@ -3,7 +3,7 @@
 "T2","Zone gate","built","","","out/tables/T2_zone_gate.csv",8,"e541ce3eeb5e3f8617c34862c1f7e85fab669d5ea50a932b12a2291718f2a770"
 "T3","Estimands by season","built","","","out/tables/T3_estimands_by_season.csv",30,"a40da1eea1ac962f869cc34307f420f68d4398a8d8754c993288749472470abc"
 "T4","Decomposition","built","","","out/tables/T4_decomposition.csv",40,"d2bb7fbe9721cdf33cec953eb795f68da7f52d2f42479f0cddc72104de606db5"
-"T5","Placebos","built","","","out/tables/T5_placebos.csv",9,"504d49d4f9fbf567dd4a5b4fa3748847958294437c1727ba5778075a43a616f3"
+"T5","Placebos","built","","","out/tables/T5_placebos.csv",10,"3f948b75cd8acf0d5343b1ff0599a25bb23c9ab3b47297139b4a70f50abe76f6"
 "T6","Umpire heterogeneity","built","","","out/tables/T6_heterogeneity.csv",21,"4950ca6201af48f4c34860bc4d5c67f57b93b5c983c96847f65b329ac7b86bf8"
 "T7","Calibration by d bin","built","","W3.23","out/tables/T7_calibration.csv",100,"3b8c306c58a23d55ad8e2bef45e3ded60edc3d120d8af97c35ad15a2b1a50595"
 "T8","Sensitivity grid","built","","","out/tables/T8_sensitivity.csv",333,"ac0ee9cd803b4333d187fb4b2784813a54d0d951a60335100e04c4f4843a1864"

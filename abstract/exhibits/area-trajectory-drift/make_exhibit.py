@@ -77,7 +77,7 @@ for name, cf, s in (("delta_buffer", cf_2025, 2025), ("delta_abs", cf_2026, 2026
     implied = level[s]["point"] - cf
     if not math.isclose(implied, comp[name]["point"], abs_tol=1e-6):
         raise SystemExit(
-            f"{name}: level minus counterfactual {implied} != table {comp[name]['point']}"
+            f"{name}: level minus carried-forward level {implied} != table {comp[name]['point']}"
         )
 
 # ---- T5: placebo P1 (failed), the drift scale -------------------------------------------

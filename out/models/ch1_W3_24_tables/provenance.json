@@ -8,18 +8,18 @@
   "game_pk_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "analysis_sets_touched": [],
   "seed": null,
-  "code_sha256": "96652d2e8414d7ddb8b2489cbdcfb7a3cc25527a6d724e457a485979e189a1c8",
+  "code_sha256": "7d2feed3521f8b6baa82193442e46e52cfcc52debba44dda53e6b682983595e0",
   "code_files": {
-    "R/ch1/71_tables.R": "407f7fc37bf286386c239bd40224cb32386971d72b5c49e01116331eb55ee492",
+    "R/ch1/71_tables.R": "3a9769f528a1b087e96a0680c322022cd2a87d7d567ef491ac1f862f4403c114",
     "R/lib/ch1_fits.R": "9ff7165b78bcfb4d38e4871a91c2a5ff5a56d45dd6ed6402ed39965dc3ebf8c4",
     "R/lib/ch1_estimands.R": "dbc59c9358fb1b8719c65c31c132915fa7ae6a393746a5adecc92b9b217117af",
     "R/lib/ch1_decomp.R": "9695463d9e3d7a1fa6eec99491fe5ec6aaa2fd45af414f1f7b6cf486a648aeff",
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "694b5937b4a49956388102d2ea608794b6639c60",
+  "git_sha": "44ebf0a38fa957f5cfd32d0fd7a45754d4c02674",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 694b5937b4a4; prereg-v1 is on origin at e4382841f2bd",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 44ebf0a38fa9; prereg-v1 is on origin at e4382841f2bd",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -31,7 +31,7 @@
     "out/ch1/tab/T3_estimands.csv": "5a722d5db1ed48ce314e844b831b5f5b8ead35b908c3048262dcb864add62a6a",
     "out/ch1/tab/T4_decomposition.csv": "d8e89dfc4d60ee3f29620c36262f75da9d309b7ba0508f52777602b13600e62c",
     "out/ch1/tab/T4_plane_component.csv": "b7235280e6b1fc6bd25e5877a9a38aff70ad60459d58b7ebc456661577bc09c5",
-    "out/ch1/tab/T5_placebos.csv": "b9d554188c2cdeb30b6fd9a4274d55b9a5e8a38ce4b4737e0db9e2ab077903f0",
+    "out/ch1/tab/T5_placebos.csv": "dd397e91d7469eafa9eff0b0557cddb25ab04e6d7bbb056e7d8c3fbc3e6c7e75",
     "out/ch1/tab/T6_heterogeneity.csv": "907aa9a6fc6ffe5d4ef9cc2d431c6c07d1c28ed2cd62ff1eaea727700d3cd61b",
     "out/ch1/tab/T9_published_comparison.csv": "398fcbf121f12f40c41ccfbed60419edd5b301b5380514efc9ba272e39666e68",
     "out/ch1/tab/framing_doolittle.csv": "aa778cfd4cbd3417af0ccaa85ef8d18cc056e097ea9cdc782b10a88b09f45b2b",
@@ -39,7 +39,7 @@
     "quality/receipts/W3.22.json": "a9903d038b2e7c3f88ae7d302630d37358c0af6d46f4d8b39d67ef1ea3946ab7",
     "out/ch1/model/estimand_draws_main.csv": "68e45b088b65e7c58494f2ff6c77d8a2b7e1020cc5fde168e1946042051ab7c6",
     "out/ch1/prose/framing.md": "2db7acec6ef6acd7ddcbd62bf9c9a7e4e81711c8b62d959b3e3e8fab3689b044",
-    "out/ch1/prose/aaa.md": "7a34863785abbb7d4927ee46261351a9b05832f8ecb60131759989d45bfa54f5",
+    "out/ch1/prose/aaa.md": "444d8a0cea55e4897e522d3a3e5ec529b978a211503c1ab3ab3d9848efb9f3ac",
     "out/ch1/prose/sensitivity.md": "bab67f423e2c9a59ffb3e1da6f700650242e3d93a4d77144313684818d4c1f11"
   },
   "outputs": {
@@ -47,15 +47,15 @@
     "out/tables/T2_zone_gate.csv": "e541ce3eeb5e3f8617c34862c1f7e85fab669d5ea50a932b12a2291718f2a770",
     "out/tables/T3_estimands_by_season.csv": "a40da1eea1ac962f869cc34307f420f68d4398a8d8754c993288749472470abc",
     "out/tables/T4_decomposition.csv": "d2bb7fbe9721cdf33cec953eb795f68da7f52d2f42479f0cddc72104de606db5",
-    "out/tables/T5_placebos.csv": "504d49d4f9fbf567dd4a5b4fa3748847958294437c1727ba5778075a43a616f3",
+    "out/tables/T5_placebos.csv": "3f948b75cd8acf0d5343b1ff0599a25bb23c9ab3b47297139b4a70f50abe76f6",
     "out/tables/T6_heterogeneity.csv": "4950ca6201af48f4c34860bc4d5c67f57b93b5c983c96847f65b329ac7b86bf8",
     "out/tables/T7_calibration.csv": "3b8c306c58a23d55ad8e2bef45e3ded60edc3d120d8af97c35ad15a2b1a50595",
     "out/tables/T8_sensitivity.csv": "ac0ee9cd803b4333d187fb4b2784813a54d0d951a60335100e04c4f4843a1864",
     "out/tables/T9_prior_work.csv": "331c9d09aa78e1f447730523c9d4cebe6c5691bbbc5d12f947f4a51b8d4edcc9",
-    "out/tables/tables_manifest.csv": "758db720d621928eb3e099f00757b18a593862e9026c9b0d2d97592ba3f4db90",
-    "docs/ch1.md": "9a57009b867095b43de3eca37f6b1ce4505c9c0772d4f7dfb2455e2b0acde13c",
+    "out/tables/tables_manifest.csv": "0075e35e60dd1d3af7b8872692e4653e2cbca78e2834149e501fbec423e027eb",
+    "docs/ch1.md": "1044cdf3608fc87e032e6193301df40a7b9dbc32528711a1d2a9998e509aa289",
     "out/tables/headline.csv": "168c6a40826dae5731dd3a37ccdf2beff667bb67d21ff403891ce5c590da4a83"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-10-01T02:51:42+0200"
+  "written_madrid": "2026-10-01T03:47:24+0200"
 }

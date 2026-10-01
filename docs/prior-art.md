@@ -525,7 +525,7 @@ Chapter 1, the headline.
 - A third regime. `use-it-or-lose-it` METHODS.md v0.3c section 8 pre-registers a 2026
   against 2025 contrast whose only placebo pair is 2024 to 2025, which spans the grading
   change. This project adds 2022 to 2024 under the earlier buffer of two inches outside the
-  zone edge, and measures the 2025 step and the 2026 step on the same estimand, each net of
+  zone edge. It measures the 2025 step and the 2026 step on the same estimand, each net of
   the 2022-2024 trend. Its placebo pair inside 2022 to 2024 failed (P1, DEV-77), so both
   steps are reported as descriptive and neither is assigned to its rule. Lee et al. (arXiv
   2609.25525, 2026-09-22) fold 2025 into a 2015-2025 trend instead. The claim is the one

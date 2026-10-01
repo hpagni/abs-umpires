@@ -307,8 +307,11 @@ test_that("docs/ch1.md names every figure and table, marks each placeholder, fol
   expect_identical(body[k:(k + length(fr) - 1L)], fr)
   aaa <- file.path(OUT, "ch1", "prose", "aaa.md")
   if (!file.exists(aaa)) expect_true(any(grepl("^Not written\\. W3\\.20 is blocked", L[b:length(L)])))
+  # The folded AAA arm prints W3.20's numbers, so W3.20's four committed tables join the pool (DEV-89).
+  aaa_tabs <- c(file.path(PUB, "aaa_placebo.csv"), file.path(TAB, c("aaa_withinweek.csv", "aaa_pretrend.csv", "aaa_did.csv")))
   src <- c(list.files(PUB, pattern = "^F[1-8]b?_data\\.csv$", full.names = TRUE), file.path(OUT, sub("^out/", "", tman$csv)),
-           file.path(FIGD, "figures_manifest.csv"), file.path(PUB, "tables_manifest.csv"))
+           file.path(FIGD, "figures_manifest.csv"), file.path(PUB, "tables_manifest.csv"),
+           if (file.exists(aaa)) aaa_tabs[file.exists(aaa_tabs)])
   pool <- pool_of(lapply(src, rd))
   rest <- L[-((a + 1L):(b - 1L))]
   bad <- untraced(paste(rest, collapse = "\n"), pool)

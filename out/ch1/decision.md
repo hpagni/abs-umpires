@@ -8,6 +8,11 @@ DEV-86 rewrite). Since then W3.20 and W3.22 have landed, CH1-A1 to CH1-A14 have 
 is copied from a file on disk, named beside it. No agent's prose is evidence: a step counts only
 when `scripts/prove.sh <step-id>` exits 0 and `make prove` accepts `quality/receipts/<step-id>.json`.
 
+Amended 2026-10-01T03:48:57+02:00 (Europe/Madrid) under DEV-89, in sections 1, 5, 6 and 7 only:
+`docs/prior-art.md` no longer carries identification language, T5 now carries P3 from W3.20, and
+`docs/ch1.md` folds the current `aaa.md` and `sensitivity.md`. Nothing else in this memo was
+re-checked.
+
 ## 1. What the chapter found
 
 **The chapter is descriptive, not causal.** Placebo P1 failed (CH1-A3). No rule changed
@@ -25,9 +30,10 @@ and the zone narrowed. The shadow-band strike rate fell 10.7 pp.
 P2 passed. The All-Star-break placebo: the headline 2026 area change (-33.10 sq in) exceeds the
 95th percentile of |placebo| over five within-season boundaries (6.69 sq in). P2 also passed on
 every edge. P3 (AAA, W3.20) passed for 2023 to 2024: the rule-net machine-day contour changed
-by +0.36 sq in (95% CI -0.54 to +1.33). The 2024 to 2025 change is not evaluable, because 2025
-has no keyless full-ABS game on disk (`out/tables/aaa_placebo.csv`, DEV-87 item 4). P4 was
-reported with no threshold.
+by +0.36 sq in (90% CI -0.44 to +1.22; 95% CI -0.54 to +1.33). The 90% interval lies inside the
++/-3 margin of its two one-sided tests. The 2024 to 2025 change is not evaluable, because 2025 has no keyless full-ABS
+game on disk (`out/tables/aaa_placebo.csv`, DEV-87 item 4). `out/tables/T5_placebos.csv` carries
+both P3 rows, read from that table (DEV-89). P4 was reported with no threshold.
 
 ## 2. Estimands (primary: bam, roster height plus offset, mid-plane, 72-in batter)
 
@@ -177,10 +183,11 @@ clause, the RESULT CALL line, is met: the owner approved it (section 8, D-R0-05)
 
 1. **CH1-A3 FAIL: the chapter is descriptive.** Causal language was removed, and the P1 failure
    is the headline (headline.csv row 1). T5 reads `decomposition_reading = descriptive`. The scan
-   found 0 causal claims in the abstract, its variants and the README. **Not complete across the
-   tree:** `docs/prior-art.md` (tracked, public) still says 2022-2025 "identifies the grading
-   change" and 2025-2026 "identifies ABS net of it", at lines 137, 390, 393 and 519 to 522 (DEV-88,
-   R1 open). Recorded in DEV-77, DEV-81, DEV-83 and DEV-88.
+   found 0 causal claims in the abstract, its variants and the README. DEV-89 applied the same
+   consequence to `docs/prior-art.md`. Its sections 1.3, 6.1 and 7 now describe each step as
+   measured against 2022 to 2024 and state the P1 failure. DEV-89 also rewrote the AAA arm's
+   parallel-trends sentence, which was a counterfactual (`out/ch1/prose/aaa.md`, `docs/ch1.md`).
+   Recorded in DEV-77, DEV-81, DEV-83, DEV-88 and DEV-89.
 2. **CH1-A5 FAIL on area: reported as a limitation, not resolved.** T4 carries
    `ch1_a5_within = false`, the limitation appears in docs/ch1.md, and the abstract is
    descriptive (DEV-81).
@@ -234,10 +241,10 @@ interval includes zero. No answer is needed unless the owner wants a change.
    stands. Blocked until then: nothing in Chapter 1.
 
 Not owner items. These are open for the agent lanes named:
-- W3.24 lane: point F5 at the AAA arm (`R/ch1/70_figures.R` line 85 still marks it blocked); add
-  the `aaa_*.csv` tables to the `docs/ch1.md` trace pool; re-run `make tables` so `docs/ch1.md`
-  folds the current `sensitivity.md` and `aaa.md`. `out/tables/T5_placebos.csv` still says P3 was
-  not run, and `docs/ch1.md` still calls the AAA arm blocked (second auditor, D1).
+- W3.24 lane: point F5 at the AAA arm (`R/ch1/70_figures.R` line 85 still marks it blocked), so
+  F5's placeholder text in `docs/ch1.md` still says W3.20 is blocked. Done under DEV-89: the
+  `aaa_*.csv` tables joined the `docs/ch1.md` trace pool, `make tables` was re-run so `docs/ch1.md`
+  folds the current `sensitivity.md` and `aaa.md`, and T5 carries P3 (second auditor, D1).
 - W3.22 lane: commit `out/ch1/tab/sensitivity_grid.csv` and `out/tables/T8_sensitivity_data.csv`,
   and gate the edge and shadow sign claim against the two mutants in section 3.
 - W3.20 lane: commit `quality/receipts/W3.20.json`, which is untracked. Rerun the arm once Phase 07
@@ -255,10 +262,10 @@ Not owner items. These are open for the agent lanes named:
 | out/figures/F1-F4, F6, F7 + out/tables/F<n>_data.csv | Present and built (W3.24) |
 | out/figures/F5 + F5_data.csv | **Placeholder**, although W3.20 has landed: `R/ch1/70_figures.R` line 85 still marks it blocked (W3.24 lane) |
 | out/figures/F8 + F8_data.csv | **Placeholder**, blocked by W3.23 (Phase 11, after 2026-11-01) |
-| out/tables/T1-T7, T9 | Present and built; T7's sealed block pending W3.23; T5 still says P3 was not run |
+| out/tables/T1-T7, T9 | Present and built; T7's sealed block pending W3.23; T5 carries P3 from W3.20 (DEV-89) |
 | out/tables/T8_sensitivity.csv | Present and built from W3.22's grid (333 rows, tracked) |
 | out/ch1/decision.md with RESULT CALL line | Present (this file); the line is the owner's (D-R0-05) |
-| docs/ch1.md | Present; folds pre-031a5e1 sensitivity prose and calls the AAA arm blocked until `make tables` is re-run (W3.24 lane) |
+| docs/ch1.md | Present; folds the current sensitivity and AAA prose (DEV-89); F5's placeholder text still calls W3.20 blocked (W3.24 lane) |
 | out/ch1/tab/sensitivity_grid.csv | Present, W3.22 PASS, **untracked** |
 | out/ch1/tab/aaa_did.csv, aaa_pretrend.csv, aaa_withinweek.csv, out/tables/aaa_placebo.csv | Present and tracked (W3.20, 694b593) |
 | out/tables/acceptance.csv | Present and tracked, 14 rows, 9 PASS and 5 FAIL (DEV-88) |
