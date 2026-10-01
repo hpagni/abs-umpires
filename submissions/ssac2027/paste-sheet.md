@@ -22,18 +22,18 @@ Baseball.
 Counted inside the word limit.
 
 ```text
-The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
+A Moving Baseline: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 ```
 
 ## 4. Body, one box
 
 Choose by the upload question in `abstract/FORM-FIELDS.md` section 3 item 5.
 
-Option A, the form has an upload field: 488 words with the title. Upload
+Option A, the form has an upload field: 487 words with the title. Upload
 `abstract/table1.png` and, if the figure stays after review R1, `abstract/figure1.png`.
 
 ```text
-The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
+A Moving Baseline: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 
 Introduction
 
@@ -52,11 +52,11 @@ Conclusion
 The 2025 zone was already smaller than any 2022-2024 zone, before regular-season challenges began, so framing and location baselines that start from 2025 miss that step. Table 1's shifts serve three uses: season-adjusted framing and pitch-location baselines, edge targets for pitchers, and the plane correction for 2025-to-2026 Statcast comparisons. Main limit: the failed placebo; the design cannot assign either step to its rule. The sealed-set definition and acceptance criteria were committed publicly before the sealed set was opened. Games from 22 September 2026 on remain sealed for a confirmatory calibration check after the postseason.
 ```
 
-Option B, no upload field: 521 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
+Option B, no upload field: 520 words with the title, OVER THE 495-WORD CAP: do not paste, review R1 must cut. Cuts in this copy: none. Table 1 is inline at
 the end of Results and the figure is dropped.
 
 ```text
-The Zone Moved First: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
+A Moving Baseline: A Pre-registered Measurement of MLB's Called Strike Zone, 2022–2026
 
 Introduction
 
