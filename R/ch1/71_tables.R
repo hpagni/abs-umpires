@@ -701,6 +701,13 @@ assemble_docs <- function(ctx, dest, tman, fman, res) {
     L <- c(L, sprintf("- **%s, %s: placeholder, not a result.** It is blocked on %s, and `make %s` exits 3 until it lands.",
                       ph$id[i], ph$title[i], ph$by[i], if (startsWith(ph$id[i], "F")) "figures" else "tables"))
   }
+  # A figure pending by design (F8 until W3.23's receipt exists, DEV-90): not a placeholder, not a result.
+  fp <- fman[fman$status == "pending", ]
+  for (i in seq_len(nrow(fp))) {
+    L <- c(L, sprintf(paste("- **%s, %s: pending by design, not a result.** %s, the sealed run, has not run. Until",
+                            "`quality/receipts/%s.json` exists, %s is a dated panel that says so and reads no sealed datum (DEV-90)."),
+                      fp$figure_id[i], fp$title[i], fp$blocked_by[i], fp$blocked_by[i], fp$figure_id[i]))
+  }
   pend <- tman[nzchar(tman$pending), ]
   for (i in seq_len(nrow(pend))) L <- c(L, sprintf("- %s is built for the open window; its sealed-set block waits on %s.",
                                                      pend$table_id[i], pend$pending[i]))
@@ -790,7 +797,8 @@ assemble_docs <- function(ctx, dest, tman, fman, res) {
                "renumbers no figure."),
          "- `make tables` also upserts the CH1-A14 balanced-panel rows of `out/tables/headline.csv`, keeping every other row.",
          "- Determinism is checked on the sidecars and table CSVs, never on the images.",
-         "- `tests/testthat/test-ch1-figures.R` re-reads every output and fails while any placeholder remains.")
+         paste("- `tests/testthat/test-ch1-figures.R` re-reads every output and fails while any placeholder remains. It",
+               "holds F8 to its pending panel until `quality/receipts/W3.23.json` exists, and to a drawn figure after (DEV-90)."))
   L
 }
 

@@ -28,9 +28,9 @@
 # running: both write the same files. One R process at a time; the compute stage peaks near 4.1 GB
 # on a cache miss.
 #
-# EXIT STATUS. 0 all eight figures and nine tables built; 3 every buildable one written but a
-# placeholder remains (F5 waits on W3.20, F8 on W3.23, T8 on W3.22's receipt), so SOP 9.2's
-# "exits 0" is not met; 1 a failed check; 2 the preflight refused; 4 GD-12 refused the run; any
+# EXIT STATUS. 0 every figure and table built, F8 aside while it is pending by design (DEV-90: the
+# sealed run, W3.23, runs once after the season, and F8 is a dated pending panel until its receipt
+# exists); 3 every buildable one written but a placeholder remains, so SOP 9.2's "exits 0" is not met; 1 a failed check; 2 the preflight refused; 4 GD-12 refused the run; any
 # other code is the R process's own.
 set -euo pipefail
 
@@ -168,20 +168,23 @@ rd <- function(f) if (file.exists(f)) utils::read.csv(f, stringsAsFactors = FALS
 show <- function(kind, ids, man, idcol, filecols, manifest) {
   ok <- fresh(manifest)
   cat(sprintf("  %s manifest %s: %s\n", kind, manifest, if (ok) "regenerated" else "NOT WRITTEN by this run"))
-  n <- 0L; built <- 0L; ph <- character(0)
+  n <- 0L; built <- 0L; ph <- character(0); pend <- character(0)
   for (id in ids) {
     r <- if (is.null(man)) NULL else man[man[[idcol]] == id, , drop = FALSE]
     if (is.null(r) || nrow(r) != 1L) { cat(sprintf("  %-3s MISSING from the manifest\n", id)); next }
     files <- unlist(r[filecols], use.names = FALSE)
     w <- fresh(files)
     n <- n + w
-    if (identical(r$status, "built")) built <- built + 1L else ph <- c(ph, id)
-    note <- c(if (nzchar(r$blocked_by)) paste("blocked on", r$blocked_by),
+    if (identical(r$status, "built")) built <- built + 1L
+    else if (identical(r$status, "pending")) pend <- c(pend, id)
+    else ph <- c(ph, id)
+    note <- c(if (nzchar(r$blocked_by)) paste(if (identical(r$status, "pending")) "pending by design on" else "blocked on",
+                                             r$blocked_by),
               if (!is.null(r$pending) && nzchar(r$pending)) paste("a block pending", r$pending))
     cat(sprintf("  %-3s %-11s %-11s %s%s\n", id, r$status, if (w) "regenerated" else "NOT WRITTEN",
                 paste(files, collapse = " "), if (length(note)) paste0("  (", paste(note, collapse = "; "), ")") else ""))
   }
-  list(n = n, built = built, ph = ph, ok = ok)
+  list(n = n, built = built, ph = ph, pend = pend, ok = ok)
 }
 f <- show("figure", sprintf("F%d", 1:8), rd("out/figures/figures_manifest.csv"), "figure_id",
           c("png", "pdf", "sidecar"), "out/figures/figures_manifest.csv")
@@ -189,8 +192,10 @@ t <- show("table", sprintf("T%d", 1:9), rd("out/tables/tables_manifest.csv"), "t
           "out/tables/tables_manifest.csv")
 d <- fresh("docs/ch1.md")
 cat(sprintf("  docs/ch1.md %s\n", if (d) "regenerated" else "NOT WRITTEN by this run"))
-phs <- function(x) if (length(x$ph)) sprintf(", %d placeholder%s: %s", length(x$ph), if (length(x$ph) > 1L) "s" else "",
-                                            paste(x$ph, collapse = " ")) else ""
+phs <- function(x) paste0(
+  if (length(x$ph)) sprintf(", %d placeholder%s: %s", length(x$ph), if (length(x$ph) > 1L) "s" else "",
+                            paste(x$ph, collapse = " ")) else "",
+  if (length(x$pend)) sprintf(", pending by design (DEV-90): %s", paste(x$pend, collapse = " ")) else "")
 cat(sprintf("ch1: figures %d of 8 regenerated (%d built%s); tables %d of 9 regenerated (%d built%s); docs/ch1.md %s\n",
             f$n, f$built, phs(f), t$n, t$built, phs(t), if (d) "regenerated" else "not regenerated"))
 writeLines(unique(written), commandArgs(TRUE)[2])

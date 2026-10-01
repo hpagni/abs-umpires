@@ -16,7 +16,9 @@
 # caveat beside every top-edge and half-width row (R3), T8 from W3.22's grid with CH1-A9's verdict (R4,
 # R5), F2b the dz-by-pitch-type figure (CH1-A13), the balanced-panel rows in headline.csv (CH1-A14),
 # F4's local sidecar (D-21) and T9's Doolittle default. The last test fails while any figure or table
-# is a placeholder: W3.24 is not done until F5 (W3.20) and F8 (W3.23) are real; T8 landed with W3.22.
+# is a placeholder. F5 is drawn from W3.20's committed tables (DEV-90). F8 is pending by design: until
+# quality/receipts/W3.23.json exists the test asserts F8 is the dated sealed-run-pending panel, and
+# once it exists it asserts F8 is built (DEV-90). T8 landed with W3.22.
 
 find_root <- function() {
   r <- Sys.getenv("ABSUMP_ROOT", "")
@@ -38,7 +40,8 @@ FIGD <- file.path(OUT, "figures")
 rd <- function(f) utils::read.csv(f, stringsAsFactors = FALSE, check.names = FALSE)
 FIG_IDS <- c("F1", "F2", "F2b", sprintf("F%d", 3:8))  # F2b: the dz-by-pitch-type figure (CH1-A13)
 TAB_IDS <- sprintf("T%d", 1:9)
-BLOCKED <- c(F5 = "W3.20", F8 = "W3.23", T8 = "W3.22")
+BLOCKED <- c(F8 = "W3.23", T8 = "W3.22")
+SEALED_DONE <- file.exists(file.path(ROOT, "quality", "receipts", "W3.23.json"))  # W3.23, the sealed run
 fman <- rd(file.path(FIGD, "figures_manifest.csv"))
 tman <- rd(file.path(PUB, "tables_manifest.csv"))
 side <- function(id) rd(file.path(PUB, paste0(id, "_data.csv")))
@@ -83,7 +86,10 @@ test_that("the manifests list F1 to F8 and T1 to T9, and only the blocked ids ar
   expect_identical(tman$table_id, TAB_IDS)
   ph <- c(fman$figure_id[fman$status == "PLACEHOLDER"], tman$table_id[tman$status == "PLACEHOLDER"])
   expect_true(all(ph %in% names(BLOCKED)), info = paste(ph, collapse = ", "))
-  expect_true(all(c(fman$status, tman$status) %in% c("built", "PLACEHOLDER")))
+  expect_true(all(c(fman$status, tman$status) %in% c("built", "PLACEHOLDER", "pending")))
+  expect_true(all(tman$status != "pending"))
+  pend <- fman$figure_id[fman$status == "pending"]
+  expect_identical(pend, if (SEALED_DONE) character(0) else "F8")
   for (id in ph) {
     by <- c(fman$blocked_by[fman$figure_id == id], tman$blocked_by[tman$table_id == id])
     expect_identical(by, BLOCKED[[id]], info = id)
@@ -183,6 +189,57 @@ test_that("F4: no umpire is identified (D-21), and the tau inset is T6's sop pos
   tau <- s[s$element == "tau", ]
   expect_equal(tau$value[tau$key == "tau_abs"], t6$median[t6$fit == "sop" & t6$quantity == "tau_abs"], tolerance = 1e-6)
   expect_equal(tau$value[tau$key == "p_tau_ge_020"], t6$median[t6$fit == "CH1-A6" & t6$quantity == "p_tau_ge_020"])
+})
+
+test_that("F5: W3.20's within-week rows and binned primary-window pre-trend rows, value for value", {
+  s <- side("F5")
+  expect_identical(fman$status[fman$figure_id == "F5"], "built")
+  ww <- rd(file.path(TAB, "aaa_withinweek.csv"))
+  w <- s[s$element == "withinweek", ]
+  expect_equal(nrow(w), 6L)
+  k <- match(w$key, paste(ww$season_scope, ww$edge_scope, sep = "/"))
+  expect_false(anyNA(k))
+  expect_equal(w$value, ww$estimate[k], tolerance = 1e-12)
+  expect_equal(c(w$lo95, w$hi95), c(ww$lo95[k], ww$hi95[k]), tolerance = 1e-12)
+  expect_equal(w$n, ww$n_pitches[k])
+  pt <- rd(file.path(TAB, "aaa_pretrend.csv"))
+  pt <- pt[pt$test == "pre-trend" & pt$mlb_estimator == "binned" & pt$aaa_window == "window", ]
+  q <- s[s$element == "pretrend", ]
+  expect_setequal(q$key, c("top_in", "bot_in", "half_width_in", "area_sqin"))
+  m <- match(q$key, pt$estimand)
+  expect_equal(q$value, pt$point[m], tolerance = 1e-12)
+  expect_equal(c(q$lo95, q$hi95), c(pt$lo95[m], pt$hi95[m]), tolerance = 1e-12)
+  expect_identical(q$verdict, pt$verdict[m])
+  # F5 is descriptive (DEV-77) and says why no contour is drawn (DEV-90).
+  cap <- fman$caption[fman$figure_id == "F5"]
+  expect_true(grepl("no contour coordinates", cap, fixed = TRUE) && grepl("DEV-90", cap, fixed = TRUE))
+  expect_false(grepl("identif|untreated|effect of|caused|accounts for|attributab|due to the rule|counterfactual",
+                     paste(cap, fman$alt[fman$figure_id == "F5"]), ignore.case = TRUE))
+})
+
+test_that("F8: the dated sealed-run-pending panel until W3.23's receipt exists, a drawn figure after (DEV-90)", {
+  m <- fman[fman$figure_id == "F8", ]
+  s <- side("F8")
+  if (!SEALED_DONE) {
+    expect_identical(m$status, "pending")
+    expect_identical(m$blocked_by, "W3.23")
+    expect_identical(s$element, "pending")
+    expect_identical(s$gate, "quality/receipts/W3.23.json")
+    # The two dates are DEV-90's schedule line in docs/DEVIATIONS.md, read here independently.
+    dv <- readLines(file.path(ROOT, "docs", "DEVIATIONS.md"), warn = FALSE, encoding = "UTF-8")
+    ln <- grep("^F8 pending panel: recorded ", dv, value = TRUE)
+    expect_length(ln, 1L)
+    expect_identical(ln, sprintf("F8 pending panel: recorded %s; W3.23 runs once after %s.", s$recorded, s$runs_after))
+    expect_true(as.Date(s$runs_after) > as.Date(s$recorded))
+    expect_true(grepl(s$recorded, m$caption, fixed = TRUE) && grepl(s$runs_after, m$caption, fixed = TRUE))
+    expect_identical(s$deviation, "DEV-90")
+    expect_true(startsWith(m$caption, "Sealed run pending, not a result."))
+    expect_identical(m$palette, "")
+    expect_true(file.exists(file.path(OUT, sub("^out/", "", m$png))) && file.exists(file.path(OUT, sub("^out/", "", m$pdf))))
+  } else {
+    expect_identical(m$status, "built", info = "quality/receipts/W3.23.json exists: F8 must be drawn from the sealed run")
+    expect_false(any(s$element == "pending"))
+  }
 })
 
 test_that("F6: the catcher-seasons are W3.19's qualified season rows, and the summaries re-derive", {

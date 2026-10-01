@@ -1275,8 +1275,9 @@
 # docs/ch1.md from the manifests, the table CSVs and the sibling prose. The verify command re-reads
 # what they wrote with tests/testthat/test-ch1-figures.R, which refits nothing, re-derives the figure
 # facts from the step outputs, traces every caption, alt-text and doc number, re-renders into a
-# temporary directory for determinism at 1e-8, and FAILS while any figure or table is a placeholder:
-# F5 waits on W3.20, F8 on W3.23 (the sealed run), T8 on W3.22's receipt. Then the prose lint on
+# temporary directory for determinism at 1e-8, and FAILS while any figure or table is a placeholder.
+# F5 is drawn from W3.20's tables; F8 is a dated sealed-run-pending panel until W3.23's receipt exists
+# and must be drawn after it (DEV-90). Then the prose lint on
 # docs/ch1.md and GD-04 on both scripts. `needs` names the outputs, so before the first real run the
 # step reads MISSING rather than FAIL.
 - id: W3.24

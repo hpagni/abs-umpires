@@ -24,14 +24,21 @@
 #   F4  the umpire caterpillar of the 2025->2026 response (W3.18's sop fit) with the tau posterior
 #       inset. CH1-A6's reliability gate is not met, so under D-21 no umpire is named: the sidecar
 #       carries ranks, never an umpire id. Intervals are 90%, as D-21 sets for per-umpire rows.
-#   F5  AAA challenge-format versus full-ABS contours. W3.20 is BLOCKED (D-11, D-57/DT-29):
-#       a placeholder that fails loudly.
+#   F5  the AAA arm. SOP W3.24 names "AAA challenge-format versus full-ABS contours", but W3.20's
+#       committed outputs hold no contour coordinates (aaa_placebo.csv carries areas only), so F5
+#       draws what they support (DEV-90): the within-week alternation from aaa_withinweek.csv
+#       (challenge-format minus full-ABS called-strike rate, pooled, by season and by edge) and the
+#       2023 to 2024 pre-trend from aaa_pretrend.csv (binned series, primary AAA window), each with
+#       its 95% interval. Descriptive (DEV-77): placebo P1 failed.
 #   F6  framing distribution by regime: W3.19's qualified catcher-seasons, count-specific runs per
 #       100 innings, the primary 2026 convention (original calls).
 #   F7  surface calibration by 0.5-inch d bin: in-sample, observed called-strike rate minus the
 #       primary surface's mean fitted probability, per regime, 95% Wilson intervals.
-#   F8  sealed prediction versus outcome. W3.23, the sealed run, has not happened: a placeholder that fails
-#       loudly.
+#   F8  sealed prediction versus outcome. W3.23, the sealed run, runs once after 2026-11-01. Until
+#       quality/receipts/W3.23.json exists F8 is a deliberate, dated "sealed run pending" panel with
+#       status `pending` (DEV-90): it reads no sealed datum, and the closing clause is met with F8
+#       pending by design. Once that receipt exists and F8 still has no builder, F8 turns into a
+#       PLACEHOLDER and the run exits 3.
 #
 # ANNEX 8.7 (D-R0-04). Every top-edge interval is read as slightly too narrow, every top-edge
 # statement carries that caveat, and the half-width's recovery shortfall is stated beside its
@@ -50,8 +57,9 @@
 # `constant` rows for every number a caption or alt text prints, so the test can trace them.
 # Determinism is checked on the sidecars, never on the images.
 #
-# EXIT STATUS. 0 when all nine figures (F1 to F8 and F2b) are built. 3 when every buildable figure was written but
-# at least one is a placeholder (F5, F8 today), so `make figures` fails loudly until they land.
+# EXIT STATUS. 0 when every figure (F1 to F8 and F2b) is built, F8 aside while it is pending by design
+# (no W3.23 receipt). 3 when every buildable figure was written but at least one is a placeholder (none
+# today; F8 once W3.23's receipt exists and F8 is still undrawn), so `make figures` fails loudly.
 #
 # WRITES
 #   --stage compute   out/ch1/fig/W3_24_F1_rays.csv, W3_24_F1_contours.csv, W3_24_F7_bins.csv,
@@ -80,12 +88,28 @@ FIG_TITLES <- c(F1 = "Called-zone contours by regime", F2 = "Decomposition water
                 F3 = "Edge event study", F4 = "Umpire caterpillar",
                 F5 = "AAA challenge format versus full ABS", F6 = "Framing by regime",
                 F7 = "Surface calibration by d bin", F8 = "Sealed prediction versus outcome")
-# The blocked figures and the step each waits on. A figure listed here is drawn as a placeholder.
-BLOCKED <- list(
-  F5 = list(step = "W3.20", why = paste("W3.20, the AAA arm, is blocked on D-11's 2023 scan and D-57's",
-                                         "2024 changeover date (DT-29); out/ch1/prose/aaa.md does not exist")),
-  F8 = list(step = "W3.23", why = paste("W3.23, the sealed run, runs once after the season;",
-                                         "no sealed output exists and none is read here")))
+# F8 is pending by design until the sealed run's receipt exists (DEV-90). The panel's two dates are
+# read from DEV-90's schedule line in docs/DEVIATIONS.md, never from the clock, so the render stays
+# deterministic and no date past the open window is written into analysis code (GD-04 rule 5).
+SEALED_RECEIPT <- file.path("quality", "receipts", "W3.23.json")
+DEV_F8 <- "DEV-90"
+f8_schedule <- function() {
+  x <- readLines(file.path(ROOT, "docs", "DEVIATIONS.md"), warn = FALSE, encoding = "UTF-8")
+  m <- regmatches(x, regexec("^F8 pending panel: recorded ([0-9]{4}-[0-9]{2}-[0-9]{2}); W3\\.23 runs once after ([0-9]{4}-[0-9]{2}-[0-9]{2})\\.$", x))
+  m <- m[lengths(m) == 3L]
+  if (length(m) != 1L) die("docs/DEVIATIONS.md has ", length(m), " F8 schedule lines; ", DEV_F8, " gives exactly one")
+  c(recorded = m[[1]][2], runs_after = m[[1]][3])
+}
+PENDING <- list(
+  F8 = list(step = "W3.23", gate = SEALED_RECEIPT, dev = DEV_F8,
+            why = "W3.23, the sealed run, runs once after the season; no sealed output exists and none is read here"))
+sealed_run_done <- function() file.exists(file.path(ROOT, SEALED_RECEIPT))
+# The blocked figures and the step each waits on. A figure listed here is drawn as a placeholder and
+# the run exits 3. F8 joins it only once W3.23's receipt exists while F8 has no builder.
+BLOCKED <- if (sealed_run_done()) {
+  list(F8 = list(step = "W3.23", why = paste("quality/receipts/W3.23.json exists, so F8 must now be drawn from the",
+                                             "sealed outputs, and R/ch1/70_figures.R has no F8 builder yet")))
+} else list()
 
 # F1's rays.
 F1_SEASONS <- c("2024", "2025", "2026")
@@ -837,6 +861,148 @@ fig_f7 <- function(p) {
   list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 10, palette = B450)
 }
 
+## --- F5 ----------------------------------------------------------------------------------------
+
+# W3.20's committed outputs. They hold no contour coordinates, so F5 is the two of W3.20's three uses
+# that carry an interval per row: the within-week alternation and the 2023 to 2024 pre-trend (DEV-90).
+F5_WW_ROWS <- data.frame(
+  season_scope = c("pooled", "2023", "2024", "pooled", "pooled", "pooled"),
+  edge_scope = c("all", "all", "all", "side", "top", "bot"),
+  label = c("Pooled", "2023 only", "2024 only", "Side edge", "Top edge", "Bottom edge"),
+  group = c("season", "season", "season", "edge", "edge", "edge"),
+  stringsAsFactors = FALSE)
+F5_PT_LAB <- c(top_in = "Top edge", bot_in = "Bottom edge", half_width_in = "Half-width", area_sqin = "Area")
+
+fig_f5 <- function(p) {
+  ww <- read_csv_plain(file.path(p$tab, "aaa_withinweek.csv"))
+  pt <- read_csv_plain(file.path(p$tab, "aaa_pretrend.csv"))
+  rc <- recovery_counts(p)
+  # Within-week rows, in a fixed order; each must exist exactly once.
+  w <- do.call(rbind, lapply(seq_len(nrow(F5_WW_ROWS)), function(i) {
+    k <- F5_WW_ROWS[i, ]
+    r <- ww[ww$use == "within-week alternation" & as.character(ww$season_scope) == k$season_scope &
+              ww$edge_scope == k$edge_scope, ]
+    if (nrow(r) != 1L) die("F5: aaa_withinweek.csv has ", nrow(r), " rows for ", k$season_scope, "/", k$edge_scope)
+    data.frame(k, r[, c("estimate", "lo95", "hi95", "n_pitches", "n_umpire_weeks", "n_umpires", "changeover_date",
+                        "frame_first_date", "frame_last_date")], stringsAsFactors = FALSE)
+  }))
+  check("F5: every within-week row has an ordered 95% interval",
+        all(w$lo95 <= w$estimate & w$estimate <= w$hi95), sprintf("%d rows", nrow(w)))
+  # Pre-trend rows: MLB's binned series against the primary AAA window, as aaa.md reports first.
+  q <- pt[pt$test == "pre-trend" & pt$mlb_estimator == "binned" & pt$aaa_window == "window", ]
+  q <- q[match(names(F5_PT_LAB), q$estimand), ]
+  if (anyNA(q$estimand)) die("F5: aaa_pretrend.csv lacks a binned primary-window row for an estimand")
+  check("F5: the pre-trend verdict is 'fail' exactly when the 95% interval excludes 0",
+        all((q$verdict == "fail") == (q$lo95 > 0 | q$hi95 < 0)), paste(q$estimand, q$verdict, collapse = "; "))
+  check("F5: the area pre-trend is W3.20's primary row", isTRUE(as.logical(q$primary[q$estimand == "area_sqin"])),
+        "aaa_pretrend.csv primary column")
+  # Layout: one row per estimate, a gap between the season rows and the edge rows.
+  w$y <- c(8, 7, 6, 4.5, 3.5, 2.5)
+  q$panel <- ifelse(q$estimand == "area_sqin", "area", "edge")
+  q$label <- unname(F5_PT_LAB[q$estimand])
+  q$y <- c(3, 2, 1, 1)
+  q$excludes0 <- q$lo95 > 0 | q$hi95 < 0
+  q$tag <- ifelse(q$excludes0, "excludes 0", "contains 0")
+  pt_x <- function(d) c(min(0, d$lo95), max(0, d$hi95))
+  ww_plot <- ggplot(w, aes(y = y)) +
+    geom_vline(xintercept = 0, colour = INK2, linewidth = 0.25) +
+    geom_linerange(aes(xmin = lo95, xmax = hi95), colour = B450, linewidth = 0.45) +
+    geom_point(aes(x = estimate), shape = 21, size = 1.6, fill = B650, colour = "white", stroke = 0.4) +
+    scale_y_continuous(breaks = w$y, labels = w$label, limits = c(2, 8.5)) +
+    scale_x_continuous(limits = c(0, max(w$hi95) * 1.05), expand = expansion(mult = c(0, 0.02))) +
+    labs(title = "Within-week alternation: challenge format minus full ABS", x = "Called-strike rate difference, pp",
+         y = NULL) +
+    theme_fig() + theme(panel.grid.major.y = element_blank())
+  pt_plot <- function(d, ttl, xl) {
+    xr <- pt_x(d)
+    ggplot(d, aes(y = y)) +
+      geom_vline(xintercept = 0, colour = INK2, linewidth = 0.25) +
+      geom_linerange(aes(xmin = lo95, xmax = hi95), colour = B450, linewidth = 0.45) +
+      geom_point(aes(x = point, fill = tag), shape = 21, size = 1.6, colour = B650, stroke = 0.5) +
+      geom_text(aes(x = hi95, label = tag), hjust = -0.15, size = 5.5 / .pt, colour = INK2) +
+      scale_fill_manual(values = c(`excludes 0` = B650, `contains 0` = "white"), guide = "none") +
+      scale_y_continuous(breaks = d$y, labels = d$label, limits = c(min(d$y) - 0.5, max(d$y) + 0.5)) +
+      scale_x_continuous(limits = c(xr[1], xr[2] + 0.35 * diff(xr)), expand = expansion(mult = c(0.03, 0))) +
+      labs(title = ttl, x = xl, y = NULL) +
+      theme_fig() + theme(panel.grid.major.y = element_blank())
+  }
+  pe <- pt_plot(q[q$panel == "edge", ], "Pre-trend, 2023 to 2024: MLB change minus AAA change", "in")
+  pa <- pt_plot(q[q$panel == "area", ], NULL, "sq in")
+  pl <- ww_plot / pe / pa + plot_layout(heights = c(5, 2.6, 0.9))
+  side <- dplyr::bind_rows(
+    data.frame(figure = "F5", element = "withinweek", key = paste(w$season_scope, w$edge_scope, sep = "/"),
+               label = w$label, value = w$estimate, lo95 = w$lo95, hi95 = w$hi95, n = w$n_pitches,
+               n_umpire_weeks = w$n_umpire_weeks, n_umpires = w$n_umpires, y = w$y,
+               note = sprintf("frame %s to %s, strictly before the %s changeover", w$frame_first_date, w$frame_last_date,
+                              w$changeover_date),
+               source = "out/ch1/tab/aaa_withinweek.csv (W3.20)", stringsAsFactors = FALSE),
+    data.frame(figure = "F5", element = "pretrend", key = q$estimand, label = q$label, units = q$units,
+               value = q$point, lo95 = q$lo95, hi95 = q$hi95, n = q$n_draws, y = q$y, verdict = q$verdict,
+               primary = as.logical(q$primary), mlb_change = q$mlb_change, aaa_change = q$aaa_change,
+               note = "MLB binned series, primary AAA window", source = "out/ch1/tab/aaa_pretrend.csv (W3.20)",
+               stringsAsFactors = FALSE),
+    const_rows("F5", c(ci_pct = 95, n_withinweek_rows = nrow(w), n_pretrend_rows = nrow(q))),
+    recovery_rows("F5", rc))
+  v <- function(x, d = 2) f_d(x, d)
+  wp <- w[w$season_scope == "pooled" & w$edge_scope == "all", ]
+  wt <- w[w$edge_scope == "top", ]; wb <- w[w$edge_scope == "bot", ]
+  qa <- q[q$estimand == "area_sqin", ]; qt <- q[q$estimand == "top_in", ]
+  # The alt text below states these four facts in words; each is checked so the words cannot go stale.
+  check("F5 alt: every within-week interval lies right of zero", all(w$lo95 > 0), sprintf("lowest lo95 %.3f", min(w$lo95)))
+  check("F5 alt: the top edge row is the largest within-week estimate and the bottom edge row the smallest",
+        which.max(w$estimate) == which(w$edge_scope == "top") && which.min(w$estimate) == which(w$edge_scope == "bot"),
+        paste(sprintf("%s %.3f", w$label, w$estimate), collapse = "; "))
+  check("F5 alt: area and top edge pre-trend intervals exclude 0; bottom edge and half-width contain it",
+        identical(setNames(q$excludes0, q$estimand), c(top_in = TRUE, bot_in = FALSE, half_width_in = FALSE, area_sqin = TRUE)),
+        paste(q$estimand, q$tag, collapse = "; "))
+  caption <- paste0(
+    "W3.20's AAA arm. Its committed outputs hold no contour coordinates, so the contours SOP W3.24 names are not ",
+    "drawn (DEV-90). The top panel is the within-week alternation. It shows the challenge-format minus full-ABS ",
+    "called-strike rate in the shadow band, for the same plate umpire, season and week. Points are in percentage ",
+    "points with 95% intervals, ", comma(wp$n_pitches), " pitches pooled. The frame ends before the ",
+    wp$changeover_date, " changeover. The lower panels are the pre-trend: MLB's 2023 to 2024 change minus AAA's, ",
+    "binned series, primary AAA window, with 95% intervals. Area is the primary row. A filled point marks an interval ",
+    "that excludes 0, and there the DiD is reported as descriptive. Placebo P1 failed, so every row is descriptive.",
+    recovery_caption(rc))
+  alt <- paste0(
+    "Three stacked dot-and-interval panels. In the top panel every within-week interval lies right of zero. ",
+    "Pooled, the challenge-format rate is ", v(wp$estimate), " pp above the full-ABS rate (95% CI ", v(wp$lo95), " to ",
+    v(wp$hi95), "). The top edge row is the largest, at ", v(wt$estimate), " pp, and the bottom edge row the smallest, at ",
+    v(wb$estimate), " pp. In the pre-trend panels the area interval, ", v(qa$point), " sq in (", v(qa$lo95), " to ",
+    v(qa$hi95), "), and the top edge interval, ", v(qt$point), " in (", v(qt$lo95), " to ", v(qt$hi95),
+    "), exclude zero. The bottom edge and half-width intervals contain it.")
+  list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 9.5, palette = B450)
+}
+
+## --- F8 while the sealed run is pending ------------------------------------------------------------
+
+# A deliberate panel, not a result: it says the sealed run is pending and when it runs, and it reads
+# nothing from the sealed set (DEV-90).
+fig_pending <- function(id) {
+  b <- c(PENDING[[id]], as.list(f8_schedule()))
+  pl <- ggplot() +
+    annotate("rect", xmin = 0, xmax = 1, ymin = 0, ymax = 1, fill = "#f0efec", colour = NA) +
+    annotate("label", x = 0.5, y = 0.74, fill = "white", linewidth = 0, label = "SEALED RUN PENDING: NOT A RESULT",
+             size = 8.5 / .pt, fontface = "bold", colour = INK) +
+    annotate("label", x = 0.5, y = 0.57, fill = "white", linewidth = 0, label = sprintf("%s  %s", id, FIG_TITLES[[id]]),
+             size = 7 / .pt, colour = INK) +
+    annotate("label", x = 0.5, y = 0.42, fill = "white", linewidth = 0,
+             label = sprintf("%s, the sealed run, runs once after %s", b$step, b$runs_after), size = 6.5 / .pt, colour = INK2) +
+    annotate("label", x = 0.5, y = 0.28, fill = "white", linewidth = 0,
+             label = sprintf("Pending by design since %s (%s); no sealed datum is read", b$recorded, b$dev),
+             size = 6 / .pt, colour = INK2) +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 1), expand = FALSE) +
+    theme_void() + theme(plot.background = element_rect(fill = "white", colour = NA))
+  side <- data.frame(figure = id, element = "pending", key = "status", blocked_by = b$step, gate = b$gate,
+                     recorded = b$recorded, runs_after = b$runs_after, deviation = b$dev,
+                     note = sprintf("Sealed run pending, not a result: %s", b$why), stringsAsFactors = FALSE)
+  caption <- sprintf(paste("Sealed run pending, not a result. %s, %s, is drawn from the sealed set once %s has run, after %s.",
+                           "Until %s exists this panel is drawn on purpose and reads no sealed datum (%s, recorded %s)."),
+                     id, tolower(FIG_TITLES[[id]]), b$step, b$runs_after, b$gate, b$dev, b$recorded)
+  alt <- sprintf("A plain grey panel reading: sealed run pending, not a result; %s runs once after %s.", b$step, b$runs_after)
+  list(plot = pl, data = side, caption = caption, alt = alt, h_cm = 5, palette = character(0))
+}
+
 ## --- the placeholders ----------------------------------------------------------------------------
 
 fig_placeholder <- function(id) {
@@ -860,7 +1026,7 @@ fig_placeholder <- function(id) {
 
 ## --- the render stage ------------------------------------------------------------------------------
 
-BUILDERS <- list(F1 = fig_f1, F2 = fig_f2, F2b = fig_f2b, F3 = fig_f3, F4 = fig_f4, F6 = fig_f6, F7 = fig_f7)
+BUILDERS <- list(F1 = fig_f1, F2 = fig_f2, F2b = fig_f2b, F3 = fig_f3, F4 = fig_f4, F5 = fig_f5, F6 = fig_f6, F7 = fig_f7)
 
 render_stage <- function(ctx, dest) {
   p <- ctx$paths
@@ -871,7 +1037,10 @@ render_stage <- function(ctx, dest) {
   for (id in FIG_IDS) {
     t0 <- proc.time()
     ph <- id %in% names(BLOCKED)
-    f <- if (ph) fig_placeholder(id) else BUILDERS[[id]](p)
+    pend <- !ph && id %in% names(PENDING) && is.null(BUILDERS[[id]])
+    if (!ph && !pend && is.null(BUILDERS[[id]])) die(id, " has no builder, is not pending and is not blocked")
+    f <- if (ph) fig_placeholder(id) else if (pend) fig_pending(id) else BUILDERS[[id]](p)
+    status <- if (ph) "PLACEHOLDER" else if (pend) "pending" else "built"
     sp <- file.path(dest, "tables", paste0(id, "_data.csv"))
     write_csv_plain(f$data, sp)
     side <- read_csv_plain(sp)
@@ -882,12 +1051,12 @@ render_stage <- function(ctx, dest) {
     outs <- c(outs, sp, fl)
     gap <- min_lgap(f$palette)
     man[[id]] <- data.frame(
-      figure_id = id, title = FIG_TITLES[[id]], status = if (ph) "PLACEHOLDER" else "built",
-      blocked_by = if (ph) BLOCKED[[id]]$step else "", png = out_rel(ctx, fl[["png"]]), pdf = out_rel(ctx, fl[["pdf"]]),
+      figure_id = id, title = FIG_TITLES[[id]], status = status,
+      blocked_by = if (ph) BLOCKED[[id]]$step else if (pend) PENDING[[id]]$step else "", png = out_rel(ctx, fl[["png"]]), pdf = out_rel(ctx, fl[["pdf"]]),
       sidecar = out_rel(ctx, sp), width_cm = FIG_W_CM, height_cm = f$h_cm, caption = f$caption, alt = f$alt,
       palette = paste(f$palette, collapse = ";"), palette_min_lstar_gap = gap,
       sidecar_rows = nrow(side), sidecar_sha256 = sha256_file(sp), stringsAsFactors = FALSE)
-    record(id, sprintf("%s, %d sidecar rows, %.0f s", if (ph) "PLACEHOLDER" else "built", nrow(side),
+    record(id, sprintf("%s, %d sidecar rows, %.0f s", status, nrow(side),
                        (proc.time() - t0)[["elapsed"]]))
   }
   mf <- file.path(dest, "figures", "figures_manifest.csv")
@@ -899,7 +1068,8 @@ render_stage <- function(ctx, dest) {
   step_receipt(ctx, suffix = "figures", seed = DRAW_SEED,
                inputs = c(unlist(fig_paths(p)[c("rays", "contours", "bins")]), dz_path(p),
                           file.path(p$tab, c("T3_estimands.csv", "T4_decomposition.csv", "T4_plane_component.csv",
-                                             "T5_placebos.csv", "T6_heterogeneity.csv", "framing_catcher_seasons.csv")),
+                                             "T5_placebos.csv", "T6_heterogeneity.csv", "framing_catcher_seasons.csv",
+                                             "aaa_withinweek.csv", "aaa_pretrend.csv")),
                           file.path(p$model, c("estimand_draws_main.csv", "umpire_me.rds"))),
                outputs = c(outs, mf))
   names(BLOCKED)
@@ -918,6 +1088,10 @@ main <- function() {
   if (length(.ch1$failures) > 0L) {
     cat("failures:\n", paste0("  ", .ch1$failures, "\n"), sep = "")
     quit(status = 1)
+  }
+  if (stage %in% c("render", "all") && !sealed_run_done()) {
+    for (id in names(PENDING)) cat(sprintf("PENDING BY DESIGN %s %s: %s has not run (no %s); %s\n", id, FIG_TITLES[[id]],
+                                           PENDING[[id]]$step, PENDING[[id]]$gate, PENDING[[id]]$dev))
   }
   if (length(ph) > 0L) {
     for (id in ph) cat(sprintf("PLACEHOLDER %s %s: blocked on %s. %s\n", id, FIG_TITLES[[id]], BLOCKED[[id]]$step,

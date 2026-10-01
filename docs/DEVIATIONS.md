@@ -2168,3 +2168,43 @@ No model was fitted. Of the published values, T5's two P3 rows changed, and noth
 now carry W3.20's numbers. `out/ch1/decision.md` sections 1, 5, 6 and 7 record the same.
 
 Status: CLOSED 2026-10-01 by this entry for R1 and D1. DEV-88 stays OPEN for its own clauses.
+
+## DEV-90: F5 drawn from W3.20's tables without contours; F8 pending by design until the sealed run
+
+Stamped 2026-10-01T05:20:00+02:00, Europe/Madrid. Owner W3, fleet phase 08, the W3.24 finisher. Files:
+`R/ch1/70_figures.R`, `R/ch1/71_tables.R`, `tests/testthat/test-ch1-figures.R`, `scripts/ch1.sh`,
+`scripts/figures.sh`, the W3.24 comment in `quality/steps.yml` and `quality/steps.d/W3.24.yml`, the
+regenerated figures, sidecars and tables, `docs/ch1.md` and the W3.24 receipt.
+
+Two departures from SOP W3.24's figure list. Neither changes a number; both change what a figure shows.
+
+1. **F5.** SOP W3.24 names "F5 AAA challenge-format versus full-ABS contours". W3.20's committed
+   outputs hold no contour coordinates. `out/tables/aaa_placebo.csv` carries machine-day contour
+   areas only, and no AAA contour vertices are written anywhere. Drawing contours would need a new
+   AAA fit, and this run fits nothing. F5 therefore draws what the committed outputs support, each
+   row with its 95% interval:
+   - the within-week alternation, six rows of `out/ch1/tab/aaa_withinweek.csv` (pooled, 2023, 2024,
+     and the side, top and bottom edges pooled);
+   - the 2023 to 2024 pre-trend, four rows of `out/ch1/tab/aaa_pretrend.csv`: MLB's binned series
+     against the primary AAA window, for the three edges and area.
+   The caption says why no contour is drawn and that every row is descriptive (DEV-77, D-R0-05).
+   It carries annex 8.7's top-edge and half-width sentences, because the chapter reads every
+   top-edge interval as slightly too narrow. The test checks every plotted row against W3.20's
+   tables, value for value. P3 stays in T5, where W3.20's change rows already sit (DEV-89).
+2. **F8.** The sealed prediction figure cannot be drawn until W3.23 runs, once, after the season.
+   F8 is now a deliberate panel with status `pending`, not a placeholder. It reads "sealed run
+   pending, not a result", names W3.23 and carries the two dates below. It reads no sealed datum.
+   The dates live on the next line and nowhere in analysis code, so GD-04's rule 5 stays clean.
+   `R/ch1/70_figures.R` and the test both parse that line.
+
+F8 pending panel: recorded 2026-10-01; W3.23 runs once after 2026-11-01.
+
+   `tests/testthat/test-ch1-figures.R` asserts the pending panel while
+   `quality/receipts/W3.23.json` does not exist. Once it exists, the test requires F8 to be built,
+   and `70_figures.R` turns F8 into a PLACEHOLDER that exits 3 until a builder lands. The SOP 9.2
+   closing clause, "make ch1 && make test-ch1 regenerates every figure and table and exits 0", is
+   therefore met with F8 pending by design. That is an owner-visible departure: the sealed figure
+   is the one exhibit the clause cannot cover before the sealed run.
+
+No model was fitted and no datum dated 2026-09-22 or later was read. The compute stage reran once,
+because its cache key hashes `70_figures.R`; it reads the cached surface and draws only.
