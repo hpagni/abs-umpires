@@ -927,12 +927,12 @@ since round N", never exhaustiveness.
   load-bearing.
 - **The premise of the task itself.** All three judges independently found the
   brief stale: it described uncommitted repairs, but round 3 was committed and
-  pushed as 4bc71f3 with a clean tree. Verified before any edit. Nothing was
+  pushed as 02c7ed1 with a clean tree. Verified before any edit. Nothing was
   re-fixed.
 
 ## Round 5 (2026-09-23, Madrid) -- the renv/activate.R rewrite that failed W1.13 once
 
-An isolated-clone verifier refuted one criterion on the pushed commit `11b1da3`: the
+An isolated-clone verifier refuted one criterion on the pushed commit `da97e26`: the
 **first** `make prove` of a fresh clone exits 1 with W1.13 FAIL, 19 PASS / 1 FAIL /
 1 MISSING / 2 PENDING-OWNER / 3 RETIRED. Runs 2 and 3 are green and byte-identical, so
 the gate erased its own cause and four rounds of proving never saw it.
@@ -1830,7 +1830,7 @@ SENS-HEIGHT-SINGLE is fitted in W3.14 and carried through W3.15 and W3.16 only, 
 the primary with no clause. `PREREGISTRATION.md` section 7 and `docs/prereg/ch1.md` section 1.1
 now state all of this, as the code will run it.
 
-The fit lane has implemented the override on `phase05/ch1-fits` at 617a75d: the flag works with
+The fit lane has implemented the override on `phase05/ch1-fits` at cedb8df: the flag works with
 the key present or absent, and SENS-HEIGHT-SINGLE is a named fit. DEV-75 closes when that branch
 merges into `main` after the tag.
 
@@ -2023,7 +2023,7 @@ struck. The edit belongs to the lane that owns `R/ch1/`.
 Applied by the W3.3 fix-3 agent on 2026-09-25 (Europe/Madrid), from the W3.3 verifier's
 findings R3 and R5 (`logs/evidence/W3.3.verify-geometry.log`). Merged from
 `logs/decisions-pending/w33-test-gaps.md`. Status: **applied under D-R0-03's delegation, not
-an owner answer.** Commit 728b1c1. The deviation it creates is DEV-45.
+an owner answer.** Commit 71220cd. The deviation it creates is DEV-45.
 
 R3. The clause "2026 CSV reproduces at y = 8.5/12 (direct integration)" read 22,604 pitches on
 five fixed days, and mutant M20b passed it. It now reads all 688,686 open 2026 pitches on 178
@@ -2371,13 +2371,13 @@ Applied by the git lane on 2026-09-25 (Europe/Madrid). Merged on 2026-09-29 from
 `logs/decisions-pending/git.md`, items G-2 to G-4. Status: **applied under D-R0-03's
 delegation, not an owner answer.** None is a deviation from the SOP.
 
-- G-2, commit 97ec48f. `end-of-file-fixer` appended a newline to the pinned
+- G-2, commit ccebb54. `end-of-file-fixer` appended a newline to the pinned
   `tier1_results_2026.json` and broke its SOP sha256. The hook now excludes that one path.
   `tests/unit/test_precommit_config.py` pins both excludes, the missing newline and the digest.
-- G-3, commit cf6acec. The URL literals in `R/ch1/01`, `02` and `10` moved unchanged to
+- G-3, commit c01c931. The URL literals in `R/ch1/01`, `02` and `10` moved unchanged to
   `R/lib/endpoints.R`, which calls no reader. The EXEMPT list in `ops/lint_http.sh` is untouched.
   T1 re-runs byte-identical, W3.6 passes 20 checks and W3.7 passes 33.
-- G-4, commit e401a46. The ruff findings in `tests/model` were fixed without changing a bound.
+- G-4, commit 26a4fd8. The ruff findings in `tests/model` were fixed without changing a bound.
   The MT-02 due day is the named constant `MT02_FULL_SCALE_DUE`, a wall-clock deadline.
 
 The lane handed three items on, and all three are closed. The stale P0 and P1 counts in
@@ -2713,9 +2713,9 @@ The tag is not cut, so each change to the pre-registration below is an edit in p
 Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
 D-R0-03's delegation, not an owner answer.** The deviation is DEV-69.
 
-The question. The repository is public. `abstract/FORM-FIELDS.md`, committed in cd44758 for
+The question. The repository is public. `abstract/FORM-FIELDS.md`, committed in 9368fa0 for
 SOP W6.1, carried the owner's personal Gmail address three times. A sweep of every tracked
-file found it once more, in `DECISIONS.md` since 74b995a. There the W1.7 / W2.3 verification
+file found it once more, in `DECISIONS.md` since 8e3581e. There the W1.7 / W2.3 verification
 entry used it in a probe URL, URL-encoded, then in base64 and decoded.
 
 The default applied. The address is replaced in the tracked files, a guard keeps it out, and
@@ -2737,9 +2737,9 @@ history is left alone.
   quotes a `prose_lint.py` command. A second test plants eight files in a throwaway
   repository and requires exactly the five violations to fire.
 
-What the owner decides. The address remains in git history, in every commit from cd44758
-for FORM-FIELDS and from 74b995a for DECISIONS.md, up to the commit that carries this entry.
-Scrubbing it rewrites every public sha after 74b995a. Whether to do that is his call.
+What the owner decides. The address remains in git history, in every commit from 9368fa0
+for FORM-FIELDS and from 8e3581e for DECISIONS.md, up to the commit that carries this entry.
+Scrubbing it rewrites every public sha after 8e3581e. Whether to do that is his call.
 
 ### D-P4-39 APPLIED UNDER D-R0-03, OWNER-VISIBLE: Chapter 1 names its two shadow bands, pre-registers the W3.18 link, and says what P3 and P4 carry
 
@@ -2838,7 +2838,7 @@ design without a `--leverage` file, so the code holds the precondition.
 
 Applied on 2026-09-29 (Europe/Madrid) on the branch `pretag/text`. Status: **applied under
 D-R0-03's delegation, not an owner answer.** The deviation is DEV-73. Each
-item was checked against the code on `phase05/ch2-fits` at 69da486.
+item was checked against the code on `phase05/ch2-fits` at e1009ae.
 
 - The index CH2-H2a reads (annex 7.1, section 10 item 5). `R/ch2/10_m1_design.R` rebuilds the
   chronological index within each challenger by official date, game number, `game_pk`, at-bat
@@ -2914,8 +2914,8 @@ M2 fit, runs. None touches M1 or the sprint, and M2 is not redesigned.
 1. M2's formula has no `m:role` term, so each role's σ comes only through shrunken slopes. The
    fit code's first dry run, on a league drawn with one slope per role, returned a batter σ of
    2.40 in against 3.02 in injected.
-2. CH2-H2b reads `sd_tau > 0.20 probit`, while `tau_i` is in inches. The code at 171f9f6
-   computed the probability on `sd_challenger_id__Intercept`. Since 2279fc1 it computes it on
+2. CH2-H2b reads `sd_tau > 0.20 probit`, while `tau_i` is in inches. The code at 063469e
+   computed the probability on `sd_challenger_id__Intercept`. Since 16ba847 it computes it on
    the SD of `tau_i` in inches, reports the intercept SD beside it, and logs the unit as an
    owner item. The annex describes the code as it stands.
 3. The role-rate reproduction gate has no test id. It was section 10 item 7 and stays there.
@@ -2927,8 +2927,8 @@ D-R0-03's delegation, not an owner answer.** No deviation: the merge departs fro
 SOP.
 
 SOP D-66 requires the three abstract variants to be committed before `prereg-v1`.
-`phase06/abstract` at 6102d4a, based on ae5a11d, holds them. It was merged with `--no-ff`.
-`main` changed none of the branch's files between ae5a11d and 044ad8a, so no conflict arose.
+`phase06/abstract` at 9df5352, based on a86762a, holds them. It was merged with `--no-ff`.
+`main` changed none of the branch's files between a86762a and 1cbcf05, so no conflict arose.
 `quality/merge_steps.py` folded the branch's six `quality/steps.d` files into
 `quality/steps.yml`: W6.10, W6.11, W6.12, W7.10 and W7.24 are new, and W9.13 takes the branch's
 registration. The branch's `quality/prose_lint.py`, `quality/check_numbers.py` and
@@ -2941,7 +2941,7 @@ Applied on 2026-09-29 (Europe/Madrid) on the branch `phase01/public`. Status: **
 D-R0-03's delegation, not an owner answer.** No deviation: the SOP's rule is "model code reads
 only the `v_*_open` views", and this entry applies it to two tables it does not name.
 
-W9.4 check C7 failed at 044ad8a and at ba63935. It flagged nine places in four R files. Five were
+W9.4 check C7 failed at 1cbcf05 and at 7cb30c3. It flagged nine places in four R files. Five were
 real reads of `dim_batter_season` in `R/ch1/03_heights.R` with no open label. Four were prose that
 the line scan read as a read: a comment in each of `10_build_analysis_table.R`, `20_spec_dev.R`
 and `R/ch2/03_prior_predictive.R`, and one output string in the last. The actual reads in those

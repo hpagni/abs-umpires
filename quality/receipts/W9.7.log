@@ -1,47 +1,49 @@
-........................................................................ [ 46%]
+..............................................F......................... [ 46%]
 ........................................................................ [ 92%]
 ...........                                                              [100%]
+=================================== FAILURES ===================================
+____________ test_no_executable_or_shebang_under_an_excluded_prefix ____________
+
+    def test_no_executable_or_shebang_under_an_excluded_prefix() -> None:
+        """The stronger form of the R2 finding: those directories hold no programs.
+
+        `test_nothing_runnable_is_excluded_on_disk` proves the scan does not SKIP a
+        program there. This one proves there is no program there to skip, which is
+        what lets `ops/lint_http.sh` exclude the same two directories wholesale so
+        that a lint receipt quoting a violation never re-triggers the linter. Both
+        the executable bit and a `#!` first line count, whatever the suffix.
+        """
+        offenders: list[str] = []
+        for prefix in EXCLUDED_PREFIXES:
+            base = REPO_ROOT / prefix.rstrip("/")
+            if not base.is_dir():
+                continue
+            for path in base.rglob("*"):
+                if not path.is_file() or path.is_symlink():
+                    continue
+                relative = str(path.relative_to(REPO_ROOT))
+                if os.access(path, os.X_OK):
+                    offenders.append(f"{relative} (mode {oct(path.stat().st_mode & 0o777)})")
+                    continue
+                try:
+                    with path.open("rb") as handle:
+                        if handle.read(2) == b"#!":
+                            offenders.append(f"{relative} (shebang)")
+                except OSError:
+                    continue
+>       assert not offenders, (
+            "an excluded directory holds a program; move it under ops/ or scripts/: "
+            + ", ".join(sorted(offenders))
+        )
+E       AssertionError: an excluded directory holds a program; move it under ops/ or scripts/: logs/evidence/W3.22-verify-cells.py (shebang), logs/evidence/W3.22-verify-numbers.py (shebang), logs/evidence/W3.22-verify.py (shebang)
+E       assert not ['logs/evidence/W3.22-verify-cells.py (shebang)', 'logs/evidence/W3.22-verify.py (shebang)', 'logs/evidence/W3.22-verify-numbers.py (shebang)']
+
+tests/guard/test_no_sealed_reads.py:203: AssertionError
 =============================== warnings summary ===============================
 tests/guard/test_unseal_receipt.py::test_every_unsealed_line_has_its_receipt
   /Users/hudsonpagni/sports-project/tests/guard/test_unseal_receipt.py:101: UserWarning: GD-10 pairing vacuous: docs/prereg/SEAL.md records no UNSEALED line in phase 01
     warnings.warn(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-[redteam] checking the guard is green before anything is planted
-[redteam] make test-guard -> exit 0 at rest, nothing planted
-[redteam] applying tests/guard/redteam.patch
-[redteam] SOP plant -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:101 reads the held-out analysis set -- d <- dplyr::filter(d, analysis_set == 'sealed')
-[redteam] SOP plant -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:37 names the held-out pitch view -- rows = con.execute("SELECT * FROM v_pitch_sealed").pl()
-[redteam] reverted the two SOP plants
-[redteam] E1 label in two pieces, compared through a variable -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:161 reads the held-out analysis set -- late_frame <- function(d) dplyr::filter(d, analysis_set == HELD)
-[redteam] E2 view name built by an f-string -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:47 names the held-out pitch view -- view = f"v_pitch_{split}"
-[redteam] E3 FROM and the table on two lines -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/v_pitch_all__redteam.sql:9 unqualified raw fact-table read -- fct_pitch
-[redteam] E4 a comment used to forgive the read -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/late_counts__redteam.sql:5 unqualified raw fact-table read -- SELECT game_pk, count(*) AS pitches FROM fct_pitch GROUP BY 1
-[redteam] E5 a later boundary day, and > the day before -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:48 literal boundary-date comparison -- "WHERE official_date >= DATE '2026-09-23' "
-[redteam] E6 the view in a notebook past two megabytes -> make test-guard exit 2   GD-04 FAIL: notebooks/ch1_explore__redteam.ipynb:10 names the held-out pitch view -- "rows = con.execute(\"SELECT * FROM v_pitch_sealed\").pl()\n"
-[redteam] E7 an importable symlink out of the repository -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/probe__redteam.py:2 names the held-out pitch view -- return con.execute("SELECT * FROM v_pitch_sealed").pl()
-[redteam] E8 the complement of the open label -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:47 reads the held-out analysis set -- "SELECT plate_x FROM v_pitch_open WHERE analysis_set != 'open'"
-[redteam] E9 the second fact table -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/challenge_all__redteam.sql:3 unqualified raw fact-table read -- SELECT * FROM fct_challenge
-[redteam] E10 the label alone in ch3, no read on the line -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/dp_fast.py:46 the held-out label outside the two allowlisted files -- split = "sealed"
-[redteam] E11 the held-out partition read by path -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/parquet__redteam.py:2 the held-out label outside the two allowlisted files -- return con.execute("SELECT * FROM read_parquet('data/sealed/pitch/*.parquet')").pl()
-[redteam] E12 the boundary day in two fragments, python -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/dp_fast.py:45 literal boundary-date comparison -- FIRST = "2026-09-2" + "2"
-[redteam] E13 the boundary day built by paste(), R -> make test-guard exit 2   GD-04 FAIL: R/ch1/20_surfaces.R:160 held-out date literal -- cut_day <- as.Date(paste("2026", "09", "22", sep = "-"))
-[redteam] E14 a pull window through the seal, in a config -> make test-guard exit 2   GD-04 FAIL: config/backfill__redteam.yml:3 held-out date literal -- end: "2026-09-30"
-[redteam] E15 a held-out game copied into a fixture -> make test-guard exit 2   GD-04 FAIL: tests/fixtures/late_game__redteam.json:1 held-out date literal -- {"gamePk": 825412, "officialDate": "2026-09-23", "venue": "Wrigley Field"}
-[redteam] E16 the query carried as base64 in a notebook -> make test-guard exit 2   GD-04 FAIL: notebooks/encoded__redteam.ipynb:7 names the held-out pitch view -- "q = base64.b64decode(\"U0VMRUNUICogRlJPTSB2X3BpdGNoX3NlYWxlZA==\").decode()\n",
-[redteam] E17 a blob run abutting the view name -> make test-guard exit 2   GD-04 FAIL: notebooks/abutting__redteam.ipynb:6 names the held-out pitch view -- {"output_type": "stream", "text": "<blob>_pitch_sealed"}
-[redteam] E18 the label assembled with jinja's ~ operator -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_label__redteam.sql:4 reads the held-out analysis set -- SELECT game_pk FROM {{ ref('stg_pitch') }} WHERE analysis_set = '{{ held }}'
-[redteam] E19 the fact table parked in a jinja variable -> make test-guard exit 2   GD-04 FAIL: dbt/models/marts/jinja_table__redteam.sql:4 unqualified raw fact-table read -- SELECT game_pk, plate_x FROM {{ tbl }}
-[redteam] E20 an executable under an excluded prefix -> make test-guard exit 2   GD-04 FAIL: quality/receipts/probe__redteam.sh:2 unqualified raw fact-table read -- duckdb -c "SELECT plate_x FROM fct_pitch"
-[redteam] E21 the held-out view in upper case -> make test-guard exit 2   GD-04 FAIL: sql/shouted__redteam.sql:1 names the held-out pitch view -- SELECT GAME_PK, PLATE_X FROM V_PITCH_SEALED
-[redteam] E22 the partition read by path from ops/ -> make test-guard exit 2   GD-05 FAIL: ops/nightly_pull__redteam.py:3 reads the held-out partition off disk -- frame = pl.read_parquet('data/sealed/pitch/*.parquet')
-[redteam] E23 a glob inside the label path segment -> make test-guard exit 2   GD-05 FAIL: sql/globbed__redteam.sql:1 the held-out label outside the two allowlisted files -- SELECT * FROM read_parquet('data/seal*/pitch/*.parquet')
-[redteam] E24 the boundary reached by date arithmetic -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/arith__redteam.py:3 literal boundary-date comparison -- CUT = date(2026, 9, 19) + timedelta(days=3)
-[redteam] E25 the view assembled from character codes -> make test-guard exit 2   GD-04 FAIL: src/absump/ch3/ordinal__redteam.py:1 names the held-out pitch view -- q = "SELECT * FROM " + chr(118)+chr(95)+"pitch_sealed"
-[redteam] E26 the label with a character escaped -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/escape__redteam.py:1 the held-out label outside the two allowlisted files -- split = "seal\x65d"
-[redteam] E27 the held-out view in mixed case (sibling of E21) -> make test-guard exit 2   GD-04 FAIL: sql/mixedcase__redteam.sql:1 names the held-out pitch view -- select * from Uv_pitch_sealed
-[redteam] E28 the partition behind a ? glob (sibling of E23) -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/quessglob__redteam.py:2 the held-out label outside the two allowlisted files -- df = pl.read_parquet("seale?/pitch/part.parquet")
-[redteam] E29 the partition read as a SQL FROM from ops/ (sibling of E22) -> make test-guard exit 2   GD-05 FAIL: ops/attach__redteam.py:2 reads the held-out partition off disk -- df = duckdb.sql("SELECT * FROM sealed/pitch/x.parquet")
-[redteam] E30 the label with an octal escape (sibling of E26) -> make test-guard exit 2   GD-05 FAIL: src/absump/ch3/octal__redteam.py:1 the held-out label outside the two allowlisted files -- split = "seal\145d"
-[redteam] make test-guard -> exit 0   GD-04: 0 violation(s) in the repository
-GD-09 pass: 34 of 34 checks; the guard fails when it should and is green when it should
+=========================== short test summary info ============================
+FAILED tests/guard/test_no_sealed_reads.py::test_no_executable_or_shebang_under_an_excluded_prefix

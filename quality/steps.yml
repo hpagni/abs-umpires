@@ -709,7 +709,7 @@
 # W3.1, retired. Owner W3, fleet phase 04. SOP-final has no body text for this id.
 # The SOP step text names W3.13 as its fold target. The phase 01 row named W3.2.
 # Title and reason corrected on 2026-09-30, Madrid. The retirement date stays
-# 2026-09-23, the Madrid date of commit 5d560cb, which first registered the id.
+# 2026-09-23, the Madrid date of commit 761d977, which first registered the id.
 - id: W3.1
   title: "Retired, folded into W3.13 at assembly"
   retired: true
@@ -2043,12 +2043,12 @@
 # The command pins what the ceremony produced and fails if any of it moves: GD-12
 # (tools/comms/check_seal_order.sh); the six SOP 2.4 preconditions in one check_prereg.py
 # run, 1, 2, 3 and 5 gated, 4 (clean worktree) and 6 (owner unseal) printed and not gated,
-# because they belong to the unseal; the tag object a1b06d1 on commit 7c2add9 and its
+# because they belong to the unseal; the tag object 980db5f on commit e438284 and its
 # message; origin carrying the same tag object and peeled commit, and origin main
-# containing f993c28; release 399665104 non-draft with exactly the two SOP assets, whose
+# containing fed885c; release 399665104 non-draft with exactly the two SOP assets, whose
 # GitHub sha256 digests equal the recorded values and the tagged blobs; the worktree
 # quality/prereg.lock byte-equal to the tagged lock (never recomputed after the tag); and
-# out/ch1/log/prereg_hashes.txt added once, in f993c28, the child of the tagged commit.
+# out/ch1/log/prereg_hashes.txt added once, in fed885c, the child of the tagged commit.
 # Two network calls (git ls-remote to github.com, gh to api.github.com) plus
 # check_prereg.py's one, each through the D-63 ledger data/ops/git_remote_ledger.jsonl.
 - id: W7.9

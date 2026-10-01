@@ -1,0 +1,5 @@
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 249 ]
+ban list: quality/banned.txt, 83 entries, 83 enforced with the SOP floor
+WR-10, WR-13, WR-16, WR-17, WR-19 tree checks: not run; they read the default scope only, so this path-limited run covers the per-file rules
+prose-lint: 1 file(s) from the arguments, 0 violation(s), 0 warning(s). Ran rules 1 to 5, 7, 10, WR-01 to WR-06, WR-08, WR-09, WR-10, WR-13 to WR-20 as quality/wr-scope.md scopes them, and the P8 ban list; rules 8, 9, 11 not run (no --ship); rule 6 and WR-07 are quality/check_numbers.py.
+GD-04: 0 violation(s) in R/ch1/40_aaa_arm.R

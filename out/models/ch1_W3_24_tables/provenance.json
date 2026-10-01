@@ -17,9 +17,9 @@
     "R/lib/ch1_hetero.R": "c61dbb98b6ad322873b3cdc872755bb20a8d8513a25ab9faf232fc9c68d25002",
     "R/lib/zone.R": "28db4a345337b1f10978d98c90fb35799da4f926d36d8e4b3ac68716dd3a509c"
   },
-  "git_sha": "9b6112134174132a73cae18d65055aeca4fd3682",
+  "git_sha": "694b5937b4a49956388102d2ea608794b6639c60",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD b460747b3cee; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 694b5937b4a4; prereg-v1 is on origin at e4382841f2bd",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {
@@ -36,10 +36,11 @@
     "out/ch1/tab/T9_published_comparison.csv": "398fcbf121f12f40c41ccfbed60419edd5b301b5380514efc9ba272e39666e68",
     "out/ch1/tab/framing_doolittle.csv": "aa778cfd4cbd3417af0ccaa85ef8d18cc056e097ea9cdc782b10a88b09f45b2b",
     "out/ch1/tab/sensitivity_grid.csv": "1388d3868ad0b678968ab602aa811a1e5fcd85af6e232169d806856a90e44387",
-    "quality/receipts/W3.22.json": "9996478f74fd8833985be2ed990f15622983bb948dfa43cabb714cb00dd4b790",
+    "quality/receipts/W3.22.json": "a9903d038b2e7c3f88ae7d302630d37358c0af6d46f4d8b39d67ef1ea3946ab7",
     "out/ch1/model/estimand_draws_main.csv": "68e45b088b65e7c58494f2ff6c77d8a2b7e1020cc5fde168e1946042051ab7c6",
     "out/ch1/prose/framing.md": "2db7acec6ef6acd7ddcbd62bf9c9a7e4e81711c8b62d959b3e3e8fab3689b044",
-    "out/ch1/prose/sensitivity.md": "625c1dfe31e5ca83f56b22b1c43d3c1f11968eb2830e5e380f963733066ca3da"
+    "out/ch1/prose/aaa.md": "7a34863785abbb7d4927ee46261351a9b05832f8ecb60131759989d45bfa54f5",
+    "out/ch1/prose/sensitivity.md": "bab67f423e2c9a59ffb3e1da6f700650242e3d93a4d77144313684818d4c1f11"
   },
   "outputs": {
     "out/tables/T1_sample_construction.csv": "c3b6dee4759e6155a8a8b512ea02ebcf9b2f203eaa8a4cf3153eaca4ec36decc",
@@ -52,9 +53,9 @@
     "out/tables/T8_sensitivity.csv": "ac0ee9cd803b4333d187fb4b2784813a54d0d951a60335100e04c4f4843a1864",
     "out/tables/T9_prior_work.csv": "331c9d09aa78e1f447730523c9d4cebe6c5691bbbc5d12f947f4a51b8d4edcc9",
     "out/tables/tables_manifest.csv": "758db720d621928eb3e099f00757b18a593862e9026c9b0d2d97592ba3f4db90",
-    "docs/ch1.md": "e3967a7e3b9d932e797a0b16c68ed84ce1350faabef8b4b07d398ac777c44b20",
+    "docs/ch1.md": "9a57009b867095b43de3eca37f6b1ce4505c9c0772d4f7dfb2455e2b0acde13c",
     "out/tables/headline.csv": "168c6a40826dae5731dd3a37ccdf2beff667bb67d21ff403891ce5c590da4a83"
   },
   "r_version": "R version 4.5.2 (2025-10-31)",
-  "written_madrid": "2026-09-30T23:21:13+0200"
+  "written_madrid": "2026-10-01T02:51:42+0200"
 }

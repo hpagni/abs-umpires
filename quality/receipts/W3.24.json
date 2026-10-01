@@ -1,17 +1,17 @@
 {
   "cmd": "Rscript -e 'testthat::test_dir(\"tests/testthat\", filter = \"ch1-figures\", stop_on_failure = TRUE)' && uv run --locked python quality/prose_lint.py docs/ch1.md && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/70_figures.R && uv run --locked python tests/guard/gd04_scan.py --path R/ch1/71_tables.R",
-  "duration_s": 12,
+  "duration_s": 4,
   "exit": 1,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
+  "git_sha": "031a5e1cd959726db4dbee95a5ee5a28e3316943",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W3.24.log",
   "owner": "W3",
   "schema": "absump/receipt/1",
   "status": "FAIL",
   "step": "W3.24",
-  "timestamp_madrid": "2026-09-30 23:40:39 CEST",
+  "timestamp_madrid": "2026-10-01 01:03:35 CEST",
   "title": "Chapter 1 figures F1 to F8, tables T1 to T9, and docs/ch1.md"
 }

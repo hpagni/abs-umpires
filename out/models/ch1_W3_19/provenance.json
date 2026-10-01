@@ -21,7 +21,7 @@
   },
   "git_sha": "3159fa91ee9d5b93785e1c901bf5df3dc20989e1",
   "prereg_tag": "prereg-v1",
-  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 8ab37f830e22; prereg-v1 is on origin at 7c2add919004",
+  "gd12": "git merge-base --is-ancestor prereg-v1 HEAD exited 0 at HEAD 3159fa91ee9d; prereg-v1 is on origin at e4382841f2bd",
   "synthetic": false,
   "table": "/Users/hudsonpagni/sports-project/data/marts/ch1_called.parquet",
   "inputs": {

@@ -1,7 +1,7 @@
 uv run --locked pytest tests/unit -q
 ......s........................................................s........ [  6%]
 .........
-W2.21 export gate: 230 files under out/, 133 read as tables, 37 of them single-object JSON walked for dates and identifiers
+W2.21 export gate: 235 files under out/, 137 read as tables, 37 of them single-object JSON walked for dates and identifiers
 ........................................................................ [ 14%]
 .................................................F...................... [ 21%]
 ........................................................................ [ 28%]
@@ -14,7 +14,7 @@ W2.21 export gate: 230 files under out/, 133 read as tables, 37 of them single-o
 ........................................................................ [ 76%]
 ........................................................................ [ 83%]
 ........................................................................ [ 90%]
-........................................................................ [ 97%]
+.................................F...................................... [ 97%]
 ...........................                                              [100%]
 =================================== FAILURES ===================================
 ________________ test_repo_is_a_git_repository_on_the_main_line ________________
@@ -40,13 +40,27 @@ ________________ test_repo_is_a_git_repository_on_the_main_line ________________
                 f"origin/main is {main_tip[:12]} but local main is {local.stdout.strip()[:12]}; "
                 "main was not pushed, or the remote moved ahead"
             )
-E           AssertionError: origin/main is bd9c85b94aac but local main is d25ec7a24d6b; main was not pushed, or the remote moved ahead
-E           assert 'd25ec7a24d6b...3f1cba0c8e3e1' == 'bd9c85b94aac...518b27c4d9342'
+E           AssertionError: origin/main is 2fe6b0d101ae but local main is 0e8806154c4c; main was not pushed, or the remote moved ahead
+E           assert '0e8806154c4c...db7475fae7736' == '2fe6b0d101ae...94923990326c1'
 E
-E             - be41ffb6e5db59bdea7dab76014ade6bdf140b32
+E             - 2fe6b0d101aebecb0814d61ba5394923990326c1
 E             + 0e8806154c4c440048e453de98bdb7475fae7736
 
 tests/unit/test_layout.py:220: AssertionError
+____________________ test_no_unseeded_stochastic_call_in_r _____________________
+
+    def test_no_unseeded_stochastic_call_in_r() -> None:
+        offences: list[str] = []
+        for path in _files(R_SCAN_DIRS, (".R", ".r")):
+            rel = str(path.relative_to(REPO_ROOT))
+            offences.extend(r_violations(path.read_text(encoding="utf-8"), rel))
+>       assert not offences, "RP-06, R:\n" + "\n".join(offences)
+E       AssertionError: RP-06, R:
+E         R/ch1/40_aaa_arm.R: parallel R (mclapply) without RNGkind("L'Ecuyer-CMRG")
+E       assert not ['R/ch1/40_aaa_arm.R: parallel R (mclapply) without RNGkind("L\'Ecuyer-CMRG")']
+
+tests/unit/test_seeds.py:355: AssertionError
 =========================== short test summary info ============================
 FAILED tests/unit/test_layout.py::test_repo_is_a_git_repository_on_the_main_line
+FAILED tests/unit/test_seeds.py::test_no_unseeded_stochastic_call_in_r - Asse...
 make[1]: *** [test-unit] Error 1

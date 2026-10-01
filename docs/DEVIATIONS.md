@@ -689,7 +689,7 @@ This matters to the pre-trend rather than to the headline. D-13's fork already t
 coverage. A partial season reads as low coverage for a reason that has nothing to do with
 height back-linking, so the two causes have to be kept apart. What closed it: the rest of 2022
 was pulled. D-13's fork can now turn on 2022 coverage without a partial season confounding it,
-and the published numbers were re-measured over the whole 2022 lake in commit 8207301.
+and the published numbers were re-measured over the whole 2022 lake in commit ab645da.
 
 ## DEV-37 -- the AAA corpus has gaps, and two W2.15 claims rest on games not on this machine
 
@@ -1458,7 +1458,7 @@ files; OPEN for git history, which the owner decides. Applied under D-R0-03's de
 as an owner answer. The decision is D-P4-38.
 
 What happened. `abstract/FORM-FIELDS.md` carried the owner's personal Gmail address three
-times from cd44758. `DECISIONS.md` carried it on one line from 74b995a, in a probe URL and in
+times from 9368fa0. `DECISIONS.md` carried it on one line from 8e3581e, in a probe URL and in
 the header that probe produced. The repository is public.
 
 What was done instead. Both files now carry a phrase or a placeholder, and the owner's name
@@ -1467,8 +1467,8 @@ an address at gmail.com or the owner's handle, outside the lockfiles, the patter
 and quoted `prose_lint.py` command lines. It proves itself on violations planted in a
 throwaway repository.
 
-What stays open. History was not rewritten. The address remains in every commit from cd44758,
-and from 74b995a for `DECISIONS.md`, up to the commit that carries this entry. The owner
+What stays open. History was not rewritten. The address remains in every commit from 9368fa0,
+and from 8e3581e for `DECISIONS.md`, up to the commit that carries this entry. The owner
 decides whether history is scrubbed.
 
 ## DEV-70: W3.15, W3.18 and W3.21, the two shadow bands, the W3.18 link, and P3 and P4
@@ -1577,12 +1577,12 @@ single offset while the key is present, before W3.14 runs. The override flag sta
 owner's override of D-P4-04. A dated entry here records the change. This lane did not touch
 that branch.
 
-2026-09-30 (Europe/Madrid): the fit lane has implemented this on `phase05/ch1-fits` at 617a75d.
+2026-09-30 (Europe/Madrid): the fit lane has implemented this on `phase05/ch1-fits` at cedb8df.
 SENS-HEIGHT-SINGLE is a named fit, and the override flag works with the key present or absent.
 This entry stays OPEN and closes when that branch merges into `main` after the tag.
 
-2026-09-30 (Europe/Madrid): CLOSED by merge commit b019344, which brings `phase05/ch1-fits`
-into `main` after `prereg-v1`. The merge carries 617a75d. In `R/lib/ch1_fits.R`,
+2026-09-30 (Europe/Madrid): CLOSED by merge commit cb3ae38, which brings `phase05/ch1-fits`
+into `main` after `prereg-v1`. The merge carries cedb8df. In `R/lib/ch1_fits.R`,
 `single_offset` is one of the six arms in `FIT_ARMS`, labelled SENS-HEIGHT-SINGLE, and
 `R/ch1/20_surfaces.R` fits it with `apply_heights()` under the single-offset rule while
 `offset_noncohort_in` is in the calibration file. `--height-rule single-offset` stays as the
@@ -1695,7 +1695,7 @@ Stamped 2026-09-30T15:44:08+02:00, Europe/Madrid. Owner W9, fleet phase 08. File
 Stamped 2026-09-30T17:28:28+02:00, Europe/Madrid. Owner W3, fleet phase 08. Files: `R/ch1/30_framing.R`,
 `tests/testthat/test-ch1-framing.R`, `out/ch1/tab/framing_centring.csv`.
 
-1. **What the first run showed.** The first real run (commit ff22df2, log
+1. **What the first run showed.** The first real run (commit aeb2cbc, log
    `out/ch1/log/W3.19_framing.log`) scored runs uncentred. The league-average catcher then
    earned +0.40 to +0.46 runs per 100 innings in every season.
 2. **Why.** Observed minus expected strikes sum to zero inside each strike class, because
@@ -1705,7 +1705,7 @@ Stamped 2026-09-30T17:28:28+02:00, Europe/Madrid. Owner W3, fleet phase 08. File
 3. **What it did to the intervals.** Across the 1,000 coefficient draws that league level moved
    with SD 0.16 to 0.38 runs per 100 innings, the same shift for every catcher. The point sat near
    the top of the draw distribution, so every level statistic's interval was wide and off centre.
-4. **The change (commit bcab0de).** Runs are now relative to the league-average catcher of each
+4. **The change (commit 44314f8).** Runs are now relative to the league-average catcher of each
    season: the league's runs per called pitch are subtracted in each season and each replicate. The
    SOP compares the top-30 mean with Doolittle, whose figures are relative to average, as Savant's are.
 5. **What moved and what did not.** Split-half reliabilities are unchanged. The signal SDs the prose quotes moved by
@@ -1747,7 +1747,7 @@ Stamped 2026-09-30T20:46:58+02:00, Europe/Madrid. Owner W3, fleet phase 08. File
 marked FAIL below are either met or reported as the finding.
 
 Applied as pre-registered, not a departure. This entry records which frozen consequences were
-applied when CH1-A1 to CH1-A14 were evaluated at HEAD 0a76fd7. The evaluator changed no model, fit
+applied when CH1-A1 to CH1-A14 were evaluated at HEAD 87b0a14. The evaluator changed no model, fit
 or published number.
 
 Verdicts: 9 PASS (CH1-A1, A2, A4, A6, A8, A11, A12, A13, A14), 5 FAIL (CH1-A3, A5, A7, A9, A10).
@@ -1844,7 +1844,7 @@ What changed:
    net of it" over "a genuinely untreated placebo pair". It now says the steps are measured net of
    the 2022-2024 trend, that the placebo failed (+10.8 sq in, 90% CI 7.7 to 13.9), and that every
    step is reported as descriptive under DEV-77.
-3. `out/tables/F4_data.csv`, committed in 0a76fd7 with 88 anonymised per-umpire rows and their
+3. `out/tables/F4_data.csv`, committed in 87b0a14 with 88 anonymised per-umpire rows and their
    intervals, is removed from the index and ignored. Annex 8.5 says no per-umpire table is
    published, whatever the fit returns. The figure F4 (anonymised, ranks only, D-21) stays.
 
@@ -1965,8 +1965,13 @@ from a1b06d1 to 980db5f and its commit from 7c2add9 to e438284. The GitHub relea
 
 Because commit ids changed, every receipt's `git_sha` and every fit receipt's `git_sha` were
 translated through the map, so `make prove`, GD-02 and GD-12 read the same commits under their new
-ids. Hashes quoted in the prose of DECISIONS.md, this file and RUNLOG.md before this entry refer to
-the pre-rewrite history; the map resolves each one. No file's contents changed in any commit.
+ids. Addendum, 2026-10-01 03:40. The acceptance auditor found 315 pre-rewrite ids in 47 tracked
+files: the `gd12` field of every provenance.json, and short ids in DECISIONS.md, this file and
+RUNLOG.md. Every id in the map, in full and in its 12, 10, 8 and 7 character forms, was then
+translated in every tracked text file. An id absent from the map names a commit rebased away
+before the tag; it never had a successor and is left as it is. This entry and
+`docs/prereg/ordering_sentence.md` quote the old ids on purpose. The GitHub release notes
+for prereg-v1 carry a note on the re-creation. No file's contents changed in any commit.
 
 ## DEV-87: W3.20, the AAA arm as built on the AAA corpus on disk, and DT-29's DiD-frame clause handed to its owner
 
@@ -2010,7 +2015,7 @@ DEV-81 table as it stood, kept because it was never tracked).
 
 Applied as pre-registered, not a departure. The verdicts in `out/tables/acceptance.csv` replace the
 verdict table in DEV-81. DEV-81's text stays as written. The evaluator changed no model, fit or
-number. Every source table is byte-identical to DEV-81's HEAD (0a76fd7, now 87b0a14 under DEV-86's
+number. Every source table is byte-identical to DEV-81's HEAD (87b0a14, now 87b0a14 under DEV-86's
 map), except T4 and T5. Those two gained disclosure columns, and their shared cells differ 0 times.
 
 Verdicts: 9 PASS (CH1-A1, A2, A4, A6, A8, A11, A12, A13, A14) and 5 FAIL (CH1-A3, A5, A7, A9, A10).

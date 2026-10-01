@@ -1,17 +1,17 @@
 {
   "cmd": "uv sync --locked --all-groups && uv run --locked python -c \"import sys, duckdb, polars, pyarrow; print(\\\"%d.%d.%d\\\" % sys.version_info[:3], duckdb.__version__, polars.__version__, pyarrow.__version__)\" | grep -qx \"3.12.14 1.5.5 1.44.2 25.0.1\"",
-  "duration_s": 1,
+  "duration_s": 0,
   "exit": 0,
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "9b6112134174132a73cae18d65055aeca4fd3682",
+  "git_sha": "031a5e1cd959726db4dbee95a5ee5a28e3316943",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W1.4.log",
   "owner": "W1",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W1.4",
-  "timestamp_madrid": "2026-09-30 23:21:59 CEST",
+  "timestamp_madrid": "2026-10-01 00:33:18 CEST",
   "title": "Python environment from uv.lock"
 }

@@ -22,7 +22,7 @@
 # reads the planted line numbers back from the files, so nothing here needs a
 # line number written by hand.
 #
-# The R hunk was regenerated against the file as commit 617a75d left it:
+# The R hunk was regenerated against the file as commit cedb8df left it:
 # fit_one gained rule_key and fit_surfaces lost its allow_single line, so the old
 # context no longer matched and `git apply` refused. The plant is the same line
 # in the same place, the first statement after the one read in fit_surfaces.

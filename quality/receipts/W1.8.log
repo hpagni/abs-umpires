@@ -1,15 +1,42 @@
-........................................................................ [ 68%]
+........F............................................................... [ 68%]
 .................................                                        [100%]
-SEAL MODULE OK (9/9) boundary 2026-09-22, tag prereg-v1, gate shut
-SEAL-ORDER OK (34/34 fit receipt(s) descend from prereg-v1 e4382841f2bde84fbeb48aad1bb4bf5da48b6dbe)
-MILESTONE M1 preconditions (SOP phase 04, D3 end of day):
-  OK      prereg_tag in config/seal.yml
-  OK      PREREGISTRATION.md on disk
-  OK      four chapter annexes under docs/prereg/ (found 5)
-  OK      quality/sealed_manifest.json frozen
-  OK      docs/prereg/RELEASE_NOTES.md written
-  OK      git repository
-  MISSING worktree clean
-  DONE    tag prereg-v1 already exists; the door is closed behind you
-  OK      remote origin configured
-preregister --check: 2 precondition(s) outstanding. Nothing was changed.
+=================================== FAILURES ===================================
+____________ test_no_executable_or_shebang_under_an_excluded_prefix ____________
+
+    def test_no_executable_or_shebang_under_an_excluded_prefix() -> None:
+        """The stronger form of the R2 finding: those directories hold no programs.
+
+        `test_nothing_runnable_is_excluded_on_disk` proves the scan does not SKIP a
+        program there. This one proves there is no program there to skip, which is
+        what lets `ops/lint_http.sh` exclude the same two directories wholesale so
+        that a lint receipt quoting a violation never re-triggers the linter. Both
+        the executable bit and a `#!` first line count, whatever the suffix.
+        """
+        offenders: list[str] = []
+        for prefix in EXCLUDED_PREFIXES:
+            base = REPO_ROOT / prefix.rstrip("/")
+            if not base.is_dir():
+                continue
+            for path in base.rglob("*"):
+                if not path.is_file() or path.is_symlink():
+                    continue
+                relative = str(path.relative_to(REPO_ROOT))
+                if os.access(path, os.X_OK):
+                    offenders.append(f"{relative} (mode {oct(path.stat().st_mode & 0o777)})")
+                    continue
+                try:
+                    with path.open("rb") as handle:
+                        if handle.read(2) == b"#!":
+                            offenders.append(f"{relative} (shebang)")
+                except OSError:
+                    continue
+>       assert not offenders, (
+            "an excluded directory holds a program; move it under ops/ or scripts/: "
+            + ", ".join(sorted(offenders))
+        )
+E       AssertionError: an excluded directory holds a program; move it under ops/ or scripts/: logs/evidence/W3.22-verify-cells.py (shebang), logs/evidence/W3.22-verify-numbers.py (shebang), logs/evidence/W3.22-verify.py (shebang)
+E       assert not ['logs/evidence/W3.22-verify-cells.py (shebang)', 'logs/evidence/W3.22-verify.py (shebang)', 'logs/evidence/W3.22-verify-numbers.py (shebang)']
+
+tests/guard/test_no_sealed_reads.py:203: AssertionError
+=========================== short test summary info ============================
+FAILED tests/guard/test_no_sealed_reads.py::test_no_executable_or_shebang_under_an_excluded_prefix

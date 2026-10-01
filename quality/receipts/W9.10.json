@@ -5,13 +5,13 @@
   "expect_exit": 0,
   "git_branch": "phase01/public",
   "git_dirty": true,
-  "git_sha": "be41ffb6e5db59bdea7dab76014ade6bdf140b32",
+  "git_sha": "031a5e1cd959726db4dbee95a5ee5a28e3316943",
   "host": "Hudsons-MacBook-Pro.local",
   "log": "quality/receipts/W9.10.log",
   "owner": "W9",
   "schema": "absump/receipt/1",
   "status": "PASS",
   "step": "W9.10",
-  "timestamp_madrid": "2026-09-30 23:57:33 CEST",
+  "timestamp_madrid": "2026-10-01 01:20:26 CEST",
   "title": "CI: ci.yml and seal-guard.yml, checked locally; clause 3 (green, under 8 minutes) pending the owner"
 }

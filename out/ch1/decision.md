@@ -1,7 +1,7 @@
 # Chapter 1 decision memo (Phase 08, chapter1-full)
 
 Refreshed 2026-10-01T03:25:36+02:00 (Europe/Madrid) by the Phase 08 owner-handoff writer, at HEAD
-b783719. It replaces the memo of 2026-09-30T21:08:57+02:00 written at d933a05 (b9de83d after the
+b783719. It replaces the memo of 2026-09-30T21:08:57+02:00 written at b9de83d (b9de83d after the
 DEV-86 rewrite). Since then W3.20 and W3.22 have landed, CH1-A1 to CH1-A14 have been re-evaluated
 (DEV-88), and the owner has answered the RESULT CALL, D-56, D-59, D-66 and the postseason cell
 (D-R0-05). This memo reports and decides nothing that is the owner's to decide. Every number below
@@ -245,7 +245,7 @@ Not owner items. These are open for the agent lanes named:
 - W2 lane: point DT-29's DiD-frame clause at `out/ch1/tab/aaa_withinweek.csv` (DEV-87 item 6).
 - Main session: the 46 receipts re-stamped in the working tree by an interrupted `make prove`
   (same statuses, `git_sha` now 031a5e1) are uncommitted. 34 tracked `out/**/provenance.json` files
-  still quote the pre-rewrite commit of `prereg-v1` (7c2add9, now e438284) in their `gd12` text
+  still quote the pre-rewrite commit of `prereg-v1` (e438284, now e438284) in their `gd12` text
   (second auditor, D2). `docs/prior-art.md` keeps causal wording (section 5, item 1).
 
 ## 7. Phase exit artifacts

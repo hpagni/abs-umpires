@@ -1,7 +1,7 @@
 SEAL-ORDER OK (34/34 fit receipt(s) descend from prereg-v1 e4382841f2bde84fbeb48aad1bb4bf5da48b6dbe, read from origin)
-PREREG 1/6 PASS tag prereg-v1 exists: annotated tag object a1b06d1254cc on commit 7c2add919004
-PREREG 2/6 PASS tag prereg-v1 is pushed to origin: origin returns a1b06d1254cc for refs/tags/prereg-v1, the local tag object
-PREREG 3/6 PASS tag prereg-v1 is an ancestor of HEAD: tagged commit 7c2add919004 is an ancestor of HEAD
+PREREG 1/6 PASS tag prereg-v1 exists: annotated tag object 980db5f294a1 on commit e4382841f2bd
+PREREG 2/6 PASS tag prereg-v1 is pushed to origin: origin returns 980db5f294a1 for refs/tags/prereg-v1, the local tag object
+PREREG 3/6 PASS tag prereg-v1 is an ancestor of HEAD: tagged commit e4382841f2bd is an ancestor of HEAD
 PREREG 4/6 FAIL the worktree is clean: git status --porcelain is not empty: a tracked change or an untracked file is present
 PREREG 5/6 PASS quality/prereg.lock matches prereg-v1: 7 files, each sha256 equal to its blob at prereg-v1; covers PREREGISTRATION.md, the 4 annexes it names and the 6 docs/prereg/*.md files
 PREREG 6/6 FAIL ABS_SEAL_UNLOCK=1 and its DECISIONS.md line: ABS_SEAL_UNLOCK is not set in this environment; DECISIONS.md has no line carrying ABS_SEAL_UNLOCK=1; at the unseal the owner appends one such as '- YYYY-MM-DD: `ABS_SEAL_UNLOCK=1` set in one shell. Manifest sha256 `a52ebf469aaafb3b37c18dcca68f01a421a7cd5a2995bd08e6af40a470904dfb`.'

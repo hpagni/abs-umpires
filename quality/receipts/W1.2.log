@@ -26,10 +26,10 @@ ________________ test_repo_is_a_git_repository_on_the_main_line ________________
                 f"origin/main is {main_tip[:12]} but local main is {local.stdout.strip()[:12]}; "
                 "main was not pushed, or the remote moved ahead"
             )
-E           AssertionError: origin/main is cf3b720c38fd but local main is d25ec7a24d6b; main was not pushed, or the remote moved ahead
-E           assert 'd25ec7a24d6b...3f1cba0c8e3e1' == 'cf3b720c38fd...844953f341e66'
+E           AssertionError: origin/main is 2fe6b0d101ae but local main is 0e8806154c4c; main was not pushed, or the remote moved ahead
+E           assert '0e8806154c4c...db7475fae7736' == '2fe6b0d101ae...94923990326c1'
 E
-E             - 137de6ad68d38af7342fb34804a8d8fccd4e760c
+E             - 2fe6b0d101aebecb0814d61ba5394923990326c1
 E             + 0e8806154c4c440048e453de98bdb7475fae7736
 
 tests/unit/test_layout.py:220: AssertionError

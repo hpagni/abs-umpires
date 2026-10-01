@@ -10,9 +10,9 @@ C7   no nightly.yml   PASS  no nightly.yml; nightly is local launchd (ops/com.ab
      plant: a sealed output with no sibling provenance               expect fail, exit 1:   out/sealed/plant/fit.parquet has no sibling provenance.json
      plant: a fit_started_at that is not a timestamp                 expect fail, exit 1:   out/models/plant/provenance.json: fit_started_at 'yesterday' is not a zoned ISO 8601 tim
      plant: PREREGISTRATION.md edited after the lock                 expect fail, exit 1:   PREREGISTRATION.md no longer matches quality/prereg.lock: file a8ee2443112e5e33a18f858b9
-     plant: a sealed output with complete provenance after the tag   expect pass, exit 0: SEAL-GUARD PASS: prereg-v1 at 7c2add919004, lock matches, 1 sealed file(s), 1 fit start(s)
+     plant: a sealed output with complete provenance after the tag   expect pass, exit 0: SEAL-GUARD PASS: prereg-v1 at e4382841f2bd, lock matches, 1 sealed file(s), 1 fit start(s)
      plant: the tag deleted                                          expect fail, exit 1: It was cut in SOP W3.13; every sealed-side guarantee is anchored to it.
-C8   seal-guard       PASS  layers 3 and 4 named; provenance step on clean HEAD: SEAL-GUARD PASS: prereg-v1 at 7c2add919004, lock matches, 0 sealed file(s), 0 fit start(s) on or after the tag; 6/6 plants behave
+C8   seal-guard       PASS  layers 3 and 4 named; provenance step on clean HEAD: SEAL-GUARD PASS: prereg-v1 at e4382841f2bd, lock matches, 0 sealed file(s), 0 fit start(s) on or after the tag; 6/6 plants behave
 C9   R-31 wording     PASS  no badge presented as reproduction; make prove on the Mac named authoritative
 C10  actionlint       SKIP  not installed on this machine, so not run; nothing was installed to run it
 CL3  clause 3        PENDING-OWNER  CI green on every push in under 8 minutes: NOT MEASURABLE UNTIL THE OWNER ENABLES THE SCOPE. The gh token lacks `workflow`, so the files are parked and no run exists. Never reported as passed by this script.

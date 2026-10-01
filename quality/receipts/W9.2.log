@@ -5,7 +5,24 @@ RP-02  OK        env installs from the lock alone
 RP-03  OK        R env matches renv.lock
 RP-04  OK        CmdStan 2.40.0 pinned, DYLD_LIBRARY_PATH unset
 RP-05  OK        arrow 25.0.1 on both sides, seam agrees to 1e-12
-RP-06  OK        every stochastic call seeded
+RP-06  FAIL      every stochastic call seeded
+             .....F................................                                   [100%]
+             =================================== FAILURES ===================================
+             ____________________ test_no_unseeded_stochastic_call_in_r _____________________
+
+                 def test_no_unseeded_stochastic_call_in_r() -> None:
+                     offences: list[str] = []
+                     for path in _files(R_SCAN_DIRS, (".R", ".r")):
+                         rel = str(path.relative_to(REPO_ROOT))
+                         offences.extend(r_violations(path.read_text(encoding="utf-8"), rel))
+             >       assert not offences, "RP-06, R:\n" + "\n".join(offences)
+             E       AssertionError: RP-06, R:
+             E         R/ch1/40_aaa_arm.R: parallel R (mclapply) without RNGkind("L'Ecuyer-CMRG")
+             E       assert not ['R/ch1/40_aaa_arm.R: parallel R (mclapply) without RNGkind("L\'Ecuyer-CMRG")']
+
+             tests/unit/test_seeds.py:355: AssertionError
+             =========================== short test summary info ============================
+             FAILED tests/unit/test_seeds.py::test_no_unseeded_stochastic_call_in_r - Asse...
 RP-07  DEFERRED  determinism: make all twice, quality/compare_out.py --tol 1e-8
                  make all has no content in phase 01. Owner SOP W9.9, fleet phase 12,
                  app-and-memo. Not counted below.
@@ -15,4 +32,5 @@ RP-08  DEFERRED  cold rebuild from a clean checkout
 RP-09  ELSEWHERE throttle config and budget table agree
                  pytest tests/unit/test_throttle_budget.py, runs under make test.
                  Not one of the six.
-6/6 OK
+5/6 OK -- failing: RP-06
+make[1]: *** [verify-env] Error 1

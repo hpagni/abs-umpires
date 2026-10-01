@@ -30,7 +30,7 @@ D-67 says: tag and push `prereg-v1` before the first Chapter 1 fit of any kind. 
 GD-12 counts files named `provenance.json` under `out/`. Before the tag there were 0 of them, so its pass tests no ordering. Chapter 1 fits did run before the tag. None of them wrote a `provenance.json`, so GD-12 cannot see them.
 
 - The tagged `PREREGISTRATION.md` says so in its section on work before the freeze: "The fits listed above ran before it, on 2022–2024 calls and simulated calls."
-- W3.4 fitted pooled contours on 2022–2024. Its first receipt, committed in `cf6acec`, is stamped `2026-09-25 13:00:11 CEST` at `git_sha` `f891d71`. Commit `f891d71` does not descend from `prereg-v1`.
+- W3.4 fitted pooled contours on 2022–2024. Its first receipt, committed in `c01c931`, is stamped `2026-09-25 13:00:11 CEST` at `git_sha` `d8e0fe9`. Commit `d8e0fe9` does not descend from `prereg-v1`.
 - W3.11 left 15 fit records in `out/dev/ch1_spec/`, written from `2026-09-25 14:53` to `2026-09-29 21:56` CEST. 11 of them fit 2022–2024 called pitches, at most 687,496 rows each. The other 4 fit simulated data. None carries a `git_sha`.
 
 The first Chapter 1 fit ran more than four days before the tag existed. D-67 asks for the tag before the first fit "of any kind", and this record reads the 2022–2024 and simulated fits as fits. The ordering was not achieved, so the narrow sentence is the one the abstract may use.
