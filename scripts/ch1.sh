@@ -178,9 +178,10 @@ show <- function(kind, ids, man, idcol, filecols, manifest) {
     if (identical(r$status, "built")) built <- built + 1L
     else if (identical(r$status, "pending")) pend <- c(pend, id)
     else ph <- c(ph, id)
-    note <- c(if (nzchar(r$blocked_by)) paste(if (identical(r$status, "pending")) "pending by design on" else "blocked on",
+    nz <- function(x) length(x) == 1L && !is.na(x) && nzchar(x)
+    note <- c(if (nz(r$blocked_by)) paste(if (identical(r$status, "pending")) "pending by design on" else "blocked on",
                                              r$blocked_by),
-              if (!is.null(r$pending) && nzchar(r$pending)) paste("a block pending", r$pending))
+              if (!is.null(r$pending) && nz(r$pending)) paste("a block pending", r$pending))
     cat(sprintf("  %-3s %-11s %-11s %s%s\n", id, r$status, if (w) "regenerated" else "NOT WRITTEN",
                 paste(files, collapse = " "), if (length(note)) paste0("  (", paste(note, collapse = "; "), ")") else ""))
   }
